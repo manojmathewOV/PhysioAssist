@@ -1,0 +1,55 @@
+{
+  "timestamp": "2025-07-29T06:39:27.330Z",
+  "environment": {
+    "node": true,
+    "npm": true,
+    "reactNative": false,
+    "xcode": true,
+    "java": true,
+    "androidHome": true
+  },
+  "platforms": {
+    "ios": {
+      "supported": true,
+      "minVersion": "14.0",
+      "tested": true,
+      "features": [
+        "Camera",
+        "ML",
+        "Haptics",
+        "HealthKit"
+      ]
+    },
+    "android": {
+      "supported": true,
+      "minVersion": "26",
+      "tested": true,
+      "features": [
+        "Camera",
+        "ML",
+        "TFLite",
+        "GoogleFit"
+      ]
+    }
+  },
+  "crossPlatform": {
+    "sharedFeatures": [
+      "Pose Detection",
+      "Exercise Validation",
+      "Progress Tracking",
+      "YouTube Comparison"
+    ],
+    "platformSpecific": {
+      "ios": [
+        "Core ML",
+        "Face ID",
+        "Apple Health"
+      ],
+      "android": [
+        "TensorFlow Lite",
+        "Fingerprint",
+        "Google Fit"
+      ]
+    }
+  }
+}

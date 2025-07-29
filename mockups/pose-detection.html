@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhysioAssist - Live Pose Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .phone-frame {
+            max-width: 375px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 25px;
+            padding: 5px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .screen {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            min-height: 812px;
+            position: relative;
+        }
+        
+        .status-bar {
+            background: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .header {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .back-btn {
+            font-size: 18px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        
+        .exercise-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .pause-btn {
+            background: #FF9800;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .camera-view {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            height: 350px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .pose-skeleton {
+            position: relative;
+            width: 200px;
+            height: 300px;
+        }
+        
+        .joint {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #00FF00;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(0,255,0,0.5);
+        }
+        
+        .connection {
+            position: absolute;
+            background: #00FF00;
+            height: 3px;
+            transform-origin: left center;
+            box-shadow: 0 0 5px rgba(0,255,0,0.3);
+        }
+        
+        /* Joint positions for a basic pose */
+        .joint-head { top: 20px; left: 95px; }
+        .joint-neck { top: 40px; left: 95px; }
+        .joint-left-shoulder { top: 60px; left: 70px; }
+        .joint-right-shoulder { top: 60px; left: 120px; }
+        .joint-left-elbow { top: 100px; left: 50px; }
+        .joint-right-elbow { top: 100px; left: 140px; }
+        .joint-left-wrist { top: 140px; left: 35px; }
+        .joint-right-wrist { top: 140px; left: 155px; }
+        .joint-left-hip { top: 140px; left: 80px; }
+        .joint-right-hip { top: 140px; left: 110px; }
+        .joint-left-knee { top: 200px; left: 80px; }
+        .joint-right-knee { top: 200px; left: 110px; }
+        .joint-left-ankle { top: 260px; left: 80px; }
+        .joint-right-ankle { top: 260px; left: 110px; }
+        
+        .angle-display {
+            position: absolute;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.5);
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        .angle-left-elbow { top: 85px; left: 20px; }
+        .angle-right-elbow { top: 85px; left: 170px; }
+        
+        .camera-overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: white;
+            font-size: 12px;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+        
+        .exercise-status {
+            background: white;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-icon {
+            color: #4CAF50;
+            font-size: 16px;
+        }
+        
+        .status-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .rep-counter {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .feedback-panel {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .voice-feedback {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .feedback-text {
+            font-size: 14px;
+            color: #333;
+            flex: 1;
+        }
+        
+        .tip-feedback {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tip-text {
+            font-size: 13px;
+            color: #666;
+            flex: 1;
+        }
+        
+        .controls-panel {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .controls-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .control-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 8px;
+            border: none;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn.pause {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .control-btn.stop {
+            background: #F44336;
+            color: white;
+        }
+        
+        .control-btn.reset {
+            background: #607D8B;
+            color: white;
+        }
+        
+        .control-btn.settings {
+            background: #9E9E9E;
+            color: white;
+        }
+        
+        .control-icon {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .progress-bar {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .progress-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .progress-track {
+            width: 150px;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            width: 80%;
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+        }
+        
+        .progress-text {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .timer {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .bottom-nav {
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 0;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-item.active {
+            color: #4CAF50;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-label {
+            font-size: 10px;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1) }
+            50% { transform: scale(1.1) }
+            100% { transform: scale(1) }
+        }
+        
+        .joint {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to Index</a>
+    
+    <div class="phone-frame">
+        <div class="screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>📶 📶 📶 🔋</span>
+            </div>
+            
+            <div class="header">
+                <div class="header-left">
+                    <a href="exercise-selection.html" class="back-btn">←</a>
+                    <div class="exercise-title">Bicep Curls</div>
+                </div>
+                <button class="pause-btn">
+                    ⏸️ Pause
+                </button>
+            </div>
+            
+            <div class="camera-view">
+                <div class="camera-overlay">
+                    📱 CAMERA VIEW WITH POSE OVERLAY
+                </div>
+                
+                <div class="pose-skeleton">
+                    <!-- Joints -->
+                    <div class="joint joint-head"></div>
+                    <div class="joint joint-neck"></div>
+                    <div class="joint joint-left-shoulder"></div>
+                    <div class="joint joint-right-shoulder"></div>
+                    <div class="joint joint-left-elbow"></div>
+                    <div class="joint joint-right-elbow"></div>
+                    <div class="joint joint-left-wrist"></div>
+                    <div class="joint joint-right-wrist"></div>
+                    <div class="joint joint-left-hip"></div>
+                    <div class="joint joint-right-hip"></div>
+                    <div class="joint joint-left-knee"></div>
+                    <div class="joint joint-right-knee"></div>
+                    <div class="joint joint-left-ankle"></div>
+                    <div class="joint joint-right-ankle"></div>
+                    
+                    <!-- Angle displays -->
+                    <div class="angle-display angle-left-elbow">130°</div>
+                    <div class="angle-display angle-right-elbow">135°</div>
+                </div>
+            </div>
+            
+            <div class="exercise-status">
+                <div class="status-left">
+                    <span class="status-icon">✅</span>
+                    <span class="status-text">Good Form!</span>
+                </div>
+                <div class="rep-counter">Rep: 8/10</div>
+            </div>
+            
+            <div class="feedback-panel">
+                <div class="voice-feedback">
+                    <span>🗣️</span>
+                    <span class="feedback-text">"Great! Keep your elbows steady"</span>
+                </div>
+                <div class="tip-feedback">
+                    <span>💡</span>
+                    <span class="tip-text">Tip: Move slower on the way down</span>
+                </div>
+            </div>
+            
+            <div class="controls-panel">
+                <div class="controls-title">Exercise Controls</div>
+                <div class="controls-grid">
+                    <button class="control-btn pause">
+                        <div class="control-icon">⏸️</div>
+                        <div>Pause</div>
+                    </button>
+                    <button class="control-btn stop">
+                        <div class="control-icon">⏹️</div>
+                        <div>Stop</div>
+                    </button>
+                    <button class="control-btn reset">
+                        <div class="control-icon">🔄</div>
+                        <div>Reset</div>
+                    </button>
+                    <button class="control-btn settings">
+                        <div class="control-icon">⚙️</div>
+                        <div>Settings</div>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-info">
+                    <span class="progress-text">Progress:</span>
+                    <div class="progress-track">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <span class="progress-text">80%</span>
+                </div>
+                <div class="timer">Time: 12:34</div>
+            </div>
+            
+            <div class="bottom-nav">
+                <a href="home-dashboard.html" class="nav-item">
+                    <div class="nav-icon">🏠</div>
+                    <div class="nav-label">Home</div>
+                </a>
+                <a href="exercise-selection.html" class="nav-item active">
+                    <div class="nav-icon">💪</div>
+                    <div class="nav-label">Exercise</div>
+                </a>
+                <a href="progress-analytics.html" class="nav-item">
+                    <div class="nav-icon">📊</div>
+                    <div class="nav-label">Progress</div>
+                </a>
+                <a href="settings-hub.html" class="nav-item">
+                    <div class="nav-icon">⚙️</div>
+                    <div class="nav-label">Settings</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

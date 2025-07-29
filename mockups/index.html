@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhysioAssist - UI Mockups</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .mockup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 40px;
+        }
+        
+        .mockup-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .mockup-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .mockup-preview {
+            height: 200px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            color: #666;
+        }
+        
+        .mockup-info {
+            padding: 20px;
+        }
+        
+        .mockup-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .mockup-info p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .mockup-link {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            transition: background 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .mockup-link:hover {
+            background: #45a049;
+        }
+        
+        .features {
+            background: #f8f9fa;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .features h2 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .feature-item {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 PhysioAssist UI Mockups</h1>
+            <p>Interactive HTML mockups for the AI-powered physiotherapy mobile app</p>
+        </div>
+        
+        <div class="mockup-grid">
+            <div class="mockup-card">
+                <div class="mockup-preview">🏠</div>
+                <div class="mockup-info">
+                    <h3>Home Dashboard</h3>
+                    <p>Main dashboard with today's exercise plan, progress stats, and quick access to new exercises.</p>
+                    <a href="home-dashboard.html" class="mockup-link">View Mockup</a>
+                </div>
+            </div>
+            
+            <div class="mockup-card">
+                <div class="mockup-preview">🔍</div>
+                <div class="mockup-info">
+                    <h3>Exercise Selection</h3>
+                    <p>Browse and select exercises by category, difficulty level, and estimated duration.</p>
+                    <a href="exercise-selection.html" class="mockup-link">View Mockup</a>
+                </div>
+            </div>
+            
+            <div class="mockup-card">
+                <div class="mockup-preview">📱</div>
+                <div class="mockup-info">
+                    <h3>Live Pose Detection</h3>
+                    <p>Real-time camera view with AI pose detection, joint angles, and form feedback.</p>
+                    <a href="pose-detection.html" class="mockup-link">View Mockup</a>
+                </div>
+            </div>
+            
+            <div class="mockup-card">
+                <div class="mockup-preview">📊</div>
+                <div class="mockup-info">
+                    <h3>Progress Analytics</h3>
+                    <p>Detailed progress tracking with charts, performance metrics, and achievements.</p>
+                    <a href="progress-analytics.html" class="mockup-link">View Mockup</a>
+                </div>
+            </div>
+            
+            <div class="mockup-card">
+                <div class="mockup-preview">⚙️</div>
+                <div class="mockup-info">
+                    <h3>Settings Hub</h3>
+                    <p>Comprehensive settings for audio, visual, performance, and accessibility options.</p>
+                    <a href="settings-hub.html" class="mockup-link">View Mockup</a>
+                </div>
+            </div>
+            
+            <div class="mockup-card">
+                <div class="mockup-preview">👤</div>
+                <div class="mockup-info">
+                    <h3>User Profile</h3>
+                    <p>Personal information, progress summary, goals, and data management.</p>
+                    <a href="user-profile.html" class="mockup-link">View Mockup</a>
+                </div>
+            </div>
+            
+            <div class="mockup-card">
+                <div class="mockup-preview">🎉</div>
+                <div class="mockup-info">
+                    <h3>Exercise Complete</h3>
+                    <p>Session summary with performance analysis, achievements, and next steps.</p>
+                    <a href="exercise-complete.html" class="mockup-link">View Mockup</a>
+                </div>
+            </div>
+            
+            <div class="mockup-card">
+                <div class="mockup-preview">🔊</div>
+                <div class="mockup-info">
+                    <h3>Audio Settings</h3>
+                    <p>Detailed audio configuration including voice instructions and sound effects.</p>
+                    <a href="audio-settings.html" class="mockup-link">View Mockup</a>
+                </div>
+            </div>
+            
+            <div class="mockup-card">
+                <div class="mockup-preview">📹</div>
+                <div class="mockup-info">
+                    <h3>Video Comparison</h3>
+                    <p>Side-by-side YouTube video comparison with pose tracking and form analysis.</p>
+                    <a href="video-comparison.html" class="mockup-link">View Mockup</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <h2>🚀 Key Features</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI Pose Detection</h3>
+                    <p>Real-time pose analysis with joint angle measurements</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Form Correction</h3>
+                    <p>Instant feedback and coaching for proper exercise form</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📈</div>
+                    <h3>Progress Tracking</h3>
+                    <p>Detailed analytics and performance improvements over time</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">♿</div>
+                    <h3>Accessibility</h3>
+                    <p>Full accessibility support with voice guidance and high contrast</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2024 PhysioAssist - AI-Powered Physiotherapy Application</p>
+        </div>
+    </div>
+</body>
+</html>

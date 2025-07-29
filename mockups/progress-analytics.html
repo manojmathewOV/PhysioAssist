@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhysioAssist - Progress Analytics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .phone-frame {
+            max-width: 375px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 25px;
+            padding: 5px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .screen {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            min-height: 812px;
+            position: relative;
+        }
+        
+        .status-bar {
+            background: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .header {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            font-size: 16px;
+            color: #4CAF50;
+        }
+        
+        .content {
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px 20px 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .card-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .card-content {
+            padding: 20px;
+        }
+        
+        .chart-container {
+            height: 150px;
+            position: relative;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+        }
+        
+        .chart-bar {
+            background: linear-gradient(180deg, #4CAF50 0%, #45a049 100%);
+            border-radius: 3px 3px 0 0;
+            width: 30px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-bar:hover {
+            opacity: 0.8;
+        }
+        
+        .bar-1 { height: 40px; }
+        .bar-2 { height: 60px; }
+        .bar-3 { height: 80px; }
+        .bar-4 { height: 45px; }
+        .bar-5 { height: 70px; }
+        .bar-6 { height: 55px; }
+        .bar-7 { height: 90px; }
+        
+        .chart-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .stats-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .exercise-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .exercise-item:last-child {
+            border-bottom: none;
+        }
+        
+        .exercise-info {
+            flex: 1;
+        }
+        
+        .exercise-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .exercise-stats {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-score {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .score-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #4CAF50;
+        }
+        
+        .score-change {
+            font-size: 12px;
+            color: #4CAF50;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .achievement-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .achievement-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .achievement-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .detailed-report-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .detailed-report-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .bottom-nav {
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 0;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-item.active {
+            color: #4CAF50;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-label {
+            font-size: 10px;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to Index</a>
+    
+    <div class="phone-frame">
+        <div class="screen">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>📶 📶 📶 🔋</span>
+            </div>
+            
+            <div class="header">
+                <h1>Progress</h1>
+                <div class="header-actions">
+                    <span>📤</span>
+                    <span>📱</span>
+                </div>
+            </div>
+            
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Weekly Overview</div>
+                        <div class="card-subtitle">Nov 20-26, 2024</div>
+                    </div>
+                    <div class="card-content">
+                        <div style="font-weight: 600; margin-bottom: 15px;">📊 Exercise Minutes</div>
+                        <div class="chart-container">
+                            <div class="chart-bar bar-1"></div>
+                            <div class="chart-bar bar-2"></div>
+                            <div class="chart-bar bar-3"></div>
+                            <div class="chart-bar bar-4"></div>
+                            <div class="chart-bar bar-5"></div>
+                            <div class="chart-bar bar-6"></div>
+                            <div class="chart-bar bar-7"></div>
+                        </div>
+                        <div class="chart-labels">
+                            <span>Mon</span>
+                            <span>Tue</span>
+                            <span>Wed</span>
+                            <span>Thu</span>
+                            <span>Fri</span>
+                            <span>Sat</span>
+                            <span>Sun</span>
+                        </div>
+                        <div class="stats-summary">
+                            <div class="stat-item">
+                                <div class="stat-value">4h 30m</div>
+                                <div class="stat-label">Total</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">5h</div>
+                                <div class="stat-label">Goal</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">90%</div>
+                                <div class="stat-label">Complete</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Exercise Performance</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="exercise-item">
+                            <div class="exercise-info">
+                                <div class="exercise-name">🎯 Bicep Curls</div>
+                                <div class="exercise-stats">
+                                    <span>Best: 10 reps</span>
+                                    <span>Avg Time: 1:30</span>
+                                </div>
+                            </div>
+                            <div class="form-score">
+                                <div class="score-value">85%</div>
+                                <div class="score-change">↗️ +5%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="exercise-item">
+                            <div class="exercise-info">
+                                <div class="exercise-name">🎯 Shoulder Press</div>
+                                <div class="exercise-stats">
+                                    <span>Best: 8 reps</span>
+                                    <span>Avg Time: 2:15</span>
+                                </div>
+                            </div>
+                            <div class="form-score">
+                                <div class="score-value">78%</div>
+                                <div class="score-change">↗️ +12%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="exercise-item">
+                            <div class="exercise-info">
+                                <div class="exercise-name">🎯 Squats</div>
+                                <div class="exercise-stats">
+                                    <span>Best: 15 reps</span>
+                                    <span>Avg Time: 2:45</span>
+                                </div>
+                            </div>
+                            <div class="form-score">
+                                <div class="score-value">92%</div>
+                                <div class="score-change">↗️ +3%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Achievements</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="achievements-grid">
+                            <div class="achievement-item">
+                                <div class="achievement-icon">🏆</div>
+                                <div class="achievement-name">Perfect Week</div>
+                            </div>
+                            <div class="achievement-item">
+                                <div class="achievement-icon">🔥</div>
+                                <div class="achievement-name">5-Day Streak</div>
+                            </div>
+                            <div class="achievement-item">
+                                <div class="achievement-icon">📈</div>
+                                <div class="achievement-name">+15% Form</div>
+                            </div>
+                            <div class="achievement-item">
+                                <div class="achievement-icon">🎯</div>
+                                <div class="achievement-name">Goal Crusher</div>
+                            </div>
+                            <div class="achievement-item">
+                                <div class="achievement-icon">⭐</div>
+                                <div class="achievement-name">Consistency</div>
+                            </div>
+                            <div class="achievement-item">
+                                <div class="achievement-icon">💪</div>
+                                <div class="achievement-name">Strength</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="detailed-report-btn">View Detailed Report</button>
+            </div>
+            
+            <div class="bottom-nav">
+                <a href="home-dashboard.html" class="nav-item">
+                    <div class="nav-icon">🏠</div>
+                    <div class="nav-label">Home</div>
+                </a>
+                <a href="exercise-selection.html" class="nav-item">
+                    <div class="nav-icon">💪</div>
+                    <div class="nav-label">Exercise</div>
+                </a>
+                <a href="#" class="nav-item active">
+                    <div class="nav-icon">📊</div>
+                    <div class="nav-label">Progress</div>
+                </a>
+                <a href="settings-hub.html" class="nav-item">
+                    <div class="nav-icon">⚙️</div>
+                    <div class="nav-label">Settings</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
