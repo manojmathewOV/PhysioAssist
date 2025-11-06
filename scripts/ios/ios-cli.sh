@@ -81,6 +81,12 @@ show_help() {
     echo -e "  ${YELLOW}instruments${NC}        Professional profiling with Instruments"
     echo -e "  ${YELLOW}debug${NC}              Debug tools and helpers"
     echo -e ""
+    echo -e "${CYAN}CLAUDE CODE CLI BRIDGE:${NC}"
+    echo -e "  ${YELLOW}claude-bridge${NC}      JSON API for programmatic control"
+    echo -e "  ${YELLOW}claude-dev${NC}         One-command dev setup with JSON output"
+    echo -e "  ${YELLOW}claude-iterate${NC}     Auto-reload with error recovery"
+    echo -e "  ${YELLOW}claude-server${NC}      Start HTTP bridge server (port 3737)"
+    echo -e ""
     echo -e "${CYAN}UTILITIES:${NC}"
     echo -e "  ${YELLOW}clean${NC}              Clean build artifacts"
     echo -e "  ${YELLOW}reset${NC}              Full reset (clean + clear cache + reinstall)"
@@ -199,6 +205,18 @@ execute_command() {
             ;;
         debug)
             bash "$SCRIPT_DIR/xcode-debug.sh" "$@"
+            ;;
+        claude-bridge)
+            bash "$SCRIPT_DIR/claude-bridge.sh" "$@"
+            ;;
+        claude-dev)
+            bash "$SCRIPT_DIR/claude-bridge.sh" quick-dev
+            ;;
+        claude-iterate)
+            bash "$SCRIPT_DIR/claude-auto-iterate.sh" "$@"
+            ;;
+        claude-server)
+            node "$SCRIPT_DIR/claude-bridge-server.js"
             ;;
         list)
             echo -e "${BLUE}📱 Available iOS Simulators:${NC}"

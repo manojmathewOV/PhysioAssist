@@ -40,6 +40,12 @@
     "xcode:fast": "./scripts/ios/xcode-build-fast.sh",
     "xcode:instruments": "./scripts/ios/xcode-instruments.sh",
     "xcode:debug": "./scripts/ios/xcode-debug.sh",
+    "claude:bridge": "./scripts/ios/claude-bridge.sh",
+    "claude:dev": "./scripts/ios/claude-bridge.sh quick-dev",
+    "claude:iterate": "./scripts/ios/claude-auto-iterate.sh",
+    "claude:bridge-server": "node scripts/ios/claude-bridge-server.js",
+    "claude:status": "./scripts/ios/claude-bridge.sh status",
+    "claude:health": "./scripts/ios/claude-bridge.sh health",
     "gate:validate": "node scripts/gate-validation.js"
   },
   "dependencies": {
