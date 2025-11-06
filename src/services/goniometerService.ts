@@ -83,13 +83,13 @@ export class GoniometerService {
     };
 
     const dotProduct = vectorBA.x * vectorBC.x + vectorBA.y * vectorBC.y;
-    
+
     const magnitudeBA = Math.sqrt(vectorBA.x ** 2 + vectorBA.y ** 2);
     const magnitudeBC = Math.sqrt(vectorBC.x ** 2 + vectorBC.y ** 2);
 
     const cosAngle = dotProduct / (magnitudeBA * magnitudeBC);
     const angleRadians = Math.acos(Math.max(-1, Math.min(1, cosAngle)));
-    
+
     return (angleRadians * 180) / Math.PI;
   }
 
@@ -113,21 +113,15 @@ export class GoniometerService {
       z: (pointC.z || 0) - (pointB.z || 0),
     };
 
-    const dotProduct = 
-      vectorBA.x * vectorBC.x + 
-      vectorBA.y * vectorBC.y + 
-      vectorBA.z * vectorBC.z;
+    const dotProduct =
+      vectorBA.x * vectorBC.x + vectorBA.y * vectorBC.y + vectorBA.z * vectorBC.z;
 
-    const magnitudeBA = Math.sqrt(
-      vectorBA.x ** 2 + vectorBA.y ** 2 + vectorBA.z ** 2
-    );
-    const magnitudeBC = Math.sqrt(
-      vectorBC.x ** 2 + vectorBC.y ** 2 + vectorBC.z ** 2
-    );
+    const magnitudeBA = Math.sqrt(vectorBA.x ** 2 + vectorBA.y ** 2 + vectorBA.z ** 2);
+    const magnitudeBC = Math.sqrt(vectorBC.x ** 2 + vectorBC.y ** 2 + vectorBC.z ** 2);
 
     const cosAngle = dotProduct / (magnitudeBA * magnitudeBC);
     const angleRadians = Math.acos(Math.max(-1, Math.min(1, cosAngle)));
-    
+
     return (angleRadians * 180) / Math.PI;
   }
 
@@ -178,13 +172,13 @@ export class GoniometerService {
       { name: 'right_elbow', indices: [12, 14, 16] },
       { name: 'left_shoulder', indices: [13, 11, 23] }, // elbow-shoulder-hip
       { name: 'right_shoulder', indices: [14, 12, 24] },
-      
+
       // Legs
       { name: 'left_knee', indices: [23, 25, 27] }, // hip-knee-ankle
       { name: 'right_knee', indices: [24, 26, 28] },
       { name: 'left_hip', indices: [11, 23, 25] }, // shoulder-hip-knee
       { name: 'right_hip', indices: [12, 24, 26] },
-      
+
       // Ankles
       { name: 'left_ankle', indices: [25, 27, 31] }, // knee-ankle-foot
       { name: 'right_ankle', indices: [26, 28, 32] },
@@ -227,7 +221,12 @@ export class GoniometerService {
     };
 
     const indices = jointConfigs[jointName];
-    if (!indices || !landmarks[indices[0]] || !landmarks[indices[1]] || !landmarks[indices[2]]) {
+    if (
+      !indices ||
+      !landmarks[indices[0]] ||
+      !landmarks[indices[1]] ||
+      !landmarks[indices[2]]
+    ) {
       return null;
     }
 
@@ -246,11 +245,16 @@ export class GoniometerService {
    */
   getAllJointAngles(landmarks: PoseLandmark[]): Record<string, number> {
     const joints = [
-      'leftElbow', 'rightElbow', 
-      'leftKnee', 'rightKnee', 
-      'leftShoulder', 'rightShoulder',
-      'leftHip', 'rightHip',
-      'leftAnkle', 'rightAnkle'
+      'leftElbow',
+      'rightElbow',
+      'leftKnee',
+      'rightKnee',
+      'leftShoulder',
+      'rightShoulder',
+      'leftHip',
+      'rightHip',
+      'leftAnkle',
+      'rightAnkle',
     ];
     const angles: Record<string, number> = {};
 

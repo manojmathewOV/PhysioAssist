@@ -19,8 +19,8 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
   return (
     <View style={styles.container}>
       {!isActive ? (
-        <TouchableOpacity 
-          style={[styles.button, styles.startButton]} 
+        <TouchableOpacity
+          style={[styles.button, styles.startButton]}
           onPress={onStart}
           testID="start-button"
         >
@@ -28,15 +28,15 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
         </TouchableOpacity>
       ) : (
         <>
-          <TouchableOpacity 
-            style={[styles.button, styles.pauseButton]} 
+          <TouchableOpacity
+            style={[styles.button, styles.pauseButton]}
             onPress={onPause}
             testID="pause-button"
           >
             <Text style={styles.buttonText}>Pause</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.button, styles.stopButton]} 
+          <TouchableOpacity
+            style={[styles.button, styles.stopButton]}
             onPress={onStop}
             testID="stop-button"
           >
@@ -44,8 +44,8 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
           </TouchableOpacity>
         </>
       )}
-      <TouchableOpacity 
-        style={[styles.button, styles.resetButton]} 
+      <TouchableOpacity
+        style={[styles.button, styles.resetButton]}
         onPress={onReset}
         testID="reset-button"
       >

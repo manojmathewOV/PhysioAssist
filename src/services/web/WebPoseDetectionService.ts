@@ -18,7 +18,7 @@ export class WebPoseDetectionService {
     this.pose = new Pose({
       locateFile: (file: string) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-      }
+      },
     });
 
     this.pose.setOptions({
@@ -26,7 +26,7 @@ export class WebPoseDetectionService {
       smoothLandmarks: true,
       enableSegmentation: false,
       minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5
+      minTrackingConfidence: 0.5,
     });
 
     this.pose.onResults(this.onResults.bind(this));
@@ -45,20 +45,23 @@ export class WebPoseDetectionService {
     // Draw video frame
     canvasCtx.drawImage(
       results.image,
-      0, 0,
+      0,
+      0,
       this.canvasElement.width,
       this.canvasElement.height
     );
 
     // Process landmarks
     if (results.poseLandmarks && this.onResultsCallback) {
-      const landmarks: PoseLandmark[] = results.poseLandmarks.map((landmark: any, index: number) => ({
-        x: landmark.x,
-        y: landmark.y,
-        z: landmark.z || 0,
-        visibility: landmark.visibility || 1,
-        name: this.getLandmarkName(index)
-      }));
+      const landmarks: PoseLandmark[] = results.poseLandmarks.map(
+        (landmark: any, index: number) => ({
+          x: landmark.x,
+          y: landmark.y,
+          z: landmark.z || 0,
+          visibility: landmark.visibility || 1,
+          name: this.getLandmarkName(index),
+        })
+      );
 
       this.onResultsCallback(landmarks);
     }
@@ -68,15 +71,39 @@ export class WebPoseDetectionService {
 
   private getLandmarkName(index: number): string {
     const landmarkNames = [
-      'nose', 'left_eye_inner', 'left_eye', 'left_eye_outer',
-      'right_eye_inner', 'right_eye', 'right_eye_outer',
-      'left_ear', 'right_ear', 'mouth_left', 'mouth_right',
-      'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow',
-      'left_wrist', 'right_wrist', 'left_pinky', 'right_pinky',
-      'left_index', 'right_index', 'left_thumb', 'right_thumb',
-      'left_hip', 'right_hip', 'left_knee', 'right_knee',
-      'left_ankle', 'right_ankle', 'left_heel', 'right_heel',
-      'left_foot_index', 'right_foot_index'
+      'nose',
+      'left_eye_inner',
+      'left_eye',
+      'left_eye_outer',
+      'right_eye_inner',
+      'right_eye',
+      'right_eye_outer',
+      'left_ear',
+      'right_ear',
+      'mouth_left',
+      'mouth_right',
+      'left_shoulder',
+      'right_shoulder',
+      'left_elbow',
+      'right_elbow',
+      'left_wrist',
+      'right_wrist',
+      'left_pinky',
+      'right_pinky',
+      'left_index',
+      'right_index',
+      'left_thumb',
+      'right_thumb',
+      'left_hip',
+      'right_hip',
+      'left_knee',
+      'right_knee',
+      'left_ankle',
+      'right_ankle',
+      'left_heel',
+      'right_heel',
+      'left_foot_index',
+      'right_foot_index',
     ];
     return landmarkNames[index] || `landmark_${index}`;
   }
@@ -112,7 +139,7 @@ export class WebPoseDetectionService {
         }
       },
       width: 1280,
-      height: 720
+      height: 720,
     });
 
     await this.camera.start();
@@ -137,7 +164,7 @@ export class WebPoseDetectionService {
 
     return new Promise((resolve) => {
       const originalCallback = this.onResultsCallback;
-      
+
       this.onResultsCallback = (landmarks) => {
         this.onResultsCallback = originalCallback;
         resolve(landmarks);
@@ -152,12 +179,16 @@ export class WebPoseDetectionService {
   }
 
   // Convert normalized coordinates to pixel coordinates
-  denormalizeCoordinates(landmarks: PoseLandmark[], width: number, height: number): Keypoint[] {
-    return landmarks.map(landmark => ({
+  denormalizeCoordinates(
+    landmarks: PoseLandmark[],
+    width: number,
+    height: number
+  ): Keypoint[] {
+    return landmarks.map((landmark) => ({
       x: landmark.x * width,
       y: landmark.y * height,
       score: landmark.visibility,
-      name: landmark.name
+      name: landmark.name,
     }));
   }
 }

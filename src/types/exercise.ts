@@ -59,7 +59,7 @@ export interface ExerciseMetrics {
   isComplete: boolean;
 }
 
-export type ExerciseCategory = 
+export type ExerciseCategory =
   | 'strength'
   | 'flexibility'
   | 'balance'

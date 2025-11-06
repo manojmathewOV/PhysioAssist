@@ -14,7 +14,7 @@ const compileNodeModules = [
   'react-native-screens',
   '@react-navigation',
   'react-native-linear-gradient',
-].map(moduleName => path.resolve(appDirectory, `node_modules/${moduleName}`));
+].map((moduleName) => path.resolve(appDirectory, `node_modules/${moduleName}`));
 
 const babelLoaderConfiguration = {
   test: /\.(js|jsx|ts|tsx)$/,
@@ -28,10 +28,7 @@ const babelLoaderConfiguration = {
     options: {
       cacheDirectory: true,
       presets: ['module:metro-react-native-babel-preset'],
-      plugins: [
-        'react-native-web',
-        'react-native-reanimated/plugin',
-      ],
+      plugins: ['react-native-web', 'react-native-reanimated/plugin'],
     },
   },
 };

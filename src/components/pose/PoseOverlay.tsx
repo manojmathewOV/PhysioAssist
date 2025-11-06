@@ -11,17 +11,44 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 // Define pose connections (skeleton)
 const POSE_CONNECTIONS = [
   // Face
-  [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 7],
+  [0, 4],
+  [4, 5],
+  [5, 6],
+  [6, 8],
   [9, 10],
   // Arms
-  [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
-  [15, 17], [16, 18], [15, 19], [16, 20], [17, 19], [18, 20],
-  [15, 21], [16, 22],
+  [11, 12],
+  [11, 13],
+  [13, 15],
+  [12, 14],
+  [14, 16],
+  [15, 17],
+  [16, 18],
+  [15, 19],
+  [16, 20],
+  [17, 19],
+  [18, 20],
+  [15, 21],
+  [16, 22],
   // Body
-  [11, 23], [12, 24], [23, 24],
+  [11, 23],
+  [12, 24],
+  [23, 24],
   // Legs
-  [23, 25], [24, 26], [25, 27], [26, 28],
-  [27, 29], [28, 30], [29, 31], [30, 32], [27, 31], [28, 32],
+  [23, 25],
+  [24, 26],
+  [25, 27],
+  [26, 28],
+  [27, 29],
+  [28, 30],
+  [29, 31],
+  [30, 32],
+  [27, 31],
+  [28, 32],
 ];
 
 interface PoseOverlayProps {
@@ -166,7 +193,12 @@ const PoseOverlay: React.FC<PoseOverlayProps> = ({
   // Skip rendering if no landmarks when props are provided
   if (propLandmarks !== undefined && landmarks.length === 0) {
     return (
-      <Svg testID="pose-overlay-svg" style={StyleSheet.absoluteFill} width={overlayWidth} height={overlayHeight} />
+      <Svg
+        testID="pose-overlay-svg"
+        style={StyleSheet.absoluteFill}
+        width={overlayWidth}
+        height={overlayHeight}
+      />
     );
   }
 
@@ -174,7 +206,12 @@ const PoseOverlay: React.FC<PoseOverlayProps> = ({
   if (!propLandmarks && !currentPose) return null;
 
   return (
-    <Svg testID="pose-overlay-svg" style={StyleSheet.absoluteFill} width={overlayWidth} height={overlayHeight}>
+    <Svg
+      testID="pose-overlay-svg"
+      style={StyleSheet.absoluteFill}
+      width={overlayWidth}
+      height={overlayHeight}
+    >
       {renderedConnections}
       {renderedLandmarks}
       {renderedAngles}

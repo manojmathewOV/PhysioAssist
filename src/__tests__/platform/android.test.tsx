@@ -15,29 +15,29 @@ jest.mock('react-native', () => ({
     Version: 33, // Android 13
     select: jest.fn((obj) => obj.android),
     isPad: false,
-    isTV: false
+    isTV: false,
   },
   PermissionsAndroid: {
     PERMISSIONS: {
       CAMERA: 'android.permission.CAMERA',
       WRITE_EXTERNAL_STORAGE: 'android.permission.WRITE_EXTERNAL_STORAGE',
       READ_EXTERNAL_STORAGE: 'android.permission.READ_EXTERNAL_STORAGE',
-      RECORD_AUDIO: 'android.permission.RECORD_AUDIO'
+      RECORD_AUDIO: 'android.permission.RECORD_AUDIO',
     },
     RESULTS: {
       GRANTED: 'granted',
       DENIED: 'denied',
-      NEVER_ASK_AGAIN: 'never_ask_again'
+      NEVER_ASK_AGAIN: 'never_ask_again',
     },
     request: jest.fn(),
     requestMultiple: jest.fn(),
-    check: jest.fn()
+    check: jest.fn(),
   },
   BackHandler: {
     addEventListener: jest.fn(),
     removeEventListener: jest.fn(),
-    exitApp: jest.fn()
-  }
+    exitApp: jest.fn(),
+  },
 }));
 
 describe('Android Platform Tests', () => {
@@ -55,13 +55,13 @@ describe('Android Platform Tests', () => {
 
     it('should select Android-specific values', () => {
       Platform.select.mockImplementation((obj) => obj.android);
-      
+
       const value = Platform.select({
         ios: 'iOS Value',
         android: 'Android Value',
-        default: 'Default Value'
+        default: 'Default Value',
       });
-      
+
       expect(value).toBe('Android Value');
     });
   });
@@ -77,7 +77,7 @@ describe('Android Platform Tests', () => {
           message: 'PhysioAssist needs access to your camera for pose detection',
           buttonNeutral: 'Ask Me Later',
           buttonNegative: 'Cancel',
-          buttonPositive: 'OK'
+          buttonPositive: 'OK',
         }
       );
 
@@ -92,13 +92,13 @@ describe('Android Platform Tests', () => {
       PermissionsAndroid.requestMultiple.mockResolvedValue({
         'android.permission.CAMERA': 'granted',
         'android.permission.WRITE_EXTERNAL_STORAGE': 'granted',
-        'android.permission.RECORD_AUDIO': 'denied'
+        'android.permission.RECORD_AUDIO': 'denied',
       });
 
       const permissions = [
         PermissionsAndroid.PERMISSIONS.CAMERA,
         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
       ];
 
       const results = await PermissionsAndroid.requestMultiple(permissions);
@@ -117,12 +117,12 @@ describe('Android Platform Tests', () => {
   describe('Android Back Button Handling', () => {
     it('should handle hardware back button press', () => {
       const backHandler = jest.fn().mockReturnValue(true);
-      
+
       BackHandler.addEventListener('hardwareBackPress', backHandler);
-      
+
       // Simulate back button press
       backHandler();
-      
+
       expect(backHandler).toHaveBeenCalled();
       expect(backHandler).toHaveReturnedWith(true);
     });
@@ -142,12 +142,14 @@ describe('Android Platform Tests', () => {
   describe('Android-Specific UI Components', () => {
     it('should render Android Material Design components', () => {
       const AndroidButton = () => (
-        <div style={{
-          elevation: 2,
-          backgroundColor: '#2196F3',
-          borderRadius: 4,
-          padding: '8px 16px'
-        }}>
+        <div
+          style={{
+            elevation: 2,
+            backgroundColor: '#2196F3',
+            borderRadius: 4,
+            padding: '8px 16px',
+          }}
+        >
           Android Material Button
         </div>
       );
@@ -158,14 +160,14 @@ describe('Android Platform Tests', () => {
 
     it('should use Android-specific fonts', () => {
       Platform.select.mockImplementation((obj) => obj.android);
-      
+
       const styles = {
         text: {
           fontFamily: Platform.select({
             ios: 'San Francisco',
-            android: 'Roboto'
-          })
-        }
+            android: 'Roboto',
+          }),
+        },
       };
 
       expect(styles.text.fontFamily).toBe('Roboto');
@@ -177,7 +179,7 @@ describe('Android Platform Tests', () => {
       const mockTFLite = {
         loadModel: jest.fn().mockResolvedValue(true),
         run: jest.fn().mockResolvedValue({ landmarks: [] }),
-        useGPU: jest.fn()
+        useGPU: jest.fn(),
       };
 
       // Android should prefer TFLite for better performance
@@ -193,24 +195,24 @@ describe('Android Platform Tests', () => {
     it('should handle Android video formats correctly', () => {
       const supportedFormats = ['mp4', '3gp', 'webm', 'mkv'];
       const testFile = 'video.mp4';
-      
+
       const extension = testFile.split('.').pop();
       expect(supportedFormats).toContain(extension);
     });
 
     it('should use Android MediaCodec settings', () => {
       Platform.select.mockImplementation((obj) => obj.android);
-      
+
       const codecSettings = Platform.select({
         ios: {
           codec: 'h264',
-          hardwareAcceleration: false
+          hardwareAcceleration: false,
         },
         android: {
           codec: 'h264',
           hardwareAcceleration: true,
-          useMediaCodec: true
-        }
+          useMediaCodec: true,
+        },
       });
 
       expect(codecSettings.hardwareAcceleration).toBe(true);
@@ -225,7 +227,7 @@ describe('Android Platform Tests', () => {
 
       const storageConfig = {
         useDocumentsDirectory: useScopedStorage,
-        requestLegacyExternalStorage: !useScopedStorage
+        requestLegacyExternalStorage: !useScopedStorage,
       };
 
       expect(storageConfig.useDocumentsDirectory).toBe(true);
@@ -236,7 +238,7 @@ describe('Android Platform Tests', () => {
   describe('Android Notification Channels', () => {
     it('should create notification channel for Android 8+', () => {
       const mockNotification = {
-        createChannel: jest.fn()
+        createChannel: jest.fn(),
       };
 
       if (Platform.Version >= 26) {
@@ -245,7 +247,7 @@ describe('Android Platform Tests', () => {
           channelName: 'Exercise Reminders',
           channelDescription: 'Notifications for exercise reminders',
           importance: 4, // HIGH
-          vibrate: true
+          vibrate: true,
         });
 
         expect(mockNotification.createChannel).toHaveBeenCalled();
@@ -263,7 +265,7 @@ describe('Android Platform Tests', () => {
       const memoryConfig = {
         largeHeap: true,
         maxMemory: 512, // MB
-        trimMemoryLevel: 'TRIM_MEMORY_RUNNING_LOW'
+        trimMemoryLevel: 'TRIM_MEMORY_RUNNING_LOW',
       };
 
       expect(memoryConfig.largeHeap).toBe(true);
@@ -278,12 +280,10 @@ describe('Android Platform Tests', () => {
         accessibilityLabel: 'Start Exercise Button',
         accessibilityHint: 'Double tap to begin your exercise session',
         accessibilityRole: 'button',
-        importantForAccessibility: 'yes'
+        importantForAccessibility: 'yes',
       };
 
-      const TestComponent = () => (
-        <div {...accessibilityProps}>Start Exercise</div>
-      );
+      const TestComponent = () => <div {...accessibilityProps}>Start Exercise</div>;
 
       const { container } = render(<TestComponent />);
       const element = container.firstChild;
@@ -297,7 +297,7 @@ describe('Android Platform Tests', () => {
     it('should request battery optimization exemption', () => {
       const mockPowerManager = {
         isIgnoringBatteryOptimizations: jest.fn().mockReturnValue(false),
-        requestIgnoreBatteryOptimizations: jest.fn()
+        requestIgnoreBatteryOptimizations: jest.fn(),
       };
 
       if (!mockPowerManager.isIgnoringBatteryOptimizations()) {

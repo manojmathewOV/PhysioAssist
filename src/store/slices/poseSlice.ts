@@ -42,5 +42,6 @@ const poseSlice = createSlice({
   },
 });
 
-export const { setPoseData, setJointAngles, setDetecting, setFrameRate, resetPose } = poseSlice.actions;
+export const { setPoseData, setJointAngles, setDetecting, setFrameRate, resetPose } =
+  poseSlice.actions;
 export default poseSlice.reducer;

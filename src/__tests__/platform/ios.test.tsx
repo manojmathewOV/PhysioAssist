@@ -18,7 +18,7 @@ const mockPlatform = {
   Version: '16.0',
   select: jest.fn((obj: any) => obj.ios),
   isPad: false,
-  isTV: false
+  isTV: false,
 };
 
 describe('iOS Platform Tests', () => {
@@ -38,7 +38,7 @@ describe('iOS Platform Tests', () => {
       const value = mockPlatform.select({
         ios: 'iOS Value',
         android: 'Android Value',
-        default: 'Default Value'
+        default: 'Default Value',
       });
       expect(value).toBe('iOS Value');
     });
@@ -52,15 +52,15 @@ describe('iOS Platform Tests', () => {
         PERMISSIONS: {
           IOS: {
             CAMERA: 'ios.permission.CAMERA',
-            MICROPHONE: 'ios.permission.MICROPHONE'
-          }
+            MICROPHONE: 'ios.permission.MICROPHONE',
+          },
         },
         RESULTS: {
           GRANTED: 'granted',
           DENIED: 'denied',
           BLOCKED: 'blocked',
-          UNAVAILABLE: 'unavailable'
-        }
+          UNAVAILABLE: 'unavailable',
+        },
       };
 
       const result = await mockPermission.request(mockPermission.PERMISSIONS.IOS.CAMERA);
@@ -71,12 +71,12 @@ describe('iOS Platform Tests', () => {
     it('should handle camera permission denial', async () => {
       const mockPermission = {
         request: jest.fn().mockResolvedValue('denied'),
-        openSettings: jest.fn()
+        openSettings: jest.fn(),
       };
 
       const result = await mockPermission.request('ios.permission.CAMERA');
       expect(result).toBe('denied');
-      
+
       // In real app, we'd show alert and offer to open settings
       mockPermission.openSettings();
       expect(mockPermission.openSettings).toHaveBeenCalled();
@@ -86,12 +86,14 @@ describe('iOS Platform Tests', () => {
   describe('iOS-Specific UI Components', () => {
     it('should render iOS-style navigation bar', () => {
       const IOSNavBar = () => (
-        <div style={{ 
-          height: 44, 
-          backgroundColor: '#f8f8f8',
-          borderBottomWidth: 0.5,
-          borderBottomColor: '#c8c8c8'
-        }}>
+        <div
+          style={{
+            height: 44,
+            backgroundColor: '#f8f8f8',
+            borderBottomWidth: 0.5,
+            borderBottomColor: '#c8c8c8',
+          }}
+        >
           iOS Navigation Bar
         </div>
       );
@@ -102,14 +104,14 @@ describe('iOS Platform Tests', () => {
 
     it('should use iOS-specific fonts', () => {
       mockPlatform.select.mockReturnValue('San Francisco');
-      
+
       const styles = {
         text: {
           fontFamily: mockPlatform.select({
             ios: 'San Francisco',
-            android: 'Roboto'
-          })
-        }
+            android: 'Roboto',
+          }),
+        },
       };
 
       expect(styles.text.fontFamily).toBe('San Francisco');
@@ -122,25 +124,25 @@ describe('iOS Platform Tests', () => {
         top: 47, // iPhone 14 Pro status bar
         bottom: 34, // iPhone 14 Pro home indicator
         left: 0,
-        right: 0
+        right: 0,
       };
 
       const SafeAreaComponent = ({ insets }: any) => (
-        <div style={{
-          paddingTop: insets.top,
-          paddingBottom: insets.bottom
-        }}>
+        <div
+          style={{
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+          }}
+        >
           Content
         </div>
       );
 
-      const { container } = render(
-        <SafeAreaComponent insets={mockSafeAreaInsets} />
-      );
+      const { container } = render(<SafeAreaComponent insets={mockSafeAreaInsets} />);
 
       expect(container.firstChild).toHaveStyle({
         paddingTop: 47,
-        paddingBottom: 34
+        paddingBottom: 34,
       });
     });
   });
@@ -151,8 +153,8 @@ describe('iOS Platform Tests', () => {
         ready: jest.fn().mockResolvedValue(true),
         setBackend: jest.fn().mockResolvedValue(true),
         ENV: {
-          set: jest.fn()
-        }
+          set: jest.fn(),
+        },
       };
 
       // iOS should use Core ML delegate for better performance
@@ -168,7 +170,7 @@ describe('iOS Platform Tests', () => {
     it('should handle iOS video formats correctly', () => {
       const supportedFormats = ['mp4', 'mov', 'm4v'];
       const testFile = 'video.mov';
-      
+
       const extension = testFile.split('.').pop();
       expect(supportedFormats).toContain(extension);
     });
@@ -178,13 +180,13 @@ describe('iOS Platform Tests', () => {
         ios: {
           codec: 'h264',
           bitrate: 2000000,
-          profile: 'high'
+          profile: 'high',
         },
         android: {
           codec: 'h264',
           bitrate: 1500000,
-          profile: 'baseline'
-        }
+          profile: 'baseline',
+        },
       });
 
       expect(compressionSettings.profile).toBe('high');
@@ -197,7 +199,7 @@ describe('iOS Platform Tests', () => {
       const mockHaptic = {
         impact: jest.fn(),
         notification: jest.fn(),
-        selection: jest.fn()
+        selection: jest.fn(),
       };
 
       // Success feedback
@@ -215,7 +217,7 @@ describe('iOS Platform Tests', () => {
       const mockAppState = {
         currentState: 'active',
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
 
       const handleAppStateChange = (nextState: string) => {
@@ -237,7 +239,7 @@ describe('iOS Platform Tests', () => {
     it('should handle memory warnings appropriately', () => {
       const mockMemoryWarning = {
         addEventListener: jest.fn(),
-        clearCache: jest.fn()
+        clearCache: jest.fn(),
       };
 
       const handleMemoryWarning = () => {
@@ -257,12 +259,10 @@ describe('iOS Platform Tests', () => {
         accessibilityLabel: 'Start Exercise Button',
         accessibilityHint: 'Double tap to begin your exercise session',
         accessibilityRole: 'button',
-        accessibilityTraits: ['button']
+        accessibilityTraits: ['button'],
       };
 
-      const TestComponent = () => (
-        <div {...accessibilityProps}>Start Exercise</div>
-      );
+      const TestComponent = () => <div {...accessibilityProps}>Start Exercise</div>;
 
       const { container } = render(<TestComponent />);
       const element = container.firstChild;

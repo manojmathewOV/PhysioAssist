@@ -33,19 +33,21 @@ jest.mock('../../services/audioFeedbackService');
 jest.mock('react-native-vision-camera', () => ({
   Camera: ({ children, ...props }: any) => <MockCamera {...props}>{children}</MockCamera>,
   useCameraDevices: () => ({ front: { id: 'front' }, back: { id: 'back' } }),
-  useFrameProcessor: (callback: any) => callback
+  useFrameProcessor: (callback: any) => callback,
 }));
 
 // Mock camera component
 const MockCamera = ({ children, ...props }: any) => (
-  <view testID="mock-camera" {...props}>{children}</view>
+  <view testID="mock-camera" {...props}>
+    {children}
+  </view>
 );
 
 // Helper to create test store
 const createTestStore = (preloadedState = {}) => {
   return configureStore({
     reducer: rootReducer,
-    preloadedState
+    preloadedState,
   });
 };
 
@@ -56,15 +58,13 @@ const renderWithProviders = (
 ) => {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>
-      <NavigationContainer>
-        {children}
-      </NavigationContainer>
+      <NavigationContainer>{children}</NavigationContainer>
     </Provider>
   );
 
   return {
     ...render(component, { wrapper: Wrapper, ...renderOptions }),
-    store
+    store,
   };
 };
 
@@ -81,7 +81,7 @@ describe('Component Integration Tests', () => {
       (poseDetectionService.startDetection as jest.Mock).mockResolvedValue(true);
       (poseDetectionService.processFrame as jest.Mock).mockReturnValue({
         landmarks: mockLandmarks,
-        confidence: 0.9
+        confidence: 0.9,
       });
 
       const { getByTestId, getByText, store } = renderWithProviders(
@@ -114,11 +114,13 @@ describe('Component Integration Tests', () => {
 
       // Simulate pose data updates
       act(() => {
-        store.dispatch(setPoseData({
-          landmarks: mockLandmarks,
-          timestamp: Date.now(),
-          confidence: 0.9
-        }));
+        store.dispatch(
+          setPoseData({
+            landmarks: mockLandmarks,
+            timestamp: Date.now(),
+            confidence: 0.9,
+          })
+        );
       });
 
       // Verify confidence display
@@ -142,14 +144,13 @@ describe('Component Integration Tests', () => {
         pose: {
           isDetecting: true,
           landmarks: mockLandmarks,
-          confidence: 0.9
-        }
+          confidence: 0.9,
+        },
       });
 
-      const { getByTestId, getByText } = renderWithProviders(
-        <ExerciseControls />,
-        { store }
-      );
+      const { getByTestId, getByText } = renderWithProviders(<ExerciseControls />, {
+        store,
+      });
 
       // Select bicep curl exercise
       const bicepCurlButton = getByTestId('exercise-bicep-curl');
@@ -169,17 +170,19 @@ describe('Component Integration Tests', () => {
 
       // Simulate exercise validation
       act(() => {
-        store.dispatch(updateExerciseProgress({
-          exerciseId: 'bicep_curl',
-          repetitions: 5,
-          quality: 0.85
-        }));
+        store.dispatch(
+          updateExerciseProgress({
+            exerciseId: 'bicep_curl',
+            repetitions: 5,
+            quality: 0.85,
+          })
+        );
       });
 
       // Verify UI updates
       const repCounter = getByTestId('exercise-rep-counter');
       expect(repCounter).toBeTruthy();
-      
+
       const formQuality = getByTestId('exercise-form-quality');
       expect(formQuality).toBeTruthy();
     });
@@ -192,12 +195,12 @@ describe('Component Integration Tests', () => {
         pose: {
           isDetecting: true,
           landmarks: mockLandmarks,
-          confidence: 0.9
+          confidence: 0.9,
         },
         exercise: {
           currentExercise: 'bicep_curl',
-          isActive: true
-        }
+          isActive: true,
+        },
       });
 
       // Mock validation results
@@ -207,21 +210,20 @@ describe('Component Integration Tests', () => {
         formScore: 0.6,
         errors: ['elbow_flare'],
         feedbackMessage: 'Keep your elbow closer to your body',
-        repetitions: 3
+        repetitions: 3,
       });
 
-      const { getByTestId } = renderWithProviders(
-        <PoseDetectionScreen />,
-        { store }
-      );
+      const { getByTestId } = renderWithProviders(<PoseDetectionScreen />, { store });
 
       // Trigger pose update
       act(() => {
-        store.dispatch(setPoseData({
-          landmarks: mockLandmarks,
-          timestamp: Date.now(),
-          confidence: 0.9
-        }));
+        store.dispatch(
+          setPoseData({
+            landmarks: mockLandmarks,
+            timestamp: Date.now(),
+            confidence: 0.9,
+          })
+        );
       });
 
       // Verify feedback was provided
@@ -241,15 +243,12 @@ describe('Component Integration Tests', () => {
     it('should persist settings changes across app', async () => {
       const store = createTestStore();
 
-      const { getByTestId } = renderWithProviders(
-        <SettingsScreen />,
-        { store }
-      );
+      const { getByTestId } = renderWithProviders(<SettingsScreen />, { store });
 
       // Toggle sound setting
       const soundToggle = getByTestId('settings-sound-toggle');
       const initialSoundState = store.getState().settings.enableSound;
-      
+
       fireEvent(soundToggle, 'onValueChange', !initialSoundState);
 
       // Verify state updated
@@ -259,7 +258,7 @@ describe('Component Integration Tests', () => {
 
       // Verify audio service updated
       expect(audioFeedbackService.updateConfig).toHaveBeenCalledWith({
-        enableSound: !initialSoundState
+        enableSound: !initialSoundState,
       });
 
       // Save settings
@@ -275,10 +274,7 @@ describe('Component Integration Tests', () => {
     it('should apply performance settings immediately', async () => {
       const store = createTestStore();
 
-      const { getByTestId } = renderWithProviders(
-        <SettingsScreen />,
-        { store }
-      );
+      const { getByTestId } = renderWithProviders(<SettingsScreen />, { store });
 
       // Adjust frame skip setting
       const frameSkipSlider = getByTestId('settings-frame-skip');
@@ -287,7 +283,7 @@ describe('Component Integration Tests', () => {
       // Verify pose detection service updated
       await waitFor(() => {
         expect(poseDetectionService.updateConfig).toHaveBeenCalledWith({
-          frameSkip: 5
+          frameSkip: 5,
         });
       });
     });
@@ -298,9 +294,7 @@ describe('Component Integration Tests', () => {
       // Mock permission denial
       (Camera.requestCameraPermission as jest.Mock).mockResolvedValue('denied');
 
-      const { getByTestId, getByText } = renderWithProviders(
-        <PoseDetectionScreen />
-      );
+      const { getByTestId, getByText } = renderWithProviders(<PoseDetectionScreen />);
 
       // Try to start detection
       const startButton = getByTestId('pose-start-detection');
@@ -322,9 +316,7 @@ describe('Component Integration Tests', () => {
         new Error('Model loading failed')
       );
 
-      const { getByTestId, getByText } = renderWithProviders(
-        <PoseDetectionScreen />
-      );
+      const { getByTestId, getByText } = renderWithProviders(<PoseDetectionScreen />);
 
       // Try to start detection
       const startButton = getByTestId('pose-start-detection');
@@ -350,16 +342,15 @@ describe('Component Integration Tests', () => {
         exercise: {
           history: [
             { date: '2025-01-28', exerciseId: 'bicep_curl', reps: 30 },
-            { date: '2025-01-27', exerciseId: 'squat', reps: 20 }
-          ]
-        }
+            { date: '2025-01-27', exerciseId: 'squat', reps: 20 },
+          ],
+        },
       });
 
       // Render main screen
-      const { getByTestId, rerender } = renderWithProviders(
-        <PoseDetectionScreen />,
-        { store }
-      );
+      const { getByTestId, rerender } = renderWithProviders(<PoseDetectionScreen />, {
+        store,
+      });
 
       // Navigate to settings
       rerender(
@@ -387,13 +378,10 @@ describe('Component Integration Tests', () => {
   describe('Performance Monitoring', () => {
     it('should handle rapid pose updates efficiently', async () => {
       const store = createTestStore({
-        pose: { isDetecting: true }
+        pose: { isDetecting: true },
       });
 
-      const { rerender } = renderWithProviders(
-        <PoseOverlay />,
-        { store }
-      );
+      const { rerender } = renderWithProviders(<PoseOverlay />, { store });
 
       const updateCount = 100;
       const startTime = Date.now();
@@ -401,11 +389,13 @@ describe('Component Integration Tests', () => {
       // Simulate rapid pose updates
       for (let i = 0; i < updateCount; i++) {
         act(() => {
-          store.dispatch(setPoseData({
-            landmarks: mockLandmarks,
-            timestamp: Date.now(),
-            confidence: 0.9
-          }));
+          store.dispatch(
+            setPoseData({
+              landmarks: mockLandmarks,
+              timestamp: Date.now(),
+              confidence: 0.9,
+            })
+          );
         });
       }
 
@@ -419,10 +409,12 @@ describe('Component Integration Tests', () => {
 });
 
 // Mock data
-const mockLandmarks = Array(33).fill(null).map((_, i) => ({
-  x: Math.random(),
-  y: Math.random(),
-  z: 0,
-  visibility: 0.9,
-  name: `landmark_${i}`
-}));
+const mockLandmarks = Array(33)
+  .fill(null)
+  .map((_, i) => ({
+    x: Math.random(),
+    y: Math.random(),
+    z: 0,
+    visibility: 0.9,
+    name: `landmark_${i}`,
+  }));

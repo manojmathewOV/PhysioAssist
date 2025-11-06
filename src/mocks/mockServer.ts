@@ -37,17 +37,17 @@ const testUsers = [
       age: 30,
       fitnessLevel: 'intermediate',
       injuries: ['lower_back'],
-      goals: ['flexibility', 'strength']
-    }
-  }
+      goals: ['flexibility', 'strength'],
+    },
+  },
 ];
 
 // Initialize test data
-testUsers.forEach(user => mockDatabase.users.set(user.id, user));
+testUsers.forEach((user) => mockDatabase.users.set(user.id, user));
 
 // Middleware to verify JWT token
 const authenticateToken = (req: any, res: any, next: any) => {
-  const authHeader = req.headers['authorization'];
+  const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
@@ -70,18 +70,19 @@ app.post('/api/auth/register', async (req, res) => {
 
   // Validation
   if (!email || !password || !name) {
-    return res.status(400).json({ 
-      error: 'Email, password, and name are required' 
+    return res.status(400).json({
+      error: 'Email, password, and name are required',
     });
   }
 
   // Check if user exists
-  const existingUser = Array.from(mockDatabase.users.values())
-    .find(user => user.email === email);
-  
+  const existingUser = Array.from(mockDatabase.users.values()).find(
+    (user) => user.email === email
+  );
+
   if (existingUser) {
-    return res.status(409).json({ 
-      error: 'User already exists' 
+    return res.status(409).json({
+      error: 'User already exists',
     });
   }
 
@@ -95,19 +96,17 @@ app.post('/api/auth/register', async (req, res) => {
       age: null,
       fitnessLevel: 'beginner',
       injuries: [],
-      goals: []
+      goals: [],
     },
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   };
 
   mockDatabase.users.set(newUser.id, newUser);
 
   // Generate token
-  const token = jwt.sign(
-    { id: newUser.id, email: newUser.email },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
+  const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, {
+    expiresIn: '7d',
+  });
 
   res.status(201).json({
     token,
@@ -115,8 +114,8 @@ app.post('/api/auth/register', async (req, res) => {
       id: newUser.id,
       email: newUser.email,
       name: newUser.name,
-      profile: newUser.profile
-    }
+      profile: newUser.profile,
+    },
   });
 });
 
@@ -125,27 +124,26 @@ app.post('/api/auth/login', async (req, res) => {
 
   // Validation
   if (!email || !password) {
-    return res.status(400).json({ 
-      error: 'Email and password are required' 
+    return res.status(400).json({
+      error: 'Email and password are required',
     });
   }
 
   // Find user
-  const user = Array.from(mockDatabase.users.values())
-    .find(u => u.email === email && u.password === password);
+  const user = Array.from(mockDatabase.users.values()).find(
+    (u) => u.email === email && u.password === password
+  );
 
   if (!user) {
-    return res.status(401).json({ 
-      error: 'Invalid credentials' 
+    return res.status(401).json({
+      error: 'Invalid credentials',
     });
   }
 
   // Generate token
-  const token = jwt.sign(
-    { id: user.id, email: user.email },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
+  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+    expiresIn: '7d',
+  });
 
   res.json({
     token,
@@ -153,8 +151,8 @@ app.post('/api/auth/login', async (req, res) => {
       id: user.id,
       email: user.email,
       name: user.name,
-      profile: user.profile
-    }
+      profile: user.profile,
+    },
   });
 });
 
@@ -165,7 +163,7 @@ app.post('/api/auth/logout', authenticateToken, (req, res) => {
 
 app.get('/api/auth/me', authenticateToken, (req: any, res) => {
   const user = mockDatabase.users.get(req.user.id);
-  
+
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
@@ -174,7 +172,7 @@ app.get('/api/auth/me', authenticateToken, (req: any, res) => {
     id: user.id,
     email: user.email,
     name: user.name,
-    profile: user.profile
+    profile: user.profile,
   });
 });
 
@@ -182,7 +180,7 @@ app.get('/api/auth/me', authenticateToken, (req: any, res) => {
 
 app.put('/api/users/profile', authenticateToken, (req: any, res) => {
   const user = mockDatabase.users.get(req.user.id);
-  
+
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
@@ -190,14 +188,14 @@ app.put('/api/users/profile', authenticateToken, (req: any, res) => {
   // Update profile
   user.profile = {
     ...user.profile,
-    ...req.body
+    ...req.body,
   };
 
   mockDatabase.users.set(user.id, user);
 
   res.json({
     message: 'Profile updated successfully',
-    profile: user.profile
+    profile: user.profile,
   });
 });
 
@@ -215,8 +213,8 @@ app.get('/api/exercises', authenticateToken, (req, res) => {
         'Stand with feet shoulder-width apart',
         'Hold weights with palms facing forward',
         'Curl weights toward shoulders',
-        'Lower slowly to starting position'
-      ]
+        'Lower slowly to starting position',
+      ],
     },
     {
       id: 'shoulder_press',
@@ -228,8 +226,8 @@ app.get('/api/exercises', authenticateToken, (req, res) => {
         'Stand with feet hip-width apart',
         'Hold weights at shoulder height',
         'Press weights overhead',
-        'Lower back to shoulders'
-      ]
+        'Lower back to shoulders',
+      ],
     },
     {
       id: 'squat',
@@ -241,8 +239,8 @@ app.get('/api/exercises', authenticateToken, (req, res) => {
         'Stand with feet shoulder-width apart',
         'Lower hips back and down',
         'Keep knees behind toes',
-        'Push through heels to stand'
-      ]
+        'Push through heels to stand',
+      ],
     },
     {
       id: 'hamstring_stretch',
@@ -254,9 +252,9 @@ app.get('/api/exercises', authenticateToken, (req, res) => {
         'Sit with one leg extended',
         'Reach toward toes',
         'Hold for 30 seconds',
-        'Switch legs and repeat'
-      ]
-    }
+        'Switch legs and repeat',
+      ],
+    },
   ];
 
   res.json({ exercises });
@@ -264,7 +262,7 @@ app.get('/api/exercises', authenticateToken, (req, res) => {
 
 app.get('/api/exercises/:id', authenticateToken, (req, res) => {
   const exerciseId = req.params.id;
-  
+
   // Mock detailed exercise data
   const exerciseDetails = {
     id: exerciseId,
@@ -277,20 +275,20 @@ app.get('/api/exercises/:id', authenticateToken, (req, res) => {
         criteria: {
           jointAngles: {
             rightElbow: { min: 160, max: 180 },
-            leftElbow: { min: 160, max: 180 }
-          }
-        }
+            leftElbow: { min: 160, max: 180 },
+          },
+        },
       },
       {
         name: 'flexion',
         criteria: {
           jointAngles: {
             rightElbow: { min: 30, max: 60 },
-            leftElbow: { min: 30, max: 60 }
-          }
-        }
-      }
-    ]
+            leftElbow: { min: 30, max: 60 },
+          },
+        },
+      },
+    ],
   };
 
   res.json(exerciseDetails);
@@ -300,7 +298,7 @@ app.get('/api/exercises/:id', authenticateToken, (req, res) => {
 
 app.post('/api/sessions', authenticateToken, (req: any, res) => {
   const { exerciseId } = req.body;
-  
+
   const session = {
     id: uuidv4(),
     userId: req.user.id,
@@ -312,8 +310,8 @@ app.post('/api/sessions', authenticateToken, (req: any, res) => {
       reps: 0,
       sets: 0,
       formScore: 0,
-      duration: 0
-    }
+      duration: 0,
+    },
   };
 
   mockDatabase.sessions.set(session.id, session);
@@ -365,7 +363,7 @@ app.post('/api/sessions/:id/end', authenticateToken, (req: any, res) => {
     sessionId,
     exerciseId: session.exerciseId,
     date: session.endTime,
-    metrics: session.metrics
+    metrics: session.metrics,
   });
   mockDatabase.progress.set(req.user.id, userProgress);
 
@@ -375,8 +373,8 @@ app.post('/api/sessions/:id/end', authenticateToken, (req: any, res) => {
     summary: {
       totalReps: session.metrics.reps,
       averageForm: session.metrics.formScore,
-      duration: session.metrics.duration
-    }
+      duration: session.metrics.duration,
+    },
   });
 });
 
@@ -384,15 +382,17 @@ app.post('/api/sessions/:id/end', authenticateToken, (req: any, res) => {
 
 app.get('/api/progress', authenticateToken, (req: any, res) => {
   const userProgress = mockDatabase.progress.get(req.user.id) || [];
-  
+
   res.json({
     progress: userProgress,
     stats: {
       totalSessions: userProgress.length,
       totalReps: userProgress.reduce((sum, p) => sum + p.metrics.reps, 0),
-      averageFormScore: userProgress.reduce((sum, p) => sum + p.metrics.formScore, 0) / userProgress.length || 0,
-      streak: calculateStreak(userProgress)
-    }
+      averageFormScore:
+        userProgress.reduce((sum, p) => sum + p.metrics.formScore, 0) /
+          userProgress.length || 0,
+      streak: calculateStreak(userProgress),
+    },
   });
 });
 
@@ -401,13 +401,11 @@ app.get('/api/progress/weekly', authenticateToken, (req: any, res) => {
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
 
-  const weeklyProgress = userProgress.filter(p => 
-    new Date(p.date) >= weekAgo
-  );
+  const weeklyProgress = userProgress.filter((p) => new Date(p.date) >= weekAgo);
 
   res.json({
     weeklyProgress,
-    dailyBreakdown: groupByDay(weeklyProgress)
+    dailyBreakdown: groupByDay(weeklyProgress),
   });
 });
 
@@ -415,10 +413,10 @@ app.get('/api/progress/weekly', authenticateToken, (req: any, res) => {
 
 app.post('/api/analytics/events', authenticateToken, (req, res) => {
   const { event, properties } = req.body;
-  
+
   // Log analytics event (in real app, would send to analytics service)
   console.log('Analytics event:', event, properties);
-  
+
   res.json({ success: true });
 });
 
@@ -428,24 +426,27 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version: '1.0.0',
   });
 });
 
 // Helper functions
 function calculateStreak(progress: any[]): number {
   if (progress.length === 0) return 0;
-  
-  const sortedProgress = progress
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  
+
+  const sortedProgress = progress.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
   let streak = 1;
   let currentDate = new Date(sortedProgress[0].date);
-  
+
   for (let i = 1; i < sortedProgress.length; i++) {
     const prevDate = new Date(sortedProgress[i].date);
-    const dayDiff = Math.floor((currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+    const dayDiff = Math.floor(
+      (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
     if (dayDiff === 1) {
       streak++;
       currentDate = prevDate;
@@ -453,39 +454,39 @@ function calculateStreak(progress: any[]): number {
       break;
     }
   }
-  
+
   return streak;
 }
 
 function groupByDay(progress: any[]): any {
   const grouped: any = {};
-  
-  progress.forEach(p => {
+
+  progress.forEach((p) => {
     const date = new Date(p.date).toISOString().split('T')[0];
     if (!grouped[date]) {
       grouped[date] = [];
     }
     grouped[date].push(p);
   });
-  
+
   return grouped;
 }
 
 // Error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {
   console.error(err.stack);
-  
+
   // Handle JSON parsing errors
   if (err.type === 'entity.parse.failed' || err.message?.includes('JSON')) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Invalid JSON format',
-      message: 'Request body contains malformed JSON'
+      message: 'Request body contains malformed JSON',
     });
   }
-  
-  res.status(500).json({ 
+
+  res.status(500).json({
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
   });
 });
 

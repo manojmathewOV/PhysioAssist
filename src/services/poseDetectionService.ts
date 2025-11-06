@@ -44,7 +44,7 @@ export class PoseDetectionService {
       });
 
       this.pose.onResults(this.handlePoseResults);
-      
+
       this.isInitialized = true;
       console.log('PoseDetectionService initialized successfully');
     } catch (error) {
@@ -67,7 +67,7 @@ export class PoseDetectionService {
     try {
       // Send the image to MediaPipe Pose
       await this.pose.send({ image: imageData });
-      
+
       // Results will be handled by onResults callback
       return null; // Actual results come through callback
     } catch (error) {
@@ -105,17 +105,41 @@ export class PoseDetectionService {
 
   private getLandmarkName(index: number): string {
     const landmarkNames = [
-      'nose', 'left_eye_inner', 'left_eye', 'left_eye_outer',
-      'right_eye_inner', 'right_eye', 'right_eye_outer',
-      'left_ear', 'right_ear', 'mouth_left', 'mouth_right',
-      'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow',
-      'left_wrist', 'right_wrist', 'left_pinky', 'right_pinky',
-      'left_index', 'right_index', 'left_thumb', 'right_thumb',
-      'left_hip', 'right_hip', 'left_knee', 'right_knee',
-      'left_ankle', 'right_ankle', 'left_heel', 'right_heel',
-      'left_foot_index', 'right_foot_index'
+      'nose',
+      'left_eye_inner',
+      'left_eye',
+      'left_eye_outer',
+      'right_eye_inner',
+      'right_eye',
+      'right_eye_outer',
+      'left_ear',
+      'right_ear',
+      'mouth_left',
+      'mouth_right',
+      'left_shoulder',
+      'right_shoulder',
+      'left_elbow',
+      'right_elbow',
+      'left_wrist',
+      'right_wrist',
+      'left_pinky',
+      'right_pinky',
+      'left_index',
+      'right_index',
+      'left_thumb',
+      'right_thumb',
+      'left_hip',
+      'right_hip',
+      'left_knee',
+      'right_knee',
+      'left_ankle',
+      'right_ankle',
+      'left_heel',
+      'right_heel',
+      'left_foot_index',
+      'right_foot_index',
     ];
-    
+
     return landmarkNames[index] || `landmark_${index}`;
   }
 
@@ -147,7 +171,7 @@ export class PoseDetectionService {
 
   updateConfig(newConfig: Partial<PoseDetectionConfig>): void {
     Object.assign(this.config, newConfig);
-    
+
     if (this.pose) {
       this.pose.setOptions({
         minDetectionConfidence: this.config.minDetectionConfidence,

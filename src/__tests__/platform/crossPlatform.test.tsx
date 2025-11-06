@@ -9,8 +9,8 @@ import React from 'react';
 
 describe('Cross-Platform Compatibility Tests', () => {
   const platforms = ['ios', 'android'];
-  
-  platforms.forEach(platform => {
+
+  platforms.forEach((platform) => {
     describe(`${platform.toUpperCase()} Platform`, () => {
       beforeEach(() => {
         Platform.OS = platform as any;
@@ -21,9 +21,9 @@ describe('Cross-Platform Compatibility Tests', () => {
           const mockCamera = {
             getCameraDevices: jest.fn().mockResolvedValue([
               { id: 'back', position: 'back', hasFlash: true },
-              { id: 'front', position: 'front', hasFlash: false }
+              { id: 'front', position: 'front', hasFlash: false },
             ]),
-            requestCameraPermission: jest.fn().mockResolvedValue('authorized')
+            requestCameraPermission: jest.fn().mockResolvedValue('authorized'),
           };
 
           const devices = await mockCamera.getCameraDevices();
@@ -33,7 +33,7 @@ describe('Cross-Platform Compatibility Tests', () => {
 
         it(`should handle camera permission on ${platform}`, async () => {
           const mockPermission = {
-            request: jest.fn().mockResolvedValue('granted')
+            request: jest.fn().mockResolvedValue('granted'),
           };
 
           const result = await mockPermission.request();
@@ -45,7 +45,7 @@ describe('Cross-Platform Compatibility Tests', () => {
         it(`should load pose detection model on ${platform}`, async () => {
           const mockModel = {
             load: jest.fn().mockResolvedValue(true),
-            predict: jest.fn().mockResolvedValue({ poses: [] })
+            predict: jest.fn().mockResolvedValue({ poses: [] }),
           };
 
           const loaded = await mockModel.load();
@@ -57,7 +57,7 @@ describe('Cross-Platform Compatibility Tests', () => {
 
         it(`should handle model loading failure on ${platform}`, async () => {
           const mockModel = {
-            load: jest.fn().mockRejectedValue(new Error('Model load failed'))
+            load: jest.fn().mockRejectedValue(new Error('Model load failed')),
           };
 
           await expect(mockModel.load()).rejects.toThrow('Model load failed');
@@ -69,23 +69,23 @@ describe('Cross-Platform Compatibility Tests', () => {
           const mockStorage = {
             setItem: jest.fn().mockResolvedValue(true),
             getItem: jest.fn().mockResolvedValue('{"theme":"dark"}'),
-            removeItem: jest.fn().mockResolvedValue(true)
+            removeItem: jest.fn().mockResolvedValue(true),
           };
 
           await mockStorage.setItem('preferences', JSON.stringify({ theme: 'dark' }));
           const prefs = await mockStorage.getItem('preferences');
-          
+
           expect(JSON.parse(prefs)).toEqual({ theme: 'dark' });
         });
 
         it(`should handle storage errors on ${platform}`, async () => {
           const mockStorage = {
-            setItem: jest.fn().mockRejectedValue(new Error('Storage full'))
+            setItem: jest.fn().mockRejectedValue(new Error('Storage full')),
           };
 
-          await expect(
-            mockStorage.setItem('key', 'value')
-          ).rejects.toThrow('Storage full');
+          await expect(mockStorage.setItem('key', 'value')).rejects.toThrow(
+            'Storage full'
+          );
         });
       });
 
@@ -93,7 +93,7 @@ describe('Cross-Platform Compatibility Tests', () => {
         it(`should make API calls on ${platform}`, async () => {
           const mockFetch = jest.fn().mockResolvedValue({
             ok: true,
-            json: async () => ({ success: true, data: [] })
+            json: async () => ({ success: true, data: [] }),
           });
 
           const response = await mockFetch('/api/exercises');
@@ -104,9 +104,9 @@ describe('Cross-Platform Compatibility Tests', () => {
         });
 
         it(`should handle network errors on ${platform}`, async () => {
-          const mockFetch = jest.fn().mockRejectedValue(
-            new Error('Network request failed')
-          );
+          const mockFetch = jest
+            .fn()
+            .mockRejectedValue(new Error('Network request failed'));
 
           await expect(mockFetch('/api/exercises')).rejects.toThrow(
             'Network request failed'
@@ -130,8 +130,8 @@ describe('Cross-Platform Compatibility Tests', () => {
           const styles = {
             container: {
               padding: Platform.OS === 'ios' ? 20 : 16,
-              marginTop: Platform.OS === 'ios' ? 44 : 0
-            }
+              marginTop: Platform.OS === 'ios' ? 44 : 0,
+            },
           };
 
           if (platform === 'ios') {
@@ -149,7 +149,7 @@ describe('Cross-Platform Compatibility Tests', () => {
           const metrics = {
             appLaunchTime: platform === 'ios' ? 2.5 : 3.0, // seconds
             poseDetectionLatency: platform === 'ios' ? 80 : 100, // ms
-            memoryUsage: platform === 'ios' ? 180 : 200 // MB
+            memoryUsage: platform === 'ios' ? 180 : 200, // MB
           };
 
           expect(metrics.appLaunchTime).toBeLessThanOrEqual(3.0);
@@ -162,7 +162,7 @@ describe('Cross-Platform Compatibility Tests', () => {
         it(`should handle crashes gracefully on ${platform}`, () => {
           const crashHandler = {
             logError: jest.fn(),
-            restart: jest.fn()
+            restart: jest.fn(),
           };
 
           const handleCrash = (error: Error) => {
@@ -185,9 +185,9 @@ describe('Cross-Platform Compatibility Tests', () => {
   describe('Platform-Agnostic Features', () => {
     it('should calculate angles consistently across platforms', () => {
       const calculateAngle = (p1: any, p2: any, p3: any) => {
-        const angle = Math.atan2(p3.y - p2.y, p3.x - p2.x) - 
-                     Math.atan2(p1.y - p2.y, p1.x - p2.x);
-        return Math.abs(angle * 180 / Math.PI);
+        const angle =
+          Math.atan2(p3.y - p2.y, p3.x - p2.x) - Math.atan2(p1.y - p2.y, p1.x - p2.x);
+        return Math.abs((angle * 180) / Math.PI);
       };
 
       const p1 = { x: 0, y: 0 };
@@ -216,14 +216,14 @@ describe('Cross-Platform Compatibility Tests', () => {
           faceId: true,
           appleHealth: true,
           siri: true,
-          arKit: true
+          arKit: true,
         },
         android: {
           fingerprint: true,
           googleFit: true,
           assistant: true,
-          arCore: true
-        }
+          arCore: true,
+        },
       };
 
       const checkFeature = (platform: string, feature: string) => {
@@ -242,7 +242,7 @@ describe('Cross-Platform Compatibility Tests', () => {
         id: '123',
         timestamp: new Date().toISOString(),
         angles: [90, 85, 92],
-        platform: Platform.OS
+        platform: Platform.OS,
       };
 
       // Data should be serializable for both platforms

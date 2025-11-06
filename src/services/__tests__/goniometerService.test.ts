@@ -43,7 +43,7 @@ describe('GoniometerService', () => {
     it('should calculate 3D angles correctly', () => {
       // Enable 3D mode
       goniometerService.updateConfig({ use3D: true });
-      
+
       const pointA: PoseLandmark = { x: 0, y: 0, z: 1, visibility: 1, name: 'pointA' };
       const pointB: PoseLandmark = { x: 0, y: 0, z: 0, visibility: 1, name: 'pointB' };
       const pointC: PoseLandmark = { x: 1, y: 0, z: 0, visibility: 1, name: 'pointC' };
@@ -51,7 +51,7 @@ describe('GoniometerService', () => {
       const result = goniometerService.calculateAngle(pointA, pointB, pointC, 'test3D');
       expect(result.angle).toBeCloseTo(90, 0);
       expect(result.isValid).toBe(true);
-      
+
       // Reset to 2D mode
       goniometerService.updateConfig({ use3D: false });
     });
@@ -64,7 +64,7 @@ describe('GoniometerService', () => {
         y: 0,
         z: 0,
         visibility: 1,
-        name: `landmark_${i}`
+        name: `landmark_${i}`,
       }));
 
       // Set up right arm in 90-degree position
@@ -90,11 +90,11 @@ describe('GoniometerService', () => {
         y: Math.random(),
         z: 0,
         visibility: 1,
-        name: `landmark_${i}`
+        name: `landmark_${i}`,
       }));
 
       const angles = goniometerService.getAllJointAngles(landmarks);
-      
+
       expect(angles).toHaveProperty('leftElbow');
       expect(angles).toHaveProperty('rightElbow');
       expect(angles).toHaveProperty('leftKnee');
@@ -115,7 +115,7 @@ describe('GoniometerService', () => {
 
     it('should smooth angle values over time', () => {
       const jointName = 'rightElbow';
-      
+
       // Add multiple angle readings
       const angle1 = goniometerService.smoothAngle(jointName, 90);
       const angle2 = goniometerService.smoothAngle(jointName, 92);
@@ -129,7 +129,7 @@ describe('GoniometerService', () => {
 
     it('should use window size correctly', () => {
       const jointName = 'leftKnee';
-      
+
       // Add more readings than window size
       for (let i = 0; i < 10; i++) {
         goniometerService.smoothAngle(jointName, 100 + i, 3);

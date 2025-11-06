@@ -30,7 +30,7 @@ const PoseDetectionScreen: React.FC = () => {
   const isFocused = useIsFocused();
   const devices = useCameraDevices();
   const device = devices.front;
-  
+
   const { isDetecting, confidence } = useSelector((state: RootState) => state.pose);
   const [hasPermission, setHasPermission] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -84,19 +84,22 @@ const PoseDetectionScreen: React.FC = () => {
   };
 
   // Frame processor for pose detection
-  const frameProcessor = useFrameProcessor((frame: Frame) => {
-    'worklet';
-    if (!isDetecting) return;
+  const frameProcessor = useFrameProcessor(
+    (frame: Frame) => {
+      'worklet';
+      if (!isDetecting) return;
 
-    // Convert frame to processable format
-    // Note: This is a simplified version. In production, you'd need
-    // proper frame conversion logic
-    runOnJS(() => {
-      // Process frame with pose detection service
-      // This would involve converting the frame to ImageData
-      // and passing it to poseDetectionService.processFrame()
-    })();
-  }, [isDetecting]);
+      // Convert frame to processable format
+      // Note: This is a simplified version. In production, you'd need
+      // proper frame conversion logic
+      runOnJS(() => {
+        // Process frame with pose detection service
+        // This would involve converting the frame to ImageData
+        // and passing it to poseDetectionService.processFrame()
+      })();
+    },
+    [isDetecting]
+  );
 
   if (!device || !hasPermission) {
     return (
@@ -117,9 +120,9 @@ const PoseDetectionScreen: React.FC = () => {
         frameProcessor={frameProcessor}
         fps={30}
       />
-      
+
       <PoseOverlay />
-      
+
       <View style={styles.topInfo}>
         <View style={styles.confidenceBadge}>
           <Text style={styles.confidenceText}>
@@ -130,17 +133,11 @@ const PoseDetectionScreen: React.FC = () => {
 
       <View style={styles.controls}>
         {!isDetecting ? (
-          <TouchableOpacity
-            style={styles.startButton}
-            onPress={startPoseDetection}
-          >
+          <TouchableOpacity style={styles.startButton} onPress={startPoseDetection}>
             <Text style={styles.buttonText}>Start Detection</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity
-            style={styles.stopButton}
-            onPress={stopPoseDetection}
-          >
+          <TouchableOpacity style={styles.stopButton} onPress={stopPoseDetection}>
             <Text style={styles.buttonText}>Stop Detection</Text>
           </TouchableOpacity>
         )}

@@ -33,7 +33,7 @@ export interface Color {
   a?: number;
 }
 
-export type AsyncState<T> = 
+export type AsyncState<T> =
   | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'success'; data: T }

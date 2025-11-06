@@ -66,5 +66,5 @@ export enum VideoComparisonError {
   VIDEO_TOO_LONG = 'Video exceeds 10 minute limit',
   PROCESSING_FAILED = 'Failed to process video',
   INSUFFICIENT_STORAGE = 'Not enough storage space',
-  POSE_EXTRACTION_FAILED = 'Failed to extract poses from video'
+  POSE_EXTRACTION_FAILED = 'Failed to extract poses from video',
 }

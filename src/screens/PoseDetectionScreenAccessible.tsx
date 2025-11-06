@@ -34,7 +34,7 @@ const PoseDetectionScreenAccessible: React.FC = () => {
   const isFocused = useIsFocused();
   const devices = useCameraDevices();
   const device = devices.front;
-  
+
   const { isDetecting, confidence } = useSelector((state: RootState) => state.pose);
   const [hasPermission, setHasPermission] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -54,21 +54,23 @@ const PoseDetectionScreenAccessible: React.FC = () => {
 
   const announceScreen = () => {
     if (Platform.OS === 'ios') {
-      AccessibilityInfo.announceForAccessibility('Pose Detection screen. Position yourself so your full body is visible in the camera.');
+      AccessibilityInfo.announceForAccessibility(
+        'Pose Detection screen. Position yourself so your full body is visible in the camera.'
+      );
     }
   };
 
   const requestCameraPermission = async () => {
     const permission = await Camera.requestCameraPermission();
     setHasPermission(permission === 'authorized');
-    
+
     if (permission !== 'authorized') {
       Alert.alert(
         'Camera Permission Required',
         'PhysioAssist needs camera access to detect your pose and provide exercise guidance.',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Open Settings', onPress: () => Camera.openSettings() }
+          { text: 'Open Settings', onPress: () => Camera.openSettings() },
         ],
         { cancelable: false }
       );
@@ -81,13 +83,19 @@ const PoseDetectionScreenAccessible: React.FC = () => {
       setIsInitialized(true);
     } catch (error) {
       console.error('Failed to initialize pose detection:', error);
-      Alert.alert('Initialization Error', 'Failed to initialize pose detection. Please restart the app.');
+      Alert.alert(
+        'Initialization Error',
+        'Failed to initialize pose detection. Please restart the app.'
+      );
     }
   };
 
   const startPoseDetection = async () => {
     if (!hasPermission || !isInitialized) {
-      Alert.alert('Not Ready', 'Please grant camera permission and wait for initialization.');
+      Alert.alert(
+        'Not Ready',
+        'Please grant camera permission and wait for initialization.'
+      );
       return;
     }
 
@@ -95,9 +103,11 @@ const PoseDetectionScreenAccessible: React.FC = () => {
     try {
       await poseDetectionService.startDetection();
       dispatch(setDetecting(true));
-      
+
       // Announce start for accessibility
-      AccessibilityInfo.announceForAccessibility('Pose detection started. Begin your exercise.');
+      AccessibilityInfo.announceForAccessibility(
+        'Pose detection started. Begin your exercise.'
+      );
     } catch (error) {
       console.error('Failed to start pose detection:', error);
       Alert.alert('Error', 'Failed to start pose detection. Please try again.');
@@ -111,7 +121,7 @@ const PoseDetectionScreenAccessible: React.FC = () => {
     try {
       await poseDetectionService.stopDetection();
       dispatch(setDetecting(false));
-      
+
       // Announce stop for accessibility
       AccessibilityInfo.announceForAccessibility('Pose detection stopped.');
     } catch (error) {
@@ -121,22 +131,27 @@ const PoseDetectionScreenAccessible: React.FC = () => {
     }
   };
 
-  const frameProcessor = useFrameProcessor((frame: Frame) => {
-    'worklet';
-    if (isDetecting) {
-      const landmarks = poseDetectionService.processFrame(frame);
-      if (landmarks) {
-        runOnJS(updatePoseData)(landmarks);
+  const frameProcessor = useFrameProcessor(
+    (frame: Frame) => {
+      'worklet';
+      if (isDetecting) {
+        const landmarks = poseDetectionService.processFrame(frame);
+        if (landmarks) {
+          runOnJS(updatePoseData)(landmarks);
+        }
       }
-    }
-  }, [isDetecting]);
+    },
+    [isDetecting]
+  );
 
   const updatePoseData = (landmarks: any) => {
-    dispatch(setPoseData({
-      landmarks,
-      timestamp: Date.now(),
-      confidence: landmarks.confidence || 0
-    }));
+    dispatch(
+      setPoseData({
+        landmarks,
+        timestamp: Date.now(),
+        confidence: landmarks.confidence || 0,
+      })
+    );
   };
 
   if (!device) {
@@ -149,7 +164,7 @@ const PoseDetectionScreenAccessible: React.FC = () => {
   }
 
   return (
-    <View 
+    <View
       style={styles.container}
       accessible={true}
       accessibilityLabel="Pose Detection Screen"
@@ -167,11 +182,11 @@ const PoseDetectionScreenAccessible: React.FC = () => {
             accessibilityLabel="Camera view for pose detection"
             testID={AccessibilityIds.poseDetection.cameraView}
           />
-          
+
           <PoseOverlay />
-          
+
           <View style={styles.topControls}>
-            <View 
+            <View
               style={styles.confidenceContainer}
               accessible={true}
               accessibilityLabel={`Confidence: ${Math.round(confidence * 100)} percent`}
@@ -185,31 +200,35 @@ const PoseDetectionScreenAccessible: React.FC = () => {
 
           <View style={styles.bottomControls}>
             <ExerciseControls />
-            
+
             <TouchableOpacity
               style={[
                 styles.controlButton,
                 isDetecting ? styles.stopButton : styles.startButton,
-                isLoading && styles.disabledButton
+                isLoading && styles.disabledButton,
               ]}
               onPress={isDetecting ? stopPoseDetection : startPoseDetection}
               disabled={isLoading}
               accessible={true}
-              accessibilityLabel={isDetecting ? "Stop pose detection" : "Start pose detection"}
+              accessibilityLabel={
+                isDetecting ? 'Stop pose detection' : 'Start pose detection'
+              }
               accessibilityRole="button"
               accessibilityState={{ disabled: isLoading }}
-              accessibilityHint={isDetecting ? 
-                "Double tap to stop detecting your pose" : 
-                "Double tap to start detecting your pose"
+              accessibilityHint={
+                isDetecting
+                  ? 'Double tap to stop detecting your pose'
+                  : 'Double tap to start detecting your pose'
               }
-              testID={isDetecting ? 
-                AccessibilityIds.poseDetection.stopButton : 
-                AccessibilityIds.poseDetection.startButton
+              testID={
+                isDetecting
+                  ? AccessibilityIds.poseDetection.stopButton
+                  : AccessibilityIds.poseDetection.startButton
               }
             >
               {isLoading ? (
-                <ActivityIndicator 
-                  color="white" 
+                <ActivityIndicator
+                  color="white"
                   accessibilityLabel="Loading"
                   testID={AccessibilityIds.common.loadingSpinner}
                 />
@@ -222,7 +241,7 @@ const PoseDetectionScreenAccessible: React.FC = () => {
           </View>
         </>
       ) : (
-        <View 
+        <View
           style={styles.permissionContainer}
           accessible={true}
           accessibilityRole="alert"

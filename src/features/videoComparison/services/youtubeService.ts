@@ -3,12 +3,12 @@ import { YouTubeVideoInfo, VideoComparisonError } from '../types/videoComparison
 
 // Mock implementations for testing
 const ytdl = require('react-native-ytdl')?.ytdl || {
-  getInfo: async () => ({ videoDetails: {} })
+  getInfo: async () => ({ videoDetails: {} }),
 };
 
 const RNFS = require('react-native-fs') || {
   CachesDirectoryPath: '/cache',
-  writeFile: async () => true
+  writeFile: async () => true,
 };
 
 export class YouTubeService {
@@ -55,7 +55,7 @@ export class YouTubeService {
         title: info.videoDetails.title || 'Unknown Title',
         duration,
         thumbnail: info.videoDetails.thumbnails?.[0]?.url || '',
-        author: info.videoDetails.author?.name || 'Unknown Author'
+        author: info.videoDetails.author?.name || 'Unknown Author',
       };
 
       // Update caches
@@ -72,23 +72,23 @@ export class YouTubeService {
   }
 
   async downloadVideo(
-    url: string, 
+    url: string,
     quality: 'low' | 'medium' | 'high' = 'medium',
     onProgress?: (progress: number) => void
   ): Promise<string> {
     const qualityMap = {
       low: '360p',
       medium: '720p',
-      high: '1080p'
+      high: '1080p',
     };
 
     try {
       const videoPath = `${RNFS.CachesDirectoryPath}/youtube_${Date.now()}.mp4`;
-      
+
       // In a real implementation, this would use ytdl-core or similar
       // For now, we'll simulate the download
       const stream = await ytdl(url, { quality: qualityMap[quality] });
-      
+
       // Simulate progress updates
       if (onProgress) {
         const progressInterval = setInterval(() => {
@@ -121,21 +121,24 @@ export class YouTubeService {
     this.cache.set(url, info);
   }
 
-  private async saveToPersistentCache(url: string, info: YouTubeVideoInfo): Promise<void> {
+  private async saveToPersistentCache(
+    url: string,
+    info: YouTubeVideoInfo
+  ): Promise<void> {
     try {
       const cacheData = await AsyncStorage.getItem('youtube_video_cache');
       const cache = cacheData ? JSON.parse(cacheData) : {};
-      
+
       cache[url] = {
         ...info,
-        cachedAt: Date.now()
+        cachedAt: Date.now(),
       };
 
       // Keep only recent items
-      const sortedKeys = Object.keys(cache).sort((a, b) => 
-        cache[b].cachedAt - cache[a].cachedAt
+      const sortedKeys = Object.keys(cache).sort(
+        (a, b) => cache[b].cachedAt - cache[a].cachedAt
       );
-      
+
       const limitedCache = sortedKeys.slice(0, 50).reduce((acc, key) => {
         acc[key] = cache[key];
         return acc;

@@ -4,7 +4,9 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@store/index';
 
 const NetworkStatusBar: React.FC = () => {
-  const isConnected = useSelector((state: RootState) => state.network?.isConnected ?? true);
+  const isConnected = useSelector(
+    (state: RootState) => state.network?.isConnected ?? true
+  );
 
   if (isConnected) {
     return null;

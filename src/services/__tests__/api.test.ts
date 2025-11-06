@@ -41,8 +41,8 @@ describe('PhysioAssist Backend API Tests', () => {
         age: 30,
         fitnessLevel: 'intermediate',
         injuries: ['lower_back'],
-        goals: ['flexibility', 'strength']
-      }
+        goals: ['flexibility', 'strength'],
+      },
     });
   });
 
@@ -52,7 +52,7 @@ describe('PhysioAssist Backend API Tests', () => {
         const newUser = {
           email: 'newuser@test.com',
           password: 'NewPass123!',
-          name: 'New User'
+          name: 'New User',
         };
 
         const response = await api.post('/api/auth/register', newUser);
@@ -61,14 +61,14 @@ describe('PhysioAssist Backend API Tests', () => {
         expect(response.data).toHaveProperty('token');
         expect(response.data.user).toMatchObject({
           email: newUser.email,
-          name: newUser.name
+          name: newUser.name,
         });
         expect(response.data.user).not.toHaveProperty('password');
       });
 
       it('should reject registration with missing fields', async () => {
         const invalidUser = {
-          email: 'test@test.com'
+          email: 'test@test.com',
           // Missing password and name
         };
 
@@ -85,7 +85,7 @@ describe('PhysioAssist Backend API Tests', () => {
         const duplicateUser = {
           email: 'test@physioassist.com', // Already exists
           password: 'AnotherPass123!',
-          name: 'Another User'
+          name: 'Another User',
         };
 
         try {
@@ -102,7 +102,7 @@ describe('PhysioAssist Backend API Tests', () => {
       it('should login with valid credentials', async () => {
         const credentials = {
           email: 'test@physioassist.com',
-          password: 'Test123!'
+          password: 'Test123!',
         };
 
         const response = await api.post('/api/auth/login', credentials);
@@ -110,7 +110,7 @@ describe('PhysioAssist Backend API Tests', () => {
         expect(response.status).toBe(200);
         expect(response.data).toHaveProperty('token');
         expect(response.data.user).toMatchObject({
-          email: credentials.email
+          email: credentials.email,
         });
 
         authToken = response.data.token;
@@ -119,7 +119,7 @@ describe('PhysioAssist Backend API Tests', () => {
       it('should reject login with invalid email', async () => {
         const invalidCredentials = {
           email: 'wrong@test.com',
-          password: 'Test123!'
+          password: 'Test123!',
         };
 
         try {
@@ -134,7 +134,7 @@ describe('PhysioAssist Backend API Tests', () => {
       it('should reject login with invalid password', async () => {
         const invalidCredentials = {
           email: 'test@physioassist.com',
-          password: 'WrongPassword'
+          password: 'WrongPassword',
         };
 
         try {
@@ -162,20 +162,20 @@ describe('PhysioAssist Backend API Tests', () => {
         // Login to get token
         const response = await api.post('/api/auth/login', {
           email: 'test@physioassist.com',
-          password: 'Test123!'
+          password: 'Test123!',
         });
         authToken = response.data.token;
       });
 
       it('should return user data with valid token', async () => {
         const response = await api.get('/api/auth/me', {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         });
 
         expect(response.status).toBe(200);
         expect(response.data).toMatchObject({
           email: 'test@physioassist.com',
-          name: 'Test User'
+          name: 'Test User',
         });
       });
 
@@ -192,7 +192,7 @@ describe('PhysioAssist Backend API Tests', () => {
       it('should reject request with invalid token', async () => {
         try {
           await api.get('/api/auth/me', {
-            headers: { Authorization: 'Bearer invalid-token' }
+            headers: { Authorization: 'Bearer invalid-token' },
           });
           fail('Should have thrown an error');
         } catch (error: any) {
@@ -207,7 +207,7 @@ describe('PhysioAssist Backend API Tests', () => {
     beforeEach(async () => {
       const response = await api.post('/api/auth/login', {
         email: 'test@physioassist.com',
-        password: 'Test123!'
+        password: 'Test123!',
       });
       authToken = response.data.token;
     });
@@ -218,11 +218,11 @@ describe('PhysioAssist Backend API Tests', () => {
           age: 35,
           fitnessLevel: 'advanced',
           injuries: ['shoulder', 'knee'],
-          goals: ['rehabilitation', 'flexibility']
+          goals: ['rehabilitation', 'flexibility'],
         };
 
         const response = await api.put('/api/users/profile', profileUpdate, {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         });
 
         expect(response.status).toBe(200);
@@ -231,11 +231,11 @@ describe('PhysioAssist Backend API Tests', () => {
 
       it('should partially update profile', async () => {
         const partialUpdate = {
-          age: 32
+          age: 32,
         };
 
         const response = await api.put('/api/users/profile', partialUpdate, {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         });
 
         expect(response.status).toBe(200);
@@ -249,7 +249,7 @@ describe('PhysioAssist Backend API Tests', () => {
     beforeEach(async () => {
       const response = await api.post('/api/auth/login', {
         email: 'test@physioassist.com',
-        password: 'Test123!'
+        password: 'Test123!',
       });
       authToken = response.data.token;
     });
@@ -257,7 +257,7 @@ describe('PhysioAssist Backend API Tests', () => {
     describe('GET /api/exercises', () => {
       it('should return list of exercises', async () => {
         const response = await api.get('/api/exercises', {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         });
 
         expect(response.status).toBe(200);
@@ -282,7 +282,7 @@ describe('PhysioAssist Backend API Tests', () => {
     describe('GET /api/exercises/:id', () => {
       it('should return detailed exercise data', async () => {
         const response = await api.get('/api/exercises/bicep_curl', {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         });
 
         expect(response.status).toBe(200);
@@ -299,14 +299,15 @@ describe('PhysioAssist Backend API Tests', () => {
     beforeEach(async () => {
       const response = await api.post('/api/auth/login', {
         email: 'test@physioassist.com',
-        password: 'Test123!'
+        password: 'Test123!',
       });
       authToken = response.data.token;
     });
 
     describe('POST /api/sessions', () => {
       it('should create a new exercise session', async () => {
-        const response = await api.post('/api/sessions', 
+        const response = await api.post(
+          '/api/sessions',
           { exerciseId: 'bicep_curl' },
           { headers: { Authorization: `Bearer ${authToken}` } }
         );
@@ -319,7 +320,7 @@ describe('PhysioAssist Backend API Tests', () => {
           reps: 0,
           sets: 0,
           formScore: 0,
-          duration: 0
+          duration: 0,
         });
 
         sessionId = response.data.id;
@@ -328,7 +329,8 @@ describe('PhysioAssist Backend API Tests', () => {
 
     describe('PUT /api/sessions/:id', () => {
       beforeEach(async () => {
-        const response = await api.post('/api/sessions', 
+        const response = await api.post(
+          '/api/sessions',
           { exerciseId: 'bicep_curl' },
           { headers: { Authorization: `Bearer ${authToken}` } }
         );
@@ -341,12 +343,12 @@ describe('PhysioAssist Backend API Tests', () => {
             reps: 10,
             sets: 1,
             formScore: 0.85,
-            duration: 120
-          }
+            duration: 120,
+          },
         };
 
         const response = await api.put(`/api/sessions/${sessionId}`, metricsUpdate, {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         });
 
         expect(response.status).toBe(200);
@@ -355,7 +357,8 @@ describe('PhysioAssist Backend API Tests', () => {
 
       it('should reject update for non-existent session', async () => {
         try {
-          await api.put('/api/sessions/invalid-id', 
+          await api.put(
+            '/api/sessions/invalid-id',
             { metrics: { reps: 5 } },
             { headers: { Authorization: `Bearer ${authToken}` } }
           );
@@ -368,7 +371,8 @@ describe('PhysioAssist Backend API Tests', () => {
 
     describe('POST /api/sessions/:id/end', () => {
       beforeEach(async () => {
-        const response = await api.post('/api/sessions', 
+        const response = await api.post(
+          '/api/sessions',
           { exerciseId: 'bicep_curl' },
           { headers: { Authorization: `Bearer ${authToken}` } }
         );
@@ -381,12 +385,12 @@ describe('PhysioAssist Backend API Tests', () => {
             reps: 15,
             sets: 3,
             formScore: 0.9,
-            duration: 300
-          }
+            duration: 300,
+          },
         };
 
         const response = await api.post(`/api/sessions/${sessionId}/end`, finalMetrics, {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         });
 
         expect(response.status).toBe(200);
@@ -395,7 +399,7 @@ describe('PhysioAssist Backend API Tests', () => {
         expect(response.data.summary).toMatchObject({
           totalReps: 15,
           averageForm: 0.9,
-          duration: 300
+          duration: 300,
         });
       });
     });
@@ -405,32 +409,37 @@ describe('PhysioAssist Backend API Tests', () => {
     beforeEach(async () => {
       const response = await api.post('/api/auth/login', {
         email: 'test@physioassist.com',
-        password: 'Test123!'
+        password: 'Test123!',
       });
       authToken = response.data.token;
 
       // Create some test progress data
-      const session = await api.post('/api/sessions', 
+      const session = await api.post(
+        '/api/sessions',
         { exerciseId: 'bicep_curl' },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
 
-      await api.post(`/api/sessions/${session.data.id}/end`, {
-        metrics: {
-          reps: 12,
-          sets: 3,
-          formScore: 0.85,
-          duration: 240
+      await api.post(
+        `/api/sessions/${session.data.id}/end`,
+        {
+          metrics: {
+            reps: 12,
+            sets: 3,
+            formScore: 0.85,
+            duration: 240,
+          },
+        },
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
         }
-      }, {
-        headers: { Authorization: `Bearer ${authToken}` }
-      });
+      );
     });
 
     describe('GET /api/progress', () => {
       it('should return user progress summary', async () => {
         const response = await api.get('/api/progress', {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         });
 
         expect(response.status).toBe(200);
@@ -446,7 +455,7 @@ describe('PhysioAssist Backend API Tests', () => {
     describe('GET /api/progress/weekly', () => {
       it('should return weekly progress breakdown', async () => {
         const response = await api.get('/api/progress/weekly', {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         });
 
         expect(response.status).toBe(200);
@@ -460,7 +469,7 @@ describe('PhysioAssist Backend API Tests', () => {
     beforeEach(async () => {
       const response = await api.post('/api/auth/login', {
         email: 'test@physioassist.com',
-        password: 'Test123!'
+        password: 'Test123!',
       });
       authToken = response.data.token;
     });
@@ -471,12 +480,12 @@ describe('PhysioAssist Backend API Tests', () => {
           event: 'exercise_started',
           properties: {
             exerciseId: 'bicep_curl',
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         };
 
         const response = await api.post('/api/analytics/events', event, {
-          headers: { Authorization: `Bearer ${authToken}` }
+          headers: { Authorization: `Bearer ${authToken}` },
         });
 
         expect(response.status).toBe(200);
@@ -511,7 +520,7 @@ describe('PhysioAssist Backend API Tests', () => {
     it('should handle malformed JSON', async () => {
       try {
         await api.post('/api/auth/login', 'invalid-json', {
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
         });
         fail('Should have thrown an error');
       } catch (error: any) {
@@ -525,12 +534,12 @@ describe('PhysioAssist Backend API Tests', () => {
       // Simulate multiple rapid requests
       const promises = [];
       for (let i = 0; i < 20; i++) {
-        promises.push(api.get('/api/health').catch(e => e));
+        promises.push(api.get('/api/health').catch((e) => e));
       }
 
       const results = await Promise.all(promises);
-      const successCount = results.filter(r => r.status === 200).length;
-      
+      const successCount = results.filter((r) => r.status === 200).length;
+
       // At least some requests should succeed
       expect(successCount).toBeGreaterThan(0);
     });

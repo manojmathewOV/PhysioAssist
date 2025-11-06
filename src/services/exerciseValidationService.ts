@@ -1,9 +1,9 @@
-import { 
-  Exercise, 
-  ExercisePhase, 
-  ValidationResult, 
+import {
+  Exercise,
+  ExercisePhase,
+  ValidationResult,
   RepetitionData,
-  ExerciseMetrics 
+  ExerciseMetrics,
 } from '@types/exercise';
 import { JointAngle, ProcessedPoseData } from '@types/pose';
 import { goniometerService } from './goniometerService';
@@ -29,7 +29,7 @@ export class ExerciseValidationService {
     this.repetitionData = [];
     this.isInRestPosition = true;
     this.hasMovedFromRest = false;
-    
+
     // console.log(`Started exercise: ${exercise.name}`);
   }
 
@@ -160,7 +160,7 @@ export class ExerciseValidationService {
     if (!this.currentExercise || !this.currentPhase) return;
 
     const currentIndex = this.currentExercise.phases.findIndex(
-      p => p.name === this.currentPhase!.name
+      (p) => p.name === this.currentPhase!.name
     );
 
     const nextIndex = (currentIndex + 1) % this.currentExercise.phases.length;
@@ -179,11 +179,14 @@ export class ExerciseValidationService {
     // For bicep curl: rest -> flexion -> extension (completes one rep)
     // We complete a rep when we've gone through all phases and returned to rest/extension
     const currentPhaseIndex = this.currentExercise.phases.findIndex(
-      p => p.name === this.currentPhase.name
+      (p) => p.name === this.currentPhase.name
     );
-    
+
     // If we're at the last phase (extension for bicep curl) and it's valid, complete a rep
-    if (currentPhaseIndex === this.currentExercise.phases.length - 1 && validation.isValid) {
+    if (
+      currentPhaseIndex === this.currentExercise.phases.length - 1 &&
+      validation.isValid
+    ) {
       return true;
     }
 
@@ -233,7 +236,7 @@ export class ExerciseValidationService {
         totalScore += score;
       } else {
         // Binary score - in range or not
-        totalScore += (angle >= minAngle && angle <= maxAngle) ? 100 : 0;
+        totalScore += angle >= minAngle && angle <= maxAngle ? 100 : 0;
       }
 
       jointCount++;
@@ -260,15 +263,13 @@ export class ExerciseValidationService {
    * Get current exercise metrics
    */
   getExerciseMetrics(): ExerciseMetrics {
-    const averageQuality = this.repetitionData.length > 0
-      ? this.repetitionData.reduce((sum, rep) => sum + rep.quality, 0) / 
-        this.repetitionData.length
-      : 0;
+    const averageQuality =
+      this.repetitionData.length > 0
+        ? this.repetitionData.reduce((sum, rep) => sum + rep.quality, 0) /
+          this.repetitionData.length
+        : 0;
 
-    const totalDuration = this.repetitionData.reduce(
-      (sum, rep) => sum + rep.duration, 
-      0
-    );
+    const totalDuration = this.repetitionData.reduce((sum, rep) => sum + rep.duration, 0);
 
     return {
       exerciseName: this.currentExercise?.name || '',
@@ -286,13 +287,13 @@ export class ExerciseValidationService {
    */
   stopExercise(): ExerciseMetrics {
     const metrics = this.getExerciseMetrics();
-    
+
     // Reset state
     this.currentExercise = null;
     this.currentPhase = null;
     this.repetitionCount = 0;
     this.repetitionData = [];
-    
+
     return metrics;
   }
 

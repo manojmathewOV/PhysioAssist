@@ -26,11 +26,7 @@ export function createTestStore(preloadedState?: any) {
 
 export function renderWithProviders(
   ui: ReactElement,
-  {
-    preloadedState = {},
-    store = createTestStore(preloadedState),
-    ...renderOptions
-  } = {}
+  { preloadedState = {}, store = createTestStore(preloadedState), ...renderOptions } = {}
 ) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
@@ -119,17 +115,25 @@ export const mockExercise = {
   ],
 };
 
-export const mockPoseLandmarks = Array(33).fill(null).map((_, i) => ({
-  x: 0.5,
-  y: 0.5,
-  z: 0,
-  visibility: 0.9,
-  name: `landmark_${i}`,
-}));
+export const mockPoseLandmarks = Array(33)
+  .fill(null)
+  .map((_, i) => ({
+    x: 0.5,
+    y: 0.5,
+    z: 0,
+    visibility: 0.9,
+    name: `landmark_${i}`,
+  }));
 
 // Specific landmarks for bicep curl
 mockPoseLandmarks[11] = { x: 0.45, y: 0.3, z: 0, visibility: 0.9, name: 'left_shoulder' };
-mockPoseLandmarks[12] = { x: 0.55, y: 0.3, z: 0, visibility: 0.9, name: 'right_shoulder' };
+mockPoseLandmarks[12] = {
+  x: 0.55,
+  y: 0.3,
+  z: 0,
+  visibility: 0.9,
+  name: 'right_shoulder',
+};
 mockPoseLandmarks[13] = { x: 0.43, y: 0.4, z: 0, visibility: 0.9, name: 'left_elbow' };
 mockPoseLandmarks[14] = { x: 0.57, y: 0.4, z: 0, visibility: 0.9, name: 'right_elbow' };
 mockPoseLandmarks[15] = { x: 0.42, y: 0.5, z: 0, visibility: 0.9, name: 'left_wrist' };

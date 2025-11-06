@@ -38,17 +38,17 @@ export class AudioFeedbackService {
     try {
       await Tts.setDefaultRate(this.config.speechRate);
       await Tts.setDefaultPitch(this.config.speechPitch);
-      
+
       // Set up TTS event listeners
       Tts.addEventListener('tts-start', () => {
         this.isSpeaking = true;
       });
-      
+
       Tts.addEventListener('tts-finish', () => {
         this.isSpeaking = false;
         this.processQueue();
       });
-      
+
       Tts.addEventListener('tts-cancel', () => {
         this.isSpeaking = false;
         this.processQueue();
@@ -69,7 +69,7 @@ export class AudioFeedbackService {
 
     Sound.setCategory('Playback');
 
-    soundFiles.forEach(filename => {
+    soundFiles.forEach((filename) => {
       const sound = new Sound(filename, Sound.MAIN_BUNDLE, (error) => {
         if (error) {
           console.error(`Failed to load sound ${filename}:`, error);
@@ -88,10 +88,7 @@ export class AudioFeedbackService {
     if (!this.config.enableSpeech || !message) return;
 
     // Avoid repeating the same message too quickly
-    if (
-      message === this.lastSpokenMessage && 
-      Date.now() - this.lastSpokenTime < 3000
-    ) {
+    if (message === this.lastSpokenMessage && Date.now() - this.lastSpokenTime < 3000) {
       return;
     }
 
@@ -147,7 +144,9 @@ export class AudioFeedbackService {
   /**
    * Provide haptic feedback
    */
-  provideHapticFeedback(type: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light'): void {
+  provideHapticFeedback(
+    type: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light'
+  ): void {
     if (!this.config.enableHaptics) return;
 
     const hapticTypes = {
@@ -177,19 +176,19 @@ export class AudioFeedbackService {
         this.provideHapticFeedback('success');
         if (message) await this.speak(message);
         break;
-        
+
       case 'phaseChange':
         this.playSound('beep');
         this.provideHapticFeedback('light');
         if (message) await this.speak(message, 'high');
         break;
-        
+
       case 'exerciseComplete':
         this.playSound('complete');
         this.provideHapticFeedback('success');
         if (message) await this.speak(message, 'high');
         break;
-        
+
       case 'formError':
         this.playSound('error');
         this.provideHapticFeedback('error');
@@ -205,7 +204,7 @@ export class AudioFeedbackService {
     for (let i = seconds; i > 0; i--) {
       this.playSound('countdown');
       await this.speak(i.toString(), 'high');
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     this.playSound('success');
     await this.speak('Go!', 'high');
@@ -224,7 +223,7 @@ export class AudioFeedbackService {
       Tts.setDefaultPitch(newConfig.speechPitch);
     }
     if (newConfig.volume !== undefined) {
-      this.soundCache.forEach(sound => sound.setVolume(newConfig.volume));
+      this.soundCache.forEach((sound) => sound.setVolume(newConfig.volume));
     }
   }
 
@@ -234,7 +233,7 @@ export class AudioFeedbackService {
   async stopAll(): Promise<void> {
     await Tts.stop();
     this.speakingQueue = [];
-    this.soundCache.forEach(sound => sound.stop());
+    this.soundCache.forEach((sound) => sound.stop());
   }
 
   /**
@@ -242,7 +241,7 @@ export class AudioFeedbackService {
    */
   cleanup(): void {
     Tts.removeAllListeners();
-    this.soundCache.forEach(sound => sound.release());
+    this.soundCache.forEach((sound) => sound.release());
     this.soundCache.clear();
   }
 }

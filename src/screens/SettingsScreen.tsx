@@ -16,16 +16,18 @@ const SettingsScreen: React.FC = () => {
     <ScrollView style={styles.container}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Audio Settings</Text>
-        
+
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>Voice Instructions</Text>
           <Switch
             testID="voice-instructions-toggle"
             value={settings.voiceInstructionsEnabled}
-            onValueChange={(value) => handleToggleSetting('voiceInstructionsEnabled', value)}
+            onValueChange={(value) =>
+              handleToggleSetting('voiceInstructionsEnabled', value)
+            }
           />
         </View>
-        
+
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>Sound Effects</Text>
           <Switch
@@ -38,7 +40,7 @@ const SettingsScreen: React.FC = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Visual Settings</Text>
-        
+
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>Show Joint Angles</Text>
           <Switch
@@ -47,7 +49,7 @@ const SettingsScreen: React.FC = () => {
             onValueChange={(value) => handleToggleSetting('showJointAngles', value)}
           />
         </View>
-        
+
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>Show Pose Overlay</Text>
           <Switch
@@ -60,7 +62,7 @@ const SettingsScreen: React.FC = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Performance</Text>
-        
+
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>High Performance Mode</Text>
           <Switch
@@ -73,7 +75,7 @@ const SettingsScreen: React.FC = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Accessibility</Text>
-        
+
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>Reduced Motion</Text>
           <Switch
@@ -82,7 +84,7 @@ const SettingsScreen: React.FC = () => {
             onValueChange={(value) => handleToggleSetting('reducedMotion', value)}
           />
         </View>
-        
+
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>High Contrast</Text>
           <Switch

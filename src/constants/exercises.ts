@@ -161,10 +161,7 @@ export const EXERCISES: Record<string, Exercise> = {
       'Keep knees tracking over toes',
       'Drive through heels to stand',
     ],
-    warnings: [
-      'Avoid letting knees cave inward',
-      'Keep weight on heels, not toes',
-    ],
+    warnings: ['Avoid letting knees cave inward', 'Keep weight on heels, not toes'],
     phases: [
       {
         name: 'standing',

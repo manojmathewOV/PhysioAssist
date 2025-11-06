@@ -7,5 +7,5 @@ module.exports = {
   mkdir: jest.fn().mockResolvedValue(true),
   readDir: jest.fn().mockResolvedValue([]),
   unlink: jest.fn().mockResolvedValue(true),
-  stat: jest.fn().mockResolvedValue({ size: 0, isFile: () => true })
+  stat: jest.fn().mockResolvedValue({ size: 0, isFile: () => true }),
 };
