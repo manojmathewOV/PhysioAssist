@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhysioAssist V2 - App Mockup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .device-frame {
+            width: 375px;
+            height: 812px;
+            background: #1a1a1a;
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .device-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #1a1a1a;
+            border-radius: 0 0 20px 20px;
+            z-index: 10;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            overflow-y: auto;
+        }
+
+        .page.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .nav-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .logo {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .app-title {
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .app-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .login-form {
+            width: 100%;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            background: rgba(255,255,255,0.9);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 18px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 18px;
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Onboarding Screen */
+        .onboarding-screen {
+            display: flex;
+            flex-direction: column;
+            padding: 60px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .onboarding-illustration {
+            font-size: 120px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .onboarding-title {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .onboarding-text {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .onboarding-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: auto;
+            margin-bottom: 30px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .dot.active {
+            background: white;
+            width: 30px;
+            border-radius: 5px;
+        }
+
+        /* Setup Wizard */
+        .setup-screen {
+            padding: 30px;
+            background: #f5f5f5;
+        }
+
+        .setup-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .setup-step {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .step-icon {
+            font-size: 60px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .step-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .step-description {
+            color: #666;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .status-good {
+            background: #E8F5E9;
+            color: #4CAF50;
+        }
+
+        .status-warning {
+            background: #FFF3E0;
+            color: #FF9800;
+        }
+
+        /* Simple Mode UI */
+        .simple-mode-screen {
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            padding: 40px 20px;
+        }
+
+        .status-bar {
+            background: #4CAF50;
+            padding: 15px;
+            border-radius: 24px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .status-text {
+            color: white;
+            font-weight: 600;
+        }
+
+        .instruction-box {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .instruction-text {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            line-height: 1.4;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .feedback-display {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .big-angle {
+            font-size: 80px;
+            font-weight: bold;
+            color: #2196F3;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.5);
+        }
+
+        .progress-bar {
+            width: 250px;
+            height: 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 20px auto;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2196F3;
+            transition: width 0.3s;
+        }
+
+        .target-label {
+            color: #CCC;
+            font-weight: 600;
+        }
+
+        .big-button {
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            padding: 28px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 60px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .big-button.stop {
+            background: linear-gradient(135deg, #F44336, #d32f2f);
+        }
+
+        .exercise-name {
+            text-align: center;
+            margin-top: 20px;
+            padding: 12px 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Advanced Mode */
+        .advanced-mode-screen {
+            background: #000;
+            position: relative;
+        }
+
+        .camera-view {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .skeleton-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .joint-dot {
+            width: 12px;
+            height: 12px;
+            background: #00FF00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00FF00;
+        }
+
+        .metrics-panel {
+            padding: 20px;
+            background: rgba(255,255,255,0.95);
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .metric-label {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            color: #333;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* Settings Screen */
+        .settings-screen {
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .settings-header {
+            text-align: center;
+            padding: 20px 0;
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .settings-group {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+
+        .settings-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .toggle {
+            width: 50px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .toggle.on {
+            background: #4CAF50;
+        }
+
+        .toggle-slider {
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle.on .toggle-slider {
+            left: 22px;
+        }
+
+        /* Profile Screen */
+        .profile-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .profile-avatar {
+            font-size: 80px;
+            margin-bottom: 15px;
+        }
+
+        .profile-name {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .profile-email {
+            color: rgba(255,255,255,0.8);
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .profile-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        /* Exercise Selection */
+        .exercise-screen {
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .exercise-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .exercise-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .exercise-icon {
+            font-size: 40px;
+        }
+
+        .exercise-info {
+            flex: 1;
+        }
+
+        .exercise-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .exercise-description {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .exercise-arrow {
+            color: #ccc;
+            font-size: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .device-frame {
+                width: 100%;
+                max-width: 375px;
+                height: 700px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 PhysioAssist V2</h1>
+        <p>100% Production Ready - Interactive App Mockup</p>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn active" onclick="showPage('login')">Login</button>
+        <button class="nav-btn" onclick="showPage('onboarding')">Onboarding</button>
+        <button class="nav-btn" onclick="showPage('setup')">Setup</button>
+        <button class="nav-btn" onclick="showPage('simple')">Simple Mode</button>
+        <button class="nav-btn" onclick="showPage('advanced')">Advanced</button>
+        <button class="nav-btn" onclick="showPage('exercises')">Exercises</button>
+        <button class="nav-btn" onclick="showPage('profile')">Profile</button>
+        <button class="nav-btn" onclick="showPage('settings')">Settings</button>
+    </div>
+
+    <div class="device-frame">
+        <div class="device-notch"></div>
+        <div class="screen">
+            <!-- Login Screen -->
+            <div class="page active" id="login">
+                <div class="login-screen">
+                    <div class="logo">🏥</div>
+                    <h1 class="app-title">PhysioAssist</h1>
+                    <p class="app-subtitle">Your Personal Physiotherapy Guide</p>
+
+                    <div class="login-form">
+                        <div class="input-group">
+                            <input type="email" class="input-field" placeholder="Email" value="patient@example.com">
+                        </div>
+                        <div class="input-group">
+                            <input type="password" class="input-field" placeholder="Password" value="••••••••">
+                        </div>
+                        <button class="btn-primary" onclick="showPage('onboarding')">Sign In</button>
+                        <button class="btn-secondary">Create Account</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onboarding Screen -->
+            <div class="page" id="onboarding">
+                <div class="onboarding-screen">
+                    <div class="onboarding-illustration">🎯</div>
+                    <h2 class="onboarding-title">Track Your Progress</h2>
+                    <p class="onboarding-text">
+                        Use your device camera to measure joint angles in real-time.
+                        Get instant feedback on your exercises and track improvements over time.
+                    </p>
+
+                    <div class="onboarding-dots">
+                        <div class="dot active"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+
+                    <button class="btn-primary" onclick="showPage('setup')">Get Started</button>
+                    <button class="btn-secondary">Skip Tutorial</button>
+                </div>
+            </div>
+
+            <!-- Setup Wizard -->
+            <div class="page" id="setup">
+                <div class="setup-screen">
+                    <div class="setup-header">
+                        <h2 class="step-title">Setup Guide</h2>
+                        <p class="step-description">Let's optimize your environment</p>
+                    </div>
+
+                    <div class="setup-step">
+                        <div class="step-icon">💡</div>
+                        <h3 class="step-title">Check Lighting</h3>
+                        <p class="step-description">Make sure you're in a well-lit area</p>
+                        <div class="status-indicator status-good">
+                            ✅ Lighting is good
+                        </div>
+                    </div>
+
+                    <div class="setup-step">
+                        <div class="step-icon">📏</div>
+                        <h3 class="step-title">Position Check</h3>
+                        <p class="step-description">Stand 6-8 feet from the camera</p>
+                        <div class="status-indicator status-warning">
+                            ⚠️ Move back a bit
+                        </div>
+                    </div>
+
+                    <div class="setup-step">
+                        <div class="step-icon">🎯</div>
+                        <h3 class="step-title">Practice Movement</h3>
+                        <p class="step-description">Try a sample exercise</p>
+                        <button class="btn-primary" onclick="showPage('simple')">Start Practice</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simple Mode -->
+            <div class="page" id="simple">
+                <div class="simple-mode-screen">
+                    <div class="status-bar">
+                        <span class="status-text">✅ Tracking great</span>
+                    </div>
+
+                    <div class="instruction-box">
+                        <p class="instruction-text">Keep going!</p>
+                    </div>
+
+                    <div class="feedback-display">
+                        <div class="big-angle">75°</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 83%"></div>
+                        </div>
+                        <div class="target-label">Target: 90°</div>
+                    </div>
+
+                    <button class="big-button">
+                        Start Exercise
+                    </button>
+
+                    <div class="exercise-name">Knee Flexion</div>
+                </div>
+            </div>
+
+            <!-- Advanced Mode -->
+            <div class="page" id="advanced">
+                <div class="advanced-mode-screen">
+                    <div class="camera-view">
+                        <div>📹 Camera Feed</div>
+                        <div class="skeleton-overlay">
+                            <div class="joint-dot"></div>
+                        </div>
+                    </div>
+
+                    <div class="metrics-panel">
+                        <div class="metric-row">
+                            <span class="metric-label">Current Angle</span>
+                            <span class="metric-value">75.3°</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Target Angle</span>
+                            <span class="metric-value">90.0°</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">95%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">FPS</span>
+                            <span class="metric-value">60</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Tracking Quality</span>
+                            <span class="metric-value" style="color: #4CAF50;">Excellent</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercise Selection -->
+            <div class="page" id="exercises">
+                <div class="exercise-screen">
+                    <h2 class="section-title" style="padding: 20px 0;">Choose Exercise</h2>
+
+                    <div class="exercise-card" onclick="showPage('simple')">
+                        <div class="exercise-icon">🦵</div>
+                        <div class="exercise-info">
+                            <div class="exercise-name">Knee Flexion</div>
+                            <div class="exercise-description">Bend and straighten your knee</div>
+                        </div>
+                        <div class="exercise-arrow">›</div>
+                    </div>
+
+                    <div class="exercise-card" onclick="showPage('simple')">
+                        <div class="exercise-icon">💪</div>
+                        <div class="exercise-info">
+                            <div class="exercise-name">Elbow Extension</div>
+                            <div class="exercise-description">Straighten your arm</div>
+                        </div>
+                        <div class="exercise-arrow">›</div>
+                    </div>
+
+                    <div class="exercise-card" onclick="showPage('simple')">
+                        <div class="exercise-icon">🤸</div>
+                        <div class="exercise-info">
+                            <div class="exercise-name">Shoulder Rotation</div>
+                            <div class="exercise-description">Rotate your shoulder joint</div>
+                        </div>
+                        <div class="exercise-arrow">›</div>
+                    </div>
+
+                    <div class="exercise-card" onclick="showPage('simple')">
+                        <div class="exercise-icon">🏃</div>
+                        <div class="exercise-info">
+                            <div class="exercise-name">Hip Flexion</div>
+                            <div class="exercise-description">Lift your leg forward</div>
+                        </div>
+                        <div class="exercise-arrow">›</div>
+                    </div>
+
+                    <div class="exercise-card" onclick="showPage('simple')">
+                        <div class="exercise-icon">🦶</div>
+                        <div class="exercise-info">
+                            <div class="exercise-name">Ankle Rotation</div>
+                            <div class="exercise-description">Circle your ankle</div>
+                        </div>
+                        <div class="exercise-arrow">›</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Screen -->
+            <div class="page" id="profile">
+                <div class="profile-screen">
+                    <div class="profile-header">
+                        <div class="profile-avatar">👤</div>
+                        <div class="profile-name">Margaret Johnson</div>
+                        <div class="profile-email">margaret.j@email.com</div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">23</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">156</div>
+                            <div class="stat-label">Minutes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">85%</div>
+                            <div class="stat-label">Progress</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">Streak Days</div>
+                        </div>
+                    </div>
+
+                    <div class="profile-section">
+                        <div class="section-title">Recent Activity</div>
+                        <div class="metric-row">
+                            <span class="metric-label">Knee Flexion</span>
+                            <span class="metric-value">Today, 2:30 PM</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Elbow Extension</span>
+                            <span class="metric-value">Today, 10:15 AM</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Shoulder Rotation</span>
+                            <span class="metric-value">Yesterday, 3:45 PM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Screen -->
+            <div class="page" id="settings">
+                <div class="settings-screen">
+                    <div class="settings-header">
+                        <h2>⚙️ Settings</h2>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3 style="padding: 15px 20px; color: #666; font-size: 14px; text-transform: uppercase;">Display</h3>
+                        <div class="settings-item">
+                            <span class="settings-label">Simple Mode</span>
+                            <div class="toggle on"><div class="toggle-slider"></div></div>
+                        </div>
+                        <div class="settings-item">
+                            <span class="settings-label">Show Angle Numbers</span>
+                            <div class="toggle on"><div class="toggle-slider"></div></div>
+                        </div>
+                        <div class="settings-item">
+                            <span class="settings-label">Voice Feedback</span>
+                            <div class="toggle"><div class="toggle-slider"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3 style="padding: 15px 20px; color: #666; font-size: 14px; text-transform: uppercase;">Detection</h3>
+                        <div class="settings-item">
+                            <span class="settings-label">High Accuracy Mode</span>
+                            <div class="toggle on"><div class="toggle-slider"></div></div>
+                        </div>
+                        <div class="settings-item">
+                            <span class="settings-label">Auto-pause Detection</span>
+                            <div class="toggle on"><div class="toggle-slider"></div></div>
+                        </div>
+                        <div class="settings-item">
+                            <span class="settings-label">Haptic Feedback</span>
+                            <div class="toggle on"><div class="toggle-slider"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3 style="padding: 15px 20px; color: #666; font-size: 14px; text-transform: uppercase;">Privacy</h3>
+                        <div class="settings-item">
+                            <span class="settings-label">Encrypted Storage</span>
+                            <div class="toggle on"><div class="toggle-slider"></div></div>
+                        </div>
+                        <div class="settings-item">
+                            <span class="settings-label">Analytics</span>
+                            <div class="toggle"><div class="toggle-slider"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <div class="settings-item">
+                            <span class="settings-label" style="color: #F44336;">Sign Out</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+
+            // Update navigation buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Toggle switches
+        document.querySelectorAll('.toggle').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                this.classList.toggle('on');
+            });
+        });
+
+        // Animate progress bar
+        setInterval(() => {
+            const progressFill = document.querySelector('.progress-fill');
+            if (progressFill) {
+                const currentWidth = parseInt(progressFill.style.width) || 83;
+                const newWidth = (currentWidth + 1) % 100;
+                progressFill.style.width = newWidth + '%';
+
+                // Update angle
+                const bigAngle = document.querySelector('.big-angle');
+                if (bigAngle) {
+                    const angle = Math.floor(90 * newWidth / 100);
+                    bigAngle.textContent = angle + '°';
+                }
+            }
+        }, 500);
+
+        // Button animation
+        const bigButton = document.querySelector('.big-button');
+        if (bigButton) {
+            bigButton.addEventListener('click', function() {
+                this.classList.toggle('stop');
+                this.textContent = this.classList.contains('stop') ? 'Stop' : 'Start Exercise';
+            });
+        }
+    </script>
+</body>
+</html>

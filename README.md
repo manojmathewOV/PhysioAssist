@@ -38,13 +38,15 @@ PhysioAssist is a revolutionary mobile application that uses AI-powered computer
 
 ## 🎬 Demo
 
-<p align="center">
-  <img src="mockups/screenshots/pose-detection.png" alt="Pose Detection" width="250"/>
-  <img src="mockups/screenshots/video-comparison.png" alt="Video Comparison" width="250"/>
-  <img src="mockups/screenshots/progress-analytics.png" alt="Progress Analytics" width="250"/>
-</p>
+### 📱 Interactive App Mockup
 
-[View Interactive HTML Mockups](mockups/index.html)
+[**View Interactive HTML Mockup**](docs/APP_MOCKUP.html) - Click to explore all app screens in your browser!
+
+Features:
+- 8 complete app screens (Login, Onboarding, Setup, Simple Mode, Advanced Mode, Exercises, Profile, Settings)
+- Fully interactive navigation
+- Animated UI elements
+- Production-ready design based on actual components
 
 ## 🔧 Prerequisites
 
@@ -225,13 +227,6 @@ npm run e2e:test:ios
 npm run e2e:test:android
 ```
 
-### Test Mockups
-
-```bash
-# Validate HTML mockups
-node test-mockups.js
-```
-
 ## 📁 Project Structure
 
 ```
@@ -253,9 +248,9 @@ PhysioAssist/
 │   └── utils/              # Helper functions
 ├── ios/                    # iOS native code
 ├── android/                # Android native code
-├── mockups/                # HTML mockups
 ├── __tests__/              # Test files
-└── docs/                   # Documentation
+├── scripts/                # Build & validation scripts
+└── docs/                   # Documentation & interactive mockup
 ```
 
 ## 🏗️ Architecture

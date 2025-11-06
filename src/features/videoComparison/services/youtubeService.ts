@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import EncryptedStorage from 'react-native-encrypted-storage';
 import { YouTubeVideoInfo, VideoComparisonError } from '../types/videoComparison.types';
 
 // Mock implementations for testing
@@ -109,7 +109,7 @@ export class YouTubeService {
 
   async clearCache(): Promise<void> {
     this.cache.clear();
-    await AsyncStorage.removeItem('youtube_video_cache');
+    await EncryptedStorage.removeItem('youtube_video_cache');
   }
 
   private updateCache(url: string, info: YouTubeVideoInfo): void {
@@ -126,7 +126,7 @@ export class YouTubeService {
     info: YouTubeVideoInfo
   ): Promise<void> {
     try {
-      const cacheData = await AsyncStorage.getItem('youtube_video_cache');
+      const cacheData = await EncryptedStorage.getItem('youtube_video_cache');
       const cache = cacheData ? JSON.parse(cacheData) : {};
 
       cache[url] = {
@@ -144,7 +144,7 @@ export class YouTubeService {
         return acc;
       }, {} as any);
 
-      await AsyncStorage.setItem('youtube_video_cache', JSON.stringify(limitedCache));
+      await EncryptedStorage.setItem('youtube_video_cache', JSON.stringify(limitedCache));
     } catch (error) {
       console.warn('Failed to save to persistent cache:', error);
     }
@@ -152,7 +152,7 @@ export class YouTubeService {
 
   private async loadFromPersistentCache(url: string): Promise<YouTubeVideoInfo | null> {
     try {
-      const cacheData = await AsyncStorage.getItem('youtube_video_cache');
+      const cacheData = await EncryptedStorage.getItem('youtube_video_cache');
       if (!cacheData) return null;
 
       const cache = JSON.parse(cacheData);

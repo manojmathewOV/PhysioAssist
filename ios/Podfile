@@ -11,6 +11,11 @@ prepare_react_native_project!
 # Add this line to fix Firebase issues
 use_modular_headers!
 
+# Enable GPU acceleration for react-native-fast-tflite
+# CoreML Delegate provides 3-10x performance improvement on iOS
+$EnableCoreMLDelegate = true
+$EnableMetalDelegate = true
+
 # If you are using a `react-native-flipper` your iOS build will fail when `NO_FLIPPER=1` is set.
 # because `react-native-flipper` depends on (FlipperKit,...) that will be excluded
 #
