@@ -14,6 +14,12 @@
 
 import { TFLiteModel } from 'react-native-fast-tflite';
 import { ProcessedPoseData, PoseLandmark, PoseDetectionConfig } from '@types/pose';
+import {
+  getPatientFriendlyError,
+  AdaptiveSettings,
+  PatientProfile,
+  EnvironmentConditions,
+} from '../utils/compensatoryMechanisms';
 
 // MoveNet keypoint names (17 total)
 const MOVENET_KEYPOINTS = [
@@ -61,6 +67,11 @@ export class PoseDetectionServiceV2 {
   // Performance tracking
   private inferenceTimeSum: number = 0;
   private inferenceCount: number = 0;
+
+  // Patient-centric adaptive settings
+  private adaptiveSettings: AdaptiveSettings | null = null;
+  private smoothingFactor: number = 0.5; // Default smoothing
+  private minConfidenceThreshold: number = 0.3; // Default confidence
 
   constructor(config: PoseDetectionConfig = {}) {
     this.config = {
@@ -121,11 +132,10 @@ export class PoseDetectionServiceV2 {
       }
     } catch (error) {
       console.error('❌ Failed to initialize PoseDetectionService V2:', error);
-      // Re-throw with user-friendly message
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Failed to initialize pose detection. Please restart the app.');
+      // Convert to patient-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const friendlyError = getPatientFriendlyError(errorMessage);
+      throw new Error(`${friendlyError.title}: ${friendlyError.message}`);
     }
   }
 
@@ -178,8 +188,9 @@ export class PoseDetectionServiceV2 {
       // Calculate confidence score
       const confidence = this.calculateConfidence(landmarks);
 
-      // Filter low-confidence poses
-      if (confidence < this.config.minDetectionConfidence) {
+      // Filter low-confidence poses using adaptive threshold
+      const confidenceThreshold = this.adaptiveSettings?.minConfidence || this.minConfidenceThreshold;
+      if (confidence < confidenceThreshold) {
         return null;
       }
 
@@ -345,6 +356,39 @@ export class PoseDetectionServiceV2 {
     this.isInitialized = false;
     this.poseDataCallback = undefined;
     console.log('🧹 PoseDetectionService V2 cleaned up');
+  }
+
+  /**
+   * Apply adaptive settings based on patient profile and environment
+   * Called by screens after environment assessment
+   */
+  applyAdaptiveSettings(settings: AdaptiveSettings): void {
+    this.adaptiveSettings = settings;
+    this.minConfidenceThreshold = settings.minConfidence;
+    this.smoothingFactor = settings.smoothing;
+
+    console.log('🎯 Applied adaptive settings:', {
+      minConfidence: settings.minConfidence,
+      smoothing: settings.smoothing,
+      exposureCompensation: settings.exposureCompensation,
+    });
+  }
+
+  /**
+   * Get current adaptive settings
+   */
+  getAdaptiveSettings(): AdaptiveSettings | null {
+    return this.adaptiveSettings;
+  }
+
+  /**
+   * Reset to default settings
+   */
+  resetAdaptiveSettings(): void {
+    this.adaptiveSettings = null;
+    this.minConfidenceThreshold = 0.3;
+    this.smoothingFactor = 0.5;
+    console.log('🔄 Reset to default settings');
   }
 }
 

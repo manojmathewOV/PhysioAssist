@@ -1,0 +1,26 @@
+{
+  "performance": {
+    "targetFPS": 10,
+    "maxFPS": 15,
+    "minFPS": 5,
+    "inferenceTimeout": 100
+  },
+  "memory": {
+    "warningThreshold": 300,
+    "cleanupThreshold": 400,
+    "criticalThreshold": 500,
+    "modelReloadAfter": 10000,
+    "historyLimit": 100
+  },
+  "thermal": {
+    "monitorInterval": 30000,
+    "throttleTrigger": 0.5,
+    "throttleAction": "reduceFPS",
+    "targetFPSWhenHot": 5
+  },
+  "reliability": {
+    "maxCrashesBeforeDisable": 3,
+    "crashResetInterval": 300000,
+    "permissionCheckInterval": 5000
+  }
+}
