@@ -1,0 +1,92 @@
+{
+  "timestamp": "2025-11-06T10:48:41.737Z",
+  "overall": {
+    "total": 73,
+    "passed": 42,
+    "failed": 31,
+    "critical": 9,
+    "warnings": 22,
+    "passRate": 57.534246575342465,
+    "finalScore": 33.034246575342465
+  },
+  "categories": {
+    "Algorithm": {
+      "total": 8,
+      "passed": 3,
+      "failed": 5,
+      "warnings": 0
+    },
+    "Numerical": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "warnings": 0
+    },
+    "Integration": {
+      "total": 6,
+      "passed": 5,
+      "failed": 1,
+      "warnings": 0
+    },
+    "Performance": {
+      "total": 4,
+      "passed": 3,
+      "failed": 1,
+      "warnings": 0
+    },
+    "Security": {
+      "total": 7,
+      "passed": 6,
+      "failed": 1,
+      "warnings": 0
+    },
+    "Accessibility": {
+      "total": 8,
+      "passed": 2,
+      "failed": 6,
+      "warnings": 0
+    },
+    "Error Handling": {
+      "total": 7,
+      "passed": 2,
+      "failed": 5,
+      "warnings": 0
+    },
+    "State Management": {
+      "total": 5,
+      "passed": 3,
+      "failed": 2,
+      "warnings": 0
+    },
+    "Chaos": {
+      "total": 5,
+      "passed": 2,
+      "failed": 3,
+      "warnings": 0
+    },
+    "Patient Scenarios": {
+      "total": 10,
+      "passed": 6,
+      "failed": 4,
+      "warnings": 0
+    },
+    "Code Quality": {
+      "total": 8,
+      "passed": 5,
+      "failed": 3,
+      "warnings": 0
+    }
+  },
+  "criticalIssues": [
+    "1. No GPU fallback mechanism (app fails without GPU)",
+    "2. No OOM error handling (app crashes on low memory)",
+    "3. Frame processor SIGSEGV cannot be recovered",
+    "4. Background transition during detection not handled",
+    "5. AsyncStorage not encrypted (patient data exposure)",
+    "6. No screen reader verification (accessibility)",
+    "7. Multiple simultaneous failures crash app",
+    "8. No input validation on AsyncStorage load",
+    "9. Memory cleanup verification needed",
+    "10. Voice control designed but not integrated"
+  ]
+}
