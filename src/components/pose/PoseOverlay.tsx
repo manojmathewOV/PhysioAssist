@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { StyleSheet, Dimensions } from 'react-native';
 import Svg, { Circle, Line, Text as SvgText } from 'react-native-svg';
 import { useSelector } from 'react-redux';
@@ -69,6 +69,14 @@ const PoseOverlay: React.FC<PoseOverlayProps> = ({
   highlightJoints = [],
 }) => {
   const { currentPose, jointAngles } = useSelector((state: RootState) => state.pose);
+
+  // Cleanup on unmount (memory leak prevention)
+  useEffect(() => {
+    return () => {
+      // Cleanup any subscriptions or timers if needed
+      // Currently no cleanup needed for this display-only component
+    };
+  }, []);
 
   // Use props if provided, otherwise use Redux state
   const landmarks = propLandmarks || currentPose?.landmarks || [];

@@ -10,10 +10,11 @@
  * Copy and adapt patterns from this file to existing screens
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions, Alert } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, StyleSheet, Dimensions, Alert, AppState, AppStateStatus } from 'react-native';
 import { Camera, useCameraDevice, useFrameProcessor } from 'react-native-vision-camera';
 import { useDispatch, useSelector } from 'react-redux';
+import { useFocusEffect } from '@react-navigation/native';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
 // Patient-centric components
@@ -163,6 +164,47 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
   const cleanup = async () => {
     await poseDetectionService.cleanup();
   };
+
+  // ============================================================================
+  // App State & Focus Handling (Battery optimization + crash prevention)
+  // ============================================================================
+
+  // Handle app state changes (background/foreground)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        console.log('📱 App foregrounded - resuming if needed');
+        // App became active - resume detection if it was running before
+        // Note: We don't auto-resume to prevent unexpected behavior
+      } else {
+        console.log('📱 App backgrounded - pausing detection');
+        // App backgrounded or inactive - pause detection immediately
+        if (isDetecting) {
+          handleStop();
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isDetecting]);
+
+  // Handle screen focus/blur (navigation)
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🎯 Screen focused');
+      // Screen focused - app is ready to use
+
+      return () => {
+        console.log('🎯 Screen blurred - stopping detection');
+        // Screen lost focus (navigated away) - stop detection
+        if (isDetecting) {
+          handleStop();
+        }
+      };
+    }, [isDetecting])
+  );
 
   // ============================================================================
   // Setup Wizard Handlers

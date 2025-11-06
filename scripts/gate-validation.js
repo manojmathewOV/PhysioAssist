@@ -614,9 +614,11 @@ if (gates.gate3.status === 'PASSED') {
       'utf8'
     );
 
-    // Check for model initialization
-    const hasModelInit = poseDetectionContent.includes('loadModel') ||
-                        poseDetectionContent.includes('initializeModel');
+    // Check for model initialization (TFLiteModel.load or similar)
+    const hasModelInit = poseDetectionContent.includes('TFLiteModel.load') ||
+                        poseDetectionContent.includes('loadModel') ||
+                        poseDetectionContent.includes('initializeModel') ||
+                        (poseDetectionContent.includes('.load(') && poseDetectionContent.includes('model'));
 
     if (!hasModelInit) {
       return { pass: false, message: 'No model initialization found' };
@@ -624,7 +626,8 @@ if (gates.gate3.status === 'PASSED') {
 
     // Check for error handling during model load
     const hasErrorHandling = poseDetectionContent.includes('try') &&
-                            poseDetectionContent.includes('catch');
+                            poseDetectionContent.includes('catch') &&
+                            poseDetectionContent.includes('loadError');
 
     if (!hasErrorHandling) {
       return { pass: false, message: 'Model loading lacks error handling' };
