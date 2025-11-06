@@ -12,6 +12,7 @@ export interface ProcessedPoseData {
   timestamp: number;
   confidence: number;
   worldLandmarks?: any[];
+  inferenceTime?: number; // V2: ML inference time in milliseconds
 }
 
 export interface PoseDetectionConfig {

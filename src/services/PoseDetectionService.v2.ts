@@ -113,6 +113,27 @@ export class PoseDetectionServiceV2 {
       return null;
     }
 
+    // Input validation
+    if (!frameData || frameData.length === 0) {
+      console.warn('⚠️ Empty frame data received');
+      return null;
+    }
+
+    const expectedSize = 192 * 192 * 3; // 110,592
+    if (frameData.length !== expectedSize) {
+      console.warn(`⚠️ Invalid frame size: ${frameData.length} (expected ${expectedSize})`);
+      return null;
+    }
+
+    // Validate pixel values for regular arrays
+    if (!(frameData instanceof Uint8Array)) {
+      const hasInvalidValues = frameData.some(v => v < 0 || v > 255 || Number.isNaN(v));
+      if (hasInvalidValues) {
+        console.warn('⚠️ Frame contains out-of-range or NaN pixel values');
+        return null;
+      }
+    }
+
     try {
       const startTime = performance.now();
 
