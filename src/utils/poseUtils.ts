@@ -45,9 +45,9 @@ export const calculateDistance = (
  * Normalize pose landmarks to account for different body sizes
  */
 export const normalizePose = (landmarks: PoseLandmark[]): PoseLandmark[] => {
-  // Use shoulder distance as reference
-  const leftShoulder = landmarks[11];
-  const rightShoulder = landmarks[12];
+  // Use shoulder distance as reference (MoveNet: 5=left_shoulder, 6=right_shoulder)
+  const leftShoulder = landmarks[5];
+  const rightShoulder = landmarks[6];
 
   if (!leftShoulder || !rightShoulder) return landmarks;
 
@@ -137,10 +137,11 @@ export const mirrorPose = (landmarks: PoseLandmark[]): PoseLandmark[] => {
  * Check if person is facing camera (based on shoulder/hip alignment)
  */
 export const isFacingCamera = (landmarks: PoseLandmark[]): boolean => {
-  const leftShoulder = landmarks[11];
-  const rightShoulder = landmarks[12];
-  const leftHip = landmarks[23];
-  const rightHip = landmarks[24];
+  // MoveNet keypoints: 5=left_shoulder, 6=right_shoulder, 11=left_hip, 12=right_hip
+  const leftShoulder = landmarks[5];
+  const rightShoulder = landmarks[6];
+  const leftHip = landmarks[11];
+  const rightHip = landmarks[12];
 
   if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) {
     return false;
