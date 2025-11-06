@@ -23,7 +23,19 @@
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "type-check": "tsc --noEmit",
     "pod-install": "cd ios && pod install",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "ios:cli": "./scripts/ios/ios-cli.sh",
+    "ios:setup": "./scripts/ios/device-setup.sh",
+    "ios:sim": "./scripts/ios/run-simulator.sh",
+    "ios:device": "./scripts/ios/run-device.sh",
+    "ios:watch": "./scripts/ios/watch-mode.sh",
+    "ios:watch:device": "./scripts/ios/watch-mode.sh device",
+    "ios:validate": "./scripts/ios/device-validate.sh simulator",
+    "ios:validate:device": "./scripts/ios/device-validate.sh device",
+    "ios:stop": "./scripts/ios/stop-metro.sh",
+    "ios:clean": "rm -rf ios/build ios/Pods && cd ios && pod install",
+    "ios:reset": "rm -rf ios/build ios/Pods node_modules && npm install && cd ios && pod install",
+    "gate:validate": "node scripts/gate-validation.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.21.0",
