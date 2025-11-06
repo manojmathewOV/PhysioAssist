@@ -14,7 +14,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Dimensions, Alert } from 'react-native';
 import { Camera, useCameraDevice, useFrameProcessor } from 'react-native-vision-camera';
 import { useDispatch, useSelector } from 'react-redux';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 // Patient-centric components
 import SetupWizard from '../components/common/SetupWizard';
@@ -114,7 +114,7 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
       await poseDetectionService.initialize();
 
       // Check if first time user
-      const hasCompletedSetup = await AsyncStorage.getItem('setup_completed');
+      const hasCompletedSetup = await EncryptedStorage.getItem('setup_completed');
 
       if (!hasCompletedSetup) {
         // First time user -> Show setup wizard
@@ -134,7 +134,7 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
 
   const loadPatientProfile = async () => {
     try {
-      const profileJson = await AsyncStorage.getItem('patient_profile');
+      const profileJson = await EncryptedStorage.getItem('patient_profile');
       if (profileJson) {
         const profile = JSON.parse(profileJson);
         setPatientProfile(profile);
@@ -172,7 +172,7 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
     console.log('✅ Setup wizard completed');
 
     // Mark setup as complete
-    await AsyncStorage.setItem('setup_completed', 'true');
+    await EncryptedStorage.setItem('setup_completed', 'true');
 
     // Hide wizard
     setShowSetupWizard(false);
@@ -187,7 +187,7 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
       sessionsCompleted: patientProfile.sessionsCompleted + 1,
     };
     setPatientProfile(updatedProfile);
-    await AsyncStorage.setItem('patient_profile', JSON.stringify(updatedProfile));
+    await EncryptedStorage.setItem('patient_profile', JSON.stringify(updatedProfile));
   };
 
   const handleSetupSkip = () => {

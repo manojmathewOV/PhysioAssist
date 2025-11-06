@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import EncryptedStorage from 'react-native-encrypted-storage';
 import { combineReducers } from 'redux';
 
 import poseReducer from './slices/poseSlice';
@@ -11,8 +11,8 @@ import networkReducer from './slices/networkSlice';
 
 const rootPersistConfig = {
   key: 'root',
-  storage: AsyncStorage,
-  whitelist: ['user', 'settings'], // Only persist user and settings
+  storage: EncryptedStorage,
+  whitelist: ['user', 'settings'], // Only persist user and settings (HIPAA-compliant encrypted storage)
 };
 
 const rootReducer = combineReducers({

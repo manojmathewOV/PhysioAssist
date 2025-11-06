@@ -143,7 +143,12 @@ const SimpleModeUI: React.FC<SimpleModeUIProps> = ({
       {/* Top Status Bar */}
       <View style={styles.statusBar}>
         {isDetecting && (
-          <View style={[styles.statusIndicator, { backgroundColor: trackingIndicator.color }]}>
+          <View
+            style={[styles.statusIndicator, { backgroundColor: trackingIndicator.color }]}
+            accessible={true}
+            accessibilityLabel={`Tracking status: ${trackingIndicator.text}`}
+            accessibilityRole="text"
+          >
             <Text style={styles.statusIcon}>{trackingIndicator.icon}</Text>
             <Text style={styles.statusText}>{trackingIndicator.text}</Text>
           </View>
@@ -153,7 +158,13 @@ const SimpleModeUI: React.FC<SimpleModeUIProps> = ({
       {/* Main Content Area */}
       <View style={styles.mainContent}>
         {/* Current Instruction - Large and Clear */}
-        <View style={styles.instructionContainer}>
+        <View
+          style={styles.instructionContainer}
+          accessible={true}
+          accessibilityLabel={`Exercise instruction: ${getCurrentInstruction()}`}
+          accessibilityRole="text"
+          accessibilityLiveRegion="polite"
+        >
           <Text style={styles.instructionText}>
             {getCurrentInstruction()}
           </Text>
@@ -176,6 +187,10 @@ const SimpleModeUI: React.FC<SimpleModeUIProps> = ({
             onPress={handleMainAction}
             activeOpacity={0.8}
             disabled={currentStatus === 'initializing' || currentStatus === 'error'}
+            accessibilityLabel={isDetecting ? 'Stop exercise' : 'Start exercise'}
+            accessibilityHint={isDetecting ? 'Tap to stop tracking your movement' : 'Tap to begin exercise tracking'}
+            accessibilityRole="button"
+            accessible={true}
           >
             <LinearGradient
               colors={isDetecting ? ['#F44336', '#d32f2f'] : ['#4CAF50', '#45a049']}
@@ -205,6 +220,10 @@ const SimpleModeUI: React.FC<SimpleModeUIProps> = ({
         <TouchableOpacity
           style={styles.advancedToggle}
           onPress={handleToggleAdvanced}
+          accessibilityLabel={showAdvanced ? 'Hide advanced details' : 'Show advanced details'}
+          accessibilityHint={showAdvanced ? 'Tap to hide detailed exercise information' : 'Tap to see detailed exercise information'}
+          accessibilityRole="button"
+          accessible={true}
         >
           <Text style={styles.advancedToggleText}>
             {showAdvanced ? '▼ Hide Details' : '▶ Show Details'}
@@ -242,7 +261,14 @@ const SimpleFeedback: React.FC<SimpleFeedbackProps> = ({
   const isComplete = progress >= 100;
 
   return (
-    <View style={styles.simpleFeedbackContainer}>
+    <View
+      style={styles.simpleFeedbackContainer}
+      accessible={true}
+      accessibilityLabel={`Current angle: ${Math.round(currentAngle)} degrees. Target: ${targetAngle} degrees. Progress: ${Math.round(progress)} percent${isComplete ? '. Target achieved!' : ''}`}
+      accessibilityRole="progressbar"
+      accessibilityValue={{ now: progress, min: 0, max: 100 }}
+      accessibilityLiveRegion="polite"
+    >
       {/* Big Angle Number */}
       <Text style={[styles.bigAngle, isComplete && styles.bigAngleSuccess]}>
         {Math.round(currentAngle)}°
@@ -292,7 +318,12 @@ const AdvancedInfo: React.FC<AdvancedInfoProps> = ({
   const progress = Math.min((currentAngle / targetAngle) * 100, 100);
 
   return (
-    <View style={styles.advancedInfoContainer}>
+    <View
+      style={styles.advancedInfoContainer}
+      accessible={true}
+      accessibilityLabel={`Advanced details. Current angle: ${currentAngle.toFixed(1)} degrees. Target angle: ${targetAngle} degrees. Progress: ${progress.toFixed(1)} percent. Tracking quality: ${trackingQuality}`}
+      accessibilityRole="text"
+    >
       <View style={styles.advancedInfoRow}>
         <Text style={styles.advancedInfoLabel}>Current Angle:</Text>
         <Text style={styles.advancedInfoValue}>{currentAngle.toFixed(1)}°</Text>
