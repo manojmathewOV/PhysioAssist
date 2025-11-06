@@ -46,7 +46,12 @@ const PoseOverlaySkia: React.FC<PoseOverlaySkiaProps> = ({
     if (poseData?.landmarks) {
       landmarks.value = poseData.landmarks;
     }
-  }, [poseData]);
+
+    // Cleanup: Clear shared values on unmount to prevent memory leaks
+    return () => {
+      landmarks.value = [];
+    };
+  }, [poseData, landmarks]);
 
   // Derive keypoint colors based on confidence
   const keypointColors = useDerivedValue(() => {

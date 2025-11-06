@@ -36,8 +36,17 @@ import { setPoseData, setDetecting, setConfidence } from '@store/slices/poseSlic
 import { poseDetectionService } from '@services/PoseDetectionService.v2';
 import PoseOverlaySkia from '@components/pose/PoseOverlay.skia';
 import ExerciseControls from '@components/exercises/ExerciseControls';
+import LoadingOverlay from '@components/common/LoadingOverlay';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import { batchDispatch, useThrottle } from '@utils/performanceUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Haptic feedback configuration
+const hapticOptions = {
+  enableVibrateFallback: true,
+  ignoreAndroidSystemSettings: false,
+};
 
 const PoseDetectionScreenV2: React.FC = () => {
   const dispatch = useDispatch();
@@ -49,6 +58,7 @@ const PoseDetectionScreenV2: React.FC = () => {
   const { isDetecting, confidence } = useSelector((state: RootState) => state.pose);
   const [hasPermission, setHasPermission] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const [fps, setFps] = useState(0);
 
   // Performance tracking
@@ -70,7 +80,14 @@ const PoseDetectionScreenV2: React.FC = () => {
   const requestCameraPermission = async () => {
     const permission = await Camera.requestCameraPermission();
     setHasPermission(permission === 'granted');
-    if (permission !== 'granted') {
+
+    if (permission === 'granted') {
+      // Success haptic
+      ReactNativeHapticFeedback.trigger('notificationSuccess', hapticOptions);
+    } else {
+      // Error haptic
+      ReactNativeHapticFeedback.trigger('notificationError', hapticOptions);
+
       Alert.alert(
         'Camera Permission Required',
         'Please grant camera permission to use pose detection.',
@@ -84,15 +101,21 @@ const PoseDetectionScreenV2: React.FC = () => {
 
   const initializePoseDetection = async () => {
     try {
+      setIsInitializing(true);
+
       await poseDetectionService.initialize();
       poseDetectionService.setPoseDataCallback((poseData) => {
         dispatch(setPoseData(poseData));
         dispatch(setConfidence(poseData.confidence));
       });
+
       setIsInitialized(true);
+      setIsInitializing(false);
       console.log('✅ Pose detection initialized');
     } catch (error) {
       console.error('❌ Failed to initialize pose detection:', error);
+      setIsInitializing(false);
+
       Alert.alert(
         'Initialization Error',
         'Failed to initialize pose detection. Please restart the app.',
@@ -103,6 +126,9 @@ const PoseDetectionScreenV2: React.FC = () => {
 
   const startPoseDetection = () => {
     if (isInitialized) {
+      // Haptic feedback for successful start
+      ReactNativeHapticFeedback.trigger('impactMedium', hapticOptions);
+
       dispatch(setDetecting(true));
       poseDetectionService.resetPerformanceStats();
       console.log('▶️ Pose detection started');
@@ -110,6 +136,9 @@ const PoseDetectionScreenV2: React.FC = () => {
   };
 
   const stopPoseDetection = () => {
+    // Haptic feedback for stop
+    ReactNativeHapticFeedback.trigger('impactLight', hapticOptions);
+
     dispatch(setDetecting(false));
     const stats = poseDetectionService.getPerformanceStats();
     console.log('⏹️ Pose detection stopped. Stats:', stats);
@@ -146,7 +175,9 @@ const PoseDetectionScreenV2: React.FC = () => {
     [isDetecting]
   );
 
-  const handlePoseDetected = (result: any) => {
+  // Throttle pose updates to 10 times per second (instead of 60)
+  // Reduces Redux overhead and unnecessary re-renders
+  const handlePoseDetected = useThrottle((result: any) => {
     // Process pose data on JavaScript thread
     const processedData = {
       landmarks: result.keypoints,
@@ -155,9 +186,12 @@ const PoseDetectionScreenV2: React.FC = () => {
       inferenceTime: result.inferenceTime,
     };
 
-    dispatch(setPoseData(processedData));
-    dispatch(setConfidence(processedData.confidence));
-  };
+    // Batch multiple dispatches into single render cycle
+    batchDispatch(() => {
+      dispatch(setPoseData(processedData));
+      dispatch(setConfidence(processedData.confidence));
+    });
+  }, 100); // Update at most 10 times per second
 
   const calculateAverageConfidence = (keypoints: any[]) => {
     if (!keypoints || keypoints.length === 0) return 0;
@@ -251,6 +285,13 @@ const PoseDetectionScreenV2: React.FC = () => {
       </View>
 
       <ExerciseControls />
+
+      {/* Loading Overlay */}
+      <LoadingOverlay
+        visible={isInitializing}
+        message="Loading AI model..."
+        showSpinner
+      />
     </View>
   );
 };
