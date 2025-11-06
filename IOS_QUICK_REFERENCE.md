@@ -10,17 +10,27 @@ One-page cheat sheet for iOS testing and development.
 # Initial setup (run once)
 npm run ios:setup
 
+# Mac users: Full Xcode setup + optimization
+npm run xcode:setup
+npm run xcode:fast
+
 # Test on simulator
 npm run ios:sim
 
 # Test on physical device
 npm run ios:device
 
-# Watch mode (auto-reload on save)
+# Watch mode (auto-reload on save - FASTEST!)
 npm run ios:watch
 
 # Validate everything
 npm run ios:validate:device
+
+# Professional profiling (Mac/Xcode Instruments)
+npm run xcode:instruments
+
+# Debug tools (Mac)
+npm run xcode:debug
 
 # Stop Metro bundler
 npm run ios:stop
@@ -70,6 +80,11 @@ npm run ios:validate:device # Validate on device
 | `npm run ios:stop` | Stop Metro bundler |
 | `npm run ios:clean` | Clean build artifacts |
 | `npm run ios:reset` | Full reset (nuclear option) |
+| `npm run xcode` | Open Xcode workspace |
+| `npm run xcode:setup` | Full Xcode setup & optimization (Mac) |
+| `npm run xcode:fast` | Optimize Xcode for max build speed (Mac) |
+| `npm run xcode:instruments` | Professional profiling with Instruments (Mac) |
+| `npm run xcode:debug` | Debug tools and helpers (Mac) |
 | `npm run gate:validate` | Run gate validation |
 
 ---
@@ -88,6 +103,11 @@ All features in one command:
 - `device` - Run on device
 - `watch` - Watch mode
 - `validate` - Run validations
+- `xcode` - Open Xcode workspace
+- `xcode-setup` - Full Xcode configuration (Mac)
+- `xcode-fast` - Build speed optimization (Mac)
+- `instruments` - Professional profiling (Mac)
+- `debug` - Debug tools (Mac)
 - `start` - Start Metro
 - `stop` - Stop Metro
 - `reload` - Force reload
@@ -283,6 +303,7 @@ xcodebuild -version
 ## 📚 Full Documentation
 
 For complete details, see:
+- **[Mac Quick Start](MAC_QUICK_START.md)** - Mac-optimized guide 🍎
 - **[iOS Testing Guide](docs/IOS_TESTING_GUIDE.md)** - Comprehensive guide
 - **[Scripts README](scripts/ios/README.md)** - Script documentation
 - **[Gated Development Plan](docs/GATED_DEVELOPMENT_PLAN.md)** - Gate system

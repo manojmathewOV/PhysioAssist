@@ -35,6 +35,11 @@
     "ios:stop": "./scripts/ios/stop-metro.sh",
     "ios:clean": "rm -rf ios/build ios/Pods && cd ios && pod install",
     "ios:reset": "rm -rf ios/build ios/Pods node_modules && npm install && cd ios && pod install",
+    "xcode": "open ios/PhysioAssist.xcworkspace",
+    "xcode:setup": "./scripts/ios/xcode-setup.sh",
+    "xcode:fast": "./scripts/ios/xcode-build-fast.sh",
+    "xcode:instruments": "./scripts/ios/xcode-instruments.sh",
+    "xcode:debug": "./scripts/ios/xcode-debug.sh",
     "gate:validate": "node scripts/gate-validation.js"
   },
   "dependencies": {

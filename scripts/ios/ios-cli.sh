@@ -74,6 +74,13 @@ show_help() {
     echo -e "  ${YELLOW}restart${NC}            Restart Metro bundler"
     echo -e "  ${YELLOW}logs${NC}               Show Metro bundler logs"
     echo -e ""
+    echo -e "${CYAN}XCODE INTEGRATION:${NC}"
+    echo -e "  ${YELLOW}xcode${NC}              Open Xcode workspace with optimization"
+    echo -e "  ${YELLOW}xcode-setup${NC}        Full Xcode setup and configuration"
+    echo -e "  ${YELLOW}xcode-fast${NC}         Optimize Xcode for maximum build speed"
+    echo -e "  ${YELLOW}instruments${NC}        Professional profiling with Instruments"
+    echo -e "  ${YELLOW}debug${NC}              Debug tools and helpers"
+    echo -e ""
     echo -e "${CYAN}UTILITIES:${NC}"
     echo -e "  ${YELLOW}clean${NC}              Clean build artifacts"
     echo -e "  ${YELLOW}reset${NC}              Full reset (clean + clear cache + reinstall)"
@@ -175,6 +182,23 @@ execute_command() {
                 cd ios && pod install
                 echo -e "${GREEN}✓ Reset complete${NC}"
             fi
+            ;;
+        xcode)
+            PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+            open "$PROJECT_ROOT/ios/PhysioAssist.xcworkspace"
+            echo -e "${GREEN}✓ Xcode workspace opened${NC}"
+            ;;
+        xcode-setup)
+            bash "$SCRIPT_DIR/xcode-setup.sh" "$@"
+            ;;
+        xcode-fast)
+            bash "$SCRIPT_DIR/xcode-build-fast.sh" "$@"
+            ;;
+        instruments)
+            bash "$SCRIPT_DIR/xcode-instruments.sh" "$@"
+            ;;
+        debug)
+            bash "$SCRIPT_DIR/xcode-debug.sh" "$@"
             ;;
         list)
             echo -e "${BLUE}📱 Available iOS Simulators:${NC}"
