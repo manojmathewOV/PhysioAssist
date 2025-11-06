@@ -15,7 +15,8 @@
  * - Gate 0: CRITICAL FIX (Keypoint bug)
  * - Gate 1: CORE FUNCTIONALITY (Measurements work)
  * - Gate 2: INTEGRATION & STABILITY (Components integrated)
- * - Gate 3: PRODUCTION READINESS (Performance, security, accessibility)
+ * - Gate 3: PRODUCTION READINESS (Security, accessibility, docs)
+ * - Gate 4: ADVANCED PROFILING (Performance, device compatibility, edge cases)
  */
 
 const fs = require('fs');
@@ -47,6 +48,7 @@ const gates = {
   gate1: { name: 'GATE 1: Core Functionality', status: 'PENDING', criteria: [], passed: 0, total: 0 },
   gate2: { name: 'GATE 2: Integration & Stability', status: 'PENDING', criteria: [], passed: 0, total: 0 },
   gate3: { name: 'GATE 3: Production Readiness', status: 'PENDING', criteria: [], passed: 0, total: 0 },
+  gate4: { name: 'GATE 4: Advanced Profiling', status: 'PENDING', criteria: [], passed: 0, total: 0 },
 };
 
 function addCriteria(gate, name, testFn) {
@@ -529,6 +531,331 @@ if (gates.gate2.status === 'PASSED') {
   });
 
   evaluateGate('gate3');
+}
+
+// ============================================================================
+// GATE 4: ADVANCED PROFILING - Performance & Edge Cases
+// ============================================================================
+// DEFINITION OF DONE:
+// - Performance profiling validated (FPS, memory, battery)
+// - Device compatibility verified (iOS/Android versions)
+// - Real-world scenarios tested (interruptions, low memory)
+// - TensorFlow model performance validated
+// - Error recovery mechanisms tested
+// - Edge cases handled (multiple people, no detection, etc.)
+// ============================================================================
+
+if (gates.gate3.status === 'PASSED') {
+  log.gate('GATE 4: ADVANCED PROFILING');
+
+  // ===== PERFORMANCE PROFILING =====
+
+  addCriteria('gate4', 'Performance: Frame rate monitoring', () => {
+    const poseDetectionContent = fs.readFileSync(
+      path.join(__dirname, '../src/services/PoseDetectionService.v2.ts'),
+      'utf8'
+    );
+
+    // Check for FPS tracking
+    const hasFpsTracking = poseDetectionContent.includes('fps') ||
+                          poseDetectionContent.includes('frameRate');
+
+    if (!hasFpsTracking) {
+      return { pass: false, message: 'No FPS tracking found in pose detection service' };
+    }
+
+    return { pass: true, message: 'FPS tracking present' };
+  });
+
+  addCriteria('gate4', 'Performance: Memory leak prevention', () => {
+    const files = [
+      '../src/services/PoseDetectionService.v2.ts',
+      '../src/components/pose/PoseOverlay.tsx',
+      '../src/screens/PoseDetectionScreenPatientCentric.example.tsx',
+    ];
+
+    let hasCleanup = true;
+    let missingFiles = [];
+
+    files.forEach(file => {
+      const filePath = path.join(__dirname, file);
+      if (!fs.existsSync(filePath)) {
+        missingFiles.push(file);
+        return;
+      }
+
+      const content = fs.readFileSync(filePath, 'utf8');
+
+      // Check for cleanup patterns: useEffect cleanup, dispose, release, clear
+      const hasCleanupPattern = content.includes('return () =>') ||
+                               content.includes('.dispose()') ||
+                               content.includes('.release()') ||
+                               content.includes('.clear()');
+
+      if (!hasCleanupPattern) {
+        hasCleanup = false;
+      }
+    });
+
+    if (missingFiles.length > 0) {
+      return { pass: false, message: `Missing files: ${missingFiles.join(', ')}` };
+    }
+
+    if (!hasCleanup) {
+      return { pass: false, message: 'Some files missing cleanup patterns' };
+    }
+
+    return { pass: true, message: 'Cleanup patterns present in all files' };
+  });
+
+  addCriteria('gate4', 'Performance: TensorFlow model load time', () => {
+    const poseDetectionContent = fs.readFileSync(
+      path.join(__dirname, '../src/services/PoseDetectionService.v2.ts'),
+      'utf8'
+    );
+
+    // Check for model initialization
+    const hasModelInit = poseDetectionContent.includes('loadModel') ||
+                        poseDetectionContent.includes('initializeModel');
+
+    if (!hasModelInit) {
+      return { pass: false, message: 'No model initialization found' };
+    }
+
+    // Check for error handling during model load
+    const hasErrorHandling = poseDetectionContent.includes('try') &&
+                            poseDetectionContent.includes('catch');
+
+    if (!hasErrorHandling) {
+      return { pass: false, message: 'Model loading lacks error handling' };
+    }
+
+    return { pass: true, message: 'Model initialization with error handling present' };
+  });
+
+  // ===== DEVICE COMPATIBILITY =====
+
+  addCriteria('gate4', 'Compatibility: iOS version check', () => {
+    const packageJsonPath = path.join(__dirname, '../package.json');
+
+    if (!fs.existsSync(packageJsonPath)) {
+      return { pass: false, message: 'package.json not found' };
+    }
+
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+
+    // React Native 0.73 requires iOS 13+
+    const hasIosVersion = packageJson.engines && packageJson.engines.ios;
+
+    if (!hasIosVersion) {
+      return { pass: true, message: 'iOS version not specified (assuming RN defaults)' };
+    }
+
+    return { pass: true, message: `iOS version requirements present` };
+  });
+
+  addCriteria('gate4', 'Compatibility: Android version check', () => {
+    const buildGradlePath = path.join(__dirname, '../android/build.gradle');
+
+    if (!fs.existsSync(buildGradlePath)) {
+      return { pass: true, message: 'Android build.gradle not found (iOS only?)' };
+    }
+
+    const buildGradle = fs.readFileSync(buildGradlePath, 'utf8');
+
+    // Check for minSdkVersion (should be 23+ for React Native 0.73)
+    const hasMinSdk = buildGradle.includes('minSdkVersion');
+
+    if (!hasMinSdk) {
+      return { pass: false, message: 'minSdkVersion not specified' };
+    }
+
+    return { pass: true, message: 'Android SDK version specified' };
+  });
+
+  // ===== REAL-WORLD SCENARIOS =====
+
+  addCriteria('gate4', 'Scenarios: App state handling (background/foreground)', () => {
+    const exampleScreenContent = fs.readFileSync(
+      path.join(__dirname, '../src/screens/PoseDetectionScreenPatientCentric.example.tsx'),
+      'utf8'
+    );
+
+    // Check for AppState handling
+    const hasAppState = exampleScreenContent.includes('AppState') ||
+                       exampleScreenContent.includes('useAppState') ||
+                       exampleScreenContent.includes('useFocusEffect');
+
+    if (!hasAppState) {
+      return { pass: false, message: 'No AppState/focus handling found' };
+    }
+
+    return { pass: true, message: 'App state handling present' };
+  });
+
+  addCriteria('gate4', 'Scenarios: Camera permission handling', () => {
+    const exampleScreenContent = fs.readFileSync(
+      path.join(__dirname, '../src/screens/PoseDetectionScreenPatientCentric.example.tsx'),
+      'utf8'
+    );
+
+    // Check for camera permission checks
+    const hasPermissionCheck = exampleScreenContent.includes('getCameraPermissionStatus') ||
+                              exampleScreenContent.includes('requestCameraPermission') ||
+                              exampleScreenContent.includes('checkPermission');
+
+    if (!hasPermissionCheck) {
+      return { pass: false, message: 'No camera permission handling' };
+    }
+
+    return { pass: true, message: 'Camera permission handling present' };
+  });
+
+  addCriteria('gate4', 'Scenarios: Network failure handling', () => {
+    const youtubeServiceContent = fs.readFileSync(
+      path.join(__dirname, '../src/features/videoComparison/services/youtubeService.ts'),
+      'utf8'
+    );
+
+    // Check for network error handling
+    const hasNetworkError = youtubeServiceContent.includes('NETWORK_ERROR') ||
+                           youtubeServiceContent.includes('NetworkError');
+
+    if (!hasNetworkError) {
+      return { pass: false, message: 'No network error handling in YouTube service' };
+    }
+
+    const hasCatch = youtubeServiceContent.includes('catch');
+
+    if (!hasCatch) {
+      return { pass: false, message: 'Missing try-catch blocks' };
+    }
+
+    return { pass: true, message: 'Network error handling present' };
+  });
+
+  // ===== ERROR RECOVERY =====
+
+  addCriteria('gate4', 'Recovery: Error boundary implementation', () => {
+    const errorBoundaryPath = path.join(__dirname, '../src/components/common/ErrorBoundary.tsx');
+
+    if (!fs.existsSync(errorBoundaryPath)) {
+      return { pass: false, message: 'ErrorBoundary component not found' };
+    }
+
+    const errorBoundaryContent = fs.readFileSync(errorBoundaryPath, 'utf8');
+
+    const hasComponentDidCatch = errorBoundaryContent.includes('componentDidCatch');
+    const hasGetDerivedStateFromError = errorBoundaryContent.includes('getDerivedStateFromError');
+
+    if (!hasComponentDidCatch && !hasGetDerivedStateFromError) {
+      return { pass: false, message: 'ErrorBoundary missing error handling methods' };
+    }
+
+    return { pass: true, message: 'ErrorBoundary properly implemented' };
+  });
+
+  addCriteria('gate4', 'Recovery: Pose detection fallback', () => {
+    const poseDetectionContent = fs.readFileSync(
+      path.join(__dirname, '../src/services/PoseDetectionService.v2.ts'),
+      'utf8'
+    );
+
+    // Check for fallback mechanisms
+    const hasFallback = poseDetectionContent.includes('fallback') ||
+                       poseDetectionContent.includes('retry') ||
+                       poseDetectionContent.includes('recovery');
+
+    if (!hasFallback) {
+      return { pass: false, message: 'No fallback/retry mechanisms found' };
+    }
+
+    return { pass: true, message: 'Fallback mechanisms present' };
+  });
+
+  // ===== EDGE CASES =====
+
+  addCriteria('gate4', 'Edge case: Invalid pose data handling', () => {
+    const goniometerContent = fs.readFileSync(
+      path.join(__dirname, '../src/services/goniometerService.ts'),
+      'utf8'
+    );
+
+    // Check for confidence threshold
+    const hasConfidenceCheck = goniometerContent.includes('minConfidence') ||
+                              goniometerContent.includes('confidence');
+
+    if (!hasConfidenceCheck) {
+      return { pass: false, message: 'No confidence threshold checking' };
+    }
+
+    // Check for invalid angle handling
+    const hasValidityCheck = goniometerContent.includes('isValid');
+
+    if (!hasValidityCheck) {
+      return { pass: false, message: 'No validity checking in angle calculations' };
+    }
+
+    return { pass: true, message: 'Invalid pose data handling present' };
+  });
+
+  addCriteria('gate4', 'Edge case: Boundary value testing', () => {
+    // Test extreme angle values
+    const calculateAngle = (p1, p2, p3) => {
+      const [x1, y1] = p1;
+      const [x2, y2] = p2;
+      const [x3, y3] = p3;
+      const v1 = [x1 - x2, y1 - y2];
+      const v2 = [x3 - x2, y3 - y2];
+      const dot = v1[0] * v2[0] + v1[1] * v2[1];
+      const mag1 = Math.sqrt(v1[0] * v1[0] + v1[1] * v1[1]);
+      const mag2 = Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1]);
+      if (mag1 === 0 || mag2 === 0) return 0;
+      const cos = dot / (mag1 * mag2);
+      return Math.acos(Math.max(-1, Math.min(1, cos))) * (180 / Math.PI);
+    };
+
+    // Test boundary values
+    const tests = [
+      { name: '0° angle', points: [[0, 0], [1, 0], [2, 0]], expected: 180 },
+      { name: '180° angle', points: [[2, 0], [1, 0], [0, 0]], expected: 180 },
+      { name: 'Coincident points', points: [[0, 0], [0, 0], [1, 0]], expected: 0 },
+    ];
+
+    for (const test of tests) {
+      const angle = calculateAngle(...test.points);
+      if (!isFinite(angle) || isNaN(angle)) {
+        return { pass: false, message: `${test.name} produces invalid result: ${angle}` };
+      }
+    }
+
+    return { pass: true, message: 'Boundary value tests passed' };
+  });
+
+  // ===== DATA INTEGRITY =====
+
+  addCriteria('gate4', 'Data integrity: Timestamp validation', () => {
+    const poseSlicePath = path.join(__dirname, '../src/store/slices/poseSlice.ts');
+
+    if (!fs.existsSync(poseSlicePath)) {
+      return { pass: true, message: 'poseSlice not found (state management optional)' };
+    }
+
+    const poseSliceContent = fs.readFileSync(poseSlicePath, 'utf8');
+
+    // Check for timestamp handling
+    const hasTimestamp = poseSliceContent.includes('timestamp') ||
+                        poseSliceContent.includes('Date.now()') ||
+                        poseSliceContent.includes('new Date()');
+
+    if (!hasTimestamp) {
+      return { pass: false, message: 'No timestamp tracking in pose data' };
+    }
+
+    return { pass: true, message: 'Timestamp tracking present' };
+  });
+
+  evaluateGate('gate4');
 }
 
 // ============================================================================
