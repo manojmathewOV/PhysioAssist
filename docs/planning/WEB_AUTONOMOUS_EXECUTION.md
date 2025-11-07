@@ -1,8 +1,28 @@
 # Claude Code Web: Maximum Autonomous Execution Plan
+## Evidence-Driven, Definition-of-Done Remediation
 
 ## 🎯 Goal
 
 Execute **95% of all remediation work** in Claude Code Web, leaving only **5% final native validation** for Claude Code CLI.
+
+This plan is **evidence-driven**: every gate produces committed validation artifacts (`docs/qa/gate-N-verification.md`) with terminal logs, test outputs, and rationale. No gate begins until the previous gate's Definition of Done artifacts are merged.
+
+## 📜 Working Agreements
+
+### No Gate Skipping
+Claude must not start a new gate until the previous gate's DoD artifacts are committed and pushed. This prevents regressions from accumulating.
+
+### Evidence In-Source
+All validation logs, screenshots, and analysis live in the repository (`docs/qa/`, `docs/artifacts/`) so auditors can review history without external tooling.
+
+### Transparent Handoffs
+Every gate documents explicit CLI follow-up tasks with rationale, ensuring the local validation team knows what remains and why it matters.
+
+### Fail Fast
+Replace silent mocks with deterministic errors, backed by tests and documentation, so regressions are visible immediately.
+
+### Shared Vocabulary
+Use gate numbers (1-6) consistently in commit messages, PR descriptions, and updates to keep everyone aligned on progress.
 
 ---
 
