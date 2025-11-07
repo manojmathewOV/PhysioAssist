@@ -46,7 +46,11 @@
     "claude:bridge-server": "node scripts/ios/claude-bridge-server.js",
     "claude:status": "./scripts/ios/claude-bridge.sh status",
     "claude:health": "./scripts/ios/claude-bridge.sh health",
-    "gate:validate": "node scripts/gate-validation.js"
+    "gate:validate": "node scripts/gate-validation.js",
+    "gate:validate:0": "node scripts/validate-gate-0.js",
+    "gate:validate:1": "node scripts/validate-gate-1.js",
+    "gate:validate:2": "node scripts/validate-gate-2.js",
+    "gate:validate:3": "node scripts/validate-gate-3.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.21.0",

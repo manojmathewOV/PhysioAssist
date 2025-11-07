@@ -1,10 +1,21 @@
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { YouTubeVideoInfo, VideoComparisonError } from '../types/videoComparison.types';
 
-// Mock implementations for testing
-const ytdl = require('react-native-ytdl')?.ytdl || {
-  getInfo: async () => ({ videoDetails: {} }),
-};
+// Fixed: Import ytdl correctly - it's the default export
+// Use optional chaining on the require itself for safety
+let ytdl: any;
+try {
+  ytdl = require('react-native-ytdl');
+  // If the module has a .default export, use that
+  if (ytdl.default) {
+    ytdl = ytdl.default;
+  }
+} catch (error) {
+  // Fallback mock for development/testing
+  ytdl = {
+    getInfo: async () => ({ videoDetails: {} }),
+  };
+}
 
 const RNFS = require('react-native-fs') || {
   CachesDirectoryPath: '/cache',
@@ -89,14 +100,16 @@ export class YouTubeService {
       // For now, we'll simulate the download
       const stream = await ytdl(url, { quality: qualityMap[quality] });
 
-      // Simulate progress updates
+      // Fixed: Simulate progress updates with proper cleanup
       if (onProgress) {
+        let currentProgress = 0;
         const progressInterval = setInterval(() => {
-          const progress = Math.random();
-          onProgress(progress);
-          if (progress >= 1) {
+          currentProgress += 0.1;
+          if (currentProgress >= 1) {
+            currentProgress = 1;
             clearInterval(progressInterval);
           }
+          onProgress(currentProgress);
         }, 100);
       }
 
