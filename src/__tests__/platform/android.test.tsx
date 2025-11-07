@@ -290,15 +290,16 @@ describe('Android Platform Tests', () => {
         accessibilityHint: 'Double tap to begin your exercise session',
         accessibilityRole: 'button',
         importantForAccessibility: 'yes',
+        testID: 'exercise-button',
       };
 
       const TestComponent = () => <div {...accessibilityProps}>Start Exercise</div>;
 
-      const { UNSAFE_root } = render(<TestComponent />);
-      const element = UNSAFE_root.firstChild;
+      const { getByTestId } = render(<TestComponent />);
+      const element = getByTestId('exercise-button');
 
-      expect(element).toHaveProperty('accessible', true);
-      expect(element).toHaveProperty('importantForAccessibility', 'yes');
+      expect(element.props.accessible).toBe(true);
+      expect(element.props.importantForAccessibility).toBe('yes');
     });
   });
 
