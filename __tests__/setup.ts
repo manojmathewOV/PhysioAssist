@@ -89,3 +89,14 @@ global.requestAnimationFrame = (callback: FrameRequestCallback) => {
 global.cancelAnimationFrame = (id: number) => {
   clearTimeout(id);
 };
+
+// Cleanup handlers to prevent worker process failures
+afterEach(() => {
+  jest.clearAllTimers();
+  jest.clearAllMocks();
+});
+
+// Allow async cleanup before exit
+afterAll((done) => {
+  setTimeout(done, 100);
+});
