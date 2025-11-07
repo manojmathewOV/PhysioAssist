@@ -109,7 +109,9 @@ GATE 6: Integrated System Validation & Native Build Verification
 
 **Deliverable:** Validated builds tested on real simulators/devices, deployment-ready
 
-**For detailed workflow:** See [Claude Code Workflow: Web → CLI Continuous Iteration](./CLAUDE_CODE_WORKFLOW.md)
+**For detailed workflows:**
+- **Autonomous Execution:** See [Web Autonomous Execution Plan](./WEB_AUTONOMOUS_EXECUTION.md) - 95% web, 5% CLI
+- **Collaborative Iteration:** See [Claude Code Workflow: Web → CLI Continuous Iteration](./CLAUDE_CODE_WORKFLOW.md)
 
 ### Analysis Overview (Granular Code-Level Findings)
 
