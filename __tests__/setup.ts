@@ -32,6 +32,14 @@ jest.mock('react-native-vision-camera', () => ({
 // Mock MediaPipe - using __mocks__/@mediapipe/pose.js
 // Mock TensorFlow.js React Native is in __mocks__ directory
 
+// Mock MediaPipe camera utils
+jest.mock('@mediapipe/camera_utils', () => ({
+  Camera: jest.fn().mockImplementation(() => ({
+    start: jest.fn().mockResolvedValue(undefined),
+    stop: jest.fn().mockResolvedValue(undefined),
+  })),
+}));
+
 // Mock React Native TTS
 jest.mock('react-native-tts', () => ({
   default: {
