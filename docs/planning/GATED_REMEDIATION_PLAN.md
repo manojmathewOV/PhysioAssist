@@ -10,49 +10,93 @@
 
 ## 🎯 EXECUTIVE SUMMARY
 
-This plan provides a **systematic, gate-driven approach** to transform PhysioAssist from **🔴 NOT DEPLOYMENT READY** to **✅ PRODUCTION READY**.
+This plan provides a **systematic, gate-driven approach** to transform PhysioAssist from **🔴 NOT DEPLOYMENT READY** to **✅ PRODUCTION READY**, with clear separation between what Claude Code can achieve autonomously and what requires local macOS/Xcode/Android Studio execution.
 
 ### Critical Findings from Analysis
+- **232 TypeScript errors** across 43 files preventing production builds (latest run)
 - **4 missing runtime dependencies** in pose detection services (`src/services/poseDetectionService.ts:1-3`) causing immediate crashes
 - **Hardcoded authentication bypass** (`src/navigation/RootNavigator.tsx:54-55`) creating HIPAA violation
 - **Silent mock fallbacks** (`src/features/videoComparison/services/youtubeService.ts:13-23`) masking dependency failures
-- **2 stub components** with placeholder text (`src/components/progress/ProgressChart.tsx`, `src/components/exercises/ExerciseSummary.tsx`)
-- **95+ TypeScript errors** preventing production builds
+- **2 stub components** with placeholder text requiring full implementation
 
-### Gate Philosophy
-- ✅ **No Gate Skipping** - Must pass ALL DoD criteria before proceeding
-- ✅ **No Partial Gates** - 100% completion required (tasks + tests + validation)
-- ✅ **Automated Validation** - Scripts enforce gates, not manual approval
-- ✅ **Fail Fast** - Module resolution failures are immediate crashes (correct behavior)
+### Claude Code Web Capabilities (~80-85% of Plan)
+
+**✅ What Claude Code CAN Achieve:**
+- All source code modifications (services, components, navigation, Redux)
+- Dependency declarations in `package.json` (installation prep)
+- TypeScript error resolution (all 232 errors across 43 files)
+- Test scaffolding (Jest, React Native Testing Library, Detox suite creation)
+- Component implementations (ExerciseSummary, ProgressChart with charting libraries)
+- Mock/stub removal and fail-fast error handling
+- Documentation generation and verification reports
+- ESLint fixes and code quality improvements
+
+**❌ What Requires Local macOS/Xcode/Android Studio (~15-20% of Plan):**
+- iOS `pod install` and native module linking
+- Android Gradle sync and native builds
+- Running simulators/emulators (iOS Simulator, Android Emulator)
+- Camera-based pose detection validation (requires device/simulator with camera)
+- Performance profiling (Xcode Instruments, Android Studio Profiler)
+- E2E test execution (Detox requires simulator access)
+- Final build signing and App Store/Play Store submission
+
+### Revised Gate Philosophy
+- ✅ **Two-Phase Execution** - Claude Code delivers all code changes; local environment validates native builds
+- ✅ **No Gate Skipping** - Must pass ALL Claude-achievable DoD criteria before local handoff
+- ✅ **Automated Validation** - Scripts enforce gates where possible; manual checkpoints documented
+- ✅ **Clear Handoff Points** - Each gate specifies "Claude Complete" vs. "Local Validation Required"
 - ✅ **Written Verification Reports** - Stored in `docs/qa/gate-{N}-verification.md`
-- ✅ **Multi-Stakeholder Sign-Off** - Engineering, QA, Security approvals required
+- ✅ **Fail Fast** - Code changes enforce immediate failure rather than silent mocks
 
 ### Overall Objective
-**Ensure every production import resolves to a working, tested implementation with verified security and feature completeness**
+**Claude Code delivers production-ready source code, tests, and documentation; local environment validates native builds, device behavior, and deployment artifacts**
 
 ---
 
-## 📊 GATE STRUCTURE
+## 📊 GATE STRUCTURE (Prioritized for Claude Code Execution)
 
 ```
-GATE 1: Restore Critical Runtime Dependencies & Native Bindings
-  ↓ [All imports resolve, native modules linked, smoke launch succeeds]
+Phase 1: Claude Code Autonomous Execution (Gates 1-5)
+════════════════════════════════════════════════════
 
-GATE 2: Reinstate Secure Authentication & Onboarding Flow
-  ↓ [No hardcoded bypasses, real auth flow tested, security sign-off]
+GATE 1: Prepare Runtime Dependencies (Code Changes Only)
+  ↓ [package.json updated, static imports restored, type declarations added]
+  📦 LOCAL HANDOFF: npm install, pod install, gradle sync
 
-GATE 3: Eliminate Production Mocks & Enforce Fail-Fast Behavior
-  ↓ [No fallback mocks, proper error handling, QA regression pass]
+GATE 2: Restore Secure Authentication & Onboarding Flow (Full)
+  ↓ [No hardcoded bypasses, Redux selectors wired, navigation guards tested]
+  ✅ CLAUDE COMPLETE
 
-GATE 4: Implement Deferred Feature Completeness
-  ↓ [ExerciseSummary & ProgressChart fully implemented, UX sign-off]
+GATE 3: Eliminate Production Mocks & Enforce Fail-Fast (Full)
+  ↓ [No fallback mocks, structured errors, service audit complete]
+  ✅ CLAUDE COMPLETE
 
-GATE 5: Resolve TypeScript & Module Graph Integrity
-  ↓ [0 TypeScript errors, strict mode enabled, CI enforces type-check]
+GATE 4: Implement Feature Completeness (Full)
+  ↓ [ExerciseSummary & ProgressChart fully implemented, charting integrated]
+  ✅ CLAUDE COMPLETE
 
-GATE 6: Integrated System Validation & Release Readiness
-  ↓ [E2E tests pass, device validation complete, deployment artifacts ready]
+GATE 5: Resolve TypeScript & Module Graph Integrity (Full)
+  ↓ [0 TypeScript errors, aliases aligned, strict mode enabled]
+  ✅ CLAUDE COMPLETE
+
+Phase 2: Local macOS Validation (Gate 6)
+════════════════════════════════════════
+
+GATE 6: Integrated System Validation & Native Build Verification
+  ↓ [Native builds succeed, E2E tests pass on devices, deployment ready]
+  📦 LOCAL EXECUTION REQUIRED
 ```
+
+### Execution Strategy
+
+**Claude Code Responsibilities (80-85%):**
+- Gates 2-5: 100% autonomous completion
+- Gate 1: Prepare all code changes; handoff to local for native dependency installation
+- Gate 6: Generate E2E test suites and validation scripts; handoff to local for execution
+
+**Local macOS Responsibilities (15-20%):**
+- Gate 1: Execute `npm install`, `pod install`, `gradle sync`, verify native module linking
+- Gate 6: Run simulators, execute E2E tests, profile performance, sign builds, submit to stores
 
 ### Analysis Overview (Granular Code-Level Findings)
 
@@ -70,9 +114,12 @@ GATE 6: Integrated System Validation & Release Readiness
 
 ---
 
-## 🚧 GATE 1: Restore Critical Runtime Dependencies & Native Bindings
+## 🚧 GATE 1: Prepare Runtime Dependencies (Code Changes Only)
 
-**Goal:** Ensure every production import resolves to an installed, version-locked package with working native bindings across iOS/Android/Web
+**Goal:** Update `package.json`, replace dynamic requires with static imports, add type declarations—prepare for local native installation
+
+**Claude Code Scope:** ✅ FULL (Code changes only)
+**Local Scope:** 📦 HANDOFF REQUIRED (npm install, pod install, gradle sync)
 
 **Status:** 🔴 NOT STARTED
 
@@ -123,25 +170,28 @@ GATE 6: Integrated System Validation & Release Readiness
 
 **Impact:** ~10-15MB wasted bundle size
 
-### Tasks
+### Tasks (Claude Code Scope)
 
-#### Task 1.1: Install TensorFlow.js Dependencies
-```bash
-npm install --save @tensorflow/tfjs@^4.11.0 @tensorflow/tfjs-react-native@^0.8.0
+#### Task 1.1: Add TensorFlow.js Dependencies to package.json
+
+**What Claude Code Does:**
+```json
+// Add to package.json dependencies section
+{
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.11.0",
+    "@tensorflow/tfjs-react-native": "^0.8.0",
+    // ... existing dependencies
+  }
+}
 ```
 
-**Verification:**
-- [ ] `package.json` lines 66-101 contain new entries
-- [ ] `package-lock.json` updated (commit to git)
-- [ ] ESLint no longer shows "Cannot find module '@tensorflow/tfjs'" in `poseDetectionService.ts:1`
-- [ ] TypeScript language server resolves import (VS Code shows no red squiggles)
+**Verification (Claude Code):**
+- [ ] `package.json` contains new TensorFlow entries with semantic versions
+- [ ] Dependencies alphabetically sorted for consistency
+- [ ] Run `npm run type-check --noEmit` to verify import resolution (may still fail until local install)
 
-**Native Binding:**
-- [ ] Run `cd ios && pod install` (link TensorFlow native modules)
-- [ ] Verify `ios/Podfile.lock` contains `TensorFlowLiteC` or similar
-- [ ] Android: Gradle sync auto-links via autolinking (verify no errors in `android/build.gradle`)
-
-**Smoke Test:**
+**Smoke Test Scaffolding (Claude Code Creates):**
 ```typescript
 // Create __tests__/smoke/tensorflow.test.ts
 import * as tf from '@tensorflow/tfjs';
@@ -158,7 +208,22 @@ test('TensorFlow.js initializes', async () => {
   tensor.dispose();
 });
 ```
-- [ ] Test passes: `npm test -- tensorflow.test.ts`
+- [ ] Test file created and committed
+
+**📦 LOCAL HANDOFF (You Execute):**
+```bash
+# Step 1: Install packages
+npm install
+
+# Step 2: iOS native linking
+cd ios && pod install && cd ..
+
+# Step 3: Run smoke test
+npm test -- __tests__/smoke/tensorflow.test.ts
+
+# Step 4: Verify Podfile.lock contains TensorFlow entries
+grep -i "tensorflow" ios/Podfile.lock
+```
 
 #### Task 1.2: Install MediaPipe Pose Dependencies
 ```bash
@@ -513,11 +578,33 @@ Create `docs/qa/gate-1-verification.md` with:
 
 ---
 
-## 🔐 GATE 1: Authentication & Security Fixes
+## 🔐 GATE 2: Restore Secure Authentication & Onboarding Flow
 
-**Objective:** Remove authentication bypass and establish secure production authentication flow
+**Goal:** Remove hardcoded authentication bypass, wire Redux selectors, implement secure navigation guards
 
-**Status:** 🔴 BLOCKED (Requires Gate 0 completion)
+**Claude Code Scope:** ✅ FULL (100% autonomous completion)
+**Local Scope:** ✅ NO HANDOFF REQUIRED (All code changes, tests can run in Claude environment)
+
+**Status:** 🔴 BLOCKED (Requires Gate 1 completion)
+
+### Multi-Perspective Deep Dive
+
+**State Management & Navigation Perspective:**
+- `src/navigation/RootNavigator.tsx:54-55` hardcodes `isAuthenticated` and `hasCompletedOnboarding` to `true`, bypassing the intended navigation stacks
+- Redux store (`src/store/index.ts` and associated slices) already maintains authentication state; selectors must be wired back into the navigator so hydration controls initial routing
+- Navigation stacks should separate unauthenticated screens (Login, Onboarding) from the main app; Jest/React Navigation Testing Library integration tests must cover transitions across stacks
+
+**Security & Compliance Perspective:**
+- Bypassing auth violates HIPAA obligations for a medical application. Restoring secure flows requires proof of enforced login, session handling, and logout behavior
+- Audit logs or documentation should confirm no alternate bypass paths exist (e.g., deep link handlers, legacy flags, developer settings)
+
+**User Experience Perspective:**
+- Onboarding must be reachable for first-time users and skippable only via proper state transitions. Localization, accessibility, and analytics instrumentation should confirm the flow executes as designed
+- Logout or session expiry should reliably return users to the login screen, avoiding cached authenticated routes
+
+**QA & Automation Perspective:**
+- Automated tests (React Native Testing Library) should assert navigation guards: unauthenticated users cannot access main app routes; completed onboarding unlocks the dashboard
+- Manual regression documentation required: fresh install → login prompt → onboarding → main app → logout → login prompt
 
 ### Scope
 Fix **critical security breach** in `RootNavigator.tsx` where authentication is hardcoded to `true`
@@ -660,14 +747,31 @@ const RootNavigator = () => {
 
 ---
 
-## 🧹 GATE 2: Production Code Cleanup (Remove Mocks/Stubs)
+## 🧹 GATE 3: Eliminate Production Mocks & Enforce Fail-Fast Behavior
 
-**Objective:** Remove all fallback mocks and test code from production paths
+**Goal:** Remove all fallback mocks, enforce fail-fast error handling, ensure production services use real implementations
 
-**Status:** 🔴 BLOCKED (Requires Gate 1 completion)
+**Claude Code Scope:** ✅ FULL (100% autonomous completion)
+**Local Scope:** ✅ NO HANDOFF REQUIRED (Code changes and tests)
 
-### Scope
-Fix **silent failures** caused by fallback mocks in production services
+**Status:** 🔴 BLOCKED (Requires Gate 2 completion)
+
+### Multi-Perspective Deep Dive
+
+**Service Reliability & Data Integrity Perspective:**
+- `src/features/videoComparison/services/youtubeService.ts:6-23` suppresses runtime dependency failures by substituting mock objects that return empty metadata or succeed without writing files, masking real defects and yielding silent data loss
+- Other services (e.g., `src/services/deviceHealthMonitor.ts`, `src/services/initializationService.ts`, `src/services/mockServer.ts`) must be audited to ensure no mock pathways remain wired into production bundles; lingering stubs can corrupt telemetry or block diagnostics
+
+**Error Handling & Observability Perspective:**
+- Removing mocks requires structured error propagation: services should throw domain-specific errors, surfaced via UI to prompt user remediation (e.g., reinstalling or checking connectivity)
+- Centralized logging or error boundary components must record failures for downstream monitoring, ensuring operations teams can detect regressions quickly
+
+**Security & Compliance Perspective:**
+- Mock responses may omit authentication checks or audit logging, weakening compliance posture if they continue to execute in production flows
+
+**QA & Automation Perspective:**
+- Unit and integration tests must validate both success and failure branches without relying on production mocks; Jest suites should inject controlled fakes within test environments only
+- Regression passes (documentation) must confirm that real services (YouTube metadata retrieval, filesystem caching, pose detection initialization) operate correctly and report errors when dependencies are missing
 
 ### Tasks
 
@@ -828,11 +932,35 @@ async downloadVideo(url: string): Promise<string> {
 
 ---
 
-## 📝 GATE 3: TypeScript Compilation & Type Safety
+## 🏗️ GATE 4: Implement Feature Completeness (Exercise Summary & Progress Chart)
 
-**Objective:** Fix all 95+ TypeScript errors and achieve strict type safety
+**Goal:** Deliver full exercise analytics UI with real data visualization, completing stub components
 
-**Status:** 🔴 BLOCKED (Requires Gate 2 completion)
+**Claude Code Scope:** ✅ FULL (100% autonomous completion)
+**Local Scope:** ✅ NO HANDOFF REQUIRED (Component implementation and tests)
+
+**Status:** 🔴 BLOCKED (Requires Gate 3 completion)
+
+### Multi-Perspective Deep Dive
+
+**Product & UX Perspective:**
+- `src/components/exercises/ExerciseSummary.tsx` and `src/components/progress/ProgressChart.tsx` are placeholders lacking analytics, visualizations, and feedback required for a rehab-focused product; fulfilling product promises demands comprehensive data presentation and accessibility compliance
+- Collaboration with product/UX is needed to define metrics (form quality, adherence trends, pain scores) and visualization types (line charts, radar plots) that align with therapeutic goals
+
+**Data & Analytics Perspective:**
+- Implementations must interface with real data sources (Redux slices, REST/GraphQL endpoints). Data shaping, aggregation over time, and handling of missing/partial datasets must be defined to prevent misleading feedback
+- Historical comparisons and predictive insights may necessitate new selectors or server endpoints; coordination with backend teams ensures consistency and performance
+
+**Technical Implementation Perspective:**
+- Selecting a charting library (e.g., `react-native-svg`, `victory-native`, `react-native-chart-kit`) requires evaluating performance impact, platform parity (iOS/Android/Web), and theming
+- Components must support responsive layouts, localization, color contrast ratios, and dynamic accessibility scaling
+
+**Testing & Validation Perspective:**
+- Unit tests should cover data transformation logic and edge cases (no data, partial data). Snapshot and visual regression tests ensure UI stability
+- Acceptance testing with clinicians or PMs validates metric accuracy, while UX review sessions capture feedback on clarity and interpretability
+
+### Scope
+Complete two critical stub components that currently show placeholder text
 
 ### Scope
 Fix **95+ TypeScript compilation errors** preventing production build
@@ -1221,11 +1349,281 @@ return (
 
 ---
 
-## ✅ GATE 5: Integration Testing & Deployment Readiness
+## 📝 GATE 5: Resolve TypeScript & Module Graph Integrity
 
-**Objective:** Execute end-to-end tests, validate deployment readiness, obtain final approvals
+**Goal:** Fix all 232 TypeScript errors across 43 files, achieve strict type safety, align module paths
+
+**Claude Code Scope:** ✅ FULL (100% autonomous completion)
+**Local Scope:** ✅ NO HANDOFF REQUIRED (All type fixes and configuration)
 
 **Status:** 🔴 BLOCKED (Requires Gate 4 completion)
+
+### Multi-Perspective Deep Dive
+
+**Type System & Developer Productivity Perspective:**
+- The latest `npm run type-check` reveals **232 errors across 43 files**, spanning missing exports, incorrect module paths, and invalid type assumptions (e.g., `@mediapipe/pose` unresolved, pose landmark typings, React component prop mismatches)
+- These systemic failures block IDE intellisense, automated refactoring, and ultimately any reliable build
+- Configuration shows extensive alias usage (`@components/*`, `@services/*`, etc.), so misalignment between `tsconfig.json` path mappings and Babel's module resolver directly contributes to module resolution errors
+
+**Build & Tooling Perspective:**
+- Metro (mobile), Webpack (web), and Jest each depend on consistent alias definitions; any divergence produces environment-specific runtime failures
+- With `noEmit` builds enforced, every new merge will continue failing CI unless all type errors are eradicated and tooling aligns on module graph semantics
+
+**Quality & Testing Perspective:**
+- Type errors inside test suites (`src/__tests__`, `e2e/`) demonstrate that even validation harnesses are unusable; resolving them is a prerequisite for regression coverage or gate validations
+
+### Scope
+Systematically resolve all 232 TypeScript errors, align path aliases, enable strict mode
+
+### Tasks (Claude Code Execution)
+
+#### Task 5.1: Audit and Categorize All 232 TypeScript Errors
+- [ ] Run `npm run type-check` and capture full output
+- [ ] Group errors by category:
+  - Missing modules (TS2307, TS6137)
+  - Missing exports (TS2614, TS2305)
+  - Incorrect exports/imports
+  - Type mismatches (TS2322, TS2741)
+  - Implicit anys
+  - Prop mismatches in React components
+- [ ] Prioritize by impact: critical paths first (pose detection, navigation, Redux)
+
+#### Task 5.2: Align Path Aliases Across tsconfig.json and babel.config.js
+**Current Issue:** `tsconfig.json` and `babel.config.js` have inconsistent path mappings
+
+**Fix:**
+```json
+// tsconfig.json - ensure these match babel
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["src/components/*"],
+      "@services/*": ["src/services/*"],
+      "@features/*": ["src/features/*"],
+      "@navigation/*": ["src/navigation/*"],
+      "@screens/*": ["src/screens/*"],
+      "@store/*": ["src/store/*"],
+      "@types/*": ["src/types/*"],
+      "@utils/*": ["src/utils/*"]
+    }
+  }
+}
+```
+
+```javascript
+// babel.config.js - ensure these match tsconfig
+module.exports = {
+  plugins: [
+    ['module-resolver', {
+      root: ['./src'],
+      alias: {
+        '@components': './src/components',
+        '@services': './src/services',
+        '@features': './src/features',
+        '@navigation': './src/navigation',
+        '@screens': './src/screens',
+        '@store': './src/store',
+        '@types': './src/types',
+        '@utils': './src/utils'
+      }
+    }]
+  ]
+};
+```
+- [ ] Verify aliases are identical in both configs
+- [ ] Run `npm run type-check` to confirm TS2307 errors reduced
+
+#### Task 5.3: Add Type Definitions for External Libraries
+**Missing type definitions for:**
+- `@mediapipe/pose` (from Gate 1)
+- `@tensorflow/tfjs`
+- `react-native-ytdl`
+- `react-native-fs`
+
+**Create `src/types/mediapipe.d.ts`:**
+```typescript
+declare module '@mediapipe/pose' {
+  export interface PoseLandmark {
+    x: number;
+    y: number;
+    z: number;
+    visibility?: number;
+  }
+
+  export interface Results {
+    poseLandmarks: PoseLandmark[];
+    poseLandmarksWorld?: PoseLandmark[];
+  }
+
+  export class Pose {
+    constructor(config: { locateFile: (file: string) => string });
+    setOptions(options: {
+      modelComplexity?: 0 | 1 | 2;
+      smoothLandmarks?: boolean;
+      enableSegmentation?: boolean;
+      minDetectionConfidence?: number;
+      minTrackingConfidence?: number;
+    }): void;
+    send(input: { image: HTMLImageElement | HTMLVideoElement }): Promise<void>;
+    onResults(callback: (results: Results) => void): void;
+    close(): void;
+  }
+}
+
+declare module '@mediapipe/camera_utils' {
+  export class Camera {
+    constructor(videoElement: HTMLVideoElement, options: any);
+    start(): Promise<void>;
+    stop(): void;
+  }
+}
+```
+
+**Create other necessary `.d.ts` files in `src/types/`**
+- [ ] All external library imports have type definitions
+- [ ] Run `npm run type-check` to confirm TS2307 errors resolved for these modules
+
+#### Task 5.4: Fix Redux Slice Export Issues
+**Common pattern:** Actions/selectors not exported or incorrectly typed
+
+- [ ] Review `src/store/slices/*.ts` for missing exports
+- [ ] Ensure all actions are exported from slice files
+- [ ] Verify selectors have explicit return types
+- [ ] Fix component imports that reference non-existent exports
+
+#### Task 5.5: Fix React Component Prop Type Mismatches
+**Common errors:** Components receiving props that don't match interface
+
+- [ ] Define explicit prop interfaces for all components
+- [ ] Use TypeScript generics correctly for React Navigation types
+- [ ] Fix pose detection screen prop mismatches
+- [ ] Ensure Redux `useSelector` hooks have proper return types
+
+#### Task 5.6: Eliminate Implicit `any` Types
+- [ ] Search for implicit `any` in codebase
+- [ ] Add explicit type annotations
+- [ ] For legitimate `any` uses, add justification comments
+- [ ] Enable `noImplicitAny` in tsconfig.json
+
+#### Task 5.7: Enable Strict Mode
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true
+  }
+}
+```
+- [ ] Enable strict mode
+- [ ] Fix new errors exposed by strict checks
+- [ ] Document any necessary exceptions
+
+#### Task 5.8: Final Verification
+- [ ] Run `npm run type-check` → **0 errors**
+- [ ] Run `npm run lint` → 0 TypeScript ESLint errors
+- [ ] All test files compile without type errors
+- [ ] IDE (VS Code) shows no red squiggles in critical files
+
+---
+
+### Definition of Done (Gate 5)
+
+#### ✅ Functional Criteria
+- [ ] `npm run type-check` returns **0 errors** (down from 232)
+- [ ] Strict mode enabled in `tsconfig.json`
+- [ ] Path aliases aligned between `tsconfig.json` and `babel.config.js`
+- [ ] All external library imports have type definitions
+- [ ] No implicit `any` types without justification
+- [ ] All React components have typed props
+- [ ] All Redux actions and selectors properly typed
+
+#### ✅ Testing Criteria
+- [ ] `npm run type-check` → 0 errors
+- [ ] `npm run lint` → 0 TypeScript ESLint errors
+- [ ] All existing Jest tests compile and run
+- [ ] No type-related test failures
+
+#### ✅ Code Quality Criteria
+- [ ] No `@ts-ignore` without justification comments
+- [ ] No `as any` casts without documentation
+- [ ] Exported functions have explicit return types
+- [ ] Type coverage report shows >85% coverage
+
+#### ✅ Documentation Criteria
+- [ ] Create `docs/TYPE_DEFINITIONS.md` documenting custom types
+- [ ] Document path alias configuration
+- [ ] List any justified `any` types with explanations
+
+#### ✅ Sign-Off
+```markdown
+# Gate 5 Verification Report
+**Date:** _______
+**Verifier:** _____________
+
+## TypeScript Error Resolution
+- Before: 232 errors across 43 files
+- After: 0 errors
+- Errors resolved: 232 ✅
+
+## Configuration Alignment
+- ✅ tsconfig.json and babel.config.js aliases aligned
+- ✅ Strict mode enabled
+- ✅ Type definitions added for all external libraries
+
+## Stakeholder Sign-Off
+- **Engineering:** _____________ Date: _______
+- **Type Safety Reviewer:** _____________ Date: _______
+- **TypeScript errors:** 0 / 232 ✅
+- **Ready for Gate 6:** YES / NO
+```
+
+---
+
+### Gate 5 Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| Type fixes introduce runtime regressions | Medium | High | Comprehensive test suite execution after each batch |
+| Strict mode reveals 100+ additional errors | Medium | Medium | Incremental enablement, fix category by category |
+| Alias misconfiguration breaks builds | Low | Critical | Test across all environments (Metro, Jest, Webpack) |
+| Type coverage goal unachievable | Low | Medium | Focus on critical paths, document exceptions |
+
+---
+
+## ✅ GATE 6: Integrated System Validation & Native Build Verification
+
+**Goal:** Execute E2E tests, validate native builds, verify deployment readiness
+
+**Claude Code Scope:** ✅ PARTIAL (Test suite generation, validation scripts)
+**Local Scope:** 📦 FULL HANDOFF REQUIRED (Simulator/device execution, profiling, deployment)
+
+**Status:** 🔴 BLOCKED (Requires Gate 5 completion)
+
+### Multi-Perspective Deep Dive
+
+**Testing Infrastructure Perspective:**
+- Documentation advertises comprehensive suites (`npm run test:all`, gate validations, specialized service tests), but earlier gate issues mean these pipelines require Gate 1-5 completion before they can execute successfully
+- Ensuring end-to-end coverage demands coordinated Detox (mobile), browser automation (web), and backend integration testing to exercise real services without mocks
+
+**Operational & Performance Perspective:**
+- Real-device sessions must profile pose detection latency, thermal limits, and memory usage to confirm viability for rehab scenarios; performance regressions can only surface through prolonged instrumentation runs
+- Logging/monitoring pathways should be validated to capture production telemetry for incidents
+
+**Security & Compliance Perspective:**
+- HIPAA-aligned workflows (authenticated access, encrypted storage) require final sign-off once Gate 2 reintroduces authentication and Gate 3 removes mocks
+- Gate 6 should consolidate evidence (screenshots, logs, reports) proving compliance
+
+**Release Management Perspective:**
+- Final artifacts (iOS/Android builds, web bundles) must be generated from the stabilized branch and stored with traceability, accompanied by a release checklist detailing test coverage and approvals
+
+### Scope
+Generate E2E test suites, validation scripts; execute on local devices/simulators
 
 ### Scope
 Comprehensive integration testing and deployment preparation
