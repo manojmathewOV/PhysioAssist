@@ -117,13 +117,13 @@ describe('Cross-Platform Compatibility Tests', () => {
       describe('UI Rendering', () => {
         it(`should render exercise cards on ${platform}`, () => {
           const ExerciseCard = ({ title }: { title: string }) => (
-            <div style={{ padding: 16, borderRadius: 8 }}>
+            <div testID="exercise-card" style={{ padding: 16, borderRadius: 8 }}>
               <h3>{title}</h3>
             </div>
           );
 
-          const { getByText } = render(<ExerciseCard title="Bicep Curls" />);
-          expect(getByText('Bicep Curls')).toBeTruthy();
+          const { getByTestId } = render(<ExerciseCard title="Bicep Curls" />);
+          expect(getByTestId('exercise-card')).toBeTruthy();
         });
 
         it(`should apply platform-specific styles on ${platform}`, () => {

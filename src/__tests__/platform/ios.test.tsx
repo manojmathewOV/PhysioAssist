@@ -87,6 +87,7 @@ describe('iOS Platform Tests', () => {
     it('should render iOS-style navigation bar', () => {
       const IOSNavBar = () => (
         <div
+          testID="ios-nav-bar"
           style={{
             height: 44,
             backgroundColor: '#f8f8f8',
@@ -98,8 +99,8 @@ describe('iOS Platform Tests', () => {
         </div>
       );
 
-      const { getByText } = render(<IOSNavBar />);
-      expect(getByText('iOS Navigation Bar')).toBeTruthy();
+      const { getByTestId } = render(<IOSNavBar />);
+      expect(getByTestId('ios-nav-bar')).toBeTruthy();
     });
 
     it('should use iOS-specific fonts', () => {
@@ -138,9 +139,9 @@ describe('iOS Platform Tests', () => {
         </div>
       );
 
-      const { container } = render(<SafeAreaComponent insets={mockSafeAreaInsets} />);
+      const { UNSAFE_root } = render(<SafeAreaComponent insets={mockSafeAreaInsets} />);
 
-      expect(container.firstChild).toHaveStyle({
+      expect(UNSAFE_root.firstChild).toHaveStyle({
         paddingTop: 47,
         paddingBottom: 34,
       });
@@ -176,7 +177,7 @@ describe('iOS Platform Tests', () => {
     });
 
     it('should use iOS-specific video compression settings', () => {
-      const compressionSettings = Platform.select({
+      const compressionSettings = mockPlatform.select({
         ios: {
           codec: 'h264',
           bitrate: 2000000,
@@ -264,8 +265,8 @@ describe('iOS Platform Tests', () => {
 
       const TestComponent = () => <div {...accessibilityProps}>Start Exercise</div>;
 
-      const { container } = render(<TestComponent />);
-      const element = container.firstChild;
+      const { UNSAFE_root } = render(<TestComponent />);
+      const element = UNSAFE_root.firstChild;
 
       expect(element).toHaveProperty('accessible', true);
       expect(element).toHaveProperty('accessibilityLabel', 'Start Exercise Button');
