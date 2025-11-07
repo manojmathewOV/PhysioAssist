@@ -89,14 +89,27 @@ GATE 6: Integrated System Validation & Native Build Verification
 
 ### Execution Strategy
 
-**Claude Code Responsibilities (80-85%):**
-- Gates 2-5: 100% autonomous completion
-- Gate 1: Prepare all code changes; handoff to local for native dependency installation
-- Gate 6: Generate E2E test suites and validation scripts; handoff to local for execution
+**Two-Phase Continuous Workflow:**
 
-**Local macOS Responsibilities (15-20%):**
-- Gate 1: Execute `npm install`, `pod install`, `gradle sync`, verify native module linking
-- Gate 6: Run simulators, execute E2E tests, profile performance, sign builds, submit to stores
+**Phase 1: Claude Code Web (Autonomous - Gates 1-5 Code)**
+- Gate 1: Update `package.json`, static imports, type declarations (code prep only)
+- Gate 2: Wire authentication to Redux, remove bypasses (100% complete)
+- Gate 3: Remove production mocks, add fail-fast errors (100% complete)
+- Gate 4: Implement ExerciseSummary & ProgressChart (100% complete)
+- Gate 5: Fix 232 TypeScript errors, strict mode (100% complete)
+
+**Deliverable:** Branch with all source code changes, ready for native validation
+
+**Phase 2: Claude Code CLI (Collaborative - Local Validation)**
+- **You:** Pull branch, open Claude Code CLI on macOS
+- **Claude CLI:** Execute `npm install`, `pod install`, `npm run ios:sim`
+- **Collaboration:** You watch simulator, Claude CLI iterates fixes based on your feedback
+- **Claude CLI:** Run E2E tests, performance profiling, generate deployment artifacts
+- **Leverage:** Your existing bridge infrastructure (`claude:bridge`, `claude:iterate`, `ios:watch`)
+
+**Deliverable:** Validated builds tested on real simulators/devices, deployment-ready
+
+**For detailed workflow:** See [Claude Code Workflow: Web → CLI Continuous Iteration](./CLAUDE_CODE_WORKFLOW.md)
 
 ### Analysis Overview (Granular Code-Level Findings)
 
