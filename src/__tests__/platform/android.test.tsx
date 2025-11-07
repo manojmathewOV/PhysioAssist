@@ -8,37 +8,45 @@ import { render } from '@testing-library/react-native';
 import React from 'react';
 
 // Mock Platform for Android
-jest.mock('react-native', () => ({
-  ...jest.requireActual('react-native'),
-  Platform: {
-    OS: 'android',
-    Version: 33, // Android 13
-    select: jest.fn((obj) => obj.android),
-    isPad: false,
-    isTV: false,
-  },
-  PermissionsAndroid: {
-    PERMISSIONS: {
-      CAMERA: 'android.permission.CAMERA',
-      WRITE_EXTERNAL_STORAGE: 'android.permission.WRITE_EXTERNAL_STORAGE',
-      READ_EXTERNAL_STORAGE: 'android.permission.READ_EXTERNAL_STORAGE',
-      RECORD_AUDIO: 'android.permission.RECORD_AUDIO',
+jest.mock('react-native', () => {
+  const RN = jest.requireActual('react-native');
+  return {
+    ...RN,
+    Platform: {
+      OS: 'android',
+      Version: 33, // Android 13
+      select: jest.fn((obj) => obj.android),
+      isPad: false,
+      isTV: false,
     },
-    RESULTS: {
-      GRANTED: 'granted',
-      DENIED: 'denied',
-      NEVER_ASK_AGAIN: 'never_ask_again',
+    PermissionsAndroid: {
+      PERMISSIONS: {
+        CAMERA: 'android.permission.CAMERA',
+        WRITE_EXTERNAL_STORAGE: 'android.permission.WRITE_EXTERNAL_STORAGE',
+        READ_EXTERNAL_STORAGE: 'android.permission.READ_EXTERNAL_STORAGE',
+        RECORD_AUDIO: 'android.permission.RECORD_AUDIO',
+      },
+      RESULTS: {
+        GRANTED: 'granted',
+        DENIED: 'denied',
+        NEVER_ASK_AGAIN: 'never_ask_again',
+      },
+      request: jest.fn(),
+      requestMultiple: jest.fn(),
+      check: jest.fn(),
     },
-    request: jest.fn(),
-    requestMultiple: jest.fn(),
-    check: jest.fn(),
-  },
-  BackHandler: {
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    exitApp: jest.fn(),
-  },
-}));
+    BackHandler: {
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      exitApp: jest.fn(),
+    },
+    Settings: {
+      get: jest.fn(),
+      set: jest.fn(),
+      watchKeys: jest.fn(() => ({ remove: jest.fn() })),
+    },
+  };
+});
 
 describe('Android Platform Tests', () => {
   beforeEach(() => {
@@ -143,6 +151,7 @@ describe('Android Platform Tests', () => {
     it('should render Android Material Design components', () => {
       const AndroidButton = () => (
         <div
+          testID="android-button"
           style={{
             elevation: 2,
             backgroundColor: '#2196F3',
@@ -154,8 +163,8 @@ describe('Android Platform Tests', () => {
         </div>
       );
 
-      const { getByText } = render(<AndroidButton />);
-      expect(getByText('Android Material Button')).toBeTruthy();
+      const { getByTestId } = render(<AndroidButton />);
+      expect(getByTestId('android-button')).toBeTruthy();
     });
 
     it('should use Android-specific fonts', () => {
@@ -285,8 +294,8 @@ describe('Android Platform Tests', () => {
 
       const TestComponent = () => <div {...accessibilityProps}>Start Exercise</div>;
 
-      const { container } = render(<TestComponent />);
-      const element = container.firstChild;
+      const { UNSAFE_root } = render(<TestComponent />);
+      const element = UNSAFE_root.firstChild;
 
       expect(element).toHaveProperty('accessible', true);
       expect(element).toHaveProperty('importantForAccessibility', 'yes');
