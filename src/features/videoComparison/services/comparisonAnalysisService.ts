@@ -20,7 +20,17 @@ export class ComparisonAnalysisService {
     critical: 30,
   };
 
-  private static readonly CRITICAL_JOINTS = ['elbow', 'shoulder', 'knee', 'hip'];
+  // Changed to bilateral - analyze both left and right sides
+  private static readonly CRITICAL_JOINTS = [
+    'leftElbow',
+    'rightElbow',
+    'leftShoulder',
+    'rightShoulder',
+    'leftKnee',
+    'rightKnee',
+    'leftHip',
+    'rightHip',
+  ];
 
   static analyzeMovement(
     referencePoses: PoseFrame[],
@@ -102,15 +112,10 @@ export class ComparisonAnalysisService {
   }
 
   private static extractJointAngles(poses: PoseFrame[], joint: string): number[] {
+    // Joint is now full name like 'leftElbow', 'rightKnee', etc. - no more hard-coded 'left' prefix
     return poses
-      .filter(
-        (pose) =>
-          pose.angles &&
-          pose.angles[`left${joint.charAt(0).toUpperCase() + joint.slice(1)}`]
-      )
-      .map(
-        (pose) => pose.angles![`left${joint.charAt(0).toUpperCase() + joint.slice(1)}`]
-      );
+      .filter((pose) => pose.angles && pose.angles[joint])
+      .map((pose) => pose.angles![joint]);
   }
 
   private static calculateAverage(values: number[]): number {
@@ -143,7 +148,10 @@ export class ComparisonAnalysisService {
     return {
       offset: 0, // Simplified for now
       confidence,
-      speedRatio: 1 / speedRatio, // Inverted so >1 means user is faster
+      // Fixed: Remove inversion. Now speedRatio = userDuration / refDuration
+      // speedRatio > 1 means user is SLOWER (took more time)
+      // speedRatio < 1 means user is FASTER (took less time)
+      speedRatio,
       phaseAlignment,
     };
   }
@@ -170,14 +178,22 @@ export class ComparisonAnalysisService {
     // Detect key phases in movement (peaks, valleys, transitions)
     const phases: number[] = [];
 
-    for (let i = 1; i < poses.length - 1; i++) {
-      const prev = poses[i - 1].angles?.leftElbow || 0;
-      const curr = poses[i].angles?.leftElbow || 0;
-      const next = poses[i + 1].angles?.leftElbow || 0;
+    // Fixed: Use multiple joints to detect phases, not just leftElbow
+    // This works for all exercise types (shoulder, knee, elbow)
+    const primaryJoints = ['leftElbow', 'rightElbow', 'leftKnee', 'rightKnee', 'leftShoulder', 'rightShoulder'];
 
-      // Detect peaks and valleys
-      if ((curr > prev && curr > next) || (curr < prev && curr < next)) {
-        phases.push(poses[i].timestamp);
+    for (let i = 1; i < poses.length - 1; i++) {
+      // Check for peaks/valleys across any primary joint
+      for (const joint of primaryJoints) {
+        const prev = poses[i - 1].angles?.[joint] || 0;
+        const curr = poses[i].angles?.[joint] || 0;
+        const next = poses[i + 1].angles?.[joint] || 0;
+
+        // Detect peaks and valleys
+        if ((curr > prev && curr > next) || (curr < prev && curr < next)) {
+          phases.push(poses[i].timestamp);
+          break; // Only add timestamp once per frame
+        }
       }
     }
 
@@ -205,10 +221,10 @@ export class ComparisonAnalysisService {
   private static calculatePoseSimilarity(pose1: PoseFrame, pose2: PoseFrame): number {
     if (!pose1.angles || !pose2.angles) return 0;
 
+    // Fixed: Use full joint names directly (e.g., 'leftElbow', 'rightKnee')
     const angleDiffs = this.CRITICAL_JOINTS.map((joint) => {
-      const key = `left${joint.charAt(0).toUpperCase() + joint.slice(1)}`;
-      const angle1 = pose1.angles![key] || 0;
-      const angle2 = pose2.angles![key] || 0;
+      const angle1 = pose1.angles![joint] || 0;
+      const angle2 = pose2.angles![joint] || 0;
       return Math.abs(angle1 - angle2);
     });
 
@@ -273,25 +289,28 @@ export class ComparisonAnalysisService {
     });
 
     // Tempo-based recommendations
+    // Fixed: speedRatio > 1 means user is SLOWER (took more time)
+    // speedRatio < 1 means user is FASTER (took less time)
     if (temporalAlignment.speedRatio > 1.2) {
       recommendations.push({
         type: 'tempo',
         priority: 'medium',
-        message: 'Slow down your movement',
-        detail: `You're moving ${((temporalAlignment.speedRatio - 1) * 100).toFixed(0)}% faster than the reference`,
+        message: 'Speed up your movement',
+        detail: `You're moving ${((temporalAlignment.speedRatio - 1) * 100).toFixed(0)}% slower than the reference`,
       });
     } else if (temporalAlignment.speedRatio < 0.8) {
       recommendations.push({
         type: 'tempo',
         priority: 'medium',
-        message: 'Speed up your movement',
-        detail: `You're moving ${((1 - temporalAlignment.speedRatio) * 100).toFixed(0)}% slower than the reference`,
+        message: 'Slow down your movement',
+        detail: `You're moving ${((1 - temporalAlignment.speedRatio) * 100).toFixed(0)}% faster than the reference`,
       });
     }
 
     // Exercise-specific recommendations
+    // Fixed: Use bilateral joint names (leftKnee, rightKnee, leftElbow, rightElbow)
     if (exerciseType === 'squat') {
-      const kneeDeviation = angleDeviations.find((d) => d.joint === 'knee');
+      const kneeDeviation = angleDeviations.find((d) => d.joint === 'leftKnee' || d.joint === 'rightKnee');
       if (kneeDeviation && kneeDeviation.userAngle > 100) {
         recommendations.push({
           type: 'range',
@@ -302,7 +321,7 @@ export class ComparisonAnalysisService {
       }
     } else if (exerciseType === 'bicep_curl') {
       // Check for incomplete range of motion in bicep curls
-      const elbowDeviation = angleDeviations.find((d) => d.joint === 'elbow');
+      const elbowDeviation = angleDeviations.find((d) => d.joint === 'leftElbow' || d.joint === 'rightElbow');
       if (elbowDeviation) {
         // Check if user's range is significantly less than reference
         const rangeRatio =
@@ -333,6 +352,10 @@ export class ComparisonAnalysisService {
     deviation: AngleDeviation,
     exerciseType: string
   ): string {
+    // Fixed: Support bilateral joint names (leftElbow, rightElbow, etc.)
+    // Extract base joint name for lookups (e.g., 'leftElbow' -> 'elbow')
+    const baseJoint = deviation.joint.replace(/^(left|right)/, '').toLowerCase();
+
     const corrections: Record<string, Record<string, string>> = {
       bicep_curl: {
         elbow:
@@ -348,7 +371,7 @@ export class ComparisonAnalysisService {
     };
 
     return (
-      corrections[exerciseType]?.[deviation.joint] ||
+      corrections[exerciseType]?.[baseJoint] ||
       `Adjust your ${deviation.joint} to match the reference angle`
     );
   }

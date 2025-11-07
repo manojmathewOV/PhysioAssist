@@ -102,6 +102,10 @@ android/build/
 
 # Metro
 .metro-health-check*
+metro.log
+
+# Claude Bridge (runtime state)
+.claude-bridge/
 
 # Yarn
 .yarn/*

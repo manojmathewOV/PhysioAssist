@@ -19,6 +19,11 @@ export class AudioFeedbackService {
   private speakingQueue: string[] = [];
   private isSpeaking: boolean = false;
 
+  // Fixed: Store listener references for proper cleanup
+  private ttsStartListener: (() => void) | null = null;
+  private ttsFinishListener: (() => void) | null = null;
+  private ttsCancelListener: (() => void) | null = null;
+
   constructor(config: Partial<FeedbackConfig> = {}) {
     this.config = {
       enableSpeech: true,
@@ -39,20 +44,25 @@ export class AudioFeedbackService {
       await Tts.setDefaultRate(this.config.speechRate);
       await Tts.setDefaultPitch(this.config.speechPitch);
 
-      // Set up TTS event listeners
-      Tts.addEventListener('tts-start', () => {
+      // Fixed: Store listener references so we can remove them later
+      this.ttsStartListener = () => {
         this.isSpeaking = true;
-      });
+      };
 
-      Tts.addEventListener('tts-finish', () => {
+      this.ttsFinishListener = () => {
         this.isSpeaking = false;
         this.processQueue();
-      });
+      };
 
-      Tts.addEventListener('tts-cancel', () => {
+      this.ttsCancelListener = () => {
         this.isSpeaking = false;
         this.processQueue();
-      });
+      };
+
+      // Set up TTS event listeners
+      Tts.addEventListener('tts-start', this.ttsStartListener);
+      Tts.addEventListener('tts-finish', this.ttsFinishListener);
+      Tts.addEventListener('tts-cancel', this.ttsCancelListener);
     } catch (error) {
       console.error('Failed to initialize TTS:', error);
     }
@@ -240,7 +250,20 @@ export class AudioFeedbackService {
    * Clean up resources
    */
   cleanup(): void {
-    Tts.removeAllListeners();
+    // Fixed: Remove listeners individually (removeAllListeners doesn't exist)
+    if (this.ttsStartListener) {
+      Tts.removeEventListener('tts-start', this.ttsStartListener);
+      this.ttsStartListener = null;
+    }
+    if (this.ttsFinishListener) {
+      Tts.removeEventListener('tts-finish', this.ttsFinishListener);
+      this.ttsFinishListener = null;
+    }
+    if (this.ttsCancelListener) {
+      Tts.removeEventListener('tts-cancel', this.ttsCancelListener);
+      this.ttsCancelListener = null;
+    }
+
     this.soundCache.forEach((sound) => sound.release());
     this.soundCache.clear();
   }

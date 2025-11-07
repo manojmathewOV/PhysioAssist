@@ -21,24 +21,9 @@ jest.mock('react-native-vision-camera', () => ({
   useFrameProcessor: jest.fn(),
 }));
 
-// Mock TensorFlow.js
-jest.mock('@tensorflow/tfjs', () => ({
-  ready: jest.fn(() => Promise.resolve()),
-  tensor: jest.fn(),
-  dispose: jest.fn(),
-}));
-
+// Mock TensorFlow.js - using __mocks__/@tensorflow/tfjs.js
+// Mock MediaPipe - using __mocks__/@mediapipe/pose.js
 // Mock TensorFlow.js React Native is in __mocks__ directory
-
-// Mock MediaPipe
-jest.mock('@mediapipe/pose', () => ({
-  Pose: jest.fn().mockImplementation(() => ({
-    setOptions: jest.fn(),
-    onResults: jest.fn(),
-    send: jest.fn(),
-    close: jest.fn(),
-  })),
-}));
 
 // Mock React Native TTS
 jest.mock('react-native-tts', () => ({
