@@ -67,7 +67,7 @@ describe('ComparisonAnalysisService', () => {
         'bicep_curl'
       );
 
-      const elbowDeviation = result.angleDeviations.find((d) => d.joint === 'elbow');
+      const elbowDeviation = result.angleDeviations.find((d) => d.joint === 'leftElbow');
       expect(elbowDeviation).toBeDefined();
       expect(elbowDeviation?.deviation).toBeCloseTo(20, 0);
       expect(elbowDeviation?.severity).toBe('critical');
@@ -90,7 +90,7 @@ describe('ComparisonAnalysisService', () => {
           'bicep_curl'
         );
 
-        const elbowDeviation = result.angleDeviations.find((d) => d.joint === 'elbow');
+        const elbowDeviation = result.angleDeviations.find((d) => d.joint === 'leftElbow');
         expect(elbowDeviation?.severity).toBe(expectedSeverity);
       });
     });
@@ -131,7 +131,7 @@ describe('ComparisonAnalysisService', () => {
       const angleRec = result.recommendations.find((r) => r.type === 'angle');
       expect(angleRec).toBeDefined();
       expect(angleRec?.priority).toBe('high');
-      expect(angleRec?.message).toContain('elbow');
+      expect(angleRec?.message.toLowerCase()).toContain('elbow');
     });
 
     it('should handle empty pose arrays gracefully', () => {
