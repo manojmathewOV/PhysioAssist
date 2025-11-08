@@ -16,6 +16,8 @@ module.exports = {
           '@store': './src/store',
           '@types': './src/types',
           '@constants': './src/constants',
+          '@navigation': './src/navigation',
+          '@features': './src/features',
         },
       },
     ],
