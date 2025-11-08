@@ -19,6 +19,7 @@ interface User {
 interface UserState {
   currentUser: User | null;
   isAuthenticated: boolean;
+  hasCompletedOnboarding: boolean;
   isLoading: boolean;
   error: string | null;
 }
@@ -26,6 +27,7 @@ interface UserState {
 const initialState: UserState = {
   currentUser: null,
   isAuthenticated: false,
+  hasCompletedOnboarding: false,
   isLoading: false,
   error: null,
 };
@@ -55,6 +57,9 @@ const userSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
     },
+    completeOnboarding: (state) => {
+      state.hasCompletedOnboarding = true;
+    },
     updateProfile: (state, action: PayloadAction<Partial<UserProfile>>) => {
       if (state.currentUser) {
         state.currentUser.profile = {
@@ -74,6 +79,7 @@ export const {
   loginSuccess,
   loginFailure,
   logout,
+  completeOnboarding,
   updateProfile,
   clearError,
 } = userSlice.actions;

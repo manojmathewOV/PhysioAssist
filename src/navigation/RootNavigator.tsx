@@ -2,6 +2,7 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Screens
@@ -11,6 +12,9 @@ import ProfileScreen from '../screens/ProfileScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import LoginScreen from '../screens/LoginScreen';
 import WebPoseDetectionScreen from '../screens/web/WebPoseDetectionScreen';
+
+// Redux
+import type { RootState } from '../store';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -50,9 +54,9 @@ const MainTabs = () => {
 };
 
 const RootNavigator = () => {
-  // For testing, we'll skip onboarding and login
-  const isAuthenticated = true;
-  const hasCompletedOnboarding = true;
+  // Connect to Redux auth state (HIPAA-compliant secure authentication)
+  const isAuthenticated = useSelector((state: RootState) => state.user.isAuthenticated);
+  const hasCompletedOnboarding = useSelector((state: RootState) => state.user.hasCompletedOnboarding);
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
