@@ -4,7 +4,7 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import { app, mockDatabase } from '../../mocks/mockServer';
+import { app, mockDatabase } from '../../../__tests__/mocks/mockServer';
 import { Server } from 'http';
 
 describe('PhysioAssist Backend API Tests', () => {
