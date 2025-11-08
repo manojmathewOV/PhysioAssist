@@ -1,6 +1,13 @@
 import 'react-native-gesture-handler/jestSetup';
 import '@testing-library/jest-native/extend-expect';
 
+// Mock SettingsManager before any other mocks to prevent native module errors
+jest.mock('react-native/Libraries/Settings/Settings', () => ({
+  get: jest.fn(),
+  set: jest.fn(),
+  watchKeys: jest.fn(() => ({ remove: jest.fn() })),
+}));
+
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
   const Reanimated = require('react-native-reanimated/mock');
@@ -24,6 +31,14 @@ jest.mock('react-native-vision-camera', () => ({
 // Mock TensorFlow.js - using __mocks__/@tensorflow/tfjs.js
 // Mock MediaPipe - using __mocks__/@mediapipe/pose.js
 // Mock TensorFlow.js React Native is in __mocks__ directory
+
+// Mock MediaPipe camera utils
+jest.mock('@mediapipe/camera_utils', () => ({
+  Camera: jest.fn().mockImplementation(() => ({
+    start: jest.fn().mockResolvedValue(undefined),
+    stop: jest.fn().mockResolvedValue(undefined),
+  })),
+}));
 
 // Mock React Native TTS
 jest.mock('react-native-tts', () => ({
@@ -89,3 +104,14 @@ global.requestAnimationFrame = (callback: FrameRequestCallback) => {
 global.cancelAnimationFrame = (id: number) => {
   clearTimeout(id);
 };
+
+// Cleanup handlers to prevent worker process failures
+afterEach(() => {
+  jest.clearAllTimers();
+  jest.clearAllMocks();
+});
+
+// Allow async cleanup before exit
+afterAll((done) => {
+  setTimeout(done, 100);
+});

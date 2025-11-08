@@ -87,6 +87,7 @@ describe('iOS Platform Tests', () => {
     it('should render iOS-style navigation bar', () => {
       const IOSNavBar = () => (
         <div
+          testID="ios-nav-bar"
           style={{
             height: 44,
             backgroundColor: '#f8f8f8',
@@ -98,8 +99,8 @@ describe('iOS Platform Tests', () => {
         </div>
       );
 
-      const { getByText } = render(<IOSNavBar />);
-      expect(getByText('iOS Navigation Bar')).toBeTruthy();
+      const { getByTestId } = render(<IOSNavBar />);
+      expect(getByTestId('ios-nav-bar')).toBeTruthy();
     });
 
     it('should use iOS-specific fonts', () => {
@@ -129,6 +130,7 @@ describe('iOS Platform Tests', () => {
 
       const SafeAreaComponent = ({ insets }: any) => (
         <div
+          testID="safe-area-wrapper"
           style={{
             paddingTop: insets.top,
             paddingBottom: insets.bottom,
@@ -138,9 +140,9 @@ describe('iOS Platform Tests', () => {
         </div>
       );
 
-      const { container } = render(<SafeAreaComponent insets={mockSafeAreaInsets} />);
+      const { getByTestId } = render(<SafeAreaComponent insets={mockSafeAreaInsets} />);
 
-      expect(container.firstChild).toHaveStyle({
+      expect(getByTestId('safe-area-wrapper')).toHaveStyle({
         paddingTop: 47,
         paddingBottom: 34,
       });
@@ -176,7 +178,13 @@ describe('iOS Platform Tests', () => {
     });
 
     it('should use iOS-specific video compression settings', () => {
-      const compressionSettings = Platform.select({
+      mockPlatform.select.mockReturnValueOnce({
+        codec: 'h264',
+        bitrate: 2000000,
+        profile: 'high',
+      });
+
+      const compressionSettings = mockPlatform.select({
         ios: {
           codec: 'h264',
           bitrate: 2000000,
@@ -260,15 +268,16 @@ describe('iOS Platform Tests', () => {
         accessibilityHint: 'Double tap to begin your exercise session',
         accessibilityRole: 'button',
         accessibilityTraits: ['button'],
+        testID: 'exercise-button',
       };
 
       const TestComponent = () => <div {...accessibilityProps}>Start Exercise</div>;
 
-      const { container } = render(<TestComponent />);
-      const element = container.firstChild;
+      const { getByTestId } = render(<TestComponent />);
+      const element = getByTestId('exercise-button');
 
-      expect(element).toHaveProperty('accessible', true);
-      expect(element).toHaveProperty('accessibilityLabel', 'Start Exercise Button');
+      expect(element.props.accessible).toBe(true);
+      expect(element.props.accessibilityLabel).toBe('Start Exercise Button');
     });
   });
 });

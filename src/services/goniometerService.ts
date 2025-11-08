@@ -176,7 +176,9 @@ export class GoniometerService {
       // Legs
       { name: 'left_knee', indices: [11, 13, 15] }, // hip-knee-ankle
       { name: 'right_knee', indices: [12, 14, 16] },
-      // Note: Hip and ankle angles removed - MoveNet doesn't have the required keypoints
+      { name: 'left_hip', indices: [5, 11, 13] }, // shoulder-hip-knee
+      { name: 'right_hip', indices: [6, 12, 14] }, // shoulder-hip-knee
+      // Note: Ankle angles not supported (MoveNet lacks toe keypoints)
     ];
 
     for (const config of jointConfigs) {
@@ -210,7 +212,9 @@ export class GoniometerService {
       rightKnee: [12, 14, 16],
       leftShoulder: [7, 5, 11],
       rightShoulder: [8, 6, 12],
-      // Hip and ankle angles not supported (MoveNet lacks required keypoints)
+      leftHip: [5, 11, 13], // shoulder-hip-knee
+      rightHip: [6, 12, 14], // shoulder-hip-knee
+      // Note: Ankle angles not supported (MoveNet lacks toe keypoints)
     };
 
     const indices = jointConfigs[jointName];
@@ -237,7 +241,7 @@ export class GoniometerService {
    * Get all joint angles
    */
   getAllJointAngles(landmarks: PoseLandmark[]): Record<string, number> {
-    // Only joints supported by MoveNet (17 keypoints)
+    // All joints supported by MoveNet (17 keypoints)
     const joints = [
       'leftElbow',
       'rightElbow',
@@ -245,7 +249,9 @@ export class GoniometerService {
       'rightKnee',
       'leftShoulder',
       'rightShoulder',
-      // leftHip, rightHip, leftAnkle, rightAnkle removed (not supported by MoveNet)
+      'leftHip',
+      'rightHip',
+      // Note: Ankle angles not supported (MoveNet lacks toe keypoints)
     ];
     const angles: Record<string, number> = {};
 

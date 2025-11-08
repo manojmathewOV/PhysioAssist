@@ -28,10 +28,35 @@ import { setPoseData, setDetecting } from '../../store/slices/poseSlice';
 import { updateExerciseProgress } from '../../store/slices/exerciseSlice';
 
 // Mock services
-jest.mock('../../services/poseDetectionService');
-jest.mock('../../services/audioFeedbackService');
+jest.mock('../../services/poseDetectionService', () => ({
+  poseDetectionService: {
+    initialize: jest.fn().mockResolvedValue(true),
+    startDetection: jest.fn().mockResolvedValue(true),
+    stopDetection: jest.fn().mockResolvedValue(undefined),
+    processFrame: jest.fn().mockReturnValue({
+      landmarks: [],
+      confidence: 0.9,
+    }),
+    cleanup: jest.fn(),
+  },
+}));
+
+jest.mock('../../services/audioFeedbackService', () => ({
+  audioFeedbackService: {
+    speak: jest.fn().mockResolvedValue(undefined),
+    stop: jest.fn(),
+    setRate: jest.fn(),
+  },
+}));
+
 jest.mock('react-native-vision-camera', () => ({
-  Camera: ({ children, ...props }: any) => <MockCamera {...props}>{children}</MockCamera>,
+  Camera: Object.assign(
+    ({ children, ...props }: any) => <MockCamera {...props}>{children}</MockCamera>,
+    {
+      requestCameraPermission: jest.fn().mockResolvedValue('authorized'),
+      getCameraDevice: jest.fn().mockReturnValue({ id: 'back', position: 'back' }),
+    }
+  ),
   useCameraDevices: () => ({ front: { id: 'front' }, back: { id: 'back' } }),
   useFrameProcessor: (callback: any) => callback,
 }));

@@ -59,7 +59,7 @@ describe('GoniometerService', () => {
 
   describe('getJointAngle', () => {
     it('should calculate elbow angle correctly', () => {
-      const landmarks: PoseLandmark[] = new Array(33).fill(null).map((_, i) => ({
+      const landmarks: PoseLandmark[] = new Array(17).fill(null).map((_, i) => ({
         x: 0,
         y: 0,
         z: 0,
@@ -67,10 +67,10 @@ describe('GoniometerService', () => {
         name: `landmark_${i}`,
       }));
 
-      // Set up right arm in 90-degree position
-      landmarks[12] = { x: 0, y: 0, z: 0, visibility: 1, name: 'right_shoulder' }; // shoulder
-      landmarks[14] = { x: 1, y: 0, z: 0, visibility: 1, name: 'right_elbow' }; // elbow
-      landmarks[16] = { x: 1, y: 1, z: 0, visibility: 1, name: 'right_wrist' }; // wrist
+      // Set up right arm in 90-degree position (MoveNet keypoints: 6=shoulder, 8=elbow, 10=wrist)
+      landmarks[6] = { x: 0, y: 0, z: 0, visibility: 1, name: 'right_shoulder' }; // shoulder
+      landmarks[8] = { x: 1, y: 0, z: 0, visibility: 1, name: 'right_elbow' }; // elbow
+      landmarks[10] = { x: 1, y: 1, z: 0, visibility: 1, name: 'right_wrist' }; // wrist
 
       const angle = goniometerService.getJointAngle('rightElbow', landmarks);
       expect(angle).toBeCloseTo(90, 0);
@@ -85,7 +85,7 @@ describe('GoniometerService', () => {
 
   describe('getAllJointAngles', () => {
     it('should calculate all joint angles', () => {
-      const landmarks: PoseLandmark[] = new Array(33).fill(null).map((_, i) => ({
+      const landmarks: PoseLandmark[] = new Array(17).fill(null).map((_, i) => ({
         x: Math.random(),
         y: Math.random(),
         z: 0,
@@ -95,6 +95,7 @@ describe('GoniometerService', () => {
 
       const angles = goniometerService.getAllJointAngles(landmarks);
 
+      // Expect all MoveNet-supported angles
       expect(angles).toHaveProperty('leftElbow');
       expect(angles).toHaveProperty('rightElbow');
       expect(angles).toHaveProperty('leftKnee');
@@ -103,8 +104,7 @@ describe('GoniometerService', () => {
       expect(angles).toHaveProperty('rightShoulder');
       expect(angles).toHaveProperty('leftHip');
       expect(angles).toHaveProperty('rightHip');
-      expect(angles).toHaveProperty('leftAnkle');
-      expect(angles).toHaveProperty('rightAnkle');
+      // Note: Ankle angles not supported (MoveNet lacks toe keypoints needed for ankle angle)
     });
   });
 

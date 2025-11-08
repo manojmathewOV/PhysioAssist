@@ -80,8 +80,8 @@ describe('YouTubeQuotaManager', () => {
     it('should allow operations just under threshold', async () => {
       await manager.setDailyLimit(1000);
 
-      // Use 940 units (94%)
-      for (let i = 0; i < 940; i++) {
+      // Use 849 units (84.9%) - search costs 100, so 849+100=949 (just under 95% threshold of 950)
+      for (let i = 0; i < 849; i++) {
         await manager.recordUsage('videoDetails');
       }
 

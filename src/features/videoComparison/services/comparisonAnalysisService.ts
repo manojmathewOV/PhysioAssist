@@ -137,7 +137,10 @@ export class ComparisonAnalysisService {
       reference[reference.length - 1].timestamp - reference[0].timestamp;
     const userDuration = user[user.length - 1].timestamp - user[0].timestamp;
 
-    const speedRatio = refDuration > 0 ? userDuration / refDuration : 1;
+    // Intuitive semantics: speedRatio = refDuration / userDuration
+    // speedRatio > 1 means user is FASTER (completed in less time)
+    // speedRatio < 1 means user is SLOWER (took more time)
+    const speedRatio = userDuration > 0 ? refDuration / userDuration : 1;
 
     // Calculate phase alignment
     const phaseAlignment = this.calculatePhaseAlignment(reference, user);
@@ -148,9 +151,6 @@ export class ComparisonAnalysisService {
     return {
       offset: 0, // Simplified for now
       confidence,
-      // Fixed: Remove inversion. Now speedRatio = userDuration / refDuration
-      // speedRatio > 1 means user is SLOWER (took more time)
-      // speedRatio < 1 means user is FASTER (took less time)
       speedRatio,
       phaseAlignment,
     };
@@ -289,21 +289,22 @@ export class ComparisonAnalysisService {
     });
 
     // Tempo-based recommendations
-    // Fixed: speedRatio > 1 means user is SLOWER (took more time)
-    // speedRatio < 1 means user is FASTER (took less time)
+    // speedRatio = refDuration / userDuration
+    // speedRatio > 1 means user is FASTER (completed in less time)
+    // speedRatio < 1 means user is SLOWER (took more time)
     if (temporalAlignment.speedRatio > 1.2) {
       recommendations.push({
         type: 'tempo',
         priority: 'medium',
-        message: 'Speed up your movement',
-        detail: `You're moving ${((temporalAlignment.speedRatio - 1) * 100).toFixed(0)}% slower than the reference`,
+        message: 'Slow down your movement',
+        detail: `You're moving ${((temporalAlignment.speedRatio - 1) * 100).toFixed(0)}% faster than the reference`,
       });
     } else if (temporalAlignment.speedRatio < 0.8) {
       recommendations.push({
         type: 'tempo',
         priority: 'medium',
-        message: 'Slow down your movement',
-        detail: `You're moving ${((1 - temporalAlignment.speedRatio) * 100).toFixed(0)}% faster than the reference`,
+        message: 'Speed up your movement',
+        detail: `You're moving ${((1 - temporalAlignment.speedRatio) * 100).toFixed(0)}% slower than the reference`,
       });
     }
 

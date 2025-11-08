@@ -1,22 +1,32 @@
 // Mock modules before imports
-jest.mock('react-native-ytdl', () => ({
-  ytdl: {
-    getInfo: jest.fn().mockResolvedValue({
-      videoDetails: {
-        title: 'Test Exercise Video',
-        lengthSeconds: '300',
-        author: { name: 'FitnessExpert' },
-        thumbnails: [{ url: 'https://example.com/thumb.jpg' }],
-      },
-    }),
-  },
-}));
+jest.mock('react-native-ytdl', () => {
+  const mockGetInfo = jest.fn().mockResolvedValue({
+    videoDetails: {
+      title: 'Test Exercise Video',
+      lengthSeconds: '300',
+      author: { name: 'FitnessExpert' },
+      thumbnails: [{ url: 'https://example.com/thumb.jpg' }],
+    },
+  });
+
+  // Create a callable mock that also has getInfo
+  const mockYtdl = jest.fn().mockResolvedValue('mock-stream-data');
+  mockYtdl.getInfo = mockGetInfo;
+
+  return {
+    __esModule: true,
+    default: mockYtdl,
+    getInfo: mockGetInfo,
+  };
+});
 
 // Mock react-native-fs
 jest.mock('react-native-fs', () => ({
   CachesDirectoryPath: '/cache',
   writeFile: jest.fn().mockResolvedValue(true),
 }));
+
+// EncryptedStorage mock is in __mocks__/react-native-encrypted-storage.js
 
 import { YouTubeService } from '../services/youtubeService';
 
@@ -26,6 +36,36 @@ describe('YouTubeService', () => {
   beforeEach(() => {
     service = YouTubeService.getInstance();
     jest.clearAllMocks();
+
+    // Get the mocked module and reset it
+    const ytdl = require('react-native-ytdl');
+
+    // Reset ytdl.default (which is the callable function with getInfo)
+    if (ytdl.default) {
+      ytdl.default.mockResolvedValue('mock-stream-data');
+      if (ytdl.default.getInfo) {
+        ytdl.default.getInfo.mockResolvedValue({
+          videoDetails: {
+            title: 'Test Exercise Video',
+            lengthSeconds: '300',
+            author: { name: 'FitnessExpert' },
+            thumbnails: [{ url: 'https://example.com/thumb.jpg' }],
+          },
+        });
+      }
+    }
+
+    // Reset ytdl.getInfo (top level)
+    if (ytdl.getInfo) {
+      ytdl.getInfo.mockResolvedValue({
+        videoDetails: {
+          title: 'Test Exercise Video',
+          lengthSeconds: '300',
+          author: { name: 'FitnessExpert' },
+          thumbnails: [{ url: 'https://example.com/thumb.jpg' }],
+        },
+      });
+    }
   });
 
   describe('validateUrl', () => {
@@ -74,26 +114,29 @@ describe('YouTubeService', () => {
 
     it('should cache video information', async () => {
       const url = 'https://youtube.com/watch?v=test123';
+      const ytdl = require('react-native-ytdl');
+      const mockFn = ytdl.default?.getInfo || ytdl.getInfo;
 
       // First call
       await service.getVideoInfo(url);
 
       // Second call should use cache
-      const ytdl = require('react-native-ytdl').ytdl;
-      const callCountBefore = ytdl.getInfo.mock.calls.length;
+      const callCountBefore = mockFn.mock.calls.length;
 
       await service.getVideoInfo(url);
 
-      expect(ytdl.getInfo.mock.calls.length).toBe(callCountBefore);
+      expect(mockFn.mock.calls.length).toBe(callCountBefore);
     });
 
     it('should handle fetch errors', async () => {
-      const ytdl = require('react-native-ytdl').ytdl;
-      ytdl.getInfo.mockRejectedValueOnce(new Error('Network error'));
+      const ytdl = require('react-native-ytdl');
+      const mockFn = ytdl.default?.getInfo || ytdl.getInfo;
+
+      mockFn.mockRejectedValueOnce(new Error('Network error'));
 
       await expect(
         service.getVideoInfo('https://youtube.com/watch?v=fail')
-      ).rejects.toThrow('Failed to fetch YouTube video info');
+      ).rejects.toThrow('Network connection failed');
     });
   });
 

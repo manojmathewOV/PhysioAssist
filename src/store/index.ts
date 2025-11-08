@@ -15,7 +15,7 @@ const rootPersistConfig = {
   whitelist: ['user', 'settings'], // Only persist user and settings (HIPAA-compliant encrypted storage)
 };
 
-const rootReducer = combineReducers({
+export const rootReducer = combineReducers({
   pose: poseReducer,
   exercise: exerciseReducer,
   user: userReducer,
