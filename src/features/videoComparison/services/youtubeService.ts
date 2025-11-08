@@ -1,26 +1,7 @@
 import EncryptedStorage from 'react-native-encrypted-storage';
+import ytdl from 'react-native-ytdl';
+import RNFS from 'react-native-fs';
 import { YouTubeVideoInfo, VideoComparisonError } from '../types/videoComparison.types';
-
-// Fixed: Import ytdl correctly - it's the default export
-// Use optional chaining on the require itself for safety
-let ytdl: any;
-try {
-  ytdl = require('react-native-ytdl');
-  // If the module has a .default export, use that
-  if (ytdl.default) {
-    ytdl = ytdl.default;
-  }
-} catch (error) {
-  // Fallback mock for development/testing
-  ytdl = {
-    getInfo: async () => ({ videoDetails: {} }),
-  };
-}
-
-const RNFS = require('react-native-fs') || {
-  CachesDirectoryPath: '/cache',
-  writeFile: async () => true,
-};
 
 export class YouTubeService {
   private static instance: YouTubeService;

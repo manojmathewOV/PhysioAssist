@@ -24,8 +24,11 @@
       "@hooks/*": ["src/hooks/*"],
       "@store/*": ["src/store/*"],
       "@types/*": ["src/types/*"],
-      "@constants/*": ["src/constants/*"]
-    }
+      "@constants/*": ["src/constants/*"],
+      "@navigation/*": ["src/navigation/*"],
+      "@features/*": ["src/features/*"]
+    },
+    "types": ["jest", "node"]
   },
   "exclude": [
     "node_modules",
