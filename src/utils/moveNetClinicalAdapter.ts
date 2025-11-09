@@ -27,7 +27,7 @@ export interface ClinicalMeasurements {
     /** Shoulder width (cm, for normalization) */
     shoulderWidth: number;
     /** Acromion (shoulder point) height */
-    acromi onHeight: { left: number; right: number };
+    acromionHeight: { left: number; right: number };
   };
 
   /** Trunk measurements */
