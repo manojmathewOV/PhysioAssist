@@ -81,7 +81,10 @@ describe('RootNavigator - Authentication Guards', () => {
         error: null,
       });
 
-      const { getByTestId, queryByTestId } = renderWithNavigation(<RootNavigator />, store);
+      const { getByTestId, queryByTestId } = renderWithNavigation(
+        <RootNavigator />,
+        store
+      );
 
       expect(getByTestId('onboarding-screen')).toBeTruthy();
       expect(queryByTestId('login-screen')).toBeNull();
@@ -97,7 +100,10 @@ describe('RootNavigator - Authentication Guards', () => {
         error: null,
       });
 
-      const { getByTestId, queryByTestId } = renderWithNavigation(<RootNavigator />, store);
+      const { getByTestId, queryByTestId } = renderWithNavigation(
+        <RootNavigator />,
+        store
+      );
 
       expect(getByTestId('onboarding-screen')).toBeTruthy();
       expect(queryByTestId('pose-detection-screen')).toBeNull();
@@ -114,7 +120,10 @@ describe('RootNavigator - Authentication Guards', () => {
         error: null,
       });
 
-      const { getByTestId, queryByTestId } = renderWithNavigation(<RootNavigator />, store);
+      const { getByTestId, queryByTestId } = renderWithNavigation(
+        <RootNavigator />,
+        store
+      );
 
       expect(getByTestId('login-screen')).toBeTruthy();
       expect(queryByTestId('onboarding-screen')).toBeNull();

@@ -125,14 +125,18 @@ const SimpleModeUI: React.FC<SimpleModeUIProps> = ({
   };
 
   // Get simple tracking quality indicator
-  const getTrackingQualityIndicator = (): { icon: string; color: string; text: string } => {
+  const getTrackingQualityIndicator = (): {
+    icon: string;
+    color: string;
+    text: string;
+  } => {
     switch (trackingQuality) {
       case 'excellent':
         return { icon: '✅', color: '#4CAF50', text: 'Tracking great' };
       case 'good':
         return { icon: '⚠️', color: '#FFC107', text: 'Tracking okay' };
       case 'poor':
-        return { icon: '❌', color: '#F44336', text: 'Can\'t see you well' };
+        return { icon: '❌', color: '#F44336', text: "Can't see you well" };
     }
   };
 
@@ -165,30 +169,31 @@ const SimpleModeUI: React.FC<SimpleModeUIProps> = ({
           accessibilityRole="text"
           accessibilityLiveRegion="polite"
         >
-          <Text style={styles.instructionText}>
-            {getCurrentInstruction()}
-          </Text>
+          <Text style={styles.instructionText}>{getCurrentInstruction()}</Text>
         </View>
 
         {/* Simple Visual Feedback */}
         {isDetecting && (
           <View style={styles.feedbackContainer}>
-            <SimpleFeedback
-              currentAngle={currentAngle}
-              targetAngle={targetAngle}
-            />
+            <SimpleFeedback currentAngle={currentAngle} targetAngle={targetAngle} />
           </View>
         )}
 
         {/* Big Action Button */}
-        <Animated.View style={[styles.buttonContainer, { transform: [{ scale: pulseAnim }] }]}>
+        <Animated.View
+          style={[styles.buttonContainer, { transform: [{ scale: pulseAnim }] }]}
+        >
           <TouchableOpacity
             style={styles.bigButton}
             onPress={handleMainAction}
             activeOpacity={0.8}
             disabled={currentStatus === 'initializing' || currentStatus === 'error'}
             accessibilityLabel={isDetecting ? 'Stop exercise' : 'Start exercise'}
-            accessibilityHint={isDetecting ? 'Tap to stop tracking your movement' : 'Tap to begin exercise tracking'}
+            accessibilityHint={
+              isDetecting
+                ? 'Tap to stop tracking your movement'
+                : 'Tap to begin exercise tracking'
+            }
             accessibilityRole="button"
             accessible={true}
           >
@@ -220,8 +225,14 @@ const SimpleModeUI: React.FC<SimpleModeUIProps> = ({
         <TouchableOpacity
           style={styles.advancedToggle}
           onPress={handleToggleAdvanced}
-          accessibilityLabel={showAdvanced ? 'Hide advanced details' : 'Show advanced details'}
-          accessibilityHint={showAdvanced ? 'Tap to hide detailed exercise information' : 'Tap to see detailed exercise information'}
+          accessibilityLabel={
+            showAdvanced ? 'Hide advanced details' : 'Show advanced details'
+          }
+          accessibilityHint={
+            showAdvanced
+              ? 'Tap to hide detailed exercise information'
+              : 'Tap to see detailed exercise information'
+          }
           accessibilityRole="button"
           accessible={true}
         >
@@ -253,10 +264,7 @@ interface SimpleFeedbackProps {
   targetAngle: number;
 }
 
-const SimpleFeedback: React.FC<SimpleFeedbackProps> = ({
-  currentAngle,
-  targetAngle,
-}) => {
+const SimpleFeedback: React.FC<SimpleFeedbackProps> = ({ currentAngle, targetAngle }) => {
   const progress = Math.min((currentAngle / targetAngle) * 100, 100);
   const isComplete = progress >= 100;
 

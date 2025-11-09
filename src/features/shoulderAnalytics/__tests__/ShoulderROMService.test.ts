@@ -12,11 +12,13 @@ import { PoseLandmark } from '../../../types/pose';
 
 // Mock landmarks for testing
 const createMockLandmarks = (shoulderAngle: number): PoseLandmark[] => {
-  const landmarks: PoseLandmark[] = Array(17).fill(null).map((_, i) => ({
-    x: 0.5,
-    y: 0.5,
-    score: 0.9,
-  }));
+  const landmarks: PoseLandmark[] = Array(17)
+    .fill(null)
+    .map((_, i) => ({
+      x: 0.5,
+      y: 0.5,
+      score: 0.9,
+    }));
 
   // Simulate shoulder at given angle
   // Shoulder at index 5 (left) or 6 (right)

@@ -29,7 +29,10 @@ function checkCriterion(name, condition, errorMsg) {
 }
 
 // Read youtubeService.ts
-const servicePath = path.join(__dirname, '../src/features/videoComparison/services/youtubeService.ts');
+const servicePath = path.join(
+  __dirname,
+  '../src/features/videoComparison/services/youtubeService.ts'
+);
 
 if (!fs.existsSync(servicePath)) {
   console.log('❌ CRITICAL: youtubeService.ts not found');
@@ -41,7 +44,9 @@ const serviceCode = fs.readFileSync(servicePath, 'utf8');
 console.log('Checking YouTube service import handling...\n');
 
 // Test 1: Verify ytdl import doesn't use incorrect optional chaining
-const noIncorrectOptionalChaining = !serviceCode.includes("require('react-native-ytdl')?.ytdl");
+const noIncorrectOptionalChaining = !serviceCode.includes(
+  "require('react-native-ytdl')?.ytdl"
+);
 
 checkCriterion(
   'ytdl import does not use incorrect optional chaining',

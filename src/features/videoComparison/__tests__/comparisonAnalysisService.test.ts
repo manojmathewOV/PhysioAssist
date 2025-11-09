@@ -90,7 +90,9 @@ describe('ComparisonAnalysisService', () => {
           'bicep_curl'
         );
 
-        const elbowDeviation = result.angleDeviations.find((d) => d.joint === 'leftElbow');
+        const elbowDeviation = result.angleDeviations.find(
+          (d) => d.joint === 'leftElbow'
+        );
         expect(elbowDeviation?.severity).toBe(expectedSeverity);
       });
     });

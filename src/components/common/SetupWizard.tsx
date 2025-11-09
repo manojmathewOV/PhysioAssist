@@ -44,11 +44,7 @@ interface SetupWizardProps {
 
 type SetupStep = 'lighting' | 'distance' | 'practice' | 'complete';
 
-const SetupWizard: React.FC<SetupWizardProps> = ({
-  visible,
-  onComplete,
-  onSkip,
-}) => {
+const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }) => {
   const [currentStep, setCurrentStep] = useState<SetupStep>('lighting');
   const [lightingStatus, setLightingStatus] = useState<LightingAssessment | null>(null);
   const [distanceStatus, setDistanceStatus] = useState<DistanceAssessment | null>(null);
@@ -77,14 +73,11 @@ const SetupWizard: React.FC<SetupWizardProps> = ({
    * Frame Processor - Captures latest frame for analysis
    * Gate 1: Real frame capture (no more mocks!)
    */
-  const frameProcessor = useFrameProcessor(
-    (frame) => {
-      'worklet';
-      // Store latest frame in ref for analysis
-      Worklets.runOnJS(updateLatestFrame)(frame);
-    },
-    []
-  );
+  const frameProcessor = useFrameProcessor((frame) => {
+    'worklet';
+    // Store latest frame in ref for analysis
+    Worklets.runOnJS(updateLatestFrame)(frame);
+  }, []);
 
   const updateLatestFrame = (frame: Frame) => {
     latestFrameRef.current = frame;
@@ -178,27 +171,36 @@ const SetupWizard: React.FC<SetupWizardProps> = ({
 
         {/* Progress Indicator */}
         <View style={styles.progressContainer}>
-          <View style={[styles.progressDot, currentStep === 'lighting' && styles.progressDotActive]} />
+          <View
+            style={[
+              styles.progressDot,
+              currentStep === 'lighting' && styles.progressDotActive,
+            ]}
+          />
           <View style={styles.progressLine} />
-          <View style={[styles.progressDot, currentStep === 'distance' && styles.progressDotActive]} />
+          <View
+            style={[
+              styles.progressDot,
+              currentStep === 'distance' && styles.progressDotActive,
+            ]}
+          />
           <View style={styles.progressLine} />
-          <View style={[styles.progressDot, currentStep === 'practice' && styles.progressDotActive]} />
+          <View
+            style={[
+              styles.progressDot,
+              currentStep === 'practice' && styles.progressDotActive,
+            ]}
+          />
         </View>
 
         {/* Step Content */}
         <View style={styles.content}>
           {currentStep === 'lighting' && (
-            <LightingCheckStep
-              status={lightingStatus}
-              onCheck={handleLightingCheck}
-            />
+            <LightingCheckStep status={lightingStatus} onCheck={handleLightingCheck} />
           )}
 
           {currentStep === 'distance' && (
-            <DistanceCheckStep
-              status={distanceStatus}
-              onCheck={handleDistanceCheck}
-            />
+            <DistanceCheckStep status={distanceStatus} onCheck={handleDistanceCheck} />
           )}
 
           {currentStep === 'practice' && (
@@ -209,9 +211,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({
             />
           )}
 
-          {currentStep === 'complete' && (
-            <CompleteStep />
-          )}
+          {currentStep === 'complete' && <CompleteStep />}
         </View>
       </LinearGradient>
     </Animated.View>
@@ -227,10 +227,7 @@ interface LightingCheckStepProps {
   onCheck: () => void;
 }
 
-const LightingCheckStep: React.FC<LightingCheckStepProps> = ({
-  status,
-  onCheck,
-}) => {
+const LightingCheckStep: React.FC<LightingCheckStepProps> = ({ status, onCheck }) => {
   return (
     <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>💡 Check Lighting</Text>
@@ -264,14 +261,8 @@ const LightingCheckStep: React.FC<LightingCheckStepProps> = ({
       )}
 
       {/* Action Button */}
-      <TouchableOpacity
-        style={styles.actionButton}
-        onPress={onCheck}
-      >
-        <LinearGradient
-          colors={['#4CAF50', '#45a049']}
-          style={styles.buttonGradient}
-        >
+      <TouchableOpacity style={styles.actionButton} onPress={onCheck}>
+        <LinearGradient colors={['#4CAF50', '#45a049']} style={styles.buttonGradient}>
           <Text style={styles.buttonText}>
             {status ? 'Check Again' : 'Check Lighting'}
           </Text>
@@ -294,16 +285,11 @@ interface DistanceCheckStepProps {
   onCheck: () => void;
 }
 
-const DistanceCheckStep: React.FC<DistanceCheckStepProps> = ({
-  status,
-  onCheck,
-}) => {
+const DistanceCheckStep: React.FC<DistanceCheckStepProps> = ({ status, onCheck }) => {
   return (
     <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>📏 Check Distance</Text>
-      <Text style={styles.stepDescription}>
-        Stand where your whole body is visible
-      </Text>
+      <Text style={styles.stepDescription}>Stand where your whole body is visible</Text>
 
       {/* Live Preview with Guide */}
       <View style={styles.previewContainer}>
@@ -324,14 +310,8 @@ const DistanceCheckStep: React.FC<DistanceCheckStepProps> = ({
       </View>
 
       {/* Action Button */}
-      <TouchableOpacity
-        style={styles.actionButton}
-        onPress={onCheck}
-      >
-        <LinearGradient
-          colors={['#4CAF50', '#45a049']}
-          style={styles.buttonGradient}
-        >
+      <TouchableOpacity style={styles.actionButton} onPress={onCheck}>
+        <LinearGradient colors={['#4CAF50', '#45a049']} style={styles.buttonGradient}>
           <Text style={styles.buttonText}>
             {status ? 'Check Again' : 'Check Position'}
           </Text>
@@ -363,7 +343,7 @@ const PracticeStep: React.FC<PracticeStepProps> = ({
   // Simulate angle increase for practice
   useEffect(() => {
     const interval = setInterval(() => {
-      onAngleChange(prevAngle => {
+      onAngleChange((prevAngle) => {
         const newAngle = Math.min(prevAngle + 5, 90);
         if (newAngle >= 45 && prevAngle < 45) {
           onComplete();
@@ -391,20 +371,13 @@ const PracticeStep: React.FC<PracticeStepProps> = ({
 
         {/* Progress Arc */}
         <View style={styles.progressArc}>
-          <View
-            style={[
-              styles.progressArcFill,
-              { width: `${progress}%` },
-            ]}
-          />
+          <View style={[styles.progressArcFill, { width: `${progress}%` }]} />
         </View>
       </View>
 
       {/* Coaching Message */}
       <View style={styles.coachingContainer}>
-        {currentAngle < 30 && (
-          <Text style={styles.coachingText}>Bend your knee...</Text>
-        )}
+        {currentAngle < 30 && <Text style={styles.coachingText}>Bend your knee...</Text>}
         {currentAngle >= 30 && currentAngle < 60 && (
           <Text style={styles.coachingText}>Keep going! 👍</Text>
         )}
@@ -416,9 +389,7 @@ const PracticeStep: React.FC<PracticeStepProps> = ({
       {/* Success Message */}
       {currentAngle >= 45 && (
         <View style={styles.successContainer}>
-          <Text style={styles.successText}>
-            ✅ Perfect! You're ready to start!
-          </Text>
+          <Text style={styles.successText}>✅ Perfect! You're ready to start!</Text>
         </View>
       )}
     </View>
@@ -452,9 +423,7 @@ const CompleteStep: React.FC = () => {
         </View>
       </View>
 
-      <Text style={styles.completeNote}>
-        Starting in a moment...
-      </Text>
+      <Text style={styles.completeNote}>Starting in a moment...</Text>
     </View>
   );
 };

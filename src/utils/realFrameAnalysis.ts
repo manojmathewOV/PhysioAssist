@@ -453,7 +453,7 @@ export const generateLuminanceHistogram = (pixels: PixelData): number[] => {
   }
 
   // Normalize to percentages
-  return bins.map(count => (count / pixelCount) * 100);
+  return bins.map((count) => (count / pixelCount) * 100);
 };
 
 // ============================================================================

@@ -87,7 +87,8 @@ export function detectShoulderCompensation(
   referencePose: PoseFrame,
   side: 'left' | 'right'
 ): ElbowError | null {
-  const shoulderIdx = side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
+  const shoulderIdx =
+    side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
   const hipIdx = side === 'left' ? KEYPOINTS.LEFT_HIP : KEYPOINTS.RIGHT_HIP;
 
   const userShoulder = userPose.keypoints[shoulderIdx];
@@ -154,7 +155,8 @@ export function detectIncompleteExtension(
   referencePoses: PoseFrame[],
   side: 'left' | 'right'
 ): ElbowError | null {
-  const shoulderIdx = side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
+  const shoulderIdx =
+    side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
   const elbowIdx = side === 'left' ? KEYPOINTS.LEFT_ELBOW : KEYPOINTS.RIGHT_ELBOW;
   const wristIdx = side === 'left' ? KEYPOINTS.LEFT_WRIST : KEYPOINTS.RIGHT_WRIST;
 
@@ -243,7 +245,8 @@ export function detectWristDeviation(
 ): ElbowError | null {
   const elbowIdx = side === 'left' ? KEYPOINTS.LEFT_ELBOW : KEYPOINTS.RIGHT_ELBOW;
   const wristIdx = side === 'left' ? KEYPOINTS.LEFT_WRIST : KEYPOINTS.RIGHT_WRIST;
-  const shoulderIdx = side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
+  const shoulderIdx =
+    side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
 
   const userElbow = userPose.keypoints[elbowIdx];
   const userWrist = userPose.keypoints[wristIdx];
@@ -266,8 +269,10 @@ export function detectWristDeviation(
   }
 
   // Calculate forearm angle (elbow-wrist vector relative to horizontal)
-  const userForearmAngle = Math.atan2(userWrist.y - userElbow.y, userWrist.x - userElbow.x) * (180 / Math.PI);
-  const refForearmAngle = Math.atan2(refWrist.y - refElbow.y, refWrist.x - refElbow.x) * (180 / Math.PI);
+  const userForearmAngle =
+    Math.atan2(userWrist.y - userElbow.y, userWrist.x - userElbow.x) * (180 / Math.PI);
+  const refForearmAngle =
+    Math.atan2(refWrist.y - refElbow.y, refWrist.x - refElbow.x) * (180 / Math.PI);
 
   // Calculate deviation (difference from reference)
   const deviation = Math.abs(userForearmAngle - refForearmAngle);

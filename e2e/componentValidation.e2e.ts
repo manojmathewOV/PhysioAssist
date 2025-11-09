@@ -18,9 +18,7 @@ describe('PhysioAssist - Complete Component Validation', () => {
       await detoxExpect(element(by.text('Welcome to PhysioAssist'))).toBeVisible();
 
       // Verify description text
-      await detoxExpect(
-        element(by.text(/AI-powered physiotherapy/i))
-      ).toBeVisible();
+      await detoxExpect(element(by.text(/AI-powered physiotherapy/i))).toBeVisible();
 
       // Verify illustration/animation component
       await detoxExpect(element(by.id('onboarding-illustration'))).toBeVisible();
@@ -361,8 +359,9 @@ describe('PhysioAssist - Complete Component Validation', () => {
       await element(by.id('settings-tab')).tap();
 
       // Setting should still be changed
-      await detoxExpect(element(by.id('haptic-feedback-toggle')))
-        .toHaveToggleValue(false);
+      await detoxExpect(element(by.id('haptic-feedback-toggle'))).toHaveToggleValue(
+        false
+      );
     });
 
     it('should reset all settings to defaults', async () => {
@@ -375,10 +374,8 @@ describe('PhysioAssist - Complete Component Validation', () => {
       await element(by.id('confirm-reset-button')).tap();
 
       // All should be back to defaults
-      await detoxExpect(element(by.id('audio-feedback-toggle')))
-        .toHaveToggleValue(true);
-      await detoxExpect(element(by.id('haptic-feedback-toggle')))
-        .toHaveToggleValue(true);
+      await detoxExpect(element(by.id('audio-feedback-toggle'))).toHaveToggleValue(true);
+      await detoxExpect(element(by.id('haptic-feedback-toggle'))).toHaveToggleValue(true);
     });
   });
 
@@ -422,9 +419,7 @@ describe('PhysioAssist - Complete Component Validation', () => {
 
     it('should display empty state when no data', async () => {
       // If new user or no exercises done
-      await detoxExpect(
-        element(by.text(/No exercise data yet/i))
-      ).toBeVisible();
+      await detoxExpect(element(by.text(/No exercise data yet/i))).toBeVisible();
       await detoxExpect(element(by.id('start-first-exercise-button'))).toBeVisible();
     });
   });
@@ -495,9 +490,7 @@ describe('PhysioAssist - Complete Component Validation', () => {
       });
 
       // Should show error state
-      await detoxExpect(
-        element(by.text(/camera permission required/i))
-      ).toBeVisible();
+      await detoxExpect(element(by.text(/camera permission required/i))).toBeVisible();
 
       // Should offer to open settings
       await detoxExpect(element(by.id('open-settings-button'))).toBeVisible();

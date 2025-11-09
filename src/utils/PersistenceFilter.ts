@@ -185,7 +185,7 @@ export class MultiThresholdPersistenceFilter {
    * Reset all filters
    */
   resetAll(): void {
-    this.filters.forEach(filter => filter.resetAll());
+    this.filters.forEach((filter) => filter.resetAll());
   }
 }
 

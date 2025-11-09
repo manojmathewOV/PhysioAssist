@@ -132,12 +132,7 @@ const PoseOverlaySkia: React.FC<PoseOverlaySkiaProps> = ({
               opacity={0.3}
             />
             {/* Main keypoint */}
-            <Circle
-              cx={coords.x}
-              cy={coords.y}
-              r={keypointRadius}
-              color={color}
-            />
+            <Circle cx={coords.x} cy={coords.y} r={keypointRadius} color={color} />
             {/* Inner highlight */}
             <Circle
               cx={coords.x}
@@ -154,12 +149,7 @@ const PoseOverlaySkia: React.FC<PoseOverlaySkiaProps> = ({
       {showConfidence && confidence > 0 && (
         <>
           {/* Background circle */}
-          <Circle
-            cx={SCREEN_WIDTH - 40}
-            cy={50}
-            r={30}
-            color="rgba(0, 0, 0, 0.7)"
-          />
+          <Circle cx={SCREEN_WIDTH - 40} cy={50} r={30} color="rgba(0, 0, 0, 0.7)" />
           {/* Confidence arc */}
           <Circle
             cx={SCREEN_WIDTH - 40}

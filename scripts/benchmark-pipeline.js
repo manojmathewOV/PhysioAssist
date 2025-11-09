@@ -35,15 +35,15 @@ const baseline = {
       poseDetection: 30,
       goniometry: 10,
       comparison: 15,
-      feedbackGeneration: 12
-    }
+      feedbackGeneration: 12,
+    },
   },
   measurements: {
     // To be populated in Gate 1+
     endToEnd: null,
-    components: {}
+    components: {},
   },
-  notes: 'Gate 0: Toolchain baseline only. Real measurements start at Gate 1.'
+  notes: 'Gate 0: Toolchain baseline only. Real measurements start at Gate 1.',
 };
 
 // Save baseline

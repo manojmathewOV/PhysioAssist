@@ -92,7 +92,8 @@ export function detectShoulderHiking(
   referencePose: PoseFrame,
   side: 'left' | 'right'
 ): ShoulderError | null {
-  const shoulderIdx = side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
+  const shoulderIdx =
+    side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
   const earIdx = side === 'left' ? KEYPOINTS.LEFT_EAR : KEYPOINTS.RIGHT_EAR;
 
   const userShoulder = userPose.keypoints[shoulderIdx];
@@ -164,7 +165,8 @@ export function detectTrunkLean(
   referencePose: PoseFrame,
   side: 'left' | 'right'
 ): ShoulderError | null {
-  const shoulderIdx = side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
+  const shoulderIdx =
+    side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
   const hipIdx = side === 'left' ? KEYPOINTS.LEFT_HIP : KEYPOINTS.RIGHT_HIP;
 
   const userShoulder = userPose.keypoints[shoulderIdx];
@@ -183,8 +185,12 @@ export function detectTrunkLean(
   }
 
   // Calculate trunk angle (lateral deviation from vertical)
-  const userLeanAngle = Math.abs(Math.atan2(userShoulder.x - userHip.x, userHip.y - userShoulder.y) * (180 / Math.PI));
-  const refLeanAngle = Math.abs(Math.atan2(refShoulder.x - refHip.x, refHip.y - refShoulder.y) * (180 / Math.PI));
+  const userLeanAngle = Math.abs(
+    Math.atan2(userShoulder.x - userHip.x, userHip.y - userShoulder.y) * (180 / Math.PI)
+  );
+  const refLeanAngle = Math.abs(
+    Math.atan2(refShoulder.x - refHip.x, refHip.y - refShoulder.y) * (180 / Math.PI)
+  );
 
   const leanDifference = Math.abs(userLeanAngle - refLeanAngle);
 
@@ -230,7 +236,8 @@ export function detectInternalRotation(
   referencePose: PoseFrame,
   side: 'left' | 'right'
 ): ShoulderError | null {
-  const shoulderIdx = side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
+  const shoulderIdx =
+    side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
   const elbowIdx = side === 'left' ? KEYPOINTS.LEFT_ELBOW : KEYPOINTS.RIGHT_ELBOW;
   const wristIdx = side === 'left' ? KEYPOINTS.LEFT_WRIST : KEYPOINTS.RIGHT_WRIST;
 
@@ -300,7 +307,8 @@ export function detectIncompleteROM(
   referencePoses: PoseFrame[],
   side: 'left' | 'right'
 ): ShoulderError | null {
-  const shoulderIdx = side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
+  const shoulderIdx =
+    side === 'left' ? KEYPOINTS.LEFT_SHOULDER : KEYPOINTS.RIGHT_SHOULDER;
   const elbowIdx = side === 'left' ? KEYPOINTS.LEFT_ELBOW : KEYPOINTS.RIGHT_ELBOW;
   const hipIdx = side === 'left' ? KEYPOINTS.LEFT_HIP : KEYPOINTS.RIGHT_HIP;
 

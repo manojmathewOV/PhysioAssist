@@ -470,7 +470,7 @@ describe('ShoulderROMTracker', () => {
       });
 
       // All frames should be tracked
-      expect(results.filter(r => r !== null)).toHaveLength(9);
+      expect(results.filter((r) => r !== null)).toHaveLength(9);
 
       const session = tracker.endSession();
       expect(session).toBeTruthy();
@@ -486,7 +486,7 @@ describe('ShoulderROMTracker', () => {
         'internal_rotation',
       ];
 
-      movements.forEach(movement => {
+      movements.forEach((movement) => {
         tracker.startSession(movement, 'left', 'sagittal');
         const landmarks = createMockLandmarks({ shoulderAngle: 100 });
         tracker.trackFrame(landmarks, Date.now(), 0.8);
@@ -496,7 +496,7 @@ describe('ShoulderROMTracker', () => {
       const history = tracker.getSessionHistory();
       expect(history).toHaveLength(4);
 
-      const movementsTracked = history.map(s => s.movement);
+      const movementsTracked = history.map((s) => s.movement);
       expect(movementsTracked).toContain('forward_flexion');
       expect(movementsTracked).toContain('abduction');
       expect(movementsTracked).toContain('external_rotation');

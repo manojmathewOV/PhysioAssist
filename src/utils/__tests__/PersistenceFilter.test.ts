@@ -213,12 +213,7 @@ describe('PersistenceFilter', () => {
 
       // Wait 300ms more (total 600ms)
       timestamp += 300;
-      const warningConfirmedNow = filter.update(
-        'error_1',
-        'warning',
-        true,
-        timestamp
-      );
+      const warningConfirmedNow = filter.update('error_1', 'warning', true, timestamp);
 
       // Now warning should also be confirmed
       expect(warningConfirmedNow).toBe(true);
@@ -254,9 +249,7 @@ describe('PersistenceFilter', () => {
         false
       );
       timestamp += 200;
-      expect(filter.update('shoulder_shrug', 'compensatory', true, timestamp)).toBe(
-        true
-      );
+      expect(filter.update('shoulder_shrug', 'compensatory', true, timestamp)).toBe(true);
 
       // Test high-risk pattern (300ms)
       timestamp = 2000;
@@ -270,9 +263,7 @@ describe('PersistenceFilter', () => {
       timestamp = 3000;
       filter.update('scapular_winging', 'subtle', true, timestamp);
       timestamp += 400;
-      expect(filter.update('scapular_winging', 'subtle', true, timestamp)).toBe(
-        false
-      );
+      expect(filter.update('scapular_winging', 'subtle', true, timestamp)).toBe(false);
       timestamp += 150;
       expect(filter.update('scapular_winging', 'subtle', true, timestamp)).toBe(true);
     });

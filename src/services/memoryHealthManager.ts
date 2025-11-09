@@ -74,7 +74,9 @@ export class MemoryHealthManager {
       // const eventEmitter = new NativeEventEmitter(NativeModules.MemoryMonitor);
       // this.memoryWarningListener = eventEmitter.addListener('memoryWarning', this.handleMemoryWarning);
 
-      console.log('[MemoryHealth] Memory warning listener setup (native bridge required for production)');
+      console.log(
+        '[MemoryHealth] Memory warning listener setup (native bridge required for production)'
+      );
     } catch (error) {
       console.error('[MemoryHealth] Failed to setup memory warning listener:', error);
     }
@@ -116,7 +118,10 @@ export class MemoryHealthManager {
     if (!this.currentState.actionsToken.includes('downgrade_resolution')) {
       await this.downgradeResolution();
       actions.push('downgrade_resolution');
-      this.recordAction('downgrade_resolution', 'Reduced video resolution to conserve memory');
+      this.recordAction(
+        'downgrade_resolution',
+        'Reduced video resolution to conserve memory'
+      );
     }
 
     // Level 3: Clear frame buffers
@@ -143,7 +148,10 @@ export class MemoryHealthManager {
     // Update state with actions taken
     this.currentState.actionsToken.push(...actions);
 
-    console.log(`[MemoryHealth] Executed ${actions.length} memory reduction actions:`, actions);
+    console.log(
+      `[MemoryHealth] Executed ${actions.length} memory reduction actions:`,
+      actions
+    );
   }
 
   /**
@@ -270,7 +278,7 @@ export class MemoryHealthManager {
    * Notify all listeners of state change
    */
   private notifyListeners(): void {
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(this.currentState);
       } catch (error) {
@@ -301,7 +309,7 @@ export class MemoryHealthManager {
 
     // Return unsubscribe function
     return () => {
-      this.listeners = this.listeners.filter(l => l !== callback);
+      this.listeners = this.listeners.filter((l) => l !== callback);
     };
   }
 

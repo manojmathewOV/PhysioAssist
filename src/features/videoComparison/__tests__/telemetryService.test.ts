@@ -153,7 +153,10 @@ describe('TelemetryService', () => {
   describe('Event Types', () => {
     it('should handle all event types', () => {
       const eventTypes = [
-        { type: 'session_start', data: { sessionId: 'test', mode: 'async', exerciseType: 'squat' } },
+        {
+          type: 'session_start',
+          data: { sessionId: 'test', mode: 'async', exerciseType: 'squat' },
+        },
         { type: 'session_complete', data: {} },
         { type: 'frame_processed', data: {} },
         { type: 'network_operation', data: {} },
@@ -163,7 +166,7 @@ describe('TelemetryService', () => {
         { type: 'thermal_throttle', data: { timestamp: Date.now(), state: 'nominal' } },
       ];
 
-      eventTypes.forEach(event => {
+      eventTypes.forEach((event) => {
         service.emit(event as any);
       });
 

@@ -194,7 +194,9 @@ export class ExerciseTemplateManager {
   /**
    * Create a new exercise template
    */
-  createTemplate(template: Omit<ExerciseTemplate, 'id' | 'createdAt' | 'updatedAt'>): ExerciseTemplate {
+  createTemplate(
+    template: Omit<ExerciseTemplate, 'id' | 'createdAt' | 'updatedAt'>
+  ): ExerciseTemplate {
     const id = this.generateTemplateId();
     const now = Date.now();
 
@@ -212,7 +214,10 @@ export class ExerciseTemplateManager {
   /**
    * Update an existing template
    */
-  updateTemplate(id: string, updates: Partial<ExerciseTemplate>): ExerciseTemplate | null {
+  updateTemplate(
+    id: string,
+    updates: Partial<ExerciseTemplate>
+  ): ExerciseTemplate | null {
     const template = this.templates.get(id);
     if (!template) {
       return null;
@@ -259,42 +264,41 @@ export class ExerciseTemplateManager {
     let results = this.getAllTemplates();
 
     if (filter.category) {
-      results = results.filter(t => t.category === filter.category);
+      results = results.filter((t) => t.category === filter.category);
     }
 
     if (filter.difficultyMin !== undefined) {
-      results = results.filter(t => t.difficulty >= filter.difficultyMin!);
+      results = results.filter((t) => t.difficulty >= filter.difficultyMin!);
     }
 
     if (filter.difficultyMax !== undefined) {
-      results = results.filter(t => t.difficulty <= filter.difficultyMax!);
+      results = results.filter((t) => t.difficulty <= filter.difficultyMax!);
     }
 
     if (filter.bodyRegion) {
-      results = results.filter(t => t.bodyRegion === filter.bodyRegion);
+      results = results.filter((t) => t.bodyRegion === filter.bodyRegion);
     }
 
     if (filter.primaryJoint) {
-      results = results.filter(t => t.primaryJoints.includes(filter.primaryJoint!));
+      results = results.filter((t) => t.primaryJoints.includes(filter.primaryJoint!));
     }
 
     if (filter.active !== undefined) {
-      results = results.filter(t => t.active === filter.active);
+      results = results.filter((t) => t.active === filter.active);
     }
 
     if (filter.searchTerm) {
       const term = filter.searchTerm.toLowerCase();
-      results = results.filter(t =>
-        t.name.toLowerCase().includes(term) ||
-        t.description.toLowerCase().includes(term) ||
-        t.tags.some(tag => tag.toLowerCase().includes(term))
+      results = results.filter(
+        (t) =>
+          t.name.toLowerCase().includes(term) ||
+          t.description.toLowerCase().includes(term) ||
+          t.tags.some((tag) => tag.toLowerCase().includes(term))
       );
     }
 
     if (filter.tags && filter.tags.length > 0) {
-      results = results.filter(t =>
-        filter.tags!.some(tag => t.tags.includes(tag))
-      );
+      results = results.filter((t) => filter.tags!.some((tag) => t.tags.includes(tag)));
     }
 
     return results;
@@ -366,7 +370,10 @@ export class ExerciseTemplateManager {
   /**
    * Update prescription status
    */
-  updatePrescription(id: string, updates: Partial<ExercisePrescription>): ExercisePrescription | null {
+  updatePrescription(
+    id: string,
+    updates: Partial<ExercisePrescription>
+  ): ExercisePrescription | null {
     const prescription = this.prescriptions.get(id);
     if (!prescription) {
       return null;
@@ -395,7 +402,7 @@ export class ExerciseTemplateManager {
   getPrescriptionsForPatient(patientId: string): ExercisePrescription[] {
     const prescriptionIds = this.prescriptionsByPatient.get(patientId) || [];
     return prescriptionIds
-      .map(id => this.prescriptions.get(id))
+      .map((id) => this.prescriptions.get(id))
       .filter((p): p is ExercisePrescription => p !== undefined);
   }
 
@@ -404,7 +411,7 @@ export class ExerciseTemplateManager {
    */
   getActivePrescriptionsForPatient(patientId: string): ExercisePrescription[] {
     return this.getPrescriptionsForPatient(patientId).filter(
-      p => p.status === 'active'
+      (p) => p.status === 'active'
     );
   }
 
@@ -443,7 +450,11 @@ export class ExerciseTemplateManager {
     };
 
     const byDifficulty: Record<number, number> = {
-      1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
     };
 
     const byBodyRegion: Record<BodyRegion, number> = {
@@ -558,19 +569,31 @@ export class ExerciseTemplateManager {
     // Shoulder exercises
     this.createTemplate({
       name: 'Shoulder Forward Flexion (Wall Slides)',
-      description: 'Progressive shoulder flexion exercise using wall for support and guidance',
+      description:
+        'Progressive shoulder flexion exercise using wall for support and guidance',
       category: 'rehabilitation',
       difficulty: 2,
       bodyRegion: 'upper_extremity',
       primaryJoints: ['shoulder'],
-      indications: ['Rotator cuff repair', 'Frozen shoulder', 'Post-operative shoulder', 'Limited shoulder ROM'],
-      contraindications: ['Acute shoulder dislocation', 'Recent fracture', 'Severe shoulder pain at rest'],
+      indications: [
+        'Rotator cuff repair',
+        'Frozen shoulder',
+        'Post-operative shoulder',
+        'Limited shoulder ROM',
+      ],
+      contraindications: [
+        'Acute shoulder dislocation',
+        'Recent fracture',
+        'Severe shoulder pain at rest',
+      ],
       estimatedDuration: 180,
       recommendedReps: 10,
       recommendedSets: 3,
       restPeriod: 60,
-      patientInstructions: 'Stand facing wall with arms at sides. Slowly slide arms up wall, reaching as high as comfortable. Hold 2-3 seconds, then slowly return. Stop if sharp pain occurs.',
-      clinicalNotes: 'Monitor for compensatory scapular elevation. Progress by increasing height of reach.',
+      patientInstructions:
+        'Stand facing wall with arms at sides. Slowly slide arms up wall, reaching as high as comfortable. Hold 2-3 seconds, then slowly return. Stop if sharp pain occurs.',
+      clinicalNotes:
+        'Monitor for compensatory scapular elevation. Progress by increasing height of reach.',
       equipment: ['Wall'],
       aaosReference: 'AAOS Shoulder ROM Guidelines - Forward Flexion 180°',
       tags: ['shoulder', 'rom', 'flexion', 'rehabilitation'],
@@ -581,20 +604,31 @@ export class ExerciseTemplateManager {
 
     this.createTemplate({
       name: 'Shoulder Abduction (Scapular Plane)',
-      description: 'Shoulder abduction in scapular plane (30° anterior to coronal) for optimal mechanics',
+      description:
+        'Shoulder abduction in scapular plane (30° anterior to coronal) for optimal mechanics',
       category: 'strength',
       difficulty: 3,
       bodyRegion: 'upper_extremity',
       primaryJoints: ['shoulder'],
       secondaryJoints: ['elbow'],
-      indications: ['Rotator cuff weakness', 'Shoulder instability', 'Post-surgical strengthening'],
-      contraindications: ['Acute impingement', 'Recent rotator cuff tear', 'Uncontrolled pain'],
+      indications: [
+        'Rotator cuff weakness',
+        'Shoulder instability',
+        'Post-surgical strengthening',
+      ],
+      contraindications: [
+        'Acute impingement',
+        'Recent rotator cuff tear',
+        'Uncontrolled pain',
+      ],
       estimatedDuration: 240,
       recommendedReps: 12,
       recommendedSets: 3,
       restPeriod: 90,
-      patientInstructions: 'Stand with light weight in hand. Raise arm out to side at 30° angle forward. Lift to shoulder height, pause, then lower slowly. Thumb up position.',
-      clinicalNotes: 'Scapular plane reduces subacromial impingement. Monitor for hiking or shrugging.',
+      patientInstructions:
+        'Stand with light weight in hand. Raise arm out to side at 30° angle forward. Lift to shoulder height, pause, then lower slowly. Thumb up position.',
+      clinicalNotes:
+        'Scapular plane reduces subacromial impingement. Monitor for hiking or shrugging.',
       equipment: ['Light dumbbell (2-5 lbs)'],
       aaosReference: 'AAOS Shoulder ROM Guidelines - Abduction 180°',
       researchCitations: ['Townsend H et al. (1991) - Scapular plane abduction'],
@@ -613,17 +647,29 @@ export class ExerciseTemplateManager {
       bodyRegion: 'lower_extremity',
       primaryJoints: ['knee', 'hip'],
       secondaryJoints: ['ankle'],
-      indications: ['ACL prevention', 'General lower extremity strength', 'Functional movement'],
-      contraindications: ['Acute knee injury', 'Severe knee pain', 'Post-operative <6 weeks'],
+      indications: [
+        'ACL prevention',
+        'General lower extremity strength',
+        'Functional movement',
+      ],
+      contraindications: [
+        'Acute knee injury',
+        'Severe knee pain',
+        'Post-operative <6 weeks',
+      ],
       estimatedDuration: 180,
       recommendedReps: 15,
       recommendedSets: 3,
       restPeriod: 60,
-      patientInstructions: 'Stand with feet shoulder-width apart. Lower hips back and down as if sitting in chair. Keep knees aligned over toes. Return to standing.',
-      clinicalNotes: 'Monitor for knee valgus (knees caving in). Ensure neutral spine throughout movement.',
+      patientInstructions:
+        'Stand with feet shoulder-width apart. Lower hips back and down as if sitting in chair. Keep knees aligned over toes. Return to standing.',
+      clinicalNotes:
+        'Monitor for knee valgus (knees caving in). Ensure neutral spine throughout movement.',
       equipment: [],
       aaosReference: 'AAOS Knee ROM Guidelines',
-      researchCitations: ['Hewett TE et al. (2005) - Neuromuscular training for ACL injury prevention'],
+      researchCitations: [
+        'Hewett TE et al. (2005) - Neuromuscular training for ACL injury prevention',
+      ],
       tags: ['knee', 'squat', 'strength', 'acl', 'functional'],
       createdBy: 'system',
       version: '1.0.0',
@@ -637,16 +683,28 @@ export class ExerciseTemplateManager {
       difficulty: 2,
       bodyRegion: 'lower_extremity',
       primaryJoints: ['ankle', 'knee'],
-      indications: ['Ankle sprain recovery', 'ACL prevention', 'Fall prevention', 'Proprioceptive training'],
-      contraindications: ['Acute ankle injury', 'Severe balance impairment without support'],
+      indications: [
+        'Ankle sprain recovery',
+        'ACL prevention',
+        'Fall prevention',
+        'Proprioceptive training',
+      ],
+      contraindications: [
+        'Acute ankle injury',
+        'Severe balance impairment without support',
+      ],
       estimatedDuration: 120,
       recommendedReps: 30, // 30 seconds hold
       recommendedSets: 3,
       restPeriod: 30,
-      patientInstructions: 'Stand on one leg with eyes open. Maintain balance for 30 seconds. Progress to eyes closed or unstable surface.',
-      clinicalNotes: 'Observe for excessive hip or ankle movement. Progress difficulty as balance improves.',
+      patientInstructions:
+        'Stand on one leg with eyes open. Maintain balance for 30 seconds. Progress to eyes closed or unstable surface.',
+      clinicalNotes:
+        'Observe for excessive hip or ankle movement. Progress difficulty as balance improves.',
       equipment: [],
-      researchCitations: ['McKeon PO et al. (2008) - Balance training for ankle instability'],
+      researchCitations: [
+        'McKeon PO et al. (2008) - Balance training for ankle instability',
+      ],
       tags: ['balance', 'proprioception', 'ankle', 'knee', 'prevention'],
       createdBy: 'system',
       version: '1.0.0',

@@ -46,10 +46,7 @@ describe('realFrameAnalysis', () => {
     return { data, width, height };
   };
 
-  const createGradientPixelData = (
-    width: number,
-    height: number
-  ): PixelData => {
+  const createGradientPixelData = (width: number, height: number): PixelData => {
     const pixelCount = width * height;
     const data = new Uint8ClampedArray(pixelCount * 4);
 
@@ -392,9 +389,7 @@ describe('realFrameAnalysis', () => {
         const centerDist = Math.sqrt(
           Math.pow(x - width / 2, 2) + Math.pow(y - height / 2, 2)
         );
-        const maxDist = Math.sqrt(
-          Math.pow(width / 2, 2) + Math.pow(height / 2, 2)
-        );
+        const maxDist = Math.sqrt(Math.pow(width / 2, 2) + Math.pow(height / 2, 2));
         const value = Math.max(50, 255 - (centerDist / maxDist) * 200);
 
         data[i * 4] = value;
@@ -418,32 +413,22 @@ describe('realFrameAnalysis', () => {
 
   describe('Threshold Constants', () => {
     it('should have valid BRIGHTNESS_THRESHOLDS', () => {
-      expect(BRIGHTNESS_THRESHOLDS.MIN).toBeLessThan(
-        BRIGHTNESS_THRESHOLDS.OPTIMAL_MIN
-      );
+      expect(BRIGHTNESS_THRESHOLDS.MIN).toBeLessThan(BRIGHTNESS_THRESHOLDS.OPTIMAL_MIN);
       expect(BRIGHTNESS_THRESHOLDS.OPTIMAL_MIN).toBeLessThan(
         BRIGHTNESS_THRESHOLDS.OPTIMAL_MAX
       );
-      expect(BRIGHTNESS_THRESHOLDS.OPTIMAL_MAX).toBeLessThan(
-        BRIGHTNESS_THRESHOLDS.MAX
-      );
+      expect(BRIGHTNESS_THRESHOLDS.OPTIMAL_MAX).toBeLessThan(BRIGHTNESS_THRESHOLDS.MAX);
     });
 
     it('should have valid CONTRAST_THRESHOLDS', () => {
       expect(CONTRAST_THRESHOLDS.LOW).toBeLessThanOrEqual(CONTRAST_THRESHOLDS.GOOD_MIN);
-      expect(CONTRAST_THRESHOLDS.GOOD_MIN).toBeLessThan(
-        CONTRAST_THRESHOLDS.GOOD_MAX
-      );
+      expect(CONTRAST_THRESHOLDS.GOOD_MIN).toBeLessThan(CONTRAST_THRESHOLDS.GOOD_MAX);
       expect(CONTRAST_THRESHOLDS.GOOD_MAX).toBeLessThanOrEqual(CONTRAST_THRESHOLDS.HIGH);
     });
 
     it('should have valid SHADOW_THRESHOLDS', () => {
-      expect(SHADOW_THRESHOLDS.MODERATE_MIN).toBeLessThan(
-        SHADOW_THRESHOLDS.MODERATE_MAX
-      );
-      expect(SHADOW_THRESHOLDS.MODERATE_MAX).toBeLessThanOrEqual(
-        SHADOW_THRESHOLDS.HARSH
-      );
+      expect(SHADOW_THRESHOLDS.MODERATE_MIN).toBeLessThan(SHADOW_THRESHOLDS.MODERATE_MAX);
+      expect(SHADOW_THRESHOLDS.MODERATE_MAX).toBeLessThanOrEqual(SHADOW_THRESHOLDS.HARSH);
     });
   });
 });

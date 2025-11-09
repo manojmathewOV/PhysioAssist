@@ -46,17 +46,27 @@ const MOVENET_KEYPOINTS = [
 // Pose connections for skeleton visualization
 export const POSE_CONNECTIONS: [number, number][] = [
   // Face
-  [0, 1], [0, 2], [1, 3], [2, 4],
+  [0, 1],
+  [0, 2],
+  [1, 3],
+  [2, 4],
   // Torso
-  [5, 6], [5, 11], [6, 12], [11, 12],
+  [5, 6],
+  [5, 11],
+  [6, 12],
+  [11, 12],
   // Left arm
-  [5, 7], [7, 9],
+  [5, 7],
+  [7, 9],
   // Right arm
-  [6, 8], [8, 10],
+  [6, 8],
+  [8, 10],
   // Left leg
-  [11, 13], [13, 15],
+  [11, 13],
+  [13, 15],
   // Right leg
-  [12, 14], [14, 16],
+  [12, 14],
+  [14, 16],
 ];
 
 export class PoseDetectionServiceV2 {
@@ -131,16 +141,14 @@ export class PoseDetectionServiceV2 {
         try {
           // TODO: Implement actual download mechanism
           // For now, provide helpful error message
-          throw new Error(
-            'Model file not found. Please run: npm run download-models'
-          );
+          throw new Error('Model file not found. Please run: npm run download-models');
         } catch (downloadError) {
           console.error('❌ Model download fallback failed:', downloadError);
           throw new Error(
             'Pose detection model not available. Please:\n' +
-            '1. Run: npm run download-models\n' +
-            '2. Rebuild the app\n' +
-            '3. If problem persists, check your internet connection'
+              '1. Run: npm run download-models\n' +
+              '2. Rebuild the app\n' +
+              '3. If problem persists, check your internet connection'
           );
         }
       }
@@ -174,13 +182,15 @@ export class PoseDetectionServiceV2 {
 
     const expectedSize = 192 * 192 * 3; // 110,592
     if (frameData.length !== expectedSize) {
-      console.warn(`⚠️ Invalid frame size: ${frameData.length} (expected ${expectedSize})`);
+      console.warn(
+        `⚠️ Invalid frame size: ${frameData.length} (expected ${expectedSize})`
+      );
       return null;
     }
 
     // Validate pixel values for regular arrays
     if (!(frameData instanceof Uint8Array)) {
-      const hasInvalidValues = frameData.some(v => v < 0 || v > 255 || Number.isNaN(v));
+      const hasInvalidValues = frameData.some((v) => v < 0 || v > 255 || Number.isNaN(v));
       if (hasInvalidValues) {
         console.warn('⚠️ Frame contains out-of-range or NaN pixel values');
         return null;
@@ -203,7 +213,8 @@ export class PoseDetectionServiceV2 {
       const confidence = this.calculateConfidence(landmarks);
 
       // Filter low-confidence poses using adaptive threshold
-      const confidenceThreshold = this.adaptiveSettings?.minConfidence || this.minConfidenceThreshold;
+      const confidenceThreshold =
+        this.adaptiveSettings?.minConfidence || this.minConfidenceThreshold;
       if (confidence < confidenceThreshold) {
         return null;
       }
@@ -212,7 +223,7 @@ export class PoseDetectionServiceV2 {
       if (this.filteringEnabled && this.landmarkFilter) {
         const timestamp = performance.now() / 1000; // Convert to seconds
         // Convert MoveNet landmarks to format expected by filter
-        const landmarksWithZ = landmarks.map(lm => ({
+        const landmarksWithZ = landmarks.map((lm) => ({
           x: lm.x,
           y: lm.y,
           z: 0, // MoveNet doesn't have Z, use 0
@@ -222,7 +233,7 @@ export class PoseDetectionServiceV2 {
         const smoothed = this.landmarkFilter.filterPose(landmarksWithZ, timestamp);
 
         // Convert back to MoveNet format
-        landmarks = smoothed.map(lm => ({
+        landmarks = smoothed.map((lm) => ({
           x: lm.x,
           y: lm.y,
           score: lm.visibility || 0,
@@ -347,13 +358,13 @@ export class PoseDetectionServiceV2 {
    */
   getPerformanceStats() {
     return {
-      averageInferenceTime: this.inferenceCount > 0
-        ? this.inferenceTimeSum / this.inferenceCount
-        : 0,
+      averageInferenceTime:
+        this.inferenceCount > 0 ? this.inferenceTimeSum / this.inferenceCount : 0,
       totalFrames: this.inferenceCount,
-      estimatedFPS: this.inferenceCount > 0
-        ? 1000 / (this.inferenceTimeSum / this.inferenceCount)
-        : 0,
+      estimatedFPS:
+        this.inferenceCount > 0
+          ? 1000 / (this.inferenceTimeSum / this.inferenceCount)
+          : 0,
     };
   }
 

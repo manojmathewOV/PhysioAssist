@@ -61,7 +61,8 @@ const SHOULDER_THRESHOLDS: ExerciseThresholds = {
     max: 0.08, // 8% critical
     persistence_ms: 400,
     source: 'AAOS OrthoInfo - Shoulder Surgery Exercise Guide (2023)',
-    description: 'Shoulder shrugging during abduction indicates weak rotator cuff or poor scapular control',
+    description:
+      'Shoulder shrugging during abduction indicates weak rotator cuff or poor scapular control',
   },
 
   abduction_trunk_tilt: {
@@ -77,15 +78,18 @@ const SHOULDER_THRESHOLDS: ExerciseThresholds = {
     max: 12, // degrees
     persistence_ms: 400,
     source: 'AAOS OrthoInfo - Shoulder Surgery Exercise Guide',
-    description: 'Lower back arching during forward flexion indicates tight anterior shoulder or weak core',
+    description:
+      'Lower back arching during forward flexion indicates tight anterior shoulder or weak core',
   },
 
   external_rotation_elbow_flare: {
     threshold: 0.15, // 15% of torso width
-    max: 0.20, // 20%
+    max: 0.2, // 20%
     persistence_ms: 400,
-    source: 'Reinold et al. (JOSPT) - EMG studies show infraspinatus activation drops when elbow drifts',
-    description: 'Elbow drifting away from body during external rotation reduces rotator cuff engagement',
+    source:
+      'Reinold et al. (JOSPT) - EMG studies show infraspinatus activation drops when elbow drifts',
+    description:
+      'Elbow drifting away from body during external rotation reduces rotator cuff engagement',
   },
 
   scapular_winging: {
@@ -93,7 +97,8 @@ const SHOULDER_THRESHOLDS: ExerciseThresholds = {
     max: 0.05, // 5cm critical
     persistence_ms: 500,
     source: 'Hospital for Special Surgery (HSS) - Scapular Dyskinesis Assessment',
-    description: 'Shoulder blade protruding indicates weak serratus anterior or trapezius',
+    description:
+      'Shoulder blade protruding indicates weak serratus anterior or trapezius',
   },
 };
 
@@ -107,7 +112,8 @@ const KNEE_THRESHOLDS: ExerciseThresholds = {
     max: 10, // degrees (upper bound)
     persistence_ms: 150, // 5-6 frames at 30fps
     source: 'IJSPT - Frontal Plane Projection Angle (FPPA) as 2D valgus proxy',
-    description: 'Knee caving inward increases ACL injury risk, especially in post-surgical patients',
+    description:
+      'Knee caving inward increases ACL injury risk, especially in post-surgical patients',
   },
 
   varus_fppa: {
@@ -123,7 +129,8 @@ const KNEE_THRESHOLDS: ExerciseThresholds = {
     max: 8, // degrees
     persistence_ms: 300,
     source: 'AAOS OrthoInfo - Single-leg stance assessment',
-    description: 'Hip dropping on opposite side indicates weak hip abductors (gluteus medius)',
+    description:
+      'Hip dropping on opposite side indicates weak hip abductors (gluteus medius)',
   },
 
   trunk_lean: {
@@ -139,7 +146,8 @@ const KNEE_THRESHOLDS: ExerciseThresholds = {
     max: 60, // degrees (critical - insufficient ROM)
     persistence_ms: 200,
     source: 'ACSM Guidelines - Squat depth standards',
-    description: 'Not reaching parallel indicates mobility restrictions or fear-avoidance',
+    description:
+      'Not reaching parallel indicates mobility restrictions or fear-avoidance',
   },
 
   heel_lift: {
@@ -158,15 +166,16 @@ const KNEE_THRESHOLDS: ExerciseThresholds = {
 const ELBOW_THRESHOLDS: ExerciseThresholds = {
   biceps_drift_forward: {
     threshold: 0.15, // 15% of upper-arm length
-    max: 0.20, // 20%
+    max: 0.2, // 20%
     persistence_ms: 300,
     source: 'AAOS Conditioning - Biceps curl form standards',
-    description: 'Elbow drifting forward uses shoulder momentum instead of biceps isolation',
+    description:
+      'Elbow drifting forward uses shoulder momentum instead of biceps isolation',
   },
 
   biceps_drift_backward: {
     threshold: 0.15, // 15% of upper-arm length
-    max: 0.20, // 20%
+    max: 0.2, // 20%
     persistence_ms: 300,
     source: 'AAOS Conditioning - Biceps curl form standards',
     description: 'Elbow drifting backward reduces biceps tension at peak contraction',
@@ -174,7 +183,7 @@ const ELBOW_THRESHOLDS: ExerciseThresholds = {
 
   triceps_elbow_flare: {
     threshold: 0.15, // 15% deviation from torso plane
-    max: 0.20, // 20%
+    max: 0.2, // 20%
     persistence_ms: 300,
     source: 'AAOS Conditioning - Triceps extension standards',
     description: 'Elbows flaring outward reduces triceps engagement and strains shoulder',
@@ -185,7 +194,8 @@ const ELBOW_THRESHOLDS: ExerciseThresholds = {
     max: 20, // degrees
     persistence_ms: 200,
     source: 'ACSM - Upper extremity biomechanics',
-    description: 'Wrist bending outward may indicate grip weakness or poor wrist stability',
+    description:
+      'Wrist bending outward may indicate grip weakness or poor wrist stability',
   },
 
   wrist_deviation_ulnar: {
@@ -193,7 +203,8 @@ const ELBOW_THRESHOLDS: ExerciseThresholds = {
     max: 20, // degrees
     persistence_ms: 200,
     source: 'ACSM - Upper extremity biomechanics',
-    description: 'Wrist bending inward may indicate grip weakness or poor wrist stability',
+    description:
+      'Wrist bending inward may indicate grip weakness or poor wrist stability',
   },
 };
 
@@ -219,8 +230,8 @@ const META_THRESHOLDS: ExerciseThresholds = {
   },
 
   insufficient_rom: {
-    threshold: 0.70, // 70% of reference ROM
-    max: 0.50, // 50% (critical)
+    threshold: 0.7, // 70% of reference ROM
+    max: 0.5, // 50% (critical)
     persistence_ms: 500,
     source: 'APTA - Range of Motion Assessment Standards',
     description: 'Not completing full range of motion limits therapeutic benefit',
@@ -228,7 +239,7 @@ const META_THRESHOLDS: ExerciseThresholds = {
 
   patient_too_far: {
     threshold: 0.25, // Patient occupies <25% of frame height
-    max: 0.20, // <20% critical
+    max: 0.2, // <20% critical
     persistence_ms: 1000,
     source: 'PhysioAssist Internal - Pose detection accuracy standards',
     description: 'Patient too far from camera reduces pose detection accuracy',
@@ -247,7 +258,8 @@ const META_THRESHOLDS: ExerciseThresholds = {
     max: 0.2, // 20% critical
     persistence_ms: 2000,
     source: 'PhysioAssist Internal - MediaPipe visibility requirements',
-    description: 'Poor lighting reduces pose detection accuracy and may hide compensations',
+    description:
+      'Poor lighting reduces pose detection accuracy and may hide compensations',
   },
 
   poor_lighting_contrast: {

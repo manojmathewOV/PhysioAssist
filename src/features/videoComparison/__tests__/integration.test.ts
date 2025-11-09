@@ -189,9 +189,16 @@ describe('Integration Tests', () => {
 
       // 3. Download video
       if (canDownload) {
-        analyticsService.trackYouTubeDownloadStarted('https://youtube.com/watch?v=test', '720p');
+        analyticsService.trackYouTubeDownloadStarted(
+          'https://youtube.com/watch?v=test',
+          '720p'
+        );
         await youtubeQuotaManager.recordUsage('videoDetails');
-        analyticsService.trackYouTubeDownloadCompleted('https://youtube.com/watch?v=test', 5000, 5.2);
+        analyticsService.trackYouTubeDownloadCompleted(
+          'https://youtube.com/watch?v=test',
+          5000,
+          5.2
+        );
       }
 
       // 4. Start session
@@ -293,7 +300,7 @@ describe('Integration Tests', () => {
       expect(messages.shoulder.shoulderHiking.correction).toContain('shoulder down');
 
       // All messages should be actionable
-      Object.values(messages.shoulder).forEach(msg => {
+      Object.values(messages.shoulder).forEach((msg) => {
         expect(msg.correction).toBeTruthy();
         expect(msg.correction.length).toBeGreaterThan(10);
       });

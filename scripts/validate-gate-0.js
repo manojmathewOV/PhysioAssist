@@ -41,8 +41,12 @@ const goniometerCode = fs.readFileSync(goniometerPath, 'utf8');
 console.log('Checking MoveNet keypoint indices...\n');
 
 // Test 1: Verify correct elbow indices
-const hasCorrectLeftElbow = goniometerCode.includes("{ name: 'left_elbow', indices: [5, 7, 9] }");
-const hasCorrectRightElbow = goniometerCode.includes("{ name: 'right_elbow', indices: [6, 8, 10] }");
+const hasCorrectLeftElbow = goniometerCode.includes(
+  "{ name: 'left_elbow', indices: [5, 7, 9] }"
+);
+const hasCorrectRightElbow = goniometerCode.includes(
+  "{ name: 'right_elbow', indices: [6, 8, 10] }"
+);
 
 checkCriterion(
   'Left elbow uses correct MoveNet indices [5, 7, 9]',
@@ -57,8 +61,12 @@ checkCriterion(
 );
 
 // Test 2: Verify correct shoulder indices
-const hasCorrectLeftShoulder = goniometerCode.includes("{ name: 'left_shoulder', indices: [7, 5, 11] }");
-const hasCorrectRightShoulder = goniometerCode.includes("{ name: 'right_shoulder', indices: [8, 6, 12] }");
+const hasCorrectLeftShoulder = goniometerCode.includes(
+  "{ name: 'left_shoulder', indices: [7, 5, 11] }"
+);
+const hasCorrectRightShoulder = goniometerCode.includes(
+  "{ name: 'right_shoulder', indices: [8, 6, 12] }"
+);
 
 checkCriterion(
   'Left shoulder uses correct MoveNet indices [7, 5, 11]',
@@ -73,8 +81,12 @@ checkCriterion(
 );
 
 // Test 3: Verify correct knee indices
-const hasCorrectLeftKnee = goniometerCode.includes("{ name: 'left_knee', indices: [11, 13, 15] }");
-const hasCorrectRightKnee = goniometerCode.includes("{ name: 'right_knee', indices: [12, 14, 16] }");
+const hasCorrectLeftKnee = goniometerCode.includes(
+  "{ name: 'left_knee', indices: [11, 13, 15] }"
+);
+const hasCorrectRightKnee = goniometerCode.includes(
+  "{ name: 'right_knee', indices: [12, 14, 16] }"
+);
 
 checkCriterion(
   'Left knee uses correct MoveNet indices [11, 13, 15]',
@@ -102,12 +114,18 @@ for (const idx of invalidIndices) {
 checkCriterion(
   'No invalid MoveNet indices found (max is 16)',
   foundInvalidIndices.length === 0,
-  foundInvalidIndices.length > 0 ? `Found invalid indices: ${foundInvalidIndices.join(', ')}` : null
+  foundInvalidIndices.length > 0
+    ? `Found invalid indices: ${foundInvalidIndices.join(', ')}`
+    : null
 );
 
 // Test 5: Verify hip and ankle are removed (not supported by MoveNet)
-const hasHipJoint = goniometerCode.includes("{ name: 'left_hip'") || goniometerCode.includes("{ name: 'right_hip'");
-const hasAnkleJoint = goniometerCode.includes("{ name: 'left_ankle'") || goniometerCode.includes("{ name: 'right_ankle'");
+const hasHipJoint =
+  goniometerCode.includes("{ name: 'left_hip'") ||
+  goniometerCode.includes("{ name: 'right_hip'");
+const hasAnkleJoint =
+  goniometerCode.includes("{ name: 'left_ankle'") ||
+  goniometerCode.includes("{ name: 'right_ankle'");
 
 checkCriterion(
   'Unsupported hip joints removed',

@@ -28,7 +28,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
-  'Content-Type': 'application/json'
+  'Content-Type': 'application/json',
 };
 
 // Execute bridge command
@@ -44,14 +44,14 @@ async function executeBridge(command, args = []) {
       return {
         success: false,
         message: 'Failed to parse bridge response',
-        data: { stdout, stderr }
+        data: { stdout, stderr },
       };
     }
   } catch (error) {
     return {
       success: false,
       message: error.message,
-      data: { error: error.toString() }
+      data: { error: error.toString() },
     };
   }
 }
@@ -67,7 +67,7 @@ function readState() {
   }
   return {
     status: 'unknown',
-    last_update: new Date().toISOString()
+    last_update: new Date().toISOString(),
   };
 }
 
@@ -102,20 +102,22 @@ const server = http.createServer(async (req, res) => {
   // Route: GET /
   if (pathname === '/' && req.method === 'GET') {
     res.writeHead(200, corsHeaders);
-    res.end(JSON.stringify({
-      name: 'Claude Bridge Server',
-      version: '1.0.0',
-      endpoints: {
-        '/': 'API information',
-        '/status': 'Get system status',
-        '/health': 'Health check',
-        '/state': 'Get current state',
-        '/command': 'Execute bridge command (POST)',
-        '/logs': 'Get logs',
-        '/watch': 'WebSocket endpoint for real-time updates'
-      },
-      timestamp: new Date().toISOString()
-    }));
+    res.end(
+      JSON.stringify({
+        name: 'Claude Bridge Server',
+        version: '1.0.0',
+        endpoints: {
+          '/': 'API information',
+          '/status': 'Get system status',
+          '/health': 'Health check',
+          '/state': 'Get current state',
+          '/command': 'Execute bridge command (POST)',
+          '/logs': 'Get logs',
+          '/watch': 'WebSocket endpoint for real-time updates',
+        },
+        timestamp: new Date().toISOString(),
+      })
+    );
     return;
   }
 
@@ -139,19 +141,21 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/state' && req.method === 'GET') {
     const state = readState();
     res.writeHead(200, corsHeaders);
-    res.end(JSON.stringify({
-      success: true,
-      message: 'State retrieved',
-      timestamp: new Date().toISOString(),
-      data: state
-    }));
+    res.end(
+      JSON.stringify({
+        success: true,
+        message: 'State retrieved',
+        timestamp: new Date().toISOString(),
+        data: state,
+      })
+    );
     return;
   }
 
   // Route: POST /command
   if (pathname === '/command' && req.method === 'POST') {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    req.on('data', (chunk) => (body += chunk));
     req.on('end', async () => {
       try {
         const { command, args } = JSON.parse(body);
@@ -160,11 +164,13 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify(result));
       } catch (error) {
         res.writeHead(400, corsHeaders);
-        res.end(JSON.stringify({
-          success: false,
-          message: 'Invalid request body',
-          data: { error: error.message }
-        }));
+        res.end(
+          JSON.stringify({
+            success: false,
+            message: 'Invalid request body',
+            data: { error: error.message },
+          })
+        );
       }
     });
     return;
@@ -215,7 +221,7 @@ const server = http.createServer(async (req, res) => {
   // Route: POST /boot-simulator
   if (pathname === '/boot-simulator' && req.method === 'POST') {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    req.on('data', (chunk) => (body += chunk));
     req.on('end', async () => {
       try {
         const { name } = JSON.parse(body);
@@ -234,7 +240,7 @@ const server = http.createServer(async (req, res) => {
   // Route: POST /build
   if (pathname === '/build' && req.method === 'POST') {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    req.on('data', (chunk) => (body += chunk));
     req.on('end', async () => {
       try {
         const { clean } = JSON.parse(body);
@@ -255,8 +261,8 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*'
+      Connection: 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
     });
 
     // Send initial state
@@ -282,11 +288,13 @@ const server = http.createServer(async (req, res) => {
 
   // 404 Not Found
   res.writeHead(404, corsHeaders);
-  res.end(JSON.stringify({
-    success: false,
-    message: 'Endpoint not found',
-    data: { path: pathname }
-  }));
+  res.end(
+    JSON.stringify({
+      success: false,
+      message: 'Endpoint not found',
+      data: { path: pathname },
+    })
+  );
 });
 
 // Start server
@@ -330,7 +338,7 @@ Press Ctrl+C to stop
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('\n\nShutting down Claude Bridge Server...');
-  stateWatchers.forEach(watcher => watcher.close());
+  stateWatchers.forEach((watcher) => watcher.close());
   server.close(() => {
     console.log('Server stopped');
     process.exit(0);

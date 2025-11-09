@@ -103,7 +103,10 @@ declare module 'react-native-fs' {
   export const ExternalStorageDirectoryPath: string;
   export const DownloadDirectoryPath: string;
 
-  export function mkdir(filepath: string, options?: { NSURLIsExcludedFromBackupKey?: boolean }): Promise<void>;
+  export function mkdir(
+    filepath: string,
+    options?: { NSURLIsExcludedFromBackupKey?: boolean }
+  ): Promise<void>;
   export function moveFile(filepath: string, destPath: string): Promise<void>;
   export function copyFile(filepath: string, destPath: string): Promise<void>;
   export function pathForBundle(bundleNamed: string): Promise<string>;
@@ -118,18 +121,50 @@ declare module 'react-native-fs' {
   export function readDirAssets(dirpath: string): Promise<ReadDirItem[]>;
   export function stat(filepath: string): Promise<StatResult>;
   export function readFile(filepath: string, encoding?: string): Promise<string>;
-  export function read(filepath: string, length?: number, position?: number, encodingOrOptions?: string): Promise<string>;
+  export function read(
+    filepath: string,
+    length?: number,
+    position?: number,
+    encodingOrOptions?: string
+  ): Promise<string>;
   export function readFileAssets(filepath: string, encoding?: string): Promise<string>;
   export function hash(filepath: string, algorithm: string): Promise<string>;
   export function copyFileAssets(filepath: string, destPath: string): Promise<void>;
   export function copyFileAssetsIOS(imageUri: string, destPath: string): Promise<void>;
-  export function copyAssetsFileIOS(imageUri: string, destPath: string, width: number, height: number, scale?: number, compression?: number, resizeMode?: string): Promise<string>;
+  export function copyAssetsFileIOS(
+    imageUri: string,
+    destPath: string,
+    width: number,
+    height: number,
+    scale?: number,
+    compression?: number,
+    resizeMode?: string
+  ): Promise<string>;
   export function copyAssetsVideoIOS(videoUri: string, destPath: string): Promise<string>;
-  export function writeFile(filepath: string, contents: string, encoding?: string): Promise<void>;
-  export function appendFile(filepath: string, contents: string, encoding?: string): Promise<void>;
-  export function write(filepath: string, contents: string, position?: number, encoding?: string): Promise<void>;
-  export function downloadFile(options: DownloadFileOptions): { jobId: number; promise: Promise<DownloadResult> };
-  export function uploadFiles(options: UploadFileOptions): { jobId: number; promise: Promise<UploadResult> };
+  export function writeFile(
+    filepath: string,
+    contents: string,
+    encoding?: string
+  ): Promise<void>;
+  export function appendFile(
+    filepath: string,
+    contents: string,
+    encoding?: string
+  ): Promise<void>;
+  export function write(
+    filepath: string,
+    contents: string,
+    position?: number,
+    encoding?: string
+  ): Promise<void>;
+  export function downloadFile(options: DownloadFileOptions): {
+    jobId: number;
+    promise: Promise<DownloadResult>;
+  };
+  export function uploadFiles(options: UploadFileOptions): {
+    jobId: number;
+    promise: Promise<UploadResult>;
+  };
   export function touch(filepath: string, mtime?: Date, ctime?: Date): Promise<void>;
 
   const RNFS: {

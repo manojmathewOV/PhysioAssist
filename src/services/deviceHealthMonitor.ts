@@ -90,7 +90,7 @@ export class DeviceHealthMonitor {
     }
 
     // Fair thermal state or low battery or low power mode
-    if (thermalState === 'fair' || batteryLevel < 0.30 || isLowPowerMode) {
+    if (thermalState === 'fair' || batteryLevel < 0.3 || isLowPowerMode) {
       return {
         interval_ms: 750,
         resolution: '720p',
@@ -112,7 +112,10 @@ export class DeviceHealthMonitor {
    * Check if should pause/stop inference
    */
   shouldPauseInference(): boolean {
-    return this.currentHealth.thermalState === 'critical' || this.currentHealth.batteryLevel < 0.10;
+    return (
+      this.currentHealth.thermalState === 'critical' ||
+      this.currentHealth.batteryLevel < 0.1
+    );
   }
 
   /**
@@ -123,7 +126,7 @@ export class DeviceHealthMonitor {
 
     // Return unsubscribe function
     return () => {
-      this.listeners = this.listeners.filter(l => l !== callback);
+      this.listeners = this.listeners.filter((l) => l !== callback);
     };
   }
 
@@ -164,7 +167,8 @@ export class DeviceHealthMonitor {
 
       // Detect state changes
       const thermalChanged = health.thermalState !== this.currentHealth.thermalState;
-      const batteryChanged = Math.abs(health.batteryLevel - this.currentHealth.batteryLevel) > 0.05;
+      const batteryChanged =
+        Math.abs(health.batteryLevel - this.currentHealth.batteryLevel) > 0.05;
 
       this.currentHealth = health;
 
@@ -178,10 +182,9 @@ export class DeviceHealthMonitor {
         console.warn('[DeviceHealth] CRITICAL: Device overheating!');
       }
 
-      if (health.batteryLevel < 0.10) {
+      if (health.batteryLevel < 0.1) {
         console.warn('[DeviceHealth] CRITICAL: Battery very low!');
       }
-
     } catch (error) {
       console.error('[DeviceHealth] Failed to check health:', error);
     }
@@ -204,7 +207,6 @@ export class DeviceHealthMonitor {
       // Mock implementation - replace with actual native bridge
       const mockState = 'nominal';
       return mockState as ThermalState;
-
     } catch (error) {
       console.error('[DeviceHealth] Failed to get thermal state:', error);
       return 'nominal';
@@ -224,7 +226,6 @@ export class DeviceHealthMonitor {
       // Mock implementation - replace with actual native bridge
       const mockLevel = 1.0;
       return mockLevel;
-
     } catch (error) {
       console.error('[DeviceHealth] Failed to get battery level:', error);
       return 1.0;
@@ -246,7 +247,6 @@ export class DeviceHealthMonitor {
 
       // Mock implementation
       return false;
-
     } catch (error) {
       console.error('[DeviceHealth] Failed to check low power mode:', error);
       return false;
@@ -257,7 +257,7 @@ export class DeviceHealthMonitor {
    * Notify all listeners of health change
    */
   private notifyListeners(): void {
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(this.currentHealth);
       } catch (error) {
@@ -276,7 +276,7 @@ export class DeviceHealthMonitor {
       return 'Device overheating! Taking a break is recommended.';
     }
 
-    if (batteryLevel < 0.10) {
+    if (batteryLevel < 0.1) {
       return 'Battery very low! Please charge your device.';
     }
 
@@ -284,7 +284,7 @@ export class DeviceHealthMonitor {
       return 'Device is warm. Performance may be reduced.';
     }
 
-    if (batteryLevel < 0.20) {
+    if (batteryLevel < 0.2) {
       return 'Low battery. Consider charging soon.';
     }
 

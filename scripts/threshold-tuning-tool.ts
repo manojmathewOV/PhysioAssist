@@ -93,17 +93,29 @@ function displayCurrentThresholds(): void {
   console.log('📍 SHOULDER ERRORS:');
   console.log('-----------------------------------------------------------');
   console.log(`  Shoulder Hiking:`);
-  console.log(`    Warning:  ${ErrorDetectionConfig.shoulder.shoulderHiking.warning_cm} cm`);
-  console.log(`    Critical: ${ErrorDetectionConfig.shoulder.shoulderHiking.critical_cm} cm`);
+  console.log(
+    `    Warning:  ${ErrorDetectionConfig.shoulder.shoulderHiking.warning_cm} cm`
+  );
+  console.log(
+    `    Critical: ${ErrorDetectionConfig.shoulder.shoulderHiking.critical_cm} cm`
+  );
   console.log(`  Trunk Lean:`);
   console.log(`    Warning:  ${ErrorDetectionConfig.shoulder.trunkLean.warning_deg}°`);
   console.log(`    Critical: ${ErrorDetectionConfig.shoulder.trunkLean.critical_deg}°`);
   console.log(`  Internal Rotation:`);
-  console.log(`    Warning:  ${ErrorDetectionConfig.shoulder.internalRotation.warning_deg}°`);
-  console.log(`    Critical: ${ErrorDetectionConfig.shoulder.internalRotation.critical_deg}°`);
+  console.log(
+    `    Warning:  ${ErrorDetectionConfig.shoulder.internalRotation.warning_deg}°`
+  );
+  console.log(
+    `    Critical: ${ErrorDetectionConfig.shoulder.internalRotation.critical_deg}°`
+  );
   console.log(`  Incomplete ROM:`);
-  console.log(`    Warning:  ${ErrorDetectionConfig.shoulder.incompleteROM.warning_percent}%`);
-  console.log(`    Critical: ${ErrorDetectionConfig.shoulder.incompleteROM.critical_percent}%`);
+  console.log(
+    `    Warning:  ${ErrorDetectionConfig.shoulder.incompleteROM.warning_percent}%`
+  );
+  console.log(
+    `    Critical: ${ErrorDetectionConfig.shoulder.incompleteROM.critical_percent}%`
+  );
   console.log('');
 
   // Knee
@@ -116,22 +128,38 @@ function displayCurrentThresholds(): void {
   console.log(`    Warning:  ${ErrorDetectionConfig.knee.heelLift.warning_cm} cm`);
   console.log(`    Critical: ${ErrorDetectionConfig.knee.heelLift.critical_cm} cm`);
   console.log(`  Posterior Pelvic Tilt:`);
-  console.log(`    Warning:  ${ErrorDetectionConfig.knee.posteriorPelvicTilt.warning_deg}°`);
-  console.log(`    Critical: ${ErrorDetectionConfig.knee.posteriorPelvicTilt.critical_deg}°`);
+  console.log(
+    `    Warning:  ${ErrorDetectionConfig.knee.posteriorPelvicTilt.warning_deg}°`
+  );
+  console.log(
+    `    Critical: ${ErrorDetectionConfig.knee.posteriorPelvicTilt.critical_deg}°`
+  );
   console.log(`  Insufficient Depth:`);
-  console.log(`    Warning:  ${ErrorDetectionConfig.knee.insufficientDepth.warning_deg}°`);
-  console.log(`    Critical: ${ErrorDetectionConfig.knee.insufficientDepth.critical_deg}°`);
+  console.log(
+    `    Warning:  ${ErrorDetectionConfig.knee.insufficientDepth.warning_deg}°`
+  );
+  console.log(
+    `    Critical: ${ErrorDetectionConfig.knee.insufficientDepth.critical_deg}°`
+  );
   console.log('');
 
   // Elbow
   console.log('📍 ELBOW ERRORS:');
   console.log('-----------------------------------------------------------');
   console.log(`  Shoulder Compensation:`);
-  console.log(`    Warning:  ${ErrorDetectionConfig.elbow.shoulderCompensation.warning_cm} cm`);
-  console.log(`    Critical: ${ErrorDetectionConfig.elbow.shoulderCompensation.critical_cm} cm`);
+  console.log(
+    `    Warning:  ${ErrorDetectionConfig.elbow.shoulderCompensation.warning_cm} cm`
+  );
+  console.log(
+    `    Critical: ${ErrorDetectionConfig.elbow.shoulderCompensation.critical_cm} cm`
+  );
   console.log(`  Incomplete Extension:`);
-  console.log(`    Warning:  ${ErrorDetectionConfig.elbow.incompleteExtension.warning_deg}°`);
-  console.log(`    Critical: ${ErrorDetectionConfig.elbow.incompleteExtension.critical_deg}°`);
+  console.log(
+    `    Warning:  ${ErrorDetectionConfig.elbow.incompleteExtension.warning_deg}°`
+  );
+  console.log(
+    `    Critical: ${ErrorDetectionConfig.elbow.incompleteExtension.critical_deg}°`
+  );
   console.log(`  Wrist Deviation:`);
   console.log(`    Warning:  ${ErrorDetectionConfig.elbow.wristDeviation.warning_deg}°`);
   console.log(`    Critical: ${ErrorDetectionConfig.elbow.wristDeviation.critical_deg}°`);
@@ -175,7 +203,9 @@ async function tuneThresholds(
     const newWarning = parseFloat(newWarningStr) || currentWarning;
 
     // Get new critical threshold
-    const newCriticalStr = await question(`New CRITICAL threshold (${currentCritical}): `);
+    const newCriticalStr = await question(
+      `New CRITICAL threshold (${currentCritical}): `
+    );
     const newCritical = parseFloat(newCriticalStr) || currentCritical;
 
     // Validate
@@ -223,7 +253,9 @@ function validateConfiguration(): void {
  */
 async function saveConfiguration(): Promise<void> {
   console.log('');
-  const filePath = await question('Enter file path to save (default: ./error-detection-config.json): ');
+  const filePath = await question(
+    'Enter file path to save (default: ./error-detection-config.json): '
+  );
   const path = filePath.trim() || './error-detection-config.json';
 
   try {
@@ -261,7 +293,9 @@ async function loadConfiguration(): Promise<void> {
  */
 async function resetToDefaults(): Promise<void> {
   console.log('');
-  const confirm = await question('⚠️  Reset all thresholds to defaults? This cannot be undone. (y/n): ');
+  const confirm = await question(
+    '⚠️  Reset all thresholds to defaults? This cannot be undone. (y/n): '
+  );
 
   if (confirm.toLowerCase() === 'y') {
     // Re-import default config
@@ -298,7 +332,12 @@ async function main(): Promise<void> {
         break;
 
       case '3':
-        await tuneThresholds('knee', ['kneeValgus', 'heelLift', 'posteriorPelvicTilt', 'insufficientDepth']);
+        await tuneThresholds('knee', [
+          'kneeValgus',
+          'heelLift',
+          'posteriorPelvicTilt',
+          'insufficientDepth',
+        ]);
         break;
 
       case '4':

@@ -29,7 +29,10 @@ function checkCriterion(name, condition, errorMsg) {
 }
 
 // Read comparisonAnalysisService.ts
-const servicePath = path.join(__dirname, '../src/features/videoComparison/services/comparisonAnalysisService.ts');
+const servicePath = path.join(
+  __dirname,
+  '../src/features/videoComparison/services/comparisonAnalysisService.ts'
+);
 
 if (!fs.existsSync(servicePath)) {
   console.log('❌ CRITICAL: comparisonAnalysisService.ts not found');
@@ -98,7 +101,9 @@ checkCriterion(
 );
 
 // Test 6: Verify detectMovementPhases doesn't only use leftElbow
-const noOnlyLeftElbow = !serviceCode.match(/poses\[i - 1\]\.angles\?\.leftElbow \|\| 0;\s+const curr = poses\[i\]\.angles\?\.leftElbow/);
+const noOnlyLeftElbow = !serviceCode.match(
+  /poses\[i - 1\]\.angles\?\.leftElbow \|\| 0;\s+const curr = poses\[i\]\.angles\?\.leftElbow/
+);
 
 checkCriterion(
   'detectMovementPhases does not only use leftElbow',
@@ -118,7 +123,9 @@ checkCriterion(
 );
 
 // Test 8: Verify getAngleCorrection handles bilateral joint names
-const handlesBaseLookup = serviceCode.includes("deviation.joint.replace(/^(left|right)/, '')");
+const handlesBaseLookup = serviceCode.includes(
+  "deviation.joint.replace(/^(left|right)/, '')"
+);
 
 checkCriterion(
   'getAngleCorrection extracts base joint name for lookups',

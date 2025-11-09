@@ -113,7 +113,11 @@ export class TelemetryService {
   /**
    * Track session start
    */
-  trackSessionStart(sessionId: string, mode: 'async' | 'live', exerciseType: string): void {
+  trackSessionStart(
+    sessionId: string,
+    mode: 'async' | 'live',
+    exerciseType: string
+  ): void {
     this.emit({
       type: 'session_start',
       data: {
@@ -211,7 +215,7 @@ export class TelemetryService {
       // For now, log to console in development
       if (__DEV__) {
         console.log('[Telemetry] Flushing events:', events.length);
-        events.forEach(event => {
+        events.forEach((event) => {
           console.log(`  - ${event.type}:`, event.data);
         });
       }
@@ -222,7 +226,6 @@ export class TelemetryService {
 
       // Example: Firebase Analytics
       // await analytics().logEvent('batch_events', { events });
-
     } catch (error) {
       console.error('[Telemetry] Failed to flush events:', error);
       // Re-queue failed events

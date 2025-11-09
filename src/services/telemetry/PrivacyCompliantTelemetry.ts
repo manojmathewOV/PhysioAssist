@@ -193,9 +193,7 @@ export class PrivacyCompliantTelemetry {
 
     // Handle arrays
     if (Array.isArray(obj)) {
-      return obj.map((item, i) =>
-        this.deepScrub(item, scrubbedFields, `${path}[${i}]`)
-      );
+      return obj.map((item, i) => this.deepScrub(item, scrubbedFields, `${path}[${i}]`));
     }
 
     // Handle objects
@@ -326,17 +324,16 @@ export class PrivacyCompliantTelemetry {
       consent: this.consent,
       compliance: {
         // HIPAA compliance: Opt-in consent + PII scrubbing + 90-day retention
-        hipaa: this.config.anonymizeUsers &&
-               this.config.scrubDeviceIds &&
-               this.config.retentionDays <= 180,
+        hipaa:
+          this.config.anonymizeUsers &&
+          this.config.scrubDeviceIds &&
+          this.config.retentionDays <= 180,
 
         // GDPR compliance: Explicit consent + Right to be forgotten
-        gdpr: this.consent !== null &&
-              this.config.anonymizeUsers,
+        gdpr: this.consent !== null && this.config.anonymizeUsers,
 
         // CCPA compliance: Opt-out mechanism + No sale of data
-        ccpa: this.config.enabled === false ||
-              (this.consent?.telemetryConsent === false),
+        ccpa: this.config.enabled === false || this.consent?.telemetryConsent === false,
       },
     };
   }

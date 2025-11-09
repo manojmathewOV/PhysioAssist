@@ -177,7 +177,7 @@ describe('YouTubeQuotaManager', () => {
       }
 
       const alerts = await manager.getRecentAlerts();
-      const criticalAlert = alerts.find(a => a.level === 'critical');
+      const criticalAlert = alerts.find((a) => a.level === 'critical');
       expect(criticalAlert).toBeDefined();
     });
 
@@ -190,7 +190,7 @@ describe('YouTubeQuotaManager', () => {
       }
 
       const alerts = await manager.getRecentAlerts();
-      const exceededAlert = alerts.find(a => a.level === 'exceeded');
+      const exceededAlert = alerts.find((a) => a.level === 'exceeded');
       expect(exceededAlert).toBeDefined();
     });
 

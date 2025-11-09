@@ -94,8 +94,7 @@ const calculateAngle = (
   b: { x: number; y: number },
   c: { x: number; y: number }
 ): number => {
-  const radians =
-    Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+  const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
   let angle = Math.abs((radians * 180) / Math.PI);
 
   if (angle > 180) {
@@ -169,8 +168,10 @@ export const adaptMoveNetToClinical = (
     y: (leftHip.y + rightHip.y) / 2,
   };
 
-  const leftShoulderElevation = calculateElevation(leftShoulder, hipMidpoint) * frameHeight;
-  const rightShoulderElevation = calculateElevation(rightShoulder, hipMidpoint) * frameHeight;
+  const leftShoulderElevation =
+    calculateElevation(leftShoulder, hipMidpoint) * frameHeight;
+  const rightShoulderElevation =
+    calculateElevation(rightShoulder, hipMidpoint) * frameHeight;
 
   // === TRUNK MEASUREMENTS ===
   const shoulderMidpoint = {
@@ -210,17 +211,13 @@ export const adaptMoveNetToClinical = (
   // === ANKLE MEASUREMENTS ===
   // Heel elevation: Compare ankle height to baseline (simplified)
   const ankleBaseline = Math.max(leftAnkle.y, rightAnkle.y);
-  const leftHeelElevation =
-    Math.abs(leftAnkle.y - ankleBaseline) * frameHeight;
-  const rightHeelElevation =
-    Math.abs(rightAnkle.y - ankleBaseline) * frameHeight;
+  const leftHeelElevation = Math.abs(leftAnkle.y - ankleBaseline) * frameHeight;
+  const rightHeelElevation = Math.abs(rightAnkle.y - ankleBaseline) * frameHeight;
 
   // === QUALITY MEASUREMENTS ===
   const avgConfidence =
     landmarks.reduce((sum, lm) => sum + (lm.visibility || 0), 0) / landmarks.length;
-  const visibleKeypoints = landmarks.filter(
-    lm => (lm.visibility || 0) > 0.5
-  ).length;
+  const visibleKeypoints = landmarks.filter((lm) => (lm.visibility || 0) > 0.5).length;
   const isSufficient = avgConfidence > 0.5 && visibleKeypoints >= 10;
 
   return {

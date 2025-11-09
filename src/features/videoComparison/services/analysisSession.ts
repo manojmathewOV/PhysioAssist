@@ -6,7 +6,12 @@
  * poses at once vs. processing them incrementally.
  */
 
-import { PoseFrame, ComparisonResult, AngleDeviation, TemporalAlignment } from '../types/videoComparison.types';
+import {
+  PoseFrame,
+  ComparisonResult,
+  AngleDeviation,
+  TemporalAlignment,
+} from '../types/videoComparison.types';
 
 /**
  * Base interface for analysis sessions
@@ -226,12 +231,17 @@ export class StreamingAnalysisSession implements AnalysisSession {
     // Find corresponding reference window
     const userFrameIndex = this.allUserPoses.length - 1;
     const refFrameIndex = Math.min(
-      Math.floor((userFrameIndex / this.allUserPoses.length) * this.referencePoses.length),
+      Math.floor(
+        (userFrameIndex / this.allUserPoses.length) * this.referencePoses.length
+      ),
       this.referencePoses.length - 1
     );
 
     const refWindowStart = Math.max(0, refFrameIndex - Math.floor(this.WINDOW_SIZE / 2));
-    const refWindowEnd = Math.min(this.referencePoses.length, refWindowStart + this.WINDOW_SIZE);
+    const refWindowEnd = Math.min(
+      this.referencePoses.length,
+      refWindowStart + this.WINDOW_SIZE
+    );
     const refWindow = this.referencePoses.slice(refWindowStart, refWindowEnd);
 
     // Compare windows

@@ -33,7 +33,9 @@ declare module '@mediapipe/pose' {
   export class Pose {
     constructor(config: PoseConfig);
     setOptions(options: PoseOptions): void;
-    send(input: { image: HTMLImageElement | HTMLVideoElement | ImageData | any }): Promise<void>;
+    send(input: {
+      image: HTMLImageElement | HTMLVideoElement | ImageData | any;
+    }): Promise<void>;
     onResults(callback: (results: Results) => void): void;
     close(): void;
     reset(): void;

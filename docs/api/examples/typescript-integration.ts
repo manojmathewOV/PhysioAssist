@@ -172,10 +172,7 @@ export interface ApiError {
 export class PhysioAssistClient {
   private client: AxiosInstance;
 
-  constructor(
-    apiKey: string,
-    baseURL: string = 'https://api.physioassist.com/v1'
-  ) {
+  constructor(apiKey: string, baseURL: string = 'https://api.physioassist.com/v1') {
     this.client = axios.create({
       baseURL,
       headers: {
@@ -187,7 +184,7 @@ export class PhysioAssistClient {
 
     // Add response interceptor for error handling
     this.client.interceptors.response.use(
-      response => response,
+      (response) => response,
       (error: AxiosError<ApiError>) => {
         if (error.response) {
           const apiError = error.response.data;
@@ -332,10 +329,7 @@ export class PhysioAssistClient {
  * Usage:
  *   const { templates, loading, error, refetch } = useTemplates(client, { category: 'strength' });
  */
-export function useTemplates(
-  client: PhysioAssistClient,
-  filter?: TemplateFilter
-) {
+export function useTemplates(client: PhysioAssistClient, filter?: TemplateFilter) {
   const [templates, setTemplates] = useState<ExerciseTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -410,7 +404,7 @@ async function main() {
       limit: 10,
     });
     console.log(`Found ${total} templates`);
-    templates.forEach(template => {
+    templates.forEach((template) => {
       console.log(`  - ${template.name} (Difficulty: ${template.difficulty}/5)`);
     });
 
@@ -440,7 +434,7 @@ async function main() {
     // console.log(`Status: ${prescription.status}`);
 
     // Example 4: Get patient's active prescriptions
-    console.log('\n=== Example 4: Get patient\'s active prescriptions ===');
+    console.log("\n=== Example 4: Get patient's active prescriptions ===");
     // const { prescriptions } = await client.getPatientPrescriptions(
     //   'patient_456',
     //   PrescriptionStatus.ACTIVE

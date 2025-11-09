@@ -36,7 +36,8 @@ interface OnboardingFlowProps {
 const defaultSteps: OnboardingStep[] = [
   {
     title: '👋 Welcome to PhysioAssist',
-    description: 'AI-powered physiotherapy assistant that helps you exercise correctly and track your progress.',
+    description:
+      'AI-powered physiotherapy assistant that helps you exercise correctly and track your progress.',
     tips: [
       'Real-time pose detection',
       'Accurate angle measurements',
@@ -55,7 +56,8 @@ const defaultSteps: OnboardingStep[] = [
   },
   {
     title: '🎯 Pose Detection',
-    description: 'Green indicators show high confidence tracking. Yellow means you may need to adjust your position.',
+    description:
+      'Green indicators show high confidence tracking. Yellow means you may need to adjust your position.',
     tips: [
       'Green overlay = Good tracking (>70% confidence)',
       'Yellow overlay = Moderate tracking (40-70%)',
@@ -64,7 +66,8 @@ const defaultSteps: OnboardingStep[] = [
   },
   {
     title: '📐 Goniometer',
-    description: 'Measure joint angles accurately in real-time. Perfect for ROM (Range of Motion) assessment.',
+    description:
+      'Measure joint angles accurately in real-time. Perfect for ROM (Range of Motion) assessment.',
     tips: [
       'Select three points: start, vertex, end',
       'Keep joints clearly visible',
@@ -73,7 +76,8 @@ const defaultSteps: OnboardingStep[] = [
   },
   {
     title: '🏋️ Exercises',
-    description: 'Choose from guided exercises with real-time feedback on your form and range of motion.',
+    description:
+      'Choose from guided exercises with real-time feedback on your form and range of motion.',
     tips: [
       'Follow the on-screen guide',
       'Listen for audio feedback',
@@ -82,7 +86,8 @@ const defaultSteps: OnboardingStep[] = [
   },
   {
     title: '✅ Ready to Start!',
-    description: 'You\'re all set! Grant camera permission to begin your physiotherapy session.',
+    description:
+      "You're all set! Grant camera permission to begin your physiotherapy session.",
     tips: [
       'Tap "Start Detection" when ready',
       'Adjust your position as needed',
@@ -133,10 +138,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       statusBarTranslucent
       transparent={false}
     >
-      <LinearGradient
-        colors={['#1a1a1a', '#0d0d0d']}
-        style={styles.container}
-      >
+      <LinearGradient colors={['#1a1a1a', '#0d0d0d']} style={styles.container}>
         {/* Skip Button */}
         {!isLastStep && (
           <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
@@ -190,10 +192,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
           {/* Next/Get Started Button */}
           <TouchableOpacity
-            style={[
-              styles.nextButton,
-              currentStep === 0 && styles.nextButtonFull,
-            ]}
+            style={[styles.nextButton, currentStep === 0 && styles.nextButtonFull]}
             onPress={handleNext}
           >
             <LinearGradient

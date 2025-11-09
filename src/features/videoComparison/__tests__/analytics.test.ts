@@ -89,13 +89,20 @@ describe('AnalyticsService', () => {
 
     it('should track download completed', () => {
       expect(() => {
-        service.trackYouTubeDownloadCompleted('https://youtube.com/watch?v=test', 5000, 5.2);
+        service.trackYouTubeDownloadCompleted(
+          'https://youtube.com/watch?v=test',
+          5000,
+          5.2
+        );
       }).not.toThrow();
     });
 
     it('should track download failed', () => {
       expect(() => {
-        service.trackYouTubeDownloadFailed('https://youtube.com/watch?v=test', 'Network timeout');
+        service.trackYouTubeDownloadFailed(
+          'https://youtube.com/watch?v=test',
+          'Network timeout'
+        );
       }).not.toThrow();
     });
 

@@ -17,7 +17,10 @@
  */
 
 import { PoseLandmark } from '../../types/pose';
-import { ClinicalMeasurements, adaptMoveNetToClinical } from '../../utils/moveNetClinicalAdapter';
+import {
+  ClinicalMeasurements,
+  adaptMoveNetToClinical,
+} from '../../utils/moveNetClinicalAdapter';
 
 export type ShoulderMovement =
   | 'forward_flexion'
@@ -296,10 +299,7 @@ export class ShoulderROMTracker {
     if (measurementQuality === 'poor') {
       notes.push('Low measurement quality - ensure good lighting and camera angle');
     }
-    if (
-      session.peakAngle < populationMean.min &&
-      session.angleHistory.length > 10
-    ) {
+    if (session.peakAngle < populationMean.min && session.angleHistory.length > 10) {
       notes.push('ROM below population average - consider discussing with therapist');
     }
 

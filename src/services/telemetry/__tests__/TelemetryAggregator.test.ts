@@ -55,7 +55,7 @@ describe('TelemetryAggregator', () => {
   describe('Performance aggregation', () => {
     it('should aggregate inference times with statistics', () => {
       // Add various inference times
-      [50, 75, 100, 80, 90, 60, 70, 85, 95, 110].forEach(time => {
+      [50, 75, 100, 80, 90, 60, 70, 85, 95, 110].forEach((time) => {
         aggregator.addInferenceTime(time);
       });
 
@@ -66,7 +66,9 @@ describe('TelemetryAggregator', () => {
       expect(result.performance.inference.min).toBe(50);
       expect(result.performance.inference.max).toBe(110);
       expect(result.performance.inference.p50).toBeGreaterThan(0);
-      expect(result.performance.inference.p95).toBeGreaterThan(result.performance.inference.p50);
+      expect(result.performance.inference.p95).toBeGreaterThan(
+        result.performance.inference.p50
+      );
       expect(result.performance.inference.stddev).toBeGreaterThan(0);
     });
 
@@ -109,8 +111,8 @@ describe('TelemetryAggregator', () => {
 
       const result = aggregator.aggregate();
 
-      expect(result.errors.errorsByType['knee_valgus']).toBe(3);
-      expect(result.errors.errorsByType['shoulder_hiking']).toBe(1);
+      expect(result.errors.errorsByType.knee_valgus).toBe(3);
+      expect(result.errors.errorsByType.shoulder_hiking).toBe(1);
     });
 
     it('should count errors by severity', () => {
@@ -148,8 +150,8 @@ describe('TelemetryAggregator', () => {
 
       const result = aggregator.aggregate();
 
-      expect(result.errors.errorsByJoint['leftKnee']).toBe(2);
-      expect(result.errors.errorsByJoint['rightKnee']).toBe(1);
+      expect(result.errors.errorsByJoint.leftKnee).toBe(2);
+      expect(result.errors.errorsByJoint.rightKnee).toBe(1);
     });
   });
 
@@ -187,9 +189,9 @@ describe('TelemetryAggregator', () => {
 
       const result = aggregator.aggregate();
 
-      expect(result.device.thermalStates['nominal']).toBe(1);
-      expect(result.device.thermalStates['fair']).toBe(1);
-      expect(result.device.thermalStates['serious']).toBe(1);
+      expect(result.device.thermalStates.nominal).toBe(1);
+      expect(result.device.thermalStates.fair).toBe(1);
+      expect(result.device.thermalStates.serious).toBe(1);
     });
 
     it('should calculate average battery level', () => {
@@ -226,8 +228,8 @@ describe('TelemetryAggregator', () => {
 
       const result = aggregator.aggregate();
 
-      expect(result.sessions.sessionsByExercise['squat']).toBe(2);
-      expect(result.sessions.sessionsByExercise['shoulder_abduction']).toBe(1);
+      expect(result.sessions.sessionsByExercise.squat).toBe(2);
+      expect(result.sessions.sessionsByExercise.shoulder_abduction).toBe(1);
     });
 
     it('should count sessions by mode', () => {
@@ -326,7 +328,7 @@ describe('TelemetryAggregator', () => {
   describe('Statistical calculations', () => {
     it('should calculate percentiles correctly', () => {
       const times = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140];
-      times.forEach(t => aggregator.addInferenceTime(t));
+      times.forEach((t) => aggregator.addInferenceTime(t));
 
       const result = aggregator.aggregate();
 
@@ -337,7 +339,7 @@ describe('TelemetryAggregator', () => {
 
     it('should calculate standard deviation', () => {
       // Add values with high variance
-      [10, 50, 90].forEach(t => aggregator.addInferenceTime(t));
+      [10, 50, 90].forEach((t) => aggregator.addInferenceTime(t));
 
       const result = aggregator.aggregate();
 
@@ -372,7 +374,11 @@ describe('TelemetryAggregator', () => {
       }
 
       for (let i = 0; i < 10; i++) {
-        aggregator.addNetworkOperation(1000 + Math.random() * 1000, Math.random() > 0.1, 5000000);
+        aggregator.addNetworkOperation(
+          1000 + Math.random() * 1000,
+          Math.random() > 0.1,
+          5000000
+        );
       }
 
       for (let i = 0; i < 25; i++) {
@@ -380,7 +386,14 @@ describe('TelemetryAggregator', () => {
       }
 
       for (let i = 0; i < 5; i++) {
-        aggregator.addSession('squat', 'async', 80 + Math.random() * 20, 0.85 + Math.random() * 0.1, 1.0, 150);
+        aggregator.addSession(
+          'squat',
+          'async',
+          80 + Math.random() * 20,
+          0.85 + Math.random() * 0.1,
+          1.0,
+          150
+        );
       }
 
       aggregator.addThermalThrottle();

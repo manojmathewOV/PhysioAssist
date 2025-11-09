@@ -128,7 +128,12 @@ export class TelemetryAggregator {
   private frameCounts = { total: 0, dropped: 0 };
   private networkOps: Array<{ duration: number; success: boolean; bytes: number }> = [];
   private errors: Array<{ type: string; severity: string; joint: string }> = [];
-  private deviceData: Array<{ model: string; osVersion: string; thermal: string; battery: number }> = [];
+  private deviceData: Array<{
+    model: string;
+    osVersion: string;
+    thermal: string;
+    battery: number;
+  }> = [];
   private sessions: Array<{
     exerciseType: string;
     mode: string;
@@ -140,7 +145,8 @@ export class TelemetryAggregator {
   private thermalThrottles = 0;
   private memoryWarnings = 0;
 
-  constructor(windowDuration: number = 3600000) { // 1 hour default
+  constructor(windowDuration: number = 3600000) {
+    // 1 hour default
     this.windowDuration = windowDuration;
     this.startNewWindow();
   }
@@ -183,7 +189,12 @@ export class TelemetryAggregator {
   /**
    * Add device context
    */
-  addDeviceContext(model: string, osVersion: string, thermal: string, battery: number): void {
+  addDeviceContext(
+    model: string,
+    osVersion: string,
+    thermal: string,
+    battery: number
+  ): void {
     this.ensureWindow();
     this.deviceData.push({ model, osVersion, thermal, battery });
   }
@@ -314,9 +325,9 @@ export class TelemetryAggregator {
     const avgFPS = this.frameCounts.total / windowDurationSec;
 
     // Network stats
-    const successfulOps = this.networkOps.filter(op => op.success).length;
+    const successfulOps = this.networkOps.filter((op) => op.success).length;
     const totalBytes = this.networkOps.reduce((sum, op) => sum + op.bytes, 0);
-    const avgNetworkDuration = this.mean(this.networkOps.map(op => op.duration));
+    const avgNetworkDuration = this.mean(this.networkOps.map((op) => op.duration));
 
     return {
       inference: inferenceStats,
@@ -492,7 +503,7 @@ export class TelemetryAggregator {
   private stddev(values: number[]): number {
     if (values.length === 0) return 0;
     const avg = this.mean(values);
-    const squareDiffs = values.map(val => Math.pow(val - avg, 2));
+    const squareDiffs = values.map((val) => Math.pow(val - avg, 2));
     return Math.sqrt(this.mean(squareDiffs));
   }
 }

@@ -21,13 +21,13 @@ const EncryptedStorage = {
   }),
 
   clear: jest.fn(() => {
-    Object.keys(storage).forEach(key => delete storage[key]);
+    Object.keys(storage).forEach((key) => delete storage[key]);
     return Promise.resolve();
   }),
 
   // Helper to reset mock between tests
   __reset: () => {
-    Object.keys(storage).forEach(key => delete storage[key]);
+    Object.keys(storage).forEach((key) => delete storage[key]);
     EncryptedStorage.setItem.mockClear();
     EncryptedStorage.getItem.mockClear();
     EncryptedStorage.removeItem.mockClear();

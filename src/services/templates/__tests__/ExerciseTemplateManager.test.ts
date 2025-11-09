@@ -208,13 +208,13 @@ describe('ExerciseTemplateManager', () => {
     it('should filter by category', () => {
       const results = manager.filterTemplates({ category: 'strength' });
       expect(results.length).toBeGreaterThan(0);
-      results.forEach(t => expect(t.category).toBe('strength'));
+      results.forEach((t) => expect(t.category).toBe('strength'));
     });
 
     it('should filter by difficulty range', () => {
       const results = manager.filterTemplates({ difficultyMin: 2, difficultyMax: 3 });
       expect(results.length).toBeGreaterThan(0);
-      results.forEach(t => {
+      results.forEach((t) => {
         expect(t.difficulty).toBeGreaterThanOrEqual(2);
         expect(t.difficulty).toBeLessThanOrEqual(3);
       });
@@ -223,25 +223,25 @@ describe('ExerciseTemplateManager', () => {
     it('should filter by body region', () => {
       const results = manager.filterTemplates({ bodyRegion: 'upper_extremity' });
       expect(results.length).toBeGreaterThan(0);
-      results.forEach(t => expect(t.bodyRegion).toBe('upper_extremity'));
+      results.forEach((t) => expect(t.bodyRegion).toBe('upper_extremity'));
     });
 
     it('should filter by primary joint', () => {
       const results = manager.filterTemplates({ primaryJoint: 'shoulder' });
       expect(results.length).toBeGreaterThan(0);
-      results.forEach(t => expect(t.primaryJoints).toContain('shoulder'));
+      results.forEach((t) => expect(t.primaryJoints).toContain('shoulder'));
     });
 
     it('should filter by active status', () => {
       const results = manager.filterTemplates({ active: true });
       expect(results.length).toBeGreaterThan(0);
-      results.forEach(t => expect(t.active).toBe(true));
+      results.forEach((t) => expect(t.active).toBe(true));
     });
 
     it('should search in name and description', () => {
       const results = manager.filterTemplates({ searchTerm: 'shoulder' });
       expect(results.length).toBeGreaterThan(0);
-      results.forEach(t => {
+      results.forEach((t) => {
         const searchable = (t.name + t.description + t.tags.join(' ')).toLowerCase();
         expect(searchable).toContain('shoulder');
       });
@@ -250,7 +250,7 @@ describe('ExerciseTemplateManager', () => {
     it('should filter by tags', () => {
       const results = manager.filterTemplates({ tags: ['balance'] });
       expect(results.length).toBeGreaterThan(0);
-      results.forEach(t => expect(t.tags).toContain('balance'));
+      results.forEach((t) => expect(t.tags).toContain('balance'));
     });
 
     it('should combine multiple filters', () => {
@@ -260,7 +260,7 @@ describe('ExerciseTemplateManager', () => {
         difficultyMin: 3,
       });
 
-      results.forEach(t => {
+      results.forEach((t) => {
         expect(t.category).toBe('strength');
         expect(t.bodyRegion).toBe('upper_extremity');
         expect(t.difficulty).toBeGreaterThanOrEqual(3);
@@ -386,7 +386,7 @@ describe('ExerciseTemplateManager', () => {
       const prescriptions = manager.getPrescriptionsForPatient('patient-123');
 
       expect(prescriptions).toHaveLength(2);
-      prescriptions.forEach(p => expect(p.patientId).toBe('patient-123'));
+      prescriptions.forEach((p) => expect(p.patientId).toBe('patient-123'));
     });
 
     it('should get active prescriptions for patient', () => {
@@ -399,7 +399,7 @@ describe('ExerciseTemplateManager', () => {
       const active = manager.getActivePrescriptionsForPatient('patient-123');
 
       expect(active).toHaveLength(1);
-      active.forEach(p => expect(p.status).toBe('active'));
+      active.forEach((p) => expect(p.status).toBe('active'));
     });
 
     it('should cancel a prescription', () => {
@@ -450,7 +450,7 @@ describe('ExerciseTemplateManager', () => {
     it('should count templates by category', () => {
       const stats = manager.getLibraryStats();
 
-      Object.values(stats.byCategory).forEach(count => {
+      Object.values(stats.byCategory).forEach((count) => {
         expect(count).toBeGreaterThanOrEqual(0);
       });
     });
@@ -564,7 +564,7 @@ describe('ExerciseTemplateManager', () => {
     it('should have all default templates active', () => {
       const templates = manager.getAllTemplates();
 
-      templates.forEach(template => {
+      templates.forEach((template) => {
         expect(template.active).toBe(true);
       });
     });
@@ -572,7 +572,7 @@ describe('ExerciseTemplateManager', () => {
     it('should have clinical metadata in default templates', () => {
       const templates = manager.getAllTemplates();
 
-      templates.forEach(template => {
+      templates.forEach((template) => {
         expect(template.indications.length).toBeGreaterThan(0);
         expect(template.contraindications.length).toBeGreaterThan(0);
         expect(template.patientInstructions).toBeTruthy();

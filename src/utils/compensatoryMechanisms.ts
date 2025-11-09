@@ -167,9 +167,7 @@ export const checkLightingConditions = async (
 /**
  * Gets adaptive lighting settings based on conditions
  */
-export const getAdaptiveLightingSettings = (
-  brightness: number
-): AdaptiveSettings => {
+export const getAdaptiveLightingSettings = (brightness: number): AdaptiveSettings => {
   if (brightness < BRIGHTNESS_THRESHOLD.OPTIMAL_MIN) {
     // Low light mode
     return {
@@ -249,11 +247,11 @@ const calculateBodyHeight = (landmarks: PoseLandmark[]): number => {
 
   // Find highest point (nose or eyes)
   const headLandmarks = landmarks.slice(0, 5); // Nose, eyes, ears
-  const minY = Math.min(...headLandmarks.map(l => l.y));
+  const minY = Math.min(...headLandmarks.map((l) => l.y));
 
   // Find lowest point (ankles or feet)
   const feetLandmarks = landmarks.slice(15, 17); // Ankles
-  const maxY = Math.max(...feetLandmarks.map(l => l.y));
+  const maxY = Math.max(...feetLandmarks.map((l) => l.y));
 
   return maxY - minY;
 };
@@ -313,9 +311,11 @@ export const assessEnvironment = async (
 
   // Assess lighting
   let lighting: 'poor' | 'good' | 'excellent';
-  if (lightingCheck.status === 'good' &&
-      lightingCheck.brightness >= BRIGHTNESS_THRESHOLD.OPTIMAL_MIN &&
-      lightingCheck.brightness <= BRIGHTNESS_THRESHOLD.OPTIMAL_MAX) {
+  if (
+    lightingCheck.status === 'good' &&
+    lightingCheck.brightness >= BRIGHTNESS_THRESHOLD.OPTIMAL_MIN &&
+    lightingCheck.brightness <= BRIGHTNESS_THRESHOLD.OPTIMAL_MAX
+  ) {
     lighting = 'excellent';
   } else if (lightingCheck.canProceed) {
     lighting = 'good';
@@ -325,8 +325,10 @@ export const assessEnvironment = async (
 
   // Assess space
   let space: 'limited' | 'adequate' | 'spacious';
-  if (distanceCheck.bodyFillPercentage >= BODY_FILL_THRESHOLD.OPTIMAL_MIN &&
-      distanceCheck.bodyFillPercentage <= BODY_FILL_THRESHOLD.OPTIMAL_MAX) {
+  if (
+    distanceCheck.bodyFillPercentage >= BODY_FILL_THRESHOLD.OPTIMAL_MIN &&
+    distanceCheck.bodyFillPercentage <= BODY_FILL_THRESHOLD.OPTIMAL_MAX
+  ) {
     space = 'adequate';
   } else if (distanceCheck.bodyFillPercentage > BODY_FILL_THRESHOLD.OPTIMAL_MAX) {
     space = 'limited';
@@ -386,7 +388,9 @@ export const selectOptimalTier = (
 /**
  * Gets settings for specific accuracy tier
  */
-export const getTierSettings = (tier: AccuracyTier): {
+export const getTierSettings = (
+  tier: AccuracyTier
+): {
   minConfidence: number;
   smoothing: number;
   guidance: 'full' | 'moderate' | 'minimal';
@@ -397,7 +401,7 @@ export const getTierSettings = (tier: AccuracyTier): {
 } => {
   const settings = {
     simple: {
-      minConfidence: 0.20,
+      minConfidence: 0.2,
       smoothing: 0.85, // Heavy smoothing for tremors
       guidance: 'full' as const,
       autoRecovery: true,
@@ -406,8 +410,8 @@ export const getTierSettings = (tier: AccuracyTier): {
       showTechnicalInfo: false,
     },
     standard: {
-      minConfidence: 0.30,
-      smoothing: 0.50,
+      minConfidence: 0.3,
+      smoothing: 0.5,
       guidance: 'moderate' as const,
       autoRecovery: true,
       simplifiedUI: false,
@@ -415,8 +419,8 @@ export const getTierSettings = (tier: AccuracyTier): {
       showTechnicalInfo: false,
     },
     professional: {
-      minConfidence: 0.40,
-      smoothing: 0.30,
+      minConfidence: 0.4,
+      smoothing: 0.3,
       guidance: 'minimal' as const,
       autoRecovery: false,
       simplifiedUI: false,
@@ -478,7 +482,7 @@ const calculateLandmarkVariance = (history: PoseLandmark[][]): number => {
 
   // Calculate average position for each landmark
   const avgPositions = history[0].map((_, landmarkIndex) => {
-    const positions = history.map(frame => frame[landmarkIndex]);
+    const positions = history.map((frame) => frame[landmarkIndex]);
     const avgX = positions.reduce((sum, p) => sum + p.x, 0) / positions.length;
     const avgY = positions.reduce((sum, p) => sum + p.y, 0) / positions.length;
     return { x: avgX, y: avgY };
@@ -486,7 +490,7 @@ const calculateLandmarkVariance = (history: PoseLandmark[][]): number => {
 
   // Calculate variance from average
   let totalVariance = 0;
-  history.forEach(frame => {
+  history.forEach((frame) => {
     frame.forEach((landmark, index) => {
       const avg = avgPositions[index];
       const dx = landmark.x - avg.x;
@@ -538,7 +542,7 @@ export const getComprehensiveAdaptiveSettings = (
   const spaceSettings = getAdaptiveDistanceSettings(environment.space);
 
   // Apply patient-specific adjustments
-  let patientAdjustments: Partial<AdaptiveSettings> = {};
+  const patientAdjustments: Partial<AdaptiveSettings> = {};
 
   if (patientProfile.hasTremor) {
     const tremorSettings = getTremorCompensationSettings();
@@ -555,10 +559,8 @@ export const getComprehensiveAdaptiveSettings = (
 
   // Combine all settings (priority: patient > environment > tier > base)
   return {
-    minConfidence: patientAdjustments.minConfidence ||
-                   tierSettings.minConfidence,
-    smoothing: patientAdjustments.smoothing ||
-               tierSettings.smoothing,
+    minConfidence: patientAdjustments.minConfidence || tierSettings.minConfidence,
+    smoothing: patientAdjustments.smoothing || tierSettings.smoothing,
     exposureCompensation: lightingSettings.exposureCompensation,
     minDistance: spaceSettings.minDistance,
     fov: spaceSettings.fov,
@@ -622,13 +624,15 @@ export const translateToPatientLanguage = {
 /**
  * Gets patient-friendly error message
  */
-export const getPatientFriendlyError = (technicalError: string): {
+export const getPatientFriendlyError = (
+  technicalError: string
+): {
   title: string;
   message: string;
   actions: string[];
   helpText: string;
 } => {
-  const errorKey = Object.keys(translateToPatientLanguage.errors).find(key =>
+  const errorKey = Object.keys(translateToPatientLanguage.errors).find((key) =>
     technicalError.toLowerCase().includes(key.toLowerCase())
   );
 

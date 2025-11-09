@@ -10,7 +10,13 @@
  */
 
 import { PoseLandmark } from '../../types/pose';
-import { ShoulderROMTracker, ShoulderMovement, CameraAngle, ShoulderROMResult, ShoulderROMSession } from './ShoulderROMTracker';
+import {
+  ShoulderROMTracker,
+  ShoulderMovement,
+  CameraAngle,
+  ShoulderROMResult,
+  ShoulderROMSession,
+} from './ShoulderROMTracker';
 
 export interface ShoulderROMConfig {
   /** Movement type to track */
@@ -202,7 +208,7 @@ export class ShoulderROMService {
       if (sessions.length === 0) continue;
 
       // Best ROM
-      bestROMByMovement[movement] = Math.max(...sessions.map(s => s.peakAngle));
+      bestROMByMovement[movement] = Math.max(...sessions.map((s) => s.peakAngle));
 
       // Average ROM
       const totalAngle = sessions.reduce((sum, s) => sum + s.averageAngle, 0);
@@ -214,8 +220,10 @@ export class ShoulderROMService {
         const firstQuarter = sessions.slice(0, quarterSize);
         const lastQuarter = sessions.slice(-quarterSize);
 
-        const firstAvg = firstQuarter.reduce((sum, s) => sum + s.peakAngle, 0) / firstQuarter.length;
-        const lastAvg = lastQuarter.reduce((sum, s) => sum + s.peakAngle, 0) / lastQuarter.length;
+        const firstAvg =
+          firstQuarter.reduce((sum, s) => sum + s.peakAngle, 0) / firstQuarter.length;
+        const lastAvg =
+          lastQuarter.reduce((sum, s) => sum + s.peakAngle, 0) / lastQuarter.length;
 
         improvementPercent[movement] = ((lastAvg - firstAvg) / firstAvg) * 100;
       }
@@ -235,7 +243,8 @@ export class ShoulderROMService {
       bestROMByMovement,
       avgROMByMovement,
       improvementPercent,
-      lastSessionDate: allSessions.length > 0 ? allSessions[allSessions.length - 1].startTime : 0,
+      lastSessionDate:
+        allSessions.length > 0 ? allSessions[allSessions.length - 1].startTime : 0,
     };
   }
 
@@ -263,7 +272,7 @@ export class ShoulderROMService {
 
     for (const session of trackerHistory) {
       const exists = allSessions.some(
-        s => s.startTime === session.startTime && s.movement === session.movement
+        (s) => s.startTime === session.startTime && s.movement === session.movement
       );
       if (!exists) {
         allSessions.push(session);
@@ -298,7 +307,9 @@ export class ShoulderROMService {
     let minSessions = Infinity;
     let recommended: ShoulderMovement = 'forward_flexion';
 
-    for (const movement of Object.keys(progress.sessionsByMovement) as ShoulderMovement[]) {
+    for (const movement of Object.keys(
+      progress.sessionsByMovement
+    ) as ShoulderMovement[]) {
       const count = progress.sessionsByMovement[movement];
       if (count < minSessions) {
         minSessions = count;
@@ -339,17 +350,24 @@ export class ShoulderROMService {
       }
 
       if (best >= standard) {
-        achievements.push(`${movement.replace('_', ' ')}: Achieved clinical standard (${best.toFixed(1)}°)`);
+        achievements.push(
+          `${movement.replace('_', ' ')}: Achieved clinical standard (${best.toFixed(1)}°)`
+        );
       } else if (best >= populationMin) {
-        achievements.push(`${movement.replace('_', ' ')}: Within population average (${best.toFixed(1)}°)`);
+        achievements.push(
+          `${movement.replace('_', ' ')}: Within population average (${best.toFixed(1)}°)`
+        );
       } else {
-        concerns.push(`${movement.replace('_', ' ')}: Below population average (${best.toFixed(1)}° vs ${populationMin}° min)`);
+        concerns.push(
+          `${movement.replace('_', ' ')}: Below population average (${best.toFixed(1)}° vs ${populationMin}° min)`
+        );
       }
     }
 
     // Generate summary
     const totalSessions = progress.totalSessions;
-    const avgImprovement = Object.values(progress.improvementPercent).reduce((a, b) => a + b, 0) / 4;
+    const avgImprovement =
+      Object.values(progress.improvementPercent).reduce((a, b) => a + b, 0) / 4;
 
     let summary = `Completed ${totalSessions} session(s). `;
     if (avgImprovement > 10) {
