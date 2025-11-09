@@ -1,4 +1,4 @@
-import { Vector3D } from './pose';
+import { Vector3D } from './common';
 
 /**
  * ISB-compliant 3D anatomical reference frame
