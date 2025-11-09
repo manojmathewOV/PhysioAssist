@@ -176,9 +176,7 @@ export class GoniometerService {
       // Legs
       { name: 'left_knee', indices: [11, 13, 15] }, // hip-knee-ankle
       { name: 'right_knee', indices: [12, 14, 16] },
-      { name: 'left_hip', indices: [5, 11, 13] }, // shoulder-hip-knee
-      { name: 'right_hip', indices: [6, 12, 14] }, // shoulder-hip-knee
-      // Note: Ankle angles not supported (MoveNet lacks toe keypoints)
+      // Note: Hip and ankle angles not supported (MoveNet lacks required keypoints)
     ];
 
     for (const config of jointConfigs) {
