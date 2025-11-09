@@ -2213,3 +2213,39 @@ Quantifiable metrics to validate completion.
 9. ⏳ Appendices: Supporting documentation
 
 **Document will be completed iteratively, section by section, with validation at each stage.**
+
+**Objective**: Implement LRU frame caching to achieve <120ms/frame performance target by eliminating redundant anatomical frame computation.
+
+**Prerequisites**: Gates 9B.1-4 complete ✅ (PoseSchemaRegistry, PoseDetectionServiceV2, OrientationClassifier, AnatomicalReferenceService)
+
+**Estimated Effort**: 1-2 days, 20 tests
+
+---
+
+### 5.1 Objective & Success Criteria
+
+#### Problem Statement
+
+**Current Limitation** (identified in codebase analysis):
+
+The `AnatomicalReferenceService` (344 lines, 27 tests passing) computes ISB-compliant reference frames correctly, BUT:
+
+1. **No caching**: Every downstream service that needs a frame (goniometer, clinical measurements, compensation detection) recomputes from scratch
+2. **Redundant calculations**: For a multi-joint measurement (e.g., shoulder flexion + elbow check), we recompute the thorax frame 2-3 times per video frame
+3. **Performance bottleneck**: Each frame calculation takes ~3-5ms → multi-joint measurements exceed the <120ms/frame budget
+
+**With caching**:
+```typescript
+// First calculation: 9ms (3 unique frames)
+// Subsequent lookups: <0.1ms (cache hits)
+// Total: ~9.3ms → 50% reduction
+```
+
+**Success Criteria**: Cache hit rate >80%, lookup <0.1ms, memory <1MB, 20 tests passing.
+
+---
+
+**Section 5 complete implementation details**: ~2,500 lines of specifications including cache architecture, ProcessedPoseData extension, PoseDetectionServiceV2 integration, complete test suite (20 tests), and validation checkpoints are available in the separate detailed document for this gate.
+
+This section provides the executive summary. Full implementation code, test specifications, and DoD criteria should be referenced from the separate Gate 9B.5 implementation guide.
+
