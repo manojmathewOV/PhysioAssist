@@ -88,7 +88,7 @@ describe('RootNavigator - Authentication Guards', () => {
 
       expect(getByTestId('onboarding-screen')).toBeTruthy();
       expect(queryByTestId('login-screen')).toBeNull();
-      expect(queryByTestID('pose-detection-screen')).toBeNull();
+      expect(queryByTestId('pose-detection-screen')).toBeNull();
     });
 
     it('should NOT allow access to main app when onboarding not completed', () => {
@@ -143,7 +143,7 @@ describe('RootNavigator - Authentication Guards', () => {
 
       expect(queryByTestId('pose-detection-screen')).toBeNull();
       expect(queryByTestId('profile-screen')).toBeNull();
-      expect(queryByTestID('settings-screen')).toBeNull();
+      expect(queryByTestId('settings-screen')).toBeNull();
     });
   });
 

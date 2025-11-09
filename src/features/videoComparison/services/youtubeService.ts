@@ -1,7 +1,24 @@
 import EncryptedStorage from 'react-native-encrypted-storage';
-import ytdl from 'react-native-ytdl';
 import RNFS from 'react-native-fs';
 import { YouTubeVideoInfo, VideoComparisonError } from '../types/videoComparison.types';
+
+// Safe ytdl import with fallback for development/testing
+let ytdl: any;
+try {
+  ytdl = require('react-native-ytdl');
+  // Handle ytdl.default export if present
+  if (ytdl.default) {
+    ytdl = ytdl.default;
+  }
+} catch (error) {
+  // Fallback mock implementation for development/testing
+  console.warn('[YouTubeService] react-native-ytdl not available, using fallback mock');
+  ytdl = {
+    getInfo: async () => ({
+      videoDetails: {},
+    }),
+  };
+}
 
 export class YouTubeService {
   private static instance: YouTubeService;

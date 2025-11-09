@@ -1,13 +1,13 @@
 {
-  "timestamp": "2025-11-06T10:48:41.737Z",
+  "timestamp": "2025-11-09T08:36:33.013Z",
   "overall": {
     "total": 73,
-    "passed": 42,
-    "failed": 31,
+    "passed": 41,
+    "failed": 32,
     "critical": 9,
-    "warnings": 22,
-    "passRate": 57.534246575342465,
-    "finalScore": 33.034246575342465
+    "warnings": 23,
+    "passRate": 56.16438356164384,
+    "finalScore": 31.164383561643838
   },
   "categories": {
     "Algorithm": {
@@ -30,8 +30,8 @@
     },
     "Performance": {
       "total": 4,
-      "passed": 3,
-      "failed": 1,
+      "passed": 2,
+      "failed": 2,
       "warnings": 0
     },
     "Security": {

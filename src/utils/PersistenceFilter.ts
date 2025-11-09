@@ -58,13 +58,14 @@ export class PersistenceFilter {
     if (isPresent) {
       if (!state) {
         // First detection of this error
+        const immediateConfirm = this.persistenceMs === 0;
         this.states.set(errorKey, {
           firstDetectedAt: timestamp,
           lastSeenAt: timestamp,
           consecutiveFrames: 1,
-          isConfirmed: false,
+          isConfirmed: immediateConfirm,
         });
-        return false; // Not confirmed yet
+        return immediateConfirm; // Confirm immediately if persistenceMs is 0
       } else {
         // Error continues
         state.lastSeenAt = timestamp;

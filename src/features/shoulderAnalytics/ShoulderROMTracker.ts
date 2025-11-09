@@ -331,7 +331,7 @@ export class ShoulderROMTracker {
   }
 
   /**
-   * Get session history
+   * Get session history (includes all sessions, even active ones)
    */
   getSessionHistory(): ShoulderROMSession[] {
     return Array.from(this.sessions.values());
