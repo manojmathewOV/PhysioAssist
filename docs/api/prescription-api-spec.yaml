@@ -1,0 +1,826 @@
+openapi: 3.0.3
+info:
+  title: PhysioAssist Prescription API
+  description: |
+    REST API for managing exercise templates and prescriptions.
+
+    ## Authentication
+    All endpoints require API key authentication via `X-API-Key` header.
+
+    ## Rate Limiting
+    - 1000 requests per hour per API key
+    - Exceeding limit returns 429 Too Many Requests
+
+    ## Versioning
+    API version is specified in the URL path (e.g., `/api/v1/...`)
+  version: 1.0.0
+  contact:
+    name: PhysioAssist Support
+    email: support@physioassist.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.physioassist.com/v1
+    description: Production server
+  - url: https://staging-api.physioassist.com/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Development server
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: Templates
+    description: Exercise template management
+  - name: Prescriptions
+    description: Exercise prescription operations
+  - name: Library
+    description: Template library and statistics
+
+paths:
+  # ========================================================================
+  # Templates
+  # ========================================================================
+
+  /templates:
+    get:
+      tags: [Templates]
+      summary: List all exercise templates
+      description: Retrieve all exercise templates with optional filtering
+      parameters:
+        - name: category
+          in: query
+          schema:
+            $ref: '#/components/schemas/ExerciseCategory'
+        - name: difficulty_min
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+        - name: difficulty_max
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+        - name: body_region
+          in: query
+          schema:
+            $ref: '#/components/schemas/BodyRegion'
+        - name: primary_joint
+          in: query
+          schema:
+            $ref: '#/components/schemas/Joint'
+        - name: active
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          description: Search in name, description, and tags
+          schema:
+            type: string
+        - name: tags
+          in: query
+          description: Filter by tags (comma-separated)
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExerciseTemplate'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+    post:
+      tags: [Templates]
+      summary: Create a new exercise template
+      description: Create a new exercise template (therapist/admin only)
+      security:
+        - ApiKeyAuth: []
+          TherapistAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExerciseTemplateCreate'
+      responses:
+        '201':
+          description: Template created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExerciseTemplate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /templates/{templateId}:
+    get:
+      tags: [Templates]
+      summary: Get a specific template
+      parameters:
+        - $ref: '#/components/parameters/TemplateId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExerciseTemplate'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Templates]
+      summary: Update a template
+      security:
+        - ApiKeyAuth: []
+          TherapistAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TemplateId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExerciseTemplateUpdate'
+      responses:
+        '200':
+          description: Template updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExerciseTemplate'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Templates]
+      summary: Delete a template
+      security:
+        - ApiKeyAuth: []
+          TherapistAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TemplateId'
+      responses:
+        '204':
+          description: Template deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ========================================================================
+  # Prescriptions
+  # ========================================================================
+
+  /prescriptions:
+    post:
+      tags: [Prescriptions]
+      summary: Create a new prescription
+      description: Prescribe an exercise to a patient
+      security:
+        - ApiKeyAuth: []
+          TherapistAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrescriptionCreate'
+      responses:
+        '201':
+          description: Prescription created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExercisePrescription'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Template or patient not found
+
+  /prescriptions/{prescriptionId}:
+    get:
+      tags: [Prescriptions]
+      summary: Get a specific prescription
+      parameters:
+        - $ref: '#/components/parameters/PrescriptionId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExercisePrescription'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Prescriptions]
+      summary: Update prescription status
+      security:
+        - ApiKeyAuth: []
+          TherapistAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PrescriptionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrescriptionUpdate'
+      responses:
+        '200':
+          description: Prescription updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExercisePrescription'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Prescriptions]
+      summary: Cancel a prescription
+      security:
+        - ApiKeyAuth: []
+          TherapistAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PrescriptionId'
+      responses:
+        '204':
+          description: Prescription cancelled successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /patients/{patientId}/prescriptions:
+    get:
+      tags: [Prescriptions]
+      summary: Get all prescriptions for a patient
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, completed, paused, cancelled]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prescriptions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExercisePrescription'
+                  total:
+                    type: integer
+
+  # ========================================================================
+  # Library Statistics
+  # ========================================================================
+
+  /library/stats:
+    get:
+      tags: [Library]
+      summary: Get template library statistics
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryStats'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    TherapistAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TemplateId:
+      name: templateId
+      in: path
+      required: true
+      schema:
+        type: string
+    PrescriptionId:
+      name: prescriptionId
+      in: path
+      required: true
+      schema:
+        type: string
+    PatientId:
+      name: patientId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    ExerciseCategory:
+      type: string
+      enum:
+        - strength
+        - flexibility
+        - balance
+        - endurance
+        - plyometric
+        - functional
+        - rehabilitation
+
+    BodyRegion:
+      type: string
+      enum:
+        - upper_extremity
+        - lower_extremity
+        - spine
+        - core
+        - full_body
+
+    Joint:
+      type: string
+      enum:
+        - shoulder
+        - elbow
+        - wrist
+        - hip
+        - knee
+        - ankle
+        - spine_cervical
+        - spine_thoracic
+        - spine_lumbar
+
+    ExerciseTemplate:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - category
+        - difficulty
+        - bodyRegion
+        - primaryJoints
+        - indications
+        - contraindications
+        - estimatedDuration
+        - recommendedReps
+        - recommendedSets
+        - restPeriod
+        - patientInstructions
+        - createdBy
+        - createdAt
+        - updatedAt
+        - version
+        - active
+        - tags
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: '#/components/schemas/ExerciseCategory'
+        difficulty:
+          type: integer
+          minimum: 1
+          maximum: 5
+        bodyRegion:
+          $ref: '#/components/schemas/BodyRegion'
+        primaryJoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Joint'
+        secondaryJoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Joint'
+        indications:
+          type: array
+          items:
+            type: string
+        contraindications:
+          type: array
+          items:
+            type: string
+        youtubeUrl:
+          type: string
+          format: uri
+        customVideoUrl:
+          type: string
+          format: uri
+        estimatedDuration:
+          type: integer
+          description: Duration in seconds
+        recommendedReps:
+          type: integer
+        recommendedSets:
+          type: integer
+        restPeriod:
+          type: integer
+          description: Rest period in seconds
+        clinicalNotes:
+          type: string
+        patientInstructions:
+          type: string
+        equipment:
+          type: array
+          items:
+            type: string
+        aaosReference:
+          type: string
+        researchCitations:
+          type: array
+          items:
+            type: string
+        createdBy:
+          type: string
+        createdAt:
+          type: integer
+          description: Unix timestamp
+        updatedAt:
+          type: integer
+          description: Unix timestamp
+        version:
+          type: string
+        active:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+
+    ExerciseTemplateCreate:
+      type: object
+      required:
+        - name
+        - description
+        - category
+        - difficulty
+        - bodyRegion
+        - primaryJoints
+        - indications
+        - contraindications
+        - estimatedDuration
+        - recommendedReps
+        - recommendedSets
+        - restPeriod
+        - patientInstructions
+        - tags
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: '#/components/schemas/ExerciseCategory'
+        difficulty:
+          type: integer
+          minimum: 1
+          maximum: 5
+        bodyRegion:
+          $ref: '#/components/schemas/BodyRegion'
+        primaryJoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Joint'
+        secondaryJoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Joint'
+        indications:
+          type: array
+          items:
+            type: string
+        contraindications:
+          type: array
+          items:
+            type: string
+        youtubeUrl:
+          type: string
+          format: uri
+        customVideoUrl:
+          type: string
+          format: uri
+        estimatedDuration:
+          type: integer
+        recommendedReps:
+          type: integer
+        recommendedSets:
+          type: integer
+        restPeriod:
+          type: integer
+        clinicalNotes:
+          type: string
+        patientInstructions:
+          type: string
+        equipment:
+          type: array
+          items:
+            type: string
+        aaosReference:
+          type: string
+        researchCitations:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    ExerciseTemplateUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        difficulty:
+          type: integer
+        active:
+          type: boolean
+        patientInstructions:
+          type: string
+        clinicalNotes:
+          type: string
+
+    ExercisePrescription:
+      type: object
+      required:
+        - id
+        - templateId
+        - patientId
+        - therapistId
+        - prescribedAt
+        - startDate
+        - reps
+        - sets
+        - frequencyPerWeek
+        - trackProgress
+        - status
+        - completionPercent
+      properties:
+        id:
+          type: string
+        templateId:
+          type: string
+        patientId:
+          type: string
+        therapistId:
+          type: string
+        prescribedAt:
+          type: integer
+        startDate:
+          type: integer
+        endDate:
+          type: integer
+        reps:
+          type: integer
+        sets:
+          type: integer
+        frequencyPerWeek:
+          type: integer
+        customInstructions:
+          type: string
+        trackProgress:
+          type: boolean
+        primaryJointFocus:
+          $ref: '#/components/schemas/Joint'
+        targetMetrics:
+          type: object
+          properties:
+            targetROM:
+              type: number
+            targetStrength:
+              type: number
+            targetPainReduction:
+              type: number
+        status:
+          type: string
+          enum: [active, completed, paused, cancelled]
+        completionPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        lastActivityAt:
+          type: integer
+        therapistNotes:
+          type: string
+
+    PrescriptionCreate:
+      type: object
+      required:
+        - templateId
+        - patientId
+        - therapistId
+        - frequencyPerWeek
+      properties:
+        templateId:
+          type: string
+        patientId:
+          type: string
+        therapistId:
+          type: string
+        reps:
+          type: integer
+        sets:
+          type: integer
+        frequencyPerWeek:
+          type: integer
+        customInstructions:
+          type: string
+        startDate:
+          type: integer
+        endDate:
+          type: integer
+        primaryJointFocus:
+          $ref: '#/components/schemas/Joint'
+        targetMetrics:
+          type: object
+          properties:
+            targetROM:
+              type: number
+            targetStrength:
+              type: number
+            targetPainReduction:
+              type: number
+
+    PrescriptionUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, completed, paused, cancelled]
+        completionPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        therapistNotes:
+          type: string
+        customInstructions:
+          type: string
+
+    LibraryStats:
+      type: object
+      properties:
+        totalTemplates:
+          type: integer
+        byCategory:
+          type: object
+          additionalProperties:
+            type: integer
+        byDifficulty:
+          type: object
+          additionalProperties:
+            type: integer
+        byBodyRegion:
+          type: object
+          additionalProperties:
+            type: integer
+        activeCount:
+          type: integer
+        inactiveCount:
+          type: integer
+        mostPrescribed:
+          type: array
+          items:
+            type: object
+            properties:
+              templateId:
+                type: string
+              count:
+                type: integer
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "BAD_REQUEST"
+            message: "Invalid request parameters"
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "UNAUTHORIZED"
+            message: "Invalid API key"
+
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "FORBIDDEN"
+            message: "Therapist privileges required"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "NOT_FOUND"
+            message: "Template not found"
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "RATE_LIMIT_EXCEEDED"
+            message: "API rate limit exceeded. Try again later."
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Request limit per hour
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Remaining requests
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Time when the rate limit resets (Unix timestamp)
