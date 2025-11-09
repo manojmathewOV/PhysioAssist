@@ -1,0 +1,19 @@
+{
+  "gate": 0,
+  "timestamp": "2025-11-09T01:16:17.574Z",
+  "latencyBudget": {
+    "total": 100,
+    "breakdown": {
+      "cameraCapture": 33,
+      "poseDetection": 30,
+      "goniometry": 10,
+      "comparison": 15,
+      "feedbackGeneration": 12
+    }
+  },
+  "measurements": {
+    "endToEnd": null,
+    "components": {}
+  },
+  "notes": "Gate 0: Toolchain baseline only. Real measurements start at Gate 1."
+}
