@@ -1,0 +1,460 @@
+{
+  "dashboard": {
+    "title": "PhysioAssist Production Telemetry",
+    "tags": ["physioassist", "telemetry", "production"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Active Sessions (Last Hour)",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT COUNT(*) FROM session_events WHERE timestamp >= NOW() - INTERVAL '1 hour'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "justifyMode": "auto",
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": null, "color": "green" },
+                { "value": 100, "color": "yellow" },
+                { "value": 500, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Average Processing Time (ms)",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT AVG(total_processing_time_ms) FROM session_events WHERE timestamp >= NOW() - INTERVAL '1 hour'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": null, "color": "green" },
+                { "value": 100, "color": "yellow" },
+                { "value": 200, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Error Rate (Last Hour)",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT COUNT(*) FROM error_events WHERE timestamp >= NOW() - INTERVAL '1 hour'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": null, "color": "green" },
+                { "value": 10, "color": "yellow" },
+                { "value": 50, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Network Success Rate (%)",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT (COUNT(*) FILTER (WHERE success = true)::FLOAT / COUNT(*) * 100) as success_rate FROM network_events WHERE timestamp >= NOW() - INTERVAL '1 hour'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": null, "color": "red" },
+                { "value": 95, "color": "yellow" },
+                { "value": 99, "color": "green" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Processing Time Trend (P50, P95, P99)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT hour as time, p50_processing_time as \"P50\", p95_processing_time as \"P95\", p99_processing_time as \"P99\" FROM hourly_performance WHERE hour >= NOW() - INTERVAL '24 hours' ORDER BY hour",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "custom": {
+              "axisPlacement": "auto",
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "showPoints": "never",
+              "spanNulls": true
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Error Distribution by Type",
+        "type": "piechart",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT error_type, SUM(error_count) as count FROM daily_errors WHERE day >= NOW() - INTERVAL '7 days' GROUP BY error_type ORDER BY count DESC LIMIT 10",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "pieType": "pie",
+          "legend": {
+            "displayMode": "list",
+            "placement": "right"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Sessions by Exercise Type",
+        "type": "barchart",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT exercise_type, COUNT(*) as count FROM session_events WHERE timestamp >= NOW() - INTERVAL '7 days' GROUP BY exercise_type ORDER BY count DESC",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "xTickLabelRotation": 0,
+          "showValue": "always"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Device Thermal State Distribution",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT thermal_state, COUNT(*) FROM session_events WHERE timestamp >= NOW() - INTERVAL '24 hours' GROUP BY thermal_state",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "background",
+          "justifyMode": "center",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "thresholds" },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": null, "color": "green" },
+                { "value": 10, "color": "yellow" },
+                { "value": 50, "color": "orange" },
+                { "value": 100, "color": "red" }
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "nominal" },
+              "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+            },
+            {
+              "matcher": { "id": "byName", "options": "fair" },
+              "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }]
+            },
+            {
+              "matcher": { "id": "byName", "options": "serious" },
+              "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+            },
+            {
+              "matcher": { "id": "byName", "options": "critical" },
+              "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+            }
+          ]
+        }
+      },
+      {
+        "id": 9,
+        "title": "Average Sync Confidence Over Time",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT hour as time, avg_confidence as \"Sync Confidence\" FROM hourly_performance WHERE hour >= NOW() - INTERVAL '24 hours' ORDER BY hour",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "custom": {
+              "axisPlacement": "auto",
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "showPoints": "never",
+              "spanNulls": true
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": null, "color": "red" },
+                { "value": 0.8, "color": "yellow" },
+                { "value": 0.9, "color": "green" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Device Model Performance Comparison",
+        "type": "table",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT device_model as \"Device Model\", COUNT(*) as \"Sessions\", AVG(avg_processing_time)::INT as \"Avg Processing (ms)\", SUM(thermal_issues) as \"Thermal Issues\" FROM device_performance WHERE day >= NOW() - INTERVAL '7 days' GROUP BY device_model ORDER BY \"Sessions\" DESC LIMIT 20",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{ "displayName": "Sessions", "desc": true }]
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "Avg Processing (ms)" },
+              "properties": [
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background"
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      { "value": null, "color": "green" },
+                      { "value": 100, "color": "yellow" },
+                      { "value": 200, "color": "red" }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": { "id": "byName", "options": "Thermal Issues" },
+              "properties": [
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background"
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      { "value": null, "color": "green" },
+                      { "value": 10, "color": "yellow" },
+                      { "value": 50, "color": "red" }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 11,
+        "title": "Network Operations Over Time",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT time_bucket('1 hour', timestamp) as time, operation, COUNT(*) as count FROM network_events WHERE timestamp >= NOW() - INTERVAL '24 hours' GROUP BY time, operation ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "axisPlacement": "auto",
+              "drawStyle": "bars",
+              "lineWidth": 1,
+              "fillOpacity": 80,
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": { "mode": "normal", "group": "A" }
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "Critical Errors by Joint (Last 7 Days)",
+        "type": "heatmap",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT time_bucket('6 hours', timestamp) as time, joint, COUNT(*) as count FROM error_events WHERE timestamp >= NOW() - INTERVAL '7 days' AND severity = 'critical' GROUP BY time, joint ORDER BY time",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "calculate": false,
+          "cellGap": 2,
+          "cellRadius": 0,
+          "color": {
+            "exponent": 0.5,
+            "fill": "dark-orange",
+            "mode": "scheme",
+            "scale": "exponential",
+            "scheme": "Oranges",
+            "steps": 64
+          },
+          "exemplars": { "color": "rgba(255,0,255,0.7)" },
+          "filterValues": { "le": 0 },
+          "legend": { "show": true },
+          "rowsFrame": { "layout": "auto" },
+          "tooltip": { "show": true, "yHistogram": false },
+          "yAxis": { "axisPlacement": "left" }
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "datasource": "PostgreSQL",
+          "name": "Deployments",
+          "enable": true,
+          "iconColor": "blue",
+          "rawSql": "SELECT timestamp as time, 'Deployment' as text, 'App version deployed' as tags FROM deployments WHERE timestamp >= $__timeFrom() AND timestamp <= $__timeTo()"
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "device_model",
+          "label": "Device Model",
+          "type": "query",
+          "datasource": "PostgreSQL",
+          "definition": "SELECT DISTINCT device_model FROM session_events ORDER BY device_model",
+          "multi": true,
+          "includeAll": true,
+          "refresh": 1
+        },
+        {
+          "name": "exercise_type",
+          "label": "Exercise Type",
+          "type": "query",
+          "datasource": "PostgreSQL",
+          "definition": "SELECT DISTINCT exercise_type FROM session_events ORDER BY exercise_type",
+          "multi": true,
+          "includeAll": true,
+          "refresh": 1
+        }
+      ]
+    }
+  },
+  "overwrite": true,
+  "folderId": 0,
+  "folderUid": "",
+  "message": "PhysioAssist Production Telemetry Dashboard - Initial Version"
+}
