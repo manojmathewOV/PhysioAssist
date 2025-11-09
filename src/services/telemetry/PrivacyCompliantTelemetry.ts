@@ -111,14 +111,13 @@ const DEVICE_ID_FIELDS = [
  * Privacy-Compliant Telemetry Manager
  */
 export class PrivacyCompliantTelemetry {
-  private config: PrivacyConfig = DEFAULT_PRIVACY_CONFIG;
+  private config: PrivacyConfig;
   private consent: ConsentStatus | null = null;
   private consentVersion = '1.0.0';
 
   constructor(config?: Partial<PrivacyConfig>) {
-    if (config) {
-      this.config = { ...DEFAULT_PRIVACY_CONFIG, ...config };
-    }
+    // Always create a copy to avoid mutating frozen DEFAULT_PRIVACY_CONFIG
+    this.config = { ...DEFAULT_PRIVACY_CONFIG, ...(config || {}) };
   }
 
   /**
