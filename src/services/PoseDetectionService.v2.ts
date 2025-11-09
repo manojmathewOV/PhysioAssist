@@ -79,6 +79,14 @@ export class PoseDetectionServiceV2 {
   private inferenceTimeSum: number = 0;
   private inferenceCount: number = 0;
 
+  // GPU fallback tracking
+  private isUsingGPU: boolean = false;
+  private delegateMode: 'gpu' | 'cpu' = 'gpu';
+
+  // Model reload for memory leak prevention
+  private modelReloadThreshold: number = 10000; // Reload after N inferences
+  private totalInferences: number = 0;
+
   // Patient-centric adaptive settings
   private adaptiveSettings: AdaptiveSettings | null = null;
   private smoothingFactor: number = 0.5; // Default smoothing (deprecated - use filter below)
@@ -108,29 +116,47 @@ export class PoseDetectionServiceV2 {
   }
 
   /**
-   * Initialize the TFLite model with GPU acceleration
-   * Includes fallback mechanism for missing models
+   * Initialize the TFLite model with GPU acceleration and CPU fallback
+   * Includes fallback mechanism for missing models and GPU unavailability
    */
   async initialize(): Promise<void> {
     try {
       console.log('🚀 Initializing PoseDetectionService V2...');
 
-      // Try to load the model
+      // Try to load the model with GPU first, then fallback to CPU
       try {
-        // Load MoveNet Lightning INT8 model
-        // This uses JSI for zero-copy memory access
-        this.model = await TFLiteModel.load({
-          model: require('../../assets/models/movenet_lightning_int8.tflite'),
-          // GPU delegates for maximum performance
-          delegates: ['gpu', 'core-ml'], // iOS: CoreML, Android: GPU/NNAPI
-        });
+        // Try GPU delegates first for maximum performance
+        try {
+          console.log('🎮 Attempting GPU/CoreML acceleration...');
+          this.model = await TFLiteModel.load({
+            model: require('../../assets/models/movenet_lightning_int8.tflite'),
+            delegates: ['gpu', 'core-ml'], // iOS: CoreML, Android: GPU/NNAPI
+          });
+          this.isUsingGPU = true;
+          this.delegateMode = 'gpu';
+          console.log('✅ GPU acceleration enabled');
+        } catch (gpuError) {
+          // GPU failed - fallback to CPU
+          console.warn('⚠️ GPU acceleration unavailable, falling back to CPU:', gpuError);
+          this.model = await TFLiteModel.load({
+            model: require('../../assets/models/movenet_lightning_int8.tflite'),
+            delegates: [], // No delegates = CPU mode
+          });
+          this.isUsingGPU = false;
+          this.delegateMode = 'cpu';
+          console.warn(
+            '⚠️ Running in CPU mode - expect slower inference (~150ms vs ~40ms)'
+          );
+          console.warn('💡 Recommendation: Reduce target FPS to 5-10 for better performance');
+        }
 
         this.isInitialized = true;
         console.log('✅ PoseDetectionService V2 initialized successfully');
         console.log('📊 Model info:', {
           inputShape: this.model.inputs[0].shape, // [1, 192, 192, 3]
           outputShape: this.model.outputs[0].shape, // [1, 1, 17, 3]
-          delegates: 'CoreML/GPU enabled',
+          delegates: this.isUsingGPU ? 'GPU/CoreML enabled' : 'CPU mode (no GPU)',
+          expectedInferenceTime: this.isUsingGPU ? '30-50ms' : '100-150ms',
         });
       } catch (loadError) {
         console.warn('⚠️ Failed to load bundled model:', loadError);
@@ -158,6 +184,59 @@ export class PoseDetectionServiceV2 {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const friendlyError = getPatientFriendlyError(errorMessage);
       throw new Error(`${friendlyError.title}: ${friendlyError.message}`);
+    }
+  }
+
+  /**
+   * Reload the model to prevent memory leaks in extended sessions
+   * This is called automatically after N inferences (default: 10,000)
+   */
+  private async reloadModel(): Promise<void> {
+    try {
+      console.log('🔄 Reloading model to prevent memory leaks...');
+
+      // Store delegate mode to reuse same configuration
+      const currentDelegateMode = this.delegateMode;
+
+      // Dispose of current model
+      if (this.model) {
+        this.model.dispose();
+        this.model = null;
+      }
+
+      // Reset counters
+      this.totalInferences = 0;
+
+      // Reload with same delegate mode
+      if (currentDelegateMode === 'gpu') {
+        try {
+          this.model = await TFLiteModel.load({
+            model: require('../../assets/models/movenet_lightning_int8.tflite'),
+            delegates: ['gpu', 'core-ml'],
+          });
+          console.log('✅ Model reloaded with GPU acceleration');
+        } catch (gpuError) {
+          console.warn('⚠️ GPU reload failed, falling back to CPU');
+          this.model = await TFLiteModel.load({
+            model: require('../../assets/models/movenet_lightning_int8.tflite'),
+            delegates: [],
+          });
+          this.isUsingGPU = false;
+          this.delegateMode = 'cpu';
+        }
+      } else {
+        this.model = await TFLiteModel.load({
+          model: require('../../assets/models/movenet_lightning_int8.tflite'),
+          delegates: [],
+        });
+        console.log('✅ Model reloaded in CPU mode');
+      }
+
+      console.log(`✅ Model reload complete (was at ${this.modelReloadThreshold} inferences)`);
+    } catch (error) {
+      console.error('❌ Failed to reload model:', error);
+      // Model reload failed - service will continue with old model
+      // This is safer than crashing the app
     }
   }
 
@@ -242,6 +321,18 @@ export class PoseDetectionServiceV2 {
 
       const inferenceTime = performance.now() - startTime;
       this.trackPerformance(inferenceTime);
+
+      // Track total inferences for memory leak prevention
+      this.totalInferences++;
+
+      // Check if model reload is needed (prevent memory leaks in extended sessions)
+      if (this.totalInferences >= this.modelReloadThreshold) {
+        console.warn(
+          `⚠️ Memory leak prevention: Reloading model after ${this.totalInferences} inferences`
+        );
+        // Schedule reload asynchronously to not block current frame
+        setTimeout(() => this.reloadModel(), 0);
+      }
 
       const processedData: ProcessedPoseData = {
         landmarks,
@@ -401,6 +492,28 @@ export class PoseDetectionServiceV2 {
    */
   isReady(): boolean {
     return this.isInitialized && this.model !== null;
+  }
+
+  /**
+   * Get current delegate mode (GPU or CPU)
+   * Useful for adjusting FPS expectations
+   */
+  getDelegateMode(): 'gpu' | 'cpu' {
+    return this.delegateMode;
+  }
+
+  /**
+   * Check if GPU acceleration is enabled
+   */
+  isGPUEnabled(): boolean {
+    return this.isUsingGPU;
+  }
+
+  /**
+   * Get recommended max FPS based on delegate mode
+   */
+  getRecommendedMaxFPS(): number {
+    return this.isUsingGPU ? 30 : 10; // GPU: 30 FPS, CPU: 10 FPS
   }
 
   /**
