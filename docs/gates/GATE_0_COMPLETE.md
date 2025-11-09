@@ -12,8 +12,17 @@ Gate 0 establishes automated quality checks and performance baseline tracking.
 
 ### Completed Tasks
 
-#### ✅ CI/CD Pipeline
-- **File:** `.github/workflows/ci.yml`
+#### ✅ CI/CD Pipeline Template
+- **Template File:** `docs/gates/ci-pipeline-template.yml`
+- **Manual Setup Required:** Due to GitHub App permissions, the workflow must be manually added
+- **Setup Instructions:**
+  ```bash
+  mkdir -p .github/workflows
+  cp docs/gates/ci-pipeline-template.yml .github/workflows/ci.yml
+  git add .github/workflows/ci.yml
+  git commit -m "chore: Add CI pipeline"
+  git push
+  ```
 - **Features:**
   - Runs on push to main and claude/* branches
   - TypeScript type checking
@@ -65,12 +74,14 @@ Gate 0 establishes automated quality checks and performance baseline tracking.
 
 ### ✅ Completed
 
-- [x] CI pipeline created (`.github/workflows/ci.yml`)
+- [x] CI pipeline template created (`docs/gates/ci-pipeline-template.yml`)
+  - Note: Manual setup required due to GitHub App workflow permissions
 - [x] Git hooks configured (pre-commit, pre-push)
 - [x] Security scanning script added
 - [x] Toolchain versions documented (.nvmrc, package.json engines)
 - [x] Performance baseline structure created
 - [x] Complexity reporting placeholder added
+- [x] TypeScript configuration fixed (removed missing extends, fixed JSX)
 
 ### ⏳ Deferred to CI Execution
 

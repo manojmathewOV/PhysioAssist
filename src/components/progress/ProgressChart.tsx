@@ -219,7 +219,7 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: '#F44336' }]} />
-            <Text style={styles.legendText}>Needs Work (<60)</Text>
+            <Text style={styles.legendText}>Needs Work (&lt;60)</Text>
           </View>
         </View>
       )}
