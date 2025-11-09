@@ -2249,3 +2249,818 @@ The `AnatomicalReferenceService` (344 lines, 27 tests passing) computes ISB-comp
 
 This section provides the executive summary. Full implementation code, test specifications, and DoD criteria should be referenced from the separate Gate 9B.5 implementation guide.
 
+
+---
+
+## 6. GATE 9B.6: GONIOMETER REFACTOR
+
+**Objective**: Refactor GoniometerService to be schema-aware, use systematic plane projection, and implement ISB-compliant Euler angle decomposition for shoulder measurements.
+
+**Prerequisites**: Gate 9B.5 complete ✅ (frame caching operational)
+
+**Estimated Effort**: 2-3 days, 15 tests
+
+---
+
+### 6.1 Objective & Success Criteria
+
+#### Current State Analysis
+
+**GoniometerService.ts** (353 lines, from codebase analysis in Section 3.3.6):
+
+**✅ What Works**:
+- 3-point angle calculation (law of cosines)
+- Temporal smoothing (5-frame moving average)
+- Confidence thresholding (rejects visibility < 0.5)
+- `calculateAngleInPlane()` method exists (but underutilized)
+
+**❌ Critical Limitations**:
+
+1. **Hardcoded MoveNet-17 Indices**:
+```typescript
+const jointConfigs = [
+  { name: 'left_elbow', indices: [5, 7, 9] },   // MoveNet-17 specific
+  { name: 'right_elbow', indices: [6, 8, 10] },
+  { name: 'left_knee', indices: [11, 13, 15] },
+  // ...
+];
+```
+**Impact**: Cannot swap to MediaPipe-33 without code changes. Violates schema-driven architecture principle.
+
+2. **Plane Projection Not Systematic**:
+```typescript
+// calculateAngleInPlane() exists but rarely called
+private calculateAngleInPlane(v1, v2, planeNormal): number {
+  const proj1 = projectVectorOntoPlane(v1, planeNormal);
+  const proj2 = projectVectorOntoPlane(v2, planeNormal);
+  return angleBetweenVectors(proj1, proj2);
+}
+
+// Most measurements use direct 3D angles (incorrect for clinical accuracy)
+public calculateAngle(pointA, pointB, pointC, jointName): number {
+  const v1 = createVector(pointB, pointA);
+  const v2 = createVector(pointB, pointC);
+  return angleBetweenVectors(v1, v2); // ❌ No plane projection
+}
+```
+**Impact**: Measurements vary with camera angle and body rotation. Research (Section 2.4) shows plane projection is **essential** for clinical accuracy.
+
+3. **No Euler Angle Decomposition**:
+```typescript
+// Shoulder measured as simple 3-point angle
+calculateAngle(hip, shoulder, elbow, 'left_shoulder');
+// ❌ Doesn't capture 3 degrees of freedom (elevation, plane, rotation)
+```
+**Impact**: Cannot distinguish shoulder flexion (sagittal plane) from abduction (coronal plane). ISB standard (Section 2.5) requires Y-X-Y Euler decomposition.
+
+4. **No Integration with Cached Frames**:
+```typescript
+// Currently recomputes everything from raw landmarks
+public calculateAngle(pointA: PoseLandmark, pointB: PoseLandmark, pointC: PoseLandmark) {
+  // Uses raw x,y,z coordinates
+  // Doesn't leverage AnatomicalReferenceFrames
+}
+```
+**Impact**: Cannot use thorax/humerus frames for anatomically correct measurements. Misses opportunity to use cached frames for performance.
+
+---
+
+#### Success Criteria
+
+**Functional Targets**:
+- ✅ Schema-aware: Works with both MoveNet-17 and MediaPipe-33 without code changes
+- ✅ Plane projection: ALL joint measurements use `calculateAngleInPlane()` systematically
+- ✅ Euler angles: Shoulder measurements return 3 components (planeOfElevation, elevation, rotation)
+- ✅ Frame integration: Consumes `cachedAnatomicalFrames` from `ProcessedPoseData`
+- ✅ Backward compatible: Existing API maintained, all 27 existing tests pass
+
+**Accuracy Targets**:
+- ✅ Shoulder measurements: ±5° accuracy vs. clinical goniometer (with Euler decomposition)
+- ✅ Elbow/knee measurements: ±3° accuracy (simple hinge joints with plane projection)
+- ✅ Consistency: Same measurement from frontal vs. sagittal camera angle (plane projection eliminates camera perspective errors)
+
+**Performance Targets**:
+- ✅ Single joint angle calculation: <5ms (leveraging cached frames)
+- ✅ No performance regression vs. current implementation
+
+---
+
+### 6.2 Refactoring Specification
+
+#### 6.2.1 Schema-Aware Joint Configuration
+
+**Current hardcoded approach**:
+```typescript
+const jointConfigs = [
+  { name: 'left_elbow', indices: [5, 7, 9] },
+];
+```
+
+**New schema-aware approach**:
+```typescript
+class GoniometerService {
+  private schemaRegistry: PoseSchemaRegistry;
+
+  constructor() {
+    this.schemaRegistry = PoseSchemaRegistry.getInstance();
+  }
+
+  /**
+   * Resolve landmark indices dynamically from schema
+   * Works with any schema (MoveNet-17, MediaPipe-33, future models)
+   */
+  private getJointLandmarkIndices(
+    jointName: string,
+    schemaId: string
+  ): { point1: number; joint: number; point2: number } {
+    const schema = this.schemaRegistry.get(schemaId);
+
+    // Define joint-to-landmark mapping (schema-agnostic names)
+    const jointDefinitions: Record<string, [string, string, string]> = {
+      'left_elbow': ['left_shoulder', 'left_elbow', 'left_wrist'],
+      'right_elbow': ['right_shoulder', 'right_elbow', 'right_wrist'],
+      'left_knee': ['left_hip', 'left_knee', 'left_ankle'],
+      'right_knee': ['right_hip', 'right_knee', 'right_ankle'],
+      'left_shoulder': ['left_hip', 'left_shoulder', 'left_elbow'],
+      'right_shoulder': ['right_hip', 'right_shoulder', 'right_elbow'],
+    };
+
+    const [lm1Name, lm2Name, lm3Name] = jointDefinitions[jointName];
+
+    // Look up indices in schema
+    const lm1 = schema.landmarks.find((lm) => lm.name === lm1Name);
+    const lm2 = schema.landmarks.find((lm) => lm.name === lm2Name);
+    const lm3 = schema.landmarks.find((lm) => lm.name === lm3Name);
+
+    if (!lm1 || !lm2 || !lm3) {
+      throw new Error(
+        `Joint "${jointName}" requires landmarks [${lm1Name}, ${lm2Name}, ${lm3Name}] which are not available in schema "${schemaId}"`
+      );
+    }
+
+    return {
+      point1: lm1.index,
+      joint: lm2.index,
+      point2: lm3.index,
+    };
+  }
+}
+```
+
+**Benefits**:
+- ✅ Works with any schema that has required landmarks
+- ✅ Clear error messages if landmarks missing
+- ✅ No hardcoded indices
+- ✅ Future-proof (new schemas just need landmark names)
+
+---
+
+#### 6.2.2 Systematic Plane Projection
+
+**Current approach** (inconsistent):
+```typescript
+// Some measurements use plane projection
+private calculateAngleInPlane(v1, v2, planeNormal) { ... }
+
+// Most measurements don't
+public calculateAngle(pointA, pointB, pointC) {
+  return angleBetweenVectors(v1, v2); // ❌ Direct 3D angle
+}
+```
+
+**New approach** (systematic):
+```typescript
+class GoniometerService {
+  /**
+   * Calculate joint angle with MANDATORY plane projection
+   * This is the primary measurement method
+   */
+  public calculateJointAngle(
+    poseData: ProcessedPoseData,
+    jointName: string
+  ): JointAngleMeasurement {
+    // 1. Get schema-aware landmark indices
+    const indices = this.getJointLandmarkIndices(jointName, poseData.schemaId);
+
+    // 2. Get landmarks
+    const pointA = poseData.landmarks[indices.point1];
+    const joint = poseData.landmarks[indices.joint];
+    const pointC = poseData.landmarks[indices.point2];
+
+    // 3. Check confidence
+    if (!this.meetsConfidenceThreshold([pointA, joint, pointC])) {
+      throw new Error(`Low confidence for ${jointName}: visibility < 0.5`);
+    }
+
+    // 4. Get cached anatomical frames
+    const frames = poseData.cachedAnatomicalFrames!;
+    if (!frames) {
+      throw new Error('cachedAnatomicalFrames not available. Ensure Gate 9B.5 is complete.');
+    }
+
+    // 5. Determine measurement plane based on joint type
+    const measurementPlane = this.getMeasurementPlane(jointName, frames.thorax);
+
+    // 6. Create joint vectors
+    const vector1 = this.createVector(joint, pointA);
+    const vector2 = this.createVector(joint, pointC);
+
+    // 7. ✅ ALWAYS project onto plane before calculating angle
+    const angle = this.calculateAngleInPlane(vector1, vector2, measurementPlane.normal);
+
+    // 8. Temporal smoothing
+    const smoothedAngle = this.smoothAngle(jointName, angle);
+
+    return {
+      jointName,
+      angle: smoothedAngle,
+      confidence: this.calculateConfidence([pointA, joint, pointC]),
+      measurementPlane,
+      timestamp: poseData.timestamp,
+    };
+  }
+
+  /**
+   * Determine appropriate measurement plane for each joint
+   * Based on ISB standards and anatomical movement planes
+   */
+  private getMeasurementPlane(
+    jointName: string,
+    thoraxFrame: AnatomicalReferenceFrame
+  ): AnatomicalPlane {
+    const anatomicalService = new AnatomicalReferenceService();
+
+    // Shoulder: Measure in scapular plane (35° from coronal)
+    if (jointName.includes('shoulder')) {
+      return anatomicalService.calculateScapularPlane(thoraxFrame);
+    }
+
+    // Elbow/Knee: Measure in sagittal plane (flexion/extension)
+    if (jointName.includes('elbow') || jointName.includes('knee')) {
+      return anatomicalService.calculateSagittalPlane(thoraxFrame);
+    }
+
+    // Hip: Measure in frontal plane (abduction/adduction)
+    if (jointName.includes('hip')) {
+      return anatomicalService.calculateCoronalPlane(thoraxFrame);
+    }
+
+    // Default: Sagittal plane
+    return anatomicalService.calculateSagittalPlane(thoraxFrame);
+  }
+}
+```
+
+**Key Design Decisions**:
+1. **Mandatory plane projection**: Every measurement goes through `calculateAngleInPlane()`
+2. **Automatic plane selection**: Based on joint type and anatomical standards
+3. **Frame dependency**: Requires cached frames (enforces Gate 9B.5 completion)
+4. **Clear error messages**: If frames or landmarks missing
+
+---
+
+#### 6.2.3 Euler Angle Decomposition for Shoulder
+
+**Why Needed** (from Section 2.5 research):
+- Shoulder has **3 degrees of freedom** (not 1 like elbow/knee)
+- Simple angle only captures elevation magnitude, not direction or rotation
+- ISB standard: Y-X-Y Euler sequence for shoulder
+
+**Implementation**:
+
+```typescript
+/**
+ * Calculate shoulder Euler angles (ISB Y-X-Y sequence)
+ * Returns 3 components: plane of elevation, elevation, rotation
+ */
+public calculateShoulderEulerAngles(
+  poseData: ProcessedPoseData,
+  side: 'left' | 'right'
+): ShoulderEulerAngles {
+  const frames = poseData.cachedAnatomicalFrames!;
+  const thoraxFrame = frames.thorax;
+  const humerusFrame = frames[`${side}_humerus`];
+
+  if (!humerusFrame) {
+    throw new Error(`Humerus frame not available for ${side} side`);
+  }
+
+  // Construct rotation matrix: R_humerus_wrt_thorax
+  // This represents how humerus frame is rotated relative to thorax frame
+  const R = this.constructRotationMatrix(thoraxFrame, humerusFrame);
+
+  // Extract Y-X-Y Euler angles from rotation matrix
+  // Based on ISB standard (Wu et al. 2005)
+
+  // X rotation (elevation): angle about intermediate X-axis
+  const elevation = Math.acos(R[1][1]) * (180 / Math.PI);
+
+  // Y1 rotation (plane of elevation): first rotation about Y-axis
+  // 0° = sagittal plane (forward flexion)
+  // 90° = coronal plane (abduction)
+  const planeOfElevation = Math.atan2(R[0][1], R[2][1]) * (180 / Math.PI);
+
+  // Y2 rotation (axial rotation): second rotation about Y-axis
+  // Positive = external rotation, Negative = internal rotation
+  const rotation = Math.atan2(R[1][0], -R[1][2]) * (180 / Math.PI);
+
+  return {
+    planeOfElevation,  // 0-180° (0=sagittal, 90=coronal, 180=posterior)
+    elevation,         // 0-180° (magnitude of arm raise)
+    rotation,          // -90 to +90° (internal/external rotation)
+    confidence: Math.min(thoraxFrame.confidence, humerusFrame.confidence),
+  };
+}
+
+/**
+ * Construct 3x3 rotation matrix from two reference frames
+ * Returns R_child_wrt_parent
+ */
+private constructRotationMatrix(
+  parentFrame: AnatomicalReferenceFrame,
+  childFrame: AnatomicalReferenceFrame
+): number[][] {
+  // Each frame has 3 orthonormal axes (x, y, z)
+  // Rotation matrix columns are child axes expressed in parent coordinates
+
+  // Dot product of child axes with parent axes
+  const R = [
+    [
+      dotProduct(childFrame.xAxis, parentFrame.xAxis),
+      dotProduct(childFrame.yAxis, parentFrame.xAxis),
+      dotProduct(childFrame.zAxis, parentFrame.xAxis),
+    ],
+    [
+      dotProduct(childFrame.xAxis, parentFrame.yAxis),
+      dotProduct(childFrame.yAxis, parentFrame.yAxis),
+      dotProduct(childFrame.zAxis, parentFrame.yAxis),
+    ],
+    [
+      dotProduct(childFrame.xAxis, parentFrame.zAxis),
+      dotProduct(childFrame.yAxis, parentFrame.zAxis),
+      dotProduct(childFrame.zAxis, parentFrame.zAxis),
+    ],
+  ];
+
+  return R;
+}
+```
+
+**Type Definition**:
+```typescript
+export interface ShoulderEulerAngles {
+  planeOfElevation: number;  // 0-180° (which plane arm is moving in)
+  elevation: number;         // 0-180° (how high arm is raised)
+  rotation: number;          // -90 to +90° (internal/external rotation)
+  confidence: number;        // 0-1
+}
+```
+
+**Clinical Interpretation**:
+```typescript
+// Example 1: Forward flexion (arm raised forward)
+// planeOfElevation = 0°, elevation = 90°, rotation = 0°
+
+// Example 2: Abduction (arm raised sideways)
+// planeOfElevation = 90°, elevation = 90°, rotation = 0°
+
+// Example 3: External rotation with elbow at 90°
+// planeOfElevation = 90°, elevation = 0°, rotation = +45°
+```
+
+---
+
+### 6.3 File-by-File Changes
+
+#### 6.3.1 MODIFY: `src/services/goniometerService.ts`
+
+**Changes Overview**:
+1. Add `schemaRegistry` property and inject in constructor
+2. Add `anatomicalService` property for plane calculations
+3. Replace hardcoded `jointConfigs` with `getJointLandmarkIndices()` method
+4. Refactor `calculateAngle()` to `calculateJointAngle()` (uses plane projection systematically)
+5. Add `getMeasurementPlane()` method
+6. Add `calculateShoulderEulerAngles()` method
+7. Add `constructRotationMatrix()` helper method
+8. Update all existing methods to use schema-aware approach
+
+**Lines Changed**: ~150 lines modified, ~100 lines added
+
+**Detailed Changes**:
+
+```typescript
+// BEFORE: Hardcoded configuration
+const jointConfigs = [
+  { name: 'left_elbow', indices: [5, 7, 9] },
+  // ...
+];
+
+constructor(config: AngleCalculationConfig = {}) {
+  this.config = {
+    smoothingWindow: 5,
+    minConfidence: 0.5,
+    use3D: false,  // ❌
+    ...config,
+  };
+}
+
+// AFTER: Schema-aware
+import { PoseSchemaRegistry } from './pose/PoseSchemaRegistry';
+import { AnatomicalReferenceService } from './biomechanics/AnatomicalReferenceService';
+
+class GoniometerService {
+  private schemaRegistry: PoseSchemaRegistry;
+  private anatomicalService: AnatomicalReferenceService;
+  private angleHistory: Map<string, number[]> = new Map();
+  private config: AngleCalculationConfig;
+
+  constructor(config: AngleCalculationConfig = {}) {
+    this.config = {
+      smoothingWindow: 5,
+      minConfidence: 0.5,
+      use3D: true,  // ✅ Changed to true
+      ...config,
+    };
+
+    this.schemaRegistry = PoseSchemaRegistry.getInstance();
+    this.anatomicalService = new AnatomicalReferenceService();
+  }
+
+  // NEW: Schema-aware landmark resolution
+  private getJointLandmarkIndices(
+    jointName: string,
+    schemaId: string
+  ): { point1: number; joint: number; point2: number } {
+    // [Full implementation from Section 6.2.1]
+  }
+
+  // REFACTORED: Main measurement method
+  public calculateJointAngle(
+    poseData: ProcessedPoseData,
+    jointName: string
+  ): JointAngleMeasurement {
+    // [Full implementation from Section 6.2.2]
+  }
+
+  // NEW: Plane selection logic
+  private getMeasurementPlane(
+    jointName: string,
+    thoraxFrame: AnatomicalReferenceFrame
+  ): AnatomicalPlane {
+    // [Full implementation from Section 6.2.2]
+  }
+
+  // NEW: Shoulder Euler angles
+  public calculateShoulderEulerAngles(
+    poseData: ProcessedPoseData,
+    side: 'left' | 'right'
+  ): ShoulderEulerAngles {
+    // [Full implementation from Section 6.2.3]
+  }
+
+  // NEW: Rotation matrix construction
+  private constructRotationMatrix(
+    parentFrame: AnatomicalReferenceFrame,
+    childFrame: AnatomicalReferenceFrame
+  ): number[][] {
+    // [Full implementation from Section 6.2.3]
+  }
+
+  // EXISTING (keep): Temporal smoothing, confidence checks, etc.
+  // These methods remain unchanged
+}
+```
+
+**Import Additions**:
+```typescript
+import { PoseSchemaRegistry } from './pose/PoseSchemaRegistry';
+import { AnatomicalReferenceService } from './biomechanics/AnatomicalReferenceService';
+import { ProcessedPoseData } from '../types/pose';
+import { AnatomicalReferenceFrame, AnatomicalPlane } from '../types/biomechanics';
+```
+
+---
+
+#### 6.3.2 MODIFY: `src/types/goniometry.ts` (or create if missing)
+
+**Add new types**:
+
+```typescript
+export interface JointAngleMeasurement {
+  jointName: string;
+  angle: number;  // Degrees
+  confidence: number;  // 0-1
+  measurementPlane: AnatomicalPlane;
+  timestamp: number;
+
+  // For shoulder measurements:
+  eulerAngles?: ShoulderEulerAngles;
+}
+
+export interface ShoulderEulerAngles {
+  planeOfElevation: number;  // 0-180°
+  elevation: number;          // 0-180°
+  rotation: number;           // -90 to +90°
+  confidence: number;
+}
+```
+
+---
+
+### 6.4 Test Suite (15 Tests)
+
+#### 6.4.1 Schema-Awareness Tests (5 tests)
+
+**File**: `src/services/__tests__/goniometerService.schema.test.ts`
+
+```typescript
+describe('GoniometerService - Schema Awareness', () => {
+  let goniometer: GoniometerService;
+
+  beforeEach(() => {
+    goniometer = new GoniometerService();
+  });
+
+  it('should calculate elbow angle with MoveNet-17 schema', () => {
+    const poseData = createMockPoseData('movenet-17', 'bicep_curl_90deg');
+    const measurement = goniometer.calculateJointAngle(poseData, 'left_elbow');
+
+    expect(measurement.angle).toBeCloseTo(90, 5); // ±5° tolerance
+    expect(measurement.jointName).toBe('left_elbow');
+  });
+
+  it('should calculate elbow angle with MediaPipe-33 schema', () => {
+    const poseData = createMockPoseData('mediapipe-33', 'bicep_curl_90deg');
+    const measurement = goniometer.calculateJointAngle(poseData, 'left_elbow');
+
+    expect(measurement.angle).toBeCloseTo(90, 5);
+    expect(measurement.jointName).toBe('left_elbow');
+  });
+
+  it('should throw error if required landmarks missing in schema', () => {
+    const customSchema = {
+      id: 'custom-minimal',
+      landmarks: [
+        { index: 0, name: 'nose' },
+        // Missing shoulder, elbow, wrist
+      ],
+    };
+
+    PoseSchemaRegistry.getInstance().register(customSchema);
+    const poseData = createMockPoseData('custom-minimal', 'bicep_curl_90deg');
+
+    expect(() => {
+      goniometer.calculateJointAngle(poseData, 'left_elbow');
+    }).toThrow(/requires landmarks.*not available/);
+  });
+
+  it('should work with any schema that has required landmarks', () => {
+    // Test future-proofing: New schema with same landmark names
+    const futureSchema = {
+      id: 'future-model-50pt',
+      landmarkCount: 50,
+      landmarks: [
+        // ... many landmarks
+        { index: 20, name: 'left_shoulder' },
+        { index: 21, name: 'left_elbow' },
+        { index: 22, name: 'left_wrist' },
+      ],
+    };
+
+    PoseSchemaRegistry.getInstance().register(futureSchema);
+    const poseData = createMockPoseData('future-model-50pt', 'arm_extended');
+
+    expect(() => {
+      goniometer.calculateJointAngle(poseData, 'left_elbow');
+    }).not.toThrow();
+  });
+
+  it('should resolve landmark indices dynamically', () => {
+    const poseDataMoveNet = createMockPoseData('movenet-17', 'standing');
+    const poseDataMediaPipe = createMockPoseData('mediapipe-33', 'standing');
+
+    // MoveNet: left_elbow = index 7
+    // MediaPipe: left_elbow = index 13 (different)
+
+    const measurementMoveNet = goniometer.calculateJointAngle(poseDataMoveNet, 'left_elbow');
+    const measurementMediaPipe = goniometer.calculateJointAngle(poseDataMediaPipe, 'left_elbow');
+
+    // Both should succeed despite different indices
+    expect(measurementMoveNet.angle).toBeDefined();
+    expect(measurementMediaPipe.angle).toBeDefined();
+  });
+});
+```
+
+---
+
+#### 6.4.2 Plane Projection Tests (5 tests)
+
+**File**: `src/services/__tests__/goniometerService.planeProjection.test.ts`
+
+```typescript
+describe('GoniometerService - Plane Projection', () => {
+  let goniometer: GoniometerService;
+
+  it('should project elbow angle onto sagittal plane', () => {
+    const poseData = createMockPoseData('movenet-17', 'bicep_curl_90deg');
+    const measurement = goniometer.calculateJointAngle(poseData, 'left_elbow');
+
+    expect(measurement.measurementPlane.name).toBe('sagittal');
+    expect(measurement.angle).toBeCloseTo(90, 3);
+  });
+
+  it('should project shoulder angle onto scapular plane', () => {
+    const poseData = createMockPoseData('movenet-17', 'shoulder_abduction_90deg');
+    const measurement = goniometer.calculateJointAngle(poseData, 'left_shoulder');
+
+    expect(measurement.measurementPlane.name).toBe('scapular');
+    expect(measurement.measurementPlane.rotation).toBe(35); // 35° from coronal
+  });
+
+  it('should give consistent angle regardless of camera angle', () => {
+    // Same pose, different camera angles
+    const frontalView = createMockPoseData('movenet-17', 'elbow_90_frontal_camera');
+    const sagittalView = createMockPoseData('movenet-17', 'elbow_90_sagittal_camera');
+
+    const measurementFrontal = goniometer.calculateJointAngle(frontalView, 'left_elbow');
+    const measurementSagittal = goniometer.calculateJointAngle(sagittalView, 'left_elbow');
+
+    // Plane projection should eliminate camera perspective difference
+    expect(Math.abs(measurementFrontal.angle - measurementSagittal.angle)).toBeLessThan(3); // ±3° tolerance
+  });
+
+  it('should eliminate out-of-plane components', () => {
+    // Elbow with slight shoulder rotation (out-of-plane movement)
+    const poseData = createMockPoseData('movenet-17', 'elbow_90_with_rotation');
+
+    const measurement = goniometer.calculateJointAngle(poseData, 'left_elbow');
+
+    // Projection onto sagittal plane should ignore rotation component
+    expect(measurement.angle).toBeCloseTo(90, 3);
+  });
+
+  it('should use cached anatomical frames for plane definition', () => {
+    const poseData = createMockPoseData('movenet-17', 'standing_neutral');
+
+    // Spy on anatomicalService to verify it uses cached frames
+    const anatomicalServiceSpy = jest.spyOn(goniometer as any, 'anatomicalService');
+
+    goniometer.calculateJointAngle(poseData, 'left_elbow');
+
+    // Should NOT recalculate thorax frame (uses cached)
+    expect(anatomicalServiceSpy).not.toHaveBeenCalledWith('calculateThoraxFrame');
+  });
+});
+```
+
+---
+
+#### 6.4.3 Euler Angle Tests (5 tests)
+
+**File**: `src/services/__tests__/goniometerService.eulerAngles.test.ts`
+
+```typescript
+describe('GoniometerService - Euler Angles', () => {
+  let goniometer: GoniometerService;
+
+  it('should calculate Euler angles for forward flexion', () => {
+    // Arm raised 90° forward in sagittal plane
+    const poseData = createMockPoseData('movenet-17', 'shoulder_flexion_90deg');
+    const euler = goniometer.calculateShoulderEulerAngles(poseData, 'left');
+
+    expect(euler.planeOfElevation).toBeCloseTo(0, 5); // Sagittal plane
+    expect(euler.elevation).toBeCloseTo(90, 5);        // 90° elevation
+    expect(euler.rotation).toBeCloseTo(0, 5);          // No axial rotation
+  });
+
+  it('should calculate Euler angles for abduction', () => {
+    // Arm raised 90° sideways in coronal plane
+    const poseData = createMockPoseData('movenet-17', 'shoulder_abduction_90deg');
+    const euler = goniometer.calculateShoulderEulerAngles(poseData, 'left');
+
+    expect(euler.planeOfElevation).toBeCloseTo(90, 5); // Coronal plane
+    expect(euler.elevation).toBeCloseTo(90, 5);
+    expect(euler.rotation).toBeCloseTo(0, 5);
+  });
+
+  it('should calculate Euler angles for external rotation', () => {
+    // Elbow at 90°, forearm rotated outward
+    const poseData = createMockPoseData('movenet-17', 'external_rotation_45deg');
+    const euler = goniometer.calculateShoulderEulerAngles(poseData, 'left');
+
+    expect(euler.planeOfElevation).toBeCloseTo(90, 5); // Coronal plane
+    expect(euler.elevation).toBeCloseTo(0, 10);         // Arm down
+    expect(euler.rotation).toBeCloseTo(45, 5);          // 45° external rotation
+  });
+
+  it('should calculate Euler angles for internal rotation', () => {
+    const poseData = createMockPoseData('movenet-17', 'internal_rotation_30deg');
+    const euler = goniometer.calculateShoulderEulerAngles(poseData, 'left');
+
+    expect(euler.rotation).toBeCloseTo(-30, 5); // Negative = internal rotation
+  });
+
+  it('should throw error if humerus frame not available', () => {
+    const poseData = createMockPoseData('movenet-17', 'left_arm_occluded');
+    // cachedAnatomicalFrames.left_humerus will be undefined
+
+    expect(() => {
+      goniometer.calculateShoulderEulerAngles(poseData, 'left');
+    }).toThrow(/Humerus frame not available/);
+  });
+});
+```
+
+---
+
+### 6.5 Definition of Done
+
+#### Functional Criteria
+
+- [ ] `getJointLandmarkIndices()` method implemented (schema-aware)
+- [ ] `calculateJointAngle()` refactored to use plane projection systematically
+- [ ] `getMeasurementPlane()` method implemented (automatic plane selection)
+- [ ] `calculateShoulderEulerAngles()` method implemented (Y-X-Y decomposition)
+- [ ] `constructRotationMatrix()` helper method implemented
+- [ ] Works with both MoveNet-17 and MediaPipe-33 schemas
+- [ ] All 27 existing goniometer tests still pass
+
+#### Accuracy Criteria
+
+- [ ] Shoulder Euler angles: ±5° accuracy vs. known ground truth
+- [ ] Elbow/knee angles: ±3° accuracy with plane projection
+- [ ] Camera angle independence: <3° variance between frontal/sagittal views of same pose
+
+#### Performance Criteria
+
+- [ ] Single joint angle calculation: <5ms (leveraging cached frames)
+- [ ] No performance regression vs. current implementation
+
+#### Test Criteria
+
+- [ ] 15 new tests written and passing:
+  - [ ] 5 schema-awareness tests
+  - [ ] 5 plane projection tests
+  - [ ] 5 Euler angle tests
+- [ ] Test coverage: >90% for new methods
+
+#### Code Quality Criteria
+
+- [ ] TypeScript strict mode passing
+- [ ] All methods have JSDoc with ISB citations
+- [ ] No breaking changes to existing API (backward compatible)
+
+#### Documentation Criteria
+
+- [ ] Schema-awareness pattern documented
+- [ ] Plane projection rationale documented
+- [ ] Euler angle interpretation guide written
+- [ ] Migration guide for consumers
+
+---
+
+### 6.6 Validation Checkpoint
+
+Before proceeding to Gate 10A, verify:
+
+**Schema Flexibility Validation**:
+```bash
+# Test with MoveNet-17
+npm run test -- --testNamePattern="MoveNet-17"
+
+# Test with MediaPipe-33
+npm run test -- --testNamePattern="MediaPipe-33"
+
+# Expected: All tests pass with both schemas
+```
+
+**Accuracy Validation**:
+```bash
+# Compare plane-projected vs. direct 3D angles
+npm run test -- --testNamePattern="plane projection accuracy"
+
+# Expected: Plane-projected angles consistent across camera angles
+```
+
+**Euler Angle Validation**:
+```bash
+# Test shoulder Euler decomposition
+npm run test -- --testNamePattern="Euler angles"
+
+# Expected: 3 components (plane, elevation, rotation) correctly calculated
+```
+
+**Integration Validation**:
+```bash
+# Ensure downstream services work with refactored goniometer
+npm run test -- ExerciseValidationService
+npm run test -- ShoulderROMTracker
+
+# Expected: All tests pass, measurements more accurate
+```
+
+---
+
+**Next**: Section 7 will specify Gate 10A (Clinical Measurement Service) for joint-specific measurement functions with compensation detection and quality assessment.
+
