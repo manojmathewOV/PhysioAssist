@@ -62,8 +62,9 @@ export interface ScrubedTelemetryEvent {
 
 /**
  * Default privacy configuration (HIPAA/GDPR compliant)
+ * Frozen to prevent accidental mutation
  */
-export const DEFAULT_PRIVACY_CONFIG: PrivacyConfig = {
+export const DEFAULT_PRIVACY_CONFIG: PrivacyConfig = Object.freeze({
   enabled: false, // Opt-in by default
   anonymizeUsers: true,
   scrubDeviceIds: true,
@@ -71,7 +72,7 @@ export const DEFAULT_PRIVACY_CONFIG: PrivacyConfig = {
   retentionDays: 90, // HIPAA minimum
   crashReportingEnabled: false,
   performanceMonitoringEnabled: false,
-};
+});
 
 /**
  * PII (Personally Identifiable Information) Patterns

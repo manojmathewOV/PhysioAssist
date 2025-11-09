@@ -262,19 +262,27 @@ export class ShoulderROMService {
   }
 
   /**
-   * Get all sessions (including history)
+   * Get all sessions (completed sessions only, excludes current active session)
    */
   getAllSessions(): ShoulderROMSession[] {
     const trackerHistory = this.tracker.getSessionHistory();
 
-    // Merge sessionHistory with tracker history (avoiding duplicates)
+    // Only include completed sessions (exclude current active session)
+    // A session is complete if it exists in sessionHistory
     const allSessions = [...this.sessionHistory];
 
     for (const session of trackerHistory) {
-      const exists = allSessions.some(
+      // Skip if this session is already in sessionHistory (completed)
+      const alreadyInHistory = allSessions.some(
         (s) => s.startTime === session.startTime && s.movement === session.movement
       );
-      if (!exists) {
+
+      // Skip if this session has no data yet (hasn't had any frames tracked)
+      const hasNoData = session.angleHistory.length === 0;
+
+      // Only add if it's not already in history AND it has some data
+      // This effectively excludes the current active session if it just started
+      if (!alreadyInHistory && !hasNoData) {
         allSessions.push(session);
       }
     }

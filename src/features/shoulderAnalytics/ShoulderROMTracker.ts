@@ -331,14 +331,10 @@ export class ShoulderROMTracker {
   }
 
   /**
-   * Get session history (excludes current active session)
+   * Get session history (includes all sessions, even active ones)
    */
   getSessionHistory(): ShoulderROMSession[] {
-    const allSessions = Array.from(this.sessions.entries());
-    // Exclude current active session - only return completed sessions
-    return allSessions
-      .filter(([key]) => key !== this.currentSessionKey)
-      .map(([, session]) => session);
+    return Array.from(this.sessions.values());
   }
 
   /**
