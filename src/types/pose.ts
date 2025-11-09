@@ -34,6 +34,8 @@ export interface JointAngle {
     BA: Vector3D;
     BC: Vector3D;
   };
+  /** Optional: Anatomical plane in which angle was measured */
+  plane?: 'sagittal' | 'coronal' | 'transverse' | 'scapular';
 }
 
 export interface AngleCalculationConfig {
