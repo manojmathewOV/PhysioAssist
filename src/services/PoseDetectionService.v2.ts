@@ -17,10 +17,9 @@ import { ProcessedPoseData, PoseLandmark, PoseDetectionConfig } from '@types/pos
 import {
   getPatientFriendlyError,
   AdaptiveSettings,
-  PatientProfile,
-  EnvironmentConditions,
 } from '../utils/compensatoryMechanisms';
 import { PoseLandmarkFilter } from '../utils/smoothing';
+import { OrientationClassifier } from './pose/OrientationClassifier';
 
 // MoveNet keypoint names (17 total)
 const MOVENET_KEYPOINTS = [
@@ -96,6 +95,9 @@ export class PoseDetectionServiceV2 {
   private landmarkFilter: PoseLandmarkFilter;
   private filteringEnabled: boolean = true;
 
+  // Gate 9B: Orientation classifier for view detection
+  private orientationClassifier: OrientationClassifier;
+
   constructor(config: PoseDetectionConfig = {}) {
     this.config = {
       minDetectionConfidence: config.minDetectionConfidence || 0.3,
@@ -113,6 +115,9 @@ export class PoseDetectionServiceV2 {
     // - minVisibility: 0.5 (trust threshold for MoveNet confidence)
     this.landmarkFilter = new PoseLandmarkFilter(1.0, 0.007, 1.0, 0.5);
     this.filteringEnabled = this.config.smoothLandmarks;
+
+    // Gate 9B: Initialize orientation classifier with temporal smoothing
+    this.orientationClassifier = new OrientationClassifier(5);
   }
 
   /**
@@ -147,7 +152,9 @@ export class PoseDetectionServiceV2 {
           console.warn(
             '⚠️ Running in CPU mode - expect slower inference (~150ms vs ~40ms)'
           );
-          console.warn('💡 Recommendation: Reduce target FPS to 5-10 for better performance');
+          console.warn(
+            '💡 Recommendation: Reduce target FPS to 5-10 for better performance'
+          );
         }
 
         this.isInitialized = true;
@@ -232,7 +239,9 @@ export class PoseDetectionServiceV2 {
         console.log('✅ Model reloaded in CPU mode');
       }
 
-      console.log(`✅ Model reload complete (was at ${this.modelReloadThreshold} inferences)`);
+      console.log(
+        `✅ Model reload complete (was at ${this.modelReloadThreshold} inferences)`
+      );
     } catch (error) {
       console.error('❌ Failed to reload model:', error);
       // Model reload failed - service will continue with old model
@@ -334,11 +343,22 @@ export class PoseDetectionServiceV2 {
         setTimeout(() => this.reloadModel(), 0);
       }
 
+      // Gate 9B: Classify orientation with temporal smoothing
+      const orientationResult = this.orientationClassifier.classifyWithHistory(landmarks);
+
+      // Gate 9B: Calculate quality score
+      const qualityScore = this.calculateQualityScore(landmarks);
+
       const processedData: ProcessedPoseData = {
         landmarks,
         timestamp: Date.now(),
         confidence,
         inferenceTime, // For performance monitoring
+        // Gate 9B: Metadata fields
+        schemaId: 'movenet-17',
+        viewOrientation: orientationResult.orientation,
+        hasDepth: false, // MoveNet doesn't provide depth
+        qualityScore,
       };
 
       // Emit to callback
@@ -423,6 +443,41 @@ export class PoseDetectionServiceV2 {
   }
 
   /**
+   * Calculate quality score for pose detection
+   * Gate 9B: Combines landmark visibility, distribution, and environment factors
+   *
+   * Factors:
+   * - Landmark visibility: Average confidence of all landmarks
+   * - Landmark distribution: How well distributed landmarks are (not clustered)
+   * - Environmental factors: Placeholder for lighting, distance (future gates)
+   *
+   * @param landmarks - Detected pose landmarks
+   * @returns Quality score [0, 1]
+   */
+  private calculateQualityScore(landmarks: PoseLandmark[]): number {
+    if (landmarks.length === 0) return 0;
+
+    // Factor 1: Landmark visibility (70% weight)
+    const visibilityScore = this.calculateConfidence(landmarks);
+
+    // Factor 2: Landmark distribution (30% weight)
+    // Check if key torso landmarks are visible (shoulders, hips)
+    const keyLandmarks = [5, 6, 11, 12]; // left/right shoulders, left/right hips
+    const keyVisibleCount = keyLandmarks.filter(
+      (idx) => landmarks[idx] && landmarks[idx].visibility > 0.5
+    ).length;
+    const distributionScore = keyVisibleCount / keyLandmarks.length;
+
+    // Future: Factor 3: Lighting (from adaptive settings)
+    // Future: Factor 4: Distance/scale (from bounding box size)
+
+    // Weighted average
+    const qualityScore = visibilityScore * 0.7 + distributionScore * 0.3;
+
+    return Math.min(1.0, Math.max(0.0, qualityScore));
+  }
+
+  /**
    * Track performance metrics
    */
   private trackPerformance(inferenceTime: number): void {
@@ -463,6 +518,7 @@ export class PoseDetectionServiceV2 {
    * Reset performance tracking and smoothing filter
    *
    * Gate 2: Also resets One-Euro filter state
+   * Gate 9B: Also resets orientation classifier history
    * Call when:
    * - New exercise session starts
    * - Patient moves out of frame (tracking lost)
@@ -476,6 +532,12 @@ export class PoseDetectionServiceV2 {
     if (this.landmarkFilter) {
       this.landmarkFilter.reset();
       console.log('🔄 One-Euro filter reset');
+    }
+
+    // Gate 9B: Reset orientation classifier history
+    if (this.orientationClassifier) {
+      this.orientationClassifier.clearHistory();
+      console.log('🔄 Orientation classifier history reset');
     }
   }
 
@@ -520,6 +582,7 @@ export class PoseDetectionServiceV2 {
    * Cleanup resources
    *
    * Gate 2: Also resets One-Euro filter
+   * Gate 9B: Also resets orientation classifier
    */
   async cleanup(): Promise<void> {
     if (this.model) {
@@ -532,6 +595,11 @@ export class PoseDetectionServiceV2 {
     // Gate 2: Reset filter on cleanup
     if (this.landmarkFilter) {
       this.landmarkFilter.reset();
+    }
+
+    // Gate 9B: Reset orientation classifier
+    if (this.orientationClassifier) {
+      this.orientationClassifier.clearHistory();
     }
 
     console.log('🧹 PoseDetectionService V2 cleaned up');
