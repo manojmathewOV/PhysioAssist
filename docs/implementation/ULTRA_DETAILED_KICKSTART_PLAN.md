@@ -1214,13 +1214,827 @@ const jointConfigs = [
 
 ## 4. INTEGRATION ARCHITECTURE
 
-**[TO BE COMPLETED IN NEXT STAGE]**
+This section details how to wire the completed foundation components (Gates 9B.1-4) into an end-to-end clinical measurement system.
 
-Subsections:
-- 4.1 Three-Layer Architecture Design
-- 4.2 Data Flow Diagram
-- 4.3 Developer's Integration Pattern
-- 4.4 Performance Budget Allocation
+---
+
+### 4.1 Three-Layer Architecture Design
+
+**Design Principle**: Separation of concerns with clear interfaces between layers.
+
+#### Layer 1: Foundation (Data Ingestion & Reference Frames)
+
+**Responsibility**: Convert raw pose landmarks into schema-agnostic, ISB-compliant anatomical frames.
+
+**Components**:
+- `PoseSchemaRegistry`: Schema definitions and landmark mappings
+- `PoseDetectionServiceV2`: Pose inference + metadata threading
+- `OrientationClassifier`: View orientation detection
+- `AnatomicalReferenceService`: ISB frame calculations
+- `AnatomicalFrameCache` (Gate 9B.5): LRU cache for computed frames
+- `vectorMath.ts`: 3D vector operations
+
+**Input**: Video frame
+**Output**: `ProcessedPoseData` with cached anatomical frames
+
+```typescript
+interface ProcessedPoseData {
+  landmarks: PoseLandmark[];
+  timestamp: number;
+  schemaId: string;
+  viewOrientation: ViewOrientation;
+  qualityScore: number;
+  hasDepth: boolean;
+  cameraAzimuth: number;
+
+  // NEW in Gate 9B.5:
+  cachedAnatomicalFrames?: {
+    global: AnatomicalReferenceFrame;
+    thorax: AnatomicalReferenceFrame;
+    pelvis: AnatomicalReferenceFrame;
+    left_humerus?: AnatomicalReferenceFrame;
+    right_humerus?: AnatomicalReferenceFrame;
+    left_forearm?: AnatomicalReferenceFrame;
+    right_forearm?: AnatomicalReferenceFrame;
+  };
+}
+```
+
+**Key Contract**: All downstream services receive pre-computed frames—no redundant calculation.
+
+---
+
+#### Layer 2: Goniometry (Joint Angle Calculation)
+
+**Responsibility**: Calculate joint angles using anatomical frames and plane projection.
+
+**Component**: `GoniometerService` (refactored in Gate 9B.6)
+
+**Key Changes**:
+1. **Schema-aware**: Resolves landmark indices via `PoseSchemaRegistry`
+2. **Frame-aware**: Consumes `cachedAnatomicalFrames` from `ProcessedPoseData`
+3. **Plane projection**: Systematically projects all vectors onto anatomical planes
+4. **Euler angles**: Decomposes shoulder rotation matrix into Y-X-Y components
+
+**Input**: `ProcessedPoseData` (with cached frames)
+**Output**: Raw joint angle measurements with confidence
+
+```typescript
+interface JointAngleMeasurement {
+  jointName: string;
+  angle: number;           // Degrees
+  confidence: number;      // 0-1 based on landmark visibility
+  measurementPlane: AnatomicalPlane;
+
+  // For shoulder (Euler angles):
+  eulerComponents?: {
+    planeOfElevation: number;  // 0° = sagittal, 90° = coronal
+    elevation: number;          // Magnitude of arm raise
+    rotation: number;           // Internal/external rotation
+  };
+}
+```
+
+**Key Methods** (refactored):
+
+```typescript
+class GoniometerService {
+  // Schema-aware joint configuration
+  private getJointLandmarkIndices(
+    jointName: string,
+    schemaId: string
+  ): { point1: number; joint: number; point2: number };
+
+  // Plane-projected angle calculation
+  public calculateJointAngle(
+    poseData: ProcessedPoseData,
+    jointName: string
+  ): JointAngleMeasurement;
+
+  // Shoulder-specific Euler decomposition
+  public calculateShoulderEulerAngles(
+    humerusFrame: AnatomicalReferenceFrame,
+    thoraxFrame: AnatomicalReferenceFrame
+  ): { planeOfElevation: number; elevation: number; rotation: number };
+}
+```
+
+---
+
+#### Layer 3: Clinical Measurement (Joint-Specific Logic)
+
+**Responsibility**: Produce clinically meaningful measurements with compensation detection and quality assessment.
+
+**Component**: `ClinicalMeasurementService` (new in Gate 10A)
+
+**Input**: `ProcessedPoseData` (with cached frames)
+**Output**: `ClinicalJointMeasurement` (defined in `biomechanics.ts`)
+
+**Joint-Specific Measurement Functions**:
+
+1. **Shoulder Forward Flexion**:
+   ```typescript
+   public measureShoulderFlexion(
+     poseData: ProcessedPoseData,
+     side: 'left' | 'right'
+   ): ClinicalJointMeasurement {
+     // 1. Require sagittal orientation
+     if (poseData.viewOrientation !== 'sagittal') {
+       throw new Error('Sagittal view required for shoulder flexion');
+     }
+
+     // 2. Get cached frames
+     const { thorax, global } = poseData.cachedAnatomicalFrames!;
+     const humerusFrame = poseData.cachedAnatomicalFrames![`${side}_humerus`];
+
+     // 3. Define sagittal plane
+     const sagittalPlane = AnatomicalReferenceService.calculateSagittalPlane(thorax);
+
+     // 4. Project humerus Y-axis onto sagittal plane
+     const humerusProjected = projectVectorOntoPlane(humerusFrame.yAxis, sagittalPlane.normal);
+
+     // 5. Calculate angle from vertical (thorax Y-axis)
+     const flexionAngle = angleBetweenVectors(humerusProjected, thorax.yAxis);
+
+     // 6. Detect compensations
+     const compensations = this.detectTrunkCompensation(global, thorax);
+
+     // 7. Assess quality
+     const quality = this.assessMeasurementQuality(poseData, [side + '_shoulder', side + '_elbow']);
+
+     return {
+       primaryJoint: {
+         name: side + '_shoulder',
+         type: 'shoulder',
+         angle: flexionAngle,
+         angleType: 'flexion',
+       },
+       secondaryJoints: {},
+       referenceFrames: { global, local: humerusFrame, measurementPlane: sagittalPlane },
+       compensations,
+       quality,
+       timestamp: poseData.timestamp,
+     };
+   }
+   ```
+
+2. **Shoulder Abduction with Scapulohumeral Rhythm**:
+   ```typescript
+   public measureShoulderAbduction(
+     poseData: ProcessedPoseData,
+     side: 'left' | 'right'
+   ): ClinicalJointMeasurement {
+     // 1. Require frontal or scapular plane view
+     // 2. Calculate total abduction (humerus angle from vertical)
+     // 3. Calculate scapular upward rotation (shoulder line tilt)
+     // 4. Estimate glenohumeral contribution (total - scapular)
+     // 5. Calculate rhythm ratio (should be 2:1 to 3:1)
+     // 6. Flag if rhythm abnormal (frozen shoulder, scapular dyskinesis)
+
+     return {
+       primaryJoint: {
+         name: side + '_shoulder',
+         type: 'shoulder',
+         angle: totalAbduction,
+         angleType: 'abduction',
+         components: {
+           glenohumeral: ghContribution,
+           scapulothoracic: scapularRotation,
+           rhythm: ghContribution / scapularRotation,  // Should be ~2-3
+         },
+       },
+       // ... compensations, quality
+     };
+   }
+   ```
+
+3. **Shoulder External/Internal Rotation**:
+   ```typescript
+   public measureShoulderRotation(
+     poseData: ProcessedPoseData,
+     side: 'left' | 'right',
+     requiredElbowAngle: number = 90  // Gate external rotation at 90° elbow flexion
+   ): ClinicalJointMeasurement {
+     // 1. Calculate elbow angle
+     const elbowAngle = this.goniometer.calculateJointAngle(poseData, side + '_elbow').angle;
+
+     // 2. Check elbow is within tolerance (±10° of 90°)
+     if (Math.abs(elbowAngle - requiredElbowAngle) > 10) {
+       // Add compensation flag: elbow not at required angle
+     }
+
+     // 3. Get forearm frame
+     const forearmFrame = poseData.cachedAnatomicalFrames![`${side}_forearm`];
+     const humerusFrame = poseData.cachedAnatomicalFrames![`${side}_humerus`];
+
+     // 4. Project forearm onto transverse plane
+     const transversePlane = AnatomicalReferenceService.calculateTransversePlane(thorax);
+     const forearmProjected = projectVectorOntoPlane(forearmFrame.yAxis, transversePlane.normal);
+
+     // 5. Calculate rotation angle from anterior axis
+     const rotationAngle = angleBetweenVectors(forearmProjected, thorax.xAxis);
+
+     // 6. Determine internal vs external based on side and direction
+     // ...
+
+     return { /* ClinicalJointMeasurement with rotation angle */ };
+   }
+   ```
+
+4. **Elbow Flexion/Extension**:
+   ```typescript
+   public measureElbowFlexion(
+     poseData: ProcessedPoseData,
+     side: 'left' | 'right'
+   ): ClinicalJointMeasurement {
+     // 1. Require sagittal view
+     // 2. Get humerus and forearm frames
+     // 3. Project both onto sagittal plane
+     // 4. Calculate angle between projected vectors
+     // 5. Detect shoulder stabilization (should remain static during elbow movement)
+     // 6. Return measurement
+   }
+   ```
+
+5. **Knee Flexion/Extension**:
+   ```typescript
+   public measureKneeFlexion(
+     poseData: ProcessedPoseData,
+     side: 'left' | 'right'
+   ): ClinicalJointMeasurement {
+     // Similar to elbow: sagittal plane projection
+     // Additional: Check knee tracking (should stay over 2nd toe)
+     // Detect hip hiking, pelvic tilt compensations
+   }
+   ```
+
+**Compensation Detection** (Gate 10B):
+
+```typescript
+private detectTrunkCompensation(
+  globalFrame: AnatomicalReferenceFrame,
+  thoraxFrame: AnatomicalReferenceFrame
+): CompensationPattern[] {
+  const compensations: CompensationPattern[] = [];
+
+  // Trunk lean: Thorax Y-axis deviation from vertical (global Y)
+  const leanAngle = angleBetweenVectors(thoraxFrame.yAxis, globalFrame.yAxis);
+  if (leanAngle > 10) {
+    compensations.push({
+      type: 'trunk_lean',
+      severity: leanAngle > 20 ? 'moderate' : 'mild',
+      magnitude: leanAngle,
+      affectsJoint: 'shoulder',
+      clinicalNote: `Trunk lean of ${leanAngle.toFixed(1)}° detected. True shoulder ROM may be less than measured.`,
+    });
+  }
+
+  // Trunk rotation: Thorax Z-axis deviation from global Z (lateral)
+  const rotationAngle = angleBetweenVectors(thoraxFrame.zAxis, globalFrame.zAxis);
+  if (rotationAngle > 15) {
+    compensations.push({
+      type: 'trunk_rotation',
+      severity: rotationAngle > 25 ? 'moderate' : 'mild',
+      magnitude: rotationAngle,
+      affectsJoint: 'shoulder',
+      clinicalNote: `Trunk rotation of ${rotationAngle.toFixed(1)}° detected.`,
+    });
+  }
+
+  return compensations;
+}
+
+private detectShoulderHiking(
+  thoraxFrame: AnatomicalReferenceFrame,
+  humerusFrame: AnatomicalReferenceFrame,
+  side: 'left' | 'right'
+): CompensationPattern[] {
+  // Compare shoulder height (thorax origin Y) during arm raise
+  // If shoulder elevates >2cm during abduction → hiking compensation
+  // Requires temporal tracking across frames
+}
+```
+
+---
+
+### 4.2 Data Flow Diagram
+
+**End-to-End Flow for Clinical ROM Measurement**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  VIDEO FRAME (from camera)                                  │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  LAYER 1: PoseDetectionServiceV2                            │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 1. ML Inference (MoveNet/MediaPipe)                  │   │
+│  │    → Raw landmarks with visibility scores            │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 2. Schema Resolution (PoseSchemaRegistry)            │   │
+│  │    → Attach anatomical names to landmarks            │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 3. Orientation Classification                        │   │
+│  │    → Detect frontal/sagittal/posterior view          │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 4. Quality Scoring                                   │   │
+│  │    → Visibility + distribution + lighting            │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 5. Frame Pre-Computation (NEW - Gate 9B.5)           │   │
+│  │    a. Check AnatomicalFrameCache                     │   │
+│  │       → Cache hit? Return cached frames              │   │
+│  │       → Cache miss? Compute and cache                │   │
+│  │    b. AnatomicalReferenceService.calculateAllFrames()│   │
+│  │       → Global, Thorax, Pelvis, Humerus (L/R),      │   │
+│  │          Forearm (L/R)                               │   │
+│  │    c. Attach to ProcessedPoseData.cachedFrames       │   │
+│  └──────────────────────────────────────────────────────┘   │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+              ProcessedPoseData
+              (with cachedAnatomicalFrames)
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  LAYER 2: GoniometerService (REFACTORED - Gate 9B.6)       │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 1. Schema-Aware Landmark Resolution                  │   │
+│  │    → PoseSchemaRegistry.get(schemaId)                │   │
+│  │    → Map joint name to landmark indices              │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 2. Frame Retrieval (from cache)                      │   │
+│  │    → poseData.cachedAnatomicalFrames.humerus         │   │
+│  │    → poseData.cachedAnatomicalFrames.thorax          │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 3. Plane Projection (systematic)                     │   │
+│  │    → Define measurement plane (sagittal/coronal/etc) │   │
+│  │    → Project joint vectors onto plane                │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 4. Angle Calculation                                 │   │
+│  │    → Simple joints (elbow/knee): 2D angle in plane   │   │
+│  │    → Complex joints (shoulder): Euler decomposition  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 5. Temporal Smoothing (5-frame moving average)       │   │
+│  └──────────────────────────────────────────────────────┘   │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+              JointAngleMeasurement[]
+              (raw angles + confidence)
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  LAYER 3: ClinicalMeasurementService (Gate 10A-B)          │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 1. Joint-Specific Measurement Logic                  │   │
+│  │    → Shoulder flexion (sagittal projection)          │   │
+│  │    → Shoulder abduction (scapulohumeral rhythm)      │   │
+│  │    → Shoulder rotation (gated at 90° elbow)          │   │
+│  │    → Elbow/knee flexion (sagittal projection)        │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 2. Compensation Detection                            │   │
+│  │    → Trunk lean (>10° from vertical)                 │   │
+│  │    → Trunk rotation (>15° from frontal)              │   │
+│  │    → Shoulder hiking (scapular elevation)            │   │
+│  │    → Elbow flexion drift (rotation measurement)      │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 3. Quality Assessment                                │   │
+│  │    → Landmark visibility for required joints         │   │
+│  │    → Orientation match (sagittal for flexion, etc)   │   │
+│  │    → Motion smoothness (temporal consistency)        │   │
+│  │    → Frame count (enough data for reliable measure)  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ 4. Clinical Thresholds & Guidance                    │   │
+│  │    → Compare to target (e.g., 160° shoulder flexion) │   │
+│  │    → Generate patient feedback                       │   │
+│  │    → Surface confidence + recommendations            │   │
+│  └──────────────────────────────────────────────────────┘   │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+              ClinicalJointMeasurement
+              (clinician-ready output)
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  DOWNSTREAM CONSUMERS                                       │
+│  - ExerciseValidationService (rep counting, form scoring)  │
+│  - Patient UI (real-time feedback, angle display)          │
+│  - Clinician Dashboard (ROM reports, compensation flags)   │
+│  - Analytics Service (progress tracking, trends)           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key Integration Points**:
+
+1. **PoseDetectionServiceV2 → AnatomicalFrameCache**: Pre-compute frames once per video frame, attach to `ProcessedPoseData`
+
+2. **ProcessedPoseData → GoniometerService**: Goniometer retrieves cached frames instead of recomputing
+
+3. **GoniometerService → ClinicalMeasurementService**: Raw angles feed into joint-specific logic with compensation detection
+
+4. **ClinicalMeasurementService → UI/Analytics**: Clinical measurements with confidence and guidance ready for display
+
+---
+
+### 4.3 Developer's Integration Pattern
+
+Following the proven implementation pattern shared earlier:
+
+> "Extended the pose data model with cached anatomical frames... Updated the GPU pose detector to pre-compute torso/pelvis frames for every processed clip... Rebuilt the goniometer around plane-projected, schema-aware joint definitions and fed the anatomical frames into exercise validation for higher precision ROM scoring."
+
+**Step-by-Step Integration Sequence**:
+
+#### Step 1: Extend ProcessedPoseData (Gate 9B.5)
+
+```typescript
+// src/types/pose.ts
+export interface ProcessedPoseData {
+  landmarks: PoseLandmark[];
+  timestamp: number;
+  schemaId: string;
+  viewOrientation?: ViewOrientation;
+  qualityScore?: number;
+  hasDepth?: boolean;
+  cameraAzimuth?: number;
+
+  // ✨ NEW: Pre-computed anatomical frames
+  cachedAnatomicalFrames?: {
+    global: AnatomicalReferenceFrame;
+    thorax: AnatomicalReferenceFrame;
+    pelvis: AnatomicalReferenceFrame;
+    left_humerus?: AnatomicalReferenceFrame;
+    right_humerus?: AnatomicalReferenceFrame;
+    left_forearm?: AnatomicalReferenceFrame;
+    right_forearm?: AnatomicalReferenceFrame;
+  };
+}
+```
+
+#### Step 2: Implement AnatomicalFrameCache (Gate 9B.5)
+
+```typescript
+// src/services/biomechanics/AnatomicalFrameCache.ts
+class AnatomicalFrameCache {
+  private cache: Map<string, CachedFrame> = new Map();
+  private maxSize = 60; // frames
+  private ttl = 16; // milliseconds (60fps target)
+
+  /**
+   * Get cached frame or compute if expired
+   * @param frameType - 'global', 'thorax', 'left_humerus', etc.
+   * @param landmarks - Current pose landmarks
+   * @param calculator - Function to compute frame if cache miss
+   */
+  public get(
+    frameType: string,
+    landmarks: PoseLandmark[],
+    calculator: (landmarks: PoseLandmark[]) => AnatomicalReferenceFrame
+  ): AnatomicalReferenceFrame {
+    const key = this.generateKey(frameType, landmarks);
+    const cached = this.cache.get(key);
+
+    // Cache hit: Return cached frame if still valid
+    if (cached && Date.now() - cached.timestamp < this.ttl) {
+      return cached.frame;
+    }
+
+    // Cache miss: Calculate, store, return
+    const frame = calculator(landmarks);
+    this.cache.set(key, {
+      frame,
+      timestamp: Date.now(),
+    });
+
+    // LRU eviction
+    if (this.cache.size > this.maxSize) {
+      const firstKey = this.cache.keys().next().value!;
+      this.cache.delete(firstKey);
+    }
+
+    return frame;
+  }
+
+  /**
+   * Generate cache key from frame type + landmark positions
+   * (Simple hash of shoulder/hip positions for spatial consistency)
+   */
+  private generateKey(frameType: string, landmarks: PoseLandmark[]): string {
+    const leftShoulder = landmarks.find(lm => lm.name === 'left_shoulder');
+    const rightShoulder = landmarks.find(lm => lm.name === 'right_shoulder');
+
+    if (!leftShoulder || !rightShoulder) return `${frameType}_${Date.now()}`;
+
+    // Round to 2 decimals for spatial bucketing (small movements share cache)
+    const lsX = leftShoulder.x.toFixed(2);
+    const lsY = leftShoulder.y.toFixed(2);
+    const rsX = rightShoulder.x.toFixed(2);
+    const rsY = rightShoulder.y.toFixed(2);
+
+    return `${frameType}_${lsX}_${lsY}_${rsX}_${rsY}`;
+  }
+
+  public clear(): void {
+    this.cache.clear();
+  }
+
+  public getStats(): { size: number; hitRate: number } {
+    // Track hit/miss for performance monitoring
+    return {
+      size: this.cache.size,
+      hitRate: this.hits / (this.hits + this.misses),
+    };
+  }
+}
+```
+
+#### Step 3: Update PoseDetectionServiceV2 to Pre-Compute Frames (Gate 9B.5)
+
+```typescript
+// src/services/PoseDetectionService.v2.ts
+class PoseDetectionServiceV2 {
+  private frameCache: AnatomicalFrameCache;
+  private anatomicalService: AnatomicalReferenceService;
+
+  public async detectPose(videoFrame): Promise<ProcessedPoseData> {
+    const rawPose = await this.poseDetector.estimate(videoFrame);
+    const schema = PoseSchemaRegistry.getInstance().get(this.activeSchemaId);
+
+    const landmarks = this.normalizeLandmarks(rawPose, schema);
+
+    // ✨ NEW: Pre-compute anatomical frames with caching
+    const cachedFrames = this.preComputeAnatomicalFrames(landmarks);
+
+    return {
+      landmarks,
+      timestamp: Date.now(),
+      schemaId: this.activeSchemaId,
+      viewOrientation: OrientationClassifier.classify(rawPose),
+      qualityScore: this.calculateQualityScore(rawPose),
+      hasDepth: schema.hasDepth,
+      cameraAzimuth: this.estimateCameraAzimuth(rawPose),
+      cachedAnatomicalFrames: cachedFrames,  // ✨ NEW
+    };
+  }
+
+  /**
+   * Pre-compute all anatomical frames for this pose with caching
+   */
+  private preComputeAnatomicalFrames(landmarks: PoseLandmark[]): ProcessedPoseData['cachedAnatomicalFrames'] {
+    // Global frame (always compute)
+    const global = this.frameCache.get('global', landmarks, (lm) =>
+      this.anatomicalService.calculateGlobalFrame(lm)
+    );
+
+    // Thorax frame (always compute)
+    const thorax = this.frameCache.get('thorax', landmarks, (lm) =>
+      this.anatomicalService.calculateThoraxFrame(lm, global)
+    );
+
+    // Pelvis frame (always compute)
+    const pelvis = this.frameCache.get('pelvis', landmarks, (lm) =>
+      this.anatomicalService.calculatePelvisFrame(lm, global)
+    );
+
+    // Conditional frames (only if landmarks visible)
+    const leftShoulder = landmarks.find(lm => lm.name === 'left_shoulder');
+    const leftElbow = landmarks.find(lm => lm.name === 'left_elbow');
+
+    const left_humerus = (leftShoulder?.visibility > 0.5 && leftElbow?.visibility > 0.5)
+      ? this.frameCache.get('left_humerus', landmarks, (lm) =>
+          this.anatomicalService.calculateHumerusFrame(lm, 'left', thorax)
+        )
+      : undefined;
+
+    // ... similar for right_humerus, left_forearm, right_forearm
+
+    return {
+      global,
+      thorax,
+      pelvis,
+      left_humerus,
+      // right_humerus, left_forearm, right_forearm (conditional)
+    };
+  }
+}
+```
+
+#### Step 4: Refactor GoniometerService to Be Schema-Aware (Gate 9B.6)
+
+```typescript
+// src/services/goniometerService.ts
+class GoniometerService {
+  private schemaRegistry: PoseSchemaRegistry;
+  private anatomicalService: AnatomicalReferenceService;
+
+  /**
+   * Calculate joint angle using schema-aware, plane-projected method
+   */
+  public calculateJointAngle(
+    poseData: ProcessedPoseData,
+    jointName: string  // e.g., 'left_elbow', 'right_shoulder'
+  ): JointAngleMeasurement {
+    // 1. Resolve landmark indices via schema
+    const indices = this.getJointLandmarkIndices(jointName, poseData.schemaId);
+
+    // 2. Get landmarks
+    const pointA = poseData.landmarks[indices.point1];
+    const joint = poseData.landmarks[indices.joint];
+    const pointC = poseData.landmarks[indices.point2];
+
+    // 3. Check confidence
+    if (!this.meetsConfidenceThreshold([pointA, joint, pointC])) {
+      throw new Error(`Low confidence for ${jointName}`);
+    }
+
+    // 4. Get cached anatomical frames
+    const frames = poseData.cachedAnatomicalFrames!;
+
+    // 5. Determine measurement plane based on joint type
+    const measurementPlane = this.getMeasurementPlane(jointName, frames.thorax);
+
+    // 6. Calculate angle with plane projection
+    const vector1 = this.createVector(joint, pointA);
+    const vector2 = this.createVector(joint, pointC);
+
+    const angle = this.calculateAngleInPlane(vector1, vector2, measurementPlane.normal);
+
+    // 7. Temporal smoothing
+    const smoothedAngle = this.smoothAngle(jointName, angle);
+
+    return {
+      jointName,
+      angle: smoothedAngle,
+      confidence: (pointA.visibility! + joint.visibility! + pointC.visibility!) / 3,
+      measurementPlane,
+    };
+  }
+
+  /**
+   * Schema-aware landmark index resolution
+   */
+  private getJointLandmarkIndices(
+    jointName: string,
+    schemaId: string
+  ): { point1: number; joint: number; point2: number } {
+    const schema = this.schemaRegistry.get(schemaId);
+
+    // Map joint name to anatomical landmarks
+    const mapping: Record<string, [string, string, string]> = {
+      'left_elbow': ['left_shoulder', 'left_elbow', 'left_wrist'],
+      'right_elbow': ['right_shoulder', 'right_elbow', 'right_wrist'],
+      'left_knee': ['left_hip', 'left_knee', 'left_ankle'],
+      'right_knee': ['right_hip', 'right_knee', 'right_ankle'],
+      'left_shoulder': ['left_hip', 'left_shoulder', 'left_elbow'],
+      'right_shoulder': ['right_hip', 'right_shoulder', 'right_elbow'],
+    };
+
+    const [lm1, lm2, lm3] = mapping[jointName];
+
+    return {
+      point1: schema.landmarks.find(lm => lm.name === lm1)!.index,
+      joint: schema.landmarks.find(lm => lm.name === lm2)!.index,
+      point2: schema.landmarks.find(lm => lm.name === lm3)!.index,
+    };
+  }
+
+  /**
+   * Determine appropriate measurement plane for joint
+   */
+  private getMeasurementPlane(
+    jointName: string,
+    thoraxFrame: AnatomicalReferenceFrame
+  ): AnatomicalPlane {
+    if (jointName.includes('shoulder')) {
+      // Shoulder: Use scapular plane (35° from coronal)
+      return this.anatomicalService.calculateScapularPlane(thoraxFrame);
+    } else if (jointName.includes('elbow') || jointName.includes('knee')) {
+      // Elbow/Knee: Use sagittal plane
+      return this.anatomicalService.calculateSagittalPlane(thoraxFrame);
+    }
+
+    // Default: Sagittal
+    return this.anatomicalService.calculateSagittalPlane(thoraxFrame);
+  }
+}
+```
+
+#### Step 5: Implement ClinicalMeasurementService (Gate 10A)
+
+```typescript
+// src/services/biomechanics/ClinicalMeasurementService.ts
+class ClinicalMeasurementService {
+  private goniometer: GoniometerService;
+  private anatomicalService: AnatomicalReferenceService;
+
+  /**
+   * Measure shoulder forward flexion with compensation detection
+   */
+  public measureShoulderFlexion(
+    poseData: ProcessedPoseData,
+    side: 'left' | 'right'
+  ): ClinicalJointMeasurement {
+    // [Full implementation shown in Section 4.1 Layer 3]
+  }
+
+  // ... measureShoulderAbduction, measureShoulderRotation, etc.
+}
+```
+
+**Key Benefits of This Integration Pattern**:
+
+1. ✅ **No Redundant Calculation**: Frames computed once per video frame, reused by all measurements
+2. ✅ **Performance**: Cache hit rate >80% → <0.1ms cache lookup vs ~15ms recomputation
+3. ✅ **Schema Flexibility**: Swap MoveNet-17 ↔ MediaPipe-33 without downstream changes
+4. ✅ **Clinical Accuracy**: Systematic plane projection + Euler angles ensure ISB compliance
+5. ✅ **Maintainability**: Clear layer boundaries, each component has single responsibility
+
+---
+
+### 4.4 Performance Budget Allocation
+
+**Target**: <120ms per frame (8.3 fps minimum for real-time guidance)
+
+#### Budget Breakdown
+
+| Component | Budget | Current Status | Optimization Strategy |
+|-----------|--------|----------------|----------------------|
+| **ML Inference** (MoveNet/MediaPipe) | 40-60ms | ✅ Measured (GPU-accelerated) | Use TFLite/ONNX runtime |
+| **Schema Resolution** | <1ms | ✅ O(1) lookup | HashMap-based registry |
+| **Orientation Classification** | <2ms | ✅ Measured | Geometric heuristics only |
+| **Quality Scoring** | <5ms | ⏳ Not benchmarked | Optimize visibility loop |
+| **Frame Calculation** (all frames, no cache) | ~15-20ms | ⚠️ Needs caching | **Gate 9B.5 caching** |
+| **Frame Calculation** (with cache, 80% hit rate) | <3ms | ⏳ Target | LRU cache with TTL |
+| **Single Joint Angle** (goniometer) | <5ms | ⏳ Not benchmarked | Plane projection is <1ms |
+| **Clinical Measurement** (with compensation) | <20ms | ⏳ Not benchmarked | Reuse cached frames |
+| **Temporal Smoothing** | <2ms | ⏳ Not benchmarked | Moving average (5 frames) |
+| **UI Rendering** | <20ms | N/A | Not measured here |
+| **Total** | **<120ms** | **⚠️ 50-85ms estimated** | **Caching critical** |
+
+**Critical Path Optimization** (Gate 9B.5):
+
+Without caching:
+```
+Frame calculation: 15ms × 5 frames (global, thorax, pelvis, 2× humerus) = 75ms ❌
+Total: 40ms (ML) + 75ms (frames) + 5ms (other) = 120ms (at limit)
+```
+
+With caching (80% hit rate):
+```
+Frame calculation: 15ms × 1 frame (cache miss) + 0.1ms × 4 frames (cache hit) = 15.4ms ✅
+Total: 40ms (ML) + 15.4ms (frames) + 5ms (other) = 60.4ms (50% headroom)
+```
+
+**Performance Monitoring**:
+
+```typescript
+// Add telemetry to PoseDetectionServiceV2
+public async detectPose(videoFrame): Promise<ProcessedPoseData> {
+  const startTime = performance.now();
+
+  const mlStart = performance.now();
+  const rawPose = await this.poseDetector.estimate(videoFrame);
+  const mlTime = performance.now() - mlStart;
+
+  const frameStart = performance.now();
+  const cachedFrames = this.preComputeAnatomicalFrames(landmarks);
+  const frameTime = performance.now() - frameStart;
+
+  const totalTime = performance.now() - startTime;
+
+  // Log performance metrics
+  this.telemetry.record({
+    mlInferenceMs: mlTime,
+    frameComputationMs: frameTime,
+    totalMs: totalTime,
+    cacheHitRate: this.frameCache.getStats().hitRate,
+  });
+
+  if (totalTime > 120) {
+    console.warn(`Pose detection exceeded budget: ${totalTime}ms`);
+  }
+
+  return poseData;
+}
+```
+
+**Optimization Levers** (if budget exceeded):
+
+1. **Frame selection**: Compute conditional frames only when needed (e.g., skip left_forearm if left elbow occluded)
+2. **Downsample video**: Process every 2nd frame (15fps instead of 30fps) for non-critical flows
+3. **Worker threads**: Offload frame calculation to Web Worker (won't block UI rendering)
+4. **Model selection**: Use MoveNet-Lightning (faster) vs MoveNet-Thunder (more accurate) based on device capability
+
+---
+
+**Next**: Section 5 will provide ultra-detailed implementation specification for Gate 9B.5 (Anatomical Frame Caching) with file-by-file changes, test plan, and DoD.
 
 ---
 
