@@ -12,6 +12,7 @@
 
 import { Frame } from 'react-native-vision-camera';
 import { PoseLandmark } from '../types/pose';
+import { analyzeFrame } from './realFrameAnalysis';
 
 // ============================================================================
 // Types & Interfaces
@@ -90,11 +91,16 @@ const STABILITY_THRESHOLD = 0.02; // Variance threshold for tremor detection
 
 /**
  * Analyzes lighting conditions and provides patient-friendly guidance
+ *
+ * Gate 1 Update: Now uses real frame analysis with ITU-R BT.601 standard
  */
-export const checkLightingConditions = (frame: Frame): LightingAssessment => {
-  const brightness = analyzeBrightness(frame);
-  const contrast = analyzeContrast(frame);
-  const shadows = detectHarshShadows(frame);
+export const checkLightingConditions = async (
+  frame: Frame
+): Promise<LightingAssessment> => {
+  // Use real frame analysis from realFrameAnalysis.ts
+  const analysis = await analyzeFrame(frame, true);
+  const brightness = analysis.brightness;
+  const shadows = analysis.shadowScore;
 
   if (brightness < BRIGHTNESS_THRESHOLD.LOW) {
     return {
@@ -140,44 +146,23 @@ export const checkLightingConditions = (frame: Frame): LightingAssessment => {
 };
 
 /**
- * Analyzes frame brightness (simplified - would use actual pixel data in production)
+ * Legacy mock functions removed (Gate 1)
+ *
+ * These mock implementations have been replaced with real computer vision
+ * algorithms in src/utils/realFrameAnalysis.ts:
+ *
+ * - analyzeBrightness() → realFrameAnalysis.analyzeBrightness()
+ *   Uses ITU-R BT.601 standard: Y = 0.299R + 0.587G + 0.114B
+ *
+ * - analyzeContrast() → realFrameAnalysis.analyzeContrast()
+ *   Uses standard deviation of luminance values
+ *
+ * - detectHarshShadows() → realFrameAnalysis.detectShadows()
+ *   Uses local variance analysis with grid-based approach
+ *
+ * All functionality now accessed via analyzeFrame() which returns:
+ * { brightness, contrast, shadowScore, histogram, processingTimeMs }
  */
-const analyzeBrightness = (frame: Frame): number => {
-  // In production: Analyze actual pixel data
-  // For now: Return mock value based on frame properties
-  // Range: 0.0 (black) to 1.0 (white)
-
-  // TODO: Implement actual brightness analysis
-  // const pixelData = getPixelData(frame);
-  // const avgBrightness = calculateAverageBrightness(pixelData);
-  // return avgBrightness;
-
-  return 0.5; // Mock: Assume medium brightness
-};
-
-/**
- * Analyzes frame contrast
- */
-const analyzeContrast = (frame: Frame): number => {
-  // TODO: Implement actual contrast analysis
-  // const pixelData = getPixelData(frame);
-  // const standardDeviation = calculateStdDev(pixelData);
-  // return standardDeviation / 255;
-
-  return 0.5; // Mock: Assume medium contrast
-};
-
-/**
- * Detects harsh shadows in frame
- */
-const detectHarshShadows = (frame: Frame): number => {
-  // TODO: Implement shadow detection
-  // Look for high-contrast edges and dark regions near person
-  // const shadowScore = analyzeShadowRegions(frame);
-  // return shadowScore;
-
-  return 0.2; // Mock: Assume low shadow level
-};
 
 /**
  * Gets adaptive lighting settings based on conditions
@@ -315,13 +300,15 @@ export const getAdaptiveDistanceSettings = (
 
 /**
  * Assesses overall environment conditions
+ *
+ * Gate 1 Update: Now async due to real frame analysis
  */
-export const assessEnvironment = (
+export const assessEnvironment = async (
   frame: Frame,
   landmarks: PoseLandmark[],
   screenHeight: number
-): EnvironmentConditions => {
-  const lightingCheck = checkLightingConditions(frame);
+): Promise<EnvironmentConditions> => {
+  const lightingCheck = await checkLightingConditions(frame);
   const distanceCheck = checkPatientDistance(landmarks, screenHeight);
 
   // Assess lighting

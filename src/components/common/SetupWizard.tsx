@@ -5,7 +5,7 @@
  * Reduces setup failure from 60% → 10%
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,9 +14,17 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import { Frame, useCameraDevice } from 'react-native-vision-camera';
+import {
+  Frame,
+  Camera,
+  useCameraDevice,
+  useFrameProcessor,
+} from 'react-native-vision-camera';
+import { Worklets } from 'react-native-worklets-core';
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import { useSelector } from 'react-redux';
+import { RootState } from '@store/index';
 
 import {
   checkLightingConditions,
@@ -24,6 +32,7 @@ import {
   LightingAssessment,
   DistanceAssessment,
 } from '../../utils/compensatoryMechanisms';
+import { PoseLandmark } from '../../types/pose';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -47,6 +56,13 @@ const SetupWizard: React.FC<SetupWizardProps> = ({
 
   const fadeAnim = useState(new Animated.Value(0))[0];
 
+  // VisionCamera setup (Gate 1: Real frame capture)
+  const device = useCameraDevice('front');
+  const latestFrameRef = useRef<Frame | null>(null);
+
+  // Get pose landmarks from Redux (populated by PoseDetectionScreen)
+  const { landmarks } = useSelector((state: RootState) => state.pose.poseData || {});
+
   useEffect(() => {
     if (visible) {
       Animated.timing(fadeAnim, {
@@ -57,27 +73,54 @@ const SetupWizard: React.FC<SetupWizardProps> = ({
     }
   }, [visible]);
 
-  // Mock frame and landmarks for demonstration
-  // In production, these would come from actual camera feed
-  const mockFrame = {} as Frame;
-  const mockLandmarks = [];
+  /**
+   * Frame Processor - Captures latest frame for analysis
+   * Gate 1: Real frame capture (no more mocks!)
+   */
+  const frameProcessor = useFrameProcessor(
+    (frame) => {
+      'worklet';
+      // Store latest frame in ref for analysis
+      Worklets.runOnJS(updateLatestFrame)(frame);
+    },
+    []
+  );
 
-  const handleLightingCheck = () => {
-    const assessment = checkLightingConditions(mockFrame);
-    setLightingStatus(assessment);
+  const updateLatestFrame = (frame: Frame) => {
+    latestFrameRef.current = frame;
+  };
 
-    if (assessment.canProceed) {
-      ReactNativeHapticFeedback.trigger('notificationSuccess');
-      setTimeout(() => {
-        setCurrentStep('distance');
-      }, 1000);
-    } else {
-      ReactNativeHapticFeedback.trigger('notificationWarning');
+  const handleLightingCheck = async () => {
+    const frame = latestFrameRef.current;
+
+    if (!frame) {
+      console.warn('⚠️ No frame available yet');
+      return;
+    }
+
+    try {
+      // Gate 1: Use real frame analysis (async)
+      const assessment = await checkLightingConditions(frame);
+      setLightingStatus(assessment);
+
+      if (assessment.canProceed) {
+        ReactNativeHapticFeedback.trigger('notificationSuccess');
+        setTimeout(() => {
+          setCurrentStep('distance');
+        }, 1000);
+      } else {
+        ReactNativeHapticFeedback.trigger('notificationWarning');
+      }
+    } catch (error) {
+      console.error('❌ Error checking lighting:', error);
+      ReactNativeHapticFeedback.trigger('notificationError');
     }
   };
 
   const handleDistanceCheck = () => {
-    const assessment = checkPatientDistance(mockLandmarks, SCREEN_HEIGHT);
+    // Gate 1: Use real landmarks from Redux (populated by PoseDetectionScreen)
+    const landmarkArray: PoseLandmark[] = landmarks || [];
+    const assessment = checkPatientDistance(landmarkArray, SCREEN_HEIGHT);
     setDistanceStatus(assessment);
 
     if (assessment.status === 'perfect') {
@@ -111,8 +154,19 @@ const SetupWizard: React.FC<SetupWizardProps> = ({
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+      {/* VisionCamera for frame capture (Gate 1: Real camera integration) */}
+      {device && visible && (
+        <Camera
+          style={StyleSheet.absoluteFill}
+          device={device}
+          isActive={visible}
+          frameProcessor={frameProcessor}
+          pixelFormat="yuv"
+        />
+      )}
+
       <LinearGradient
-        colors={['#1a1a1a', '#0d0d0d']}
+        colors={['rgba(26, 26, 26, 0.85)', 'rgba(13, 13, 13, 0.85)']}
         style={styles.gradient}
       >
         {/* Skip Button */}
