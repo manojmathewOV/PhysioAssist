@@ -21,11 +21,12 @@ const createMockLandmarks = (shoulderAngle: number): PoseLandmark[] => {
   // Simulate shoulder at given angle
   // Shoulder at index 5 (left) or 6 (right)
   // Wrist at index 9 (left) or 10 (right)
+  // In screen coords: y increases downward, 0° = arm down, 180° = arm overhead
   const angleRad = (shoulderAngle * Math.PI) / 180;
   landmarks[5] = { x: 0.5, y: 0.5, score: 0.9 }; // Left shoulder
   landmarks[9] = {
     x: 0.5 + Math.sin(angleRad) * 0.3,
-    y: 0.5 - Math.cos(angleRad) * 0.3,
+    y: 0.5 + Math.cos(angleRad) * 0.3, // Fixed: + instead of - for proper orientation
     score: 0.9,
   }; // Left wrist
 

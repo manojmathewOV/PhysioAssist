@@ -238,7 +238,7 @@ export class ShoulderROMTracker {
       timestamps: [],
       peakAngle: 0,
       averageAngle: 0,
-      startTime: Date.now(),
+      startTime: 0, // Will be set on first trackFrame call
       duration: 0,
     });
 
@@ -261,6 +261,11 @@ export class ShoulderROMTracker {
 
     const session = this.sessions.get(this.currentSessionKey);
     if (!session) return null;
+
+    // Set startTime on first frame
+    if (session.startTime === 0) {
+      session.startTime = timestamp;
+    }
 
     // Calculate current angle
     const currentAngle = calculateShoulderAngle(

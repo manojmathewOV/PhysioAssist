@@ -36,10 +36,12 @@ const createMockLandmarks = (config: {
   landmarks[elbowIdx] = { x: 0.5, y: 0.4, score: 0.9 }; // Elbow
 
   // Calculate wrist position based on angle
+  // In screen coords: y increases downward
+  // 0° = arm down, 180° = arm overhead
   const angleRad = (shoulderAngle * Math.PI) / 180;
   landmarks[wristIdx] = {
     x: 0.5 + Math.sin(angleRad) * 0.3,
-    y: 0.5 - Math.cos(angleRad) * 0.3,
+    y: 0.5 + Math.cos(angleRad) * 0.3, // Fixed: + instead of - for proper orientation
     score: 0.9,
   };
 

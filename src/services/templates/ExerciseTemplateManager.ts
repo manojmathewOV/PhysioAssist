@@ -218,12 +218,13 @@ export class ExerciseTemplateManager {
       return null;
     }
 
+    const now = Date.now();
     const updated: ExerciseTemplate = {
       ...template,
       ...updates,
       id, // Prevent ID override
       createdAt: template.createdAt, // Preserve creation date
-      updatedAt: Date.now(),
+      updatedAt: now > template.updatedAt ? now : template.updatedAt + 1, // Ensure timestamp increases
     };
 
     this.templates.set(id, updated);
@@ -515,6 +516,13 @@ export class ExerciseTemplateManager {
       console.error('[ExerciseTemplateManager] Import failed:', error);
       return 0;
     }
+  }
+
+  /**
+   * Clear all templates
+   */
+  clearTemplates(): void {
+    this.templates.clear();
   }
 
   /**

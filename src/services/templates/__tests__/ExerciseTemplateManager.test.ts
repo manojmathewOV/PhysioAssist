@@ -482,7 +482,7 @@ describe('ExerciseTemplateManager', () => {
       const json = manager.exportTemplates();
 
       const newManager = new ExerciseTemplateManager();
-      newManager.resetToDefaults(); // Clear defaults
+      newManager.clearTemplates(); // Clear defaults first
       const imported = newManager.importTemplates(json);
 
       expect(imported).toBe(original.length);
