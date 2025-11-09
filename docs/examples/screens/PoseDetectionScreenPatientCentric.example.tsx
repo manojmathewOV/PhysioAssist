@@ -11,7 +11,14 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, Dimensions, Alert, AppState, AppStateStatus } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  Alert,
+  AppState,
+  AppStateStatus,
+} from 'react-native';
 import { Camera, useCameraDevice, useFrameProcessor } from 'react-native-vision-camera';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
@@ -171,19 +178,22 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
 
   // Handle app state changes (background/foreground)
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'active') {
-        console.log('📱 App foregrounded - resuming if needed');
-        // App became active - resume detection if it was running before
-        // Note: We don't auto-resume to prevent unexpected behavior
-      } else {
-        console.log('📱 App backgrounded - pausing detection');
-        // App backgrounded or inactive - pause detection immediately
-        if (isDetecting) {
-          handleStop();
+    const subscription = AppState.addEventListener(
+      'change',
+      (nextAppState: AppStateStatus) => {
+        if (nextAppState === 'active') {
+          console.log('📱 App foregrounded - resuming if needed');
+          // App became active - resume detection if it was running before
+          // Note: We don't auto-resume to prevent unexpected behavior
+        } else {
+          console.log('📱 App backgrounded - pausing detection');
+          // App backgrounded or inactive - pause detection immediately
+          if (isDetecting) {
+            handleStop();
+          }
         }
       }
-    });
+    );
 
     return () => {
       subscription.remove();
@@ -302,14 +312,10 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
       const distanceCheck = checkPatientDistance(landmarks, SCREEN_HEIGHT);
 
       if (distanceCheck.status !== 'perfect') {
-        Alert.alert(
-          '📏 Position Adjustment',
-          distanceCheck.instruction,
-          [
-            { text: 'OK, Let Me Adjust', style: 'default' },
-            { text: 'Continue Anyway', onPress: () => forceStart() },
-          ]
-        );
+        Alert.alert('📏 Position Adjustment', distanceCheck.instruction, [
+          { text: 'OK, Let Me Adjust', style: 'default' },
+          { text: 'Continue Anyway', onPress: () => forceStart() },
+        ]);
         return false;
       }
     }
@@ -418,12 +424,7 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
   // ============================================================================
 
   if (!device) {
-    return (
-      <LoadingOverlay
-        visible={true}
-        message="Camera not available"
-      />
-    );
+    return <LoadingOverlay visible={true} message="Camera not available" />;
   }
 
   return (
@@ -463,9 +464,7 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
             />
           ) : (
             // Standard Mode UI
-            <View style={styles.standardUI}>
-              {/* Standard UI implementation here */}
-            </View>
+            <View style={styles.standardUI}>{/* Standard UI implementation here */}</View>
           )}
 
           {/* Coaching Overlay (During Detection) */}
@@ -485,17 +484,10 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
       )}
 
       {/* Loading Overlay */}
-      <LoadingOverlay
-        visible={status === 'initializing'}
-        message="Getting ready..."
-      />
+      <LoadingOverlay visible={status === 'initializing'} message="Getting ready..." />
 
       {/* Error State */}
-      {status === 'error' && (
-        <View style={styles.errorContainer}>
-          {/* Error UI */}
-        </View>
-      )}
+      {status === 'error' && <View style={styles.errorContainer}>{/* Error UI */}</View>}
     </View>
   );
 };

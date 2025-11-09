@@ -34,7 +34,8 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   const durationText = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
 
   const scoreColor = score >= 80 ? '#4CAF50' : score >= 60 ? '#FF9800' : '#F44336';
-  const formColor = formAccuracy >= 80 ? '#4CAF50' : formAccuracy >= 60 ? '#FF9800' : '#F44336';
+  const formColor =
+    formAccuracy >= 80 ? '#4CAF50' : formAccuracy >= 60 ? '#FF9800' : '#F44336';
 
   const isPersonalBest = previousBestScore !== undefined && score > previousBestScore;
 
@@ -80,7 +81,12 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
           <View style={styles.statRow}>
             <Text style={styles.statRowLabel}>Form Accuracy</Text>
             <View style={styles.statRowValue}>
-              <View style={[styles.progressBar, { width: '100%', backgroundColor: '#E0E0E0' }]}>
+              <View
+                style={[
+                  styles.progressBar,
+                  { width: '100%', backgroundColor: '#E0E0E0' },
+                ]}
+              >
                 <View
                   style={[
                     styles.progressFill,
@@ -88,7 +94,9 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
                   ]}
                 />
               </View>
-              <Text style={[styles.percentage, { color: formColor }]}>{formAccuracy}%</Text>
+              <Text style={[styles.percentage, { color: formColor }]}>
+                {formAccuracy}%
+              </Text>
             </View>
           </View>
 
@@ -110,12 +118,18 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
         {/* Feedback Section */}
         <View style={styles.feedbackSection}>
           <Text style={styles.feedbackTitle}>Performance Feedback</Text>
-          {score >= 80 && <Text style={styles.feedbackText}>✨ Excellent form and execution!</Text>}
+          {score >= 80 && (
+            <Text style={styles.feedbackText}>✨ Excellent form and execution!</Text>
+          )}
           {score >= 60 && score < 80 && (
-            <Text style={styles.feedbackText}>👍 Good effort! Focus on maintaining form.</Text>
+            <Text style={styles.feedbackText}>
+              👍 Good effort! Focus on maintaining form.
+            </Text>
           )}
           {score < 60 && (
-            <Text style={styles.feedbackText}>💪 Keep practicing! Your form will improve.</Text>
+            <Text style={styles.feedbackText}>
+              💪 Keep practicing! Your form will improve.
+            </Text>
           )}
           {targetReps && reps >= targetReps && (
             <Text style={styles.feedbackText}>🎯 Target reps achieved!</Text>
@@ -124,7 +138,8 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
 
         {/* Note about v1.1 features */}
         <Text style={styles.versionNote}>
-          Advanced analytics (joint angle analysis, movement quality scoring) coming in v1.1
+          Advanced analytics (joint angle analysis, movement quality scoring) coming in
+          v1.1
         </Text>
       </View>
     </ScrollView>

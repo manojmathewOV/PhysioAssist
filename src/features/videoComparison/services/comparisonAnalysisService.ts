@@ -180,7 +180,14 @@ export class ComparisonAnalysisService {
 
     // Fixed: Use multiple joints to detect phases, not just leftElbow
     // This works for all exercise types (shoulder, knee, elbow)
-    const primaryJoints = ['leftElbow', 'rightElbow', 'leftKnee', 'rightKnee', 'leftShoulder', 'rightShoulder'];
+    const primaryJoints = [
+      'leftElbow',
+      'rightElbow',
+      'leftKnee',
+      'rightKnee',
+      'leftShoulder',
+      'rightShoulder',
+    ];
 
     for (let i = 1; i < poses.length - 1; i++) {
       // Check for peaks/valleys across any primary joint
@@ -311,7 +318,9 @@ export class ComparisonAnalysisService {
     // Exercise-specific recommendations
     // Fixed: Use bilateral joint names (leftKnee, rightKnee, leftElbow, rightElbow)
     if (exerciseType === 'squat') {
-      const kneeDeviation = angleDeviations.find((d) => d.joint === 'leftKnee' || d.joint === 'rightKnee');
+      const kneeDeviation = angleDeviations.find(
+        (d) => d.joint === 'leftKnee' || d.joint === 'rightKnee'
+      );
       if (kneeDeviation && kneeDeviation.userAngle > 100) {
         recommendations.push({
           type: 'range',
@@ -322,7 +331,9 @@ export class ComparisonAnalysisService {
       }
     } else if (exerciseType === 'bicep_curl') {
       // Check for incomplete range of motion in bicep curls
-      const elbowDeviation = angleDeviations.find((d) => d.joint === 'leftElbow' || d.joint === 'rightElbow');
+      const elbowDeviation = angleDeviations.find(
+        (d) => d.joint === 'leftElbow' || d.joint === 'rightElbow'
+      );
       if (elbowDeviation) {
         // Check if user's range is significantly less than reference
         const rangeRatio =

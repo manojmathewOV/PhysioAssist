@@ -2,7 +2,10 @@
  * DeviceHealthMonitor Unit Tests
  */
 
-import { DeviceHealthMonitor, deviceHealthMonitor } from '../services/deviceHealthMonitor';
+import {
+  DeviceHealthMonitor,
+  deviceHealthMonitor,
+} from '../services/deviceHealthMonitor';
 
 describe('DeviceHealthMonitor', () => {
   let monitor: DeviceHealthMonitor;

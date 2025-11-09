@@ -90,7 +90,9 @@ export class YouTubeQuotaManager {
   /**
    * Check if quota is available for operation
    */
-  async isAvailable(operation: 'search' | 'videoDetails' | 'videoDownload'): Promise<boolean> {
+  async isAvailable(
+    operation: 'search' | 'videoDetails' | 'videoDownload'
+  ): Promise<boolean> {
     // Check circuit breaker
     if (this.circuitOpen) {
       if (Date.now() < this.circuitOpenUntil) {
@@ -117,7 +119,9 @@ export class YouTubeQuotaManager {
   /**
    * Record quota usage
    */
-  async recordUsage(operation: 'search' | 'videoDetails' | 'videoDownload'): Promise<void> {
+  async recordUsage(
+    operation: 'search' | 'videoDetails' | 'videoDownload'
+  ): Promise<void> {
     const status = await this.getStatus();
     const cost = this.COSTS[operation];
 
@@ -204,7 +208,9 @@ export class YouTubeQuotaManager {
     tomorrow.setUTCHours(24, 0, 0, 0);
     this.circuitOpenUntil = tomorrow.getTime();
 
-    console.error('[QuotaManager] Circuit breaker OPEN - blocking YouTube API calls until quota reset');
+    console.error(
+      '[QuotaManager] Circuit breaker OPEN - blocking YouTube API calls until quota reset'
+    );
   }
 
   /**
@@ -232,7 +238,9 @@ export class YouTubeQuotaManager {
   private async saveAlert(alert: QuotaAlert): Promise<void> {
     try {
       const stored = await EncryptedStorage.getItem('youtube_quota_alerts');
-      const alerts: Array<QuotaAlert & { timestamp: number }> = stored ? JSON.parse(stored) : [];
+      const alerts: Array<QuotaAlert & { timestamp: number }> = stored
+        ? JSON.parse(stored)
+        : [];
 
       alerts.push({
         ...alert,
@@ -242,7 +250,10 @@ export class YouTubeQuotaManager {
       // Keep last 100 alerts
       const recentAlerts = alerts.slice(-100);
 
-      await EncryptedStorage.setItem('youtube_quota_alerts', JSON.stringify(recentAlerts));
+      await EncryptedStorage.setItem(
+        'youtube_quota_alerts',
+        JSON.stringify(recentAlerts)
+      );
     } catch (error) {
       console.error('[QuotaManager] Failed to save alert:', error);
     }

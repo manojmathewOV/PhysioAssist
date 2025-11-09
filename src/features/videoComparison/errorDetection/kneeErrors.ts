@@ -301,10 +301,14 @@ export function detectPosteriorPelvicTilt(
   };
 
   // Calculate trunk angle (hip-to-shoulder relative to vertical)
-  const userTrunkAngle =
-    Math.abs(Math.atan2(userShoulderMid.x - userHipMid.x, userHipMid.y - userShoulderMid.y) * (180 / Math.PI));
-  const refTrunkAngle =
-    Math.abs(Math.atan2(refShoulderMid.x - refHipMid.x, refHipMid.y - refShoulderMid.y) * (180 / Math.PI));
+  const userTrunkAngle = Math.abs(
+    Math.atan2(userShoulderMid.x - userHipMid.x, userHipMid.y - userShoulderMid.y) *
+      (180 / Math.PI)
+  );
+  const refTrunkAngle = Math.abs(
+    Math.atan2(refShoulderMid.x - refHipMid.x, refHipMid.y - refShoulderMid.y) *
+      (180 / Math.PI)
+  );
 
   const tiltDifference = Math.abs(userTrunkAngle - refTrunkAngle);
 

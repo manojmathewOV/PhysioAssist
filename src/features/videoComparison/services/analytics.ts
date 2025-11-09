@@ -220,7 +220,10 @@ export class AnalyticsService {
   }
 
   trackLiveFeedbackGiven(feedbackType: string, priority: string): void {
-    this.trackEvent(VideoComparisonEvents.LIVE_FEEDBACK_GIVEN, { feedbackType, priority });
+    this.trackEvent(VideoComparisonEvents.LIVE_FEEDBACK_GIVEN, {
+      feedbackType,
+      priority,
+    });
   }
 
   // ========== Performance Events ==========
@@ -231,12 +234,18 @@ export class AnalyticsService {
 
   trackThermalThrottle(state: string): void {
     telemetryService.trackThermalThrottle(state);
-    this.trackEvent(VideoComparisonEvents.THERMAL_THROTTLE, { state, timestamp: Date.now() });
+    this.trackEvent(VideoComparisonEvents.THERMAL_THROTTLE, {
+      state,
+      timestamp: Date.now(),
+    });
   }
 
   trackMemoryWarning(action: string): void {
     telemetryService.trackMemoryWarning(action);
-    this.trackEvent(VideoComparisonEvents.MEMORY_WARNING, { action, timestamp: Date.now() });
+    this.trackEvent(VideoComparisonEvents.MEMORY_WARNING, {
+      action,
+      timestamp: Date.now(),
+    });
   }
 
   trackFrameDrop(count: number): void {

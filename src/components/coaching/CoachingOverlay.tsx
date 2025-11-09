@@ -10,13 +10,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, Animated, Platform } from 'react-native';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import { Svg, Circle, Path } from 'react-native-svg';
 import { Canvas, Circle as SkiaCircle } from '@shopify/react-native-skia';
@@ -50,11 +44,7 @@ const CoachingOverlay: React.FC<CoachingOverlayProps> = ({
   const hasReachedTarget = useRef(false);
 
   // Get coaching instruction
-  const coaching = getCoachingInstruction(
-    currentAngle,
-    targetAngle,
-    exerciseType
-  );
+  const coaching = getCoachingInstruction(currentAngle, targetAngle, exerciseType);
 
   // Animate in/out
   useEffect(() => {
@@ -164,9 +154,7 @@ const CoachingOverlay: React.FC<CoachingOverlayProps> = ({
             <Text style={[styles.angleValue, isComplete && styles.angleValueSuccess]}>
               {Math.round(currentAngle)}°
             </Text>
-            <Text style={styles.angleLabel}>
-              of {targetAngle}°
-            </Text>
+            <Text style={styles.angleLabel}>of {targetAngle}°</Text>
           </View>
         </View>
       </View>
@@ -174,10 +162,7 @@ const CoachingOverlay: React.FC<CoachingOverlayProps> = ({
       {/* Coaching Message */}
       <View style={styles.coachingContainer}>
         <Animated.Text
-          style={[
-            styles.coachingText,
-            isComplete && styles.coachingTextSuccess,
-          ]}
+          style={[styles.coachingText, isComplete && styles.coachingTextSuccess]}
         >
           {coaching.visual}
         </Animated.Text>
@@ -211,7 +196,8 @@ const CoachingOverlay: React.FC<CoachingOverlayProps> = ({
       {showTechnicalInfo && (
         <View style={styles.technicalInfo}>
           <Text style={styles.technicalText}>
-            Current: {currentAngle.toFixed(1)}° | Target: {targetAngle}° | Progress: {progress.toFixed(1)}%
+            Current: {currentAngle.toFixed(1)}° | Target: {targetAngle}° | Progress:{' '}
+            {progress.toFixed(1)}%
           </Text>
         </View>
       )}
@@ -283,10 +269,7 @@ interface MilestoneIndicatorProps {
   reached: boolean;
 }
 
-const MilestoneIndicator: React.FC<MilestoneIndicatorProps> = ({
-  label,
-  reached,
-}) => {
+const MilestoneIndicator: React.FC<MilestoneIndicatorProps> = ({ label, reached }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -314,12 +297,7 @@ const MilestoneIndicator: React.FC<MilestoneIndicatorProps> = ({
         { transform: [{ scale: scaleAnim }] },
       ]}
     >
-      <Text
-        style={[
-          styles.milestoneText,
-          reached && styles.milestoneTextReached,
-        ]}
-      >
+      <Text style={[styles.milestoneText, reached && styles.milestoneTextReached]}>
         {reached ? '✓' : label}
       </Text>
     </Animated.View>

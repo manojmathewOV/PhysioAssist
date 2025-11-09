@@ -104,8 +104,12 @@ function generateCameraFrame(width, height, scenario, timestamp) {
 
     // RGB values (simulating skin tones in center, background elsewhere)
     frame[i] = Math.floor((200 * intensity + 50 * seed) * (0.95 + Math.random() * 0.1)); // R
-    frame[i + 1] = Math.floor((180 * intensity + 40 * seed) * (0.95 + Math.random() * 0.1)); // G
-    frame[i + 2] = Math.floor((160 * intensity + 30 * seed) * (0.95 + Math.random() * 0.1)); // B
+    frame[i + 1] = Math.floor(
+      (180 * intensity + 40 * seed) * (0.95 + Math.random() * 0.1)
+    ); // G
+    frame[i + 2] = Math.floor(
+      (160 * intensity + 30 * seed) * (0.95 + Math.random() * 0.1)
+    ); // B
   }
 
   return frame;
@@ -116,10 +120,23 @@ function generateCameraFrame(width, height, scenario, timestamp) {
  */
 function generatePoseLandmarks(scenario, timestamp, noiseLevel) {
   const keypointNames = [
-    'nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear',
-    'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow',
-    'left_wrist', 'right_wrist', 'left_hip', 'right_hip',
-    'left_knee', 'right_knee', 'left_ankle', 'right_ankle',
+    'nose',
+    'left_eye',
+    'right_eye',
+    'left_ear',
+    'right_ear',
+    'left_shoulder',
+    'right_shoulder',
+    'left_elbow',
+    'right_elbow',
+    'left_wrist',
+    'right_wrist',
+    'left_hip',
+    'right_hip',
+    'left_knee',
+    'right_knee',
+    'left_ankle',
+    'right_ankle',
   ];
 
   const landmarks = [];
@@ -131,12 +148,18 @@ function generatePoseLandmarks(scenario, timestamp, noiseLevel) {
       // Static standing pose
       return {
         nose: [0.5, 0.2],
-        left_shoulder: [0.4, 0.35], right_shoulder: [0.6, 0.35],
-        left_elbow: [0.3, 0.5], right_elbow: [0.7, 0.5],
-        left_wrist: [0.25, 0.65], right_wrist: [0.75, 0.65],
-        left_hip: [0.4, 0.6], right_hip: [0.6, 0.6],
-        left_knee: [0.4, 0.8], right_knee: [0.6, 0.8],
-        left_ankle: [0.4, 0.95], right_ankle: [0.6, 0.95],
+        left_shoulder: [0.4, 0.35],
+        right_shoulder: [0.6, 0.35],
+        left_elbow: [0.3, 0.5],
+        right_elbow: [0.7, 0.5],
+        left_wrist: [0.25, 0.65],
+        right_wrist: [0.75, 0.65],
+        left_hip: [0.4, 0.6],
+        right_hip: [0.6, 0.6],
+        left_knee: [0.4, 0.8],
+        right_knee: [0.6, 0.8],
+        left_ankle: [0.4, 0.95],
+        right_ankle: [0.6, 0.95],
       };
     },
 
@@ -145,14 +168,19 @@ function generatePoseLandmarks(scenario, timestamp, noiseLevel) {
       const curlProgress = Math.sin(t * 2) * 0.5 + 0.5; // 0-1 oscillation
       return {
         nose: [0.5, 0.2],
-        left_shoulder: [0.4, 0.35], right_shoulder: [0.6, 0.35],
-        left_elbow: [0.3, 0.5], right_elbow: [0.7, 0.5],
+        left_shoulder: [0.4, 0.35],
+        right_shoulder: [0.6, 0.35],
+        left_elbow: [0.3, 0.5],
+        right_elbow: [0.7, 0.5],
         // Right arm curls up and down
         left_wrist: [0.25, 0.65],
         right_wrist: [0.65 + curlProgress * 0.05, 0.4 - curlProgress * 0.2],
-        left_hip: [0.4, 0.6], right_hip: [0.6, 0.6],
-        left_knee: [0.4, 0.8], right_knee: [0.6, 0.8],
-        left_ankle: [0.4, 0.95], right_ankle: [0.6, 0.95],
+        left_hip: [0.4, 0.6],
+        right_hip: [0.6, 0.6],
+        left_knee: [0.4, 0.8],
+        right_knee: [0.6, 0.8],
+        left_ankle: [0.4, 0.95],
+        right_ankle: [0.6, 0.95],
       };
     },
 
@@ -162,12 +190,18 @@ function generatePoseLandmarks(scenario, timestamp, noiseLevel) {
       const depth = squatProgress * 0.2;
       return {
         nose: [0.5, 0.2 + depth],
-        left_shoulder: [0.4, 0.35 + depth], right_shoulder: [0.6, 0.35 + depth],
-        left_elbow: [0.3, 0.5 + depth], right_elbow: [0.7, 0.5 + depth],
-        left_wrist: [0.25, 0.65 + depth], right_wrist: [0.75, 0.65 + depth],
-        left_hip: [0.4, 0.6 + depth], right_hip: [0.6, 0.6 + depth],
-        left_knee: [0.4, 0.75 + depth * 0.5], right_knee: [0.6, 0.75 + depth * 0.5],
-        left_ankle: [0.4, 0.95], right_ankle: [0.6, 0.95],
+        left_shoulder: [0.4, 0.35 + depth],
+        right_shoulder: [0.6, 0.35 + depth],
+        left_elbow: [0.3, 0.5 + depth],
+        right_elbow: [0.7, 0.5 + depth],
+        left_wrist: [0.25, 0.65 + depth],
+        right_wrist: [0.75, 0.65 + depth],
+        left_hip: [0.4, 0.6 + depth],
+        right_hip: [0.6, 0.6 + depth],
+        left_knee: [0.4, 0.75 + depth * 0.5],
+        right_knee: [0.6, 0.75 + depth * 0.5],
+        left_ankle: [0.4, 0.95],
+        right_ankle: [0.6, 0.95],
       };
     },
 
@@ -176,14 +210,18 @@ function generatePoseLandmarks(scenario, timestamp, noiseLevel) {
       const phase = t * 1.5;
       return {
         nose: [0.5 + Math.sin(phase) * 0.1, 0.2 + Math.cos(phase) * 0.05],
-        left_shoulder: [0.4, 0.35], right_shoulder: [0.6, 0.35],
+        left_shoulder: [0.4, 0.35],
+        right_shoulder: [0.6, 0.35],
         left_elbow: [0.3 + Math.sin(phase * 2) * 0.1, 0.5],
         right_elbow: [0.7 + Math.cos(phase * 2) * 0.1, 0.5],
         left_wrist: [0.25 + Math.sin(phase * 3) * 0.15, 0.65],
         right_wrist: [0.75 + Math.cos(phase * 3) * 0.15, 0.65],
-        left_hip: [0.4, 0.6], right_hip: [0.6, 0.6],
-        left_knee: [0.4, 0.8], right_knee: [0.6, 0.8],
-        left_ankle: [0.4, 0.95], right_ankle: [0.6, 0.95],
+        left_hip: [0.4, 0.6],
+        right_hip: [0.6, 0.6],
+        left_knee: [0.4, 0.8],
+        right_knee: [0.6, 0.8],
+        left_ankle: [0.4, 0.95],
+        right_ankle: [0.6, 0.95],
       };
     },
   };
@@ -240,7 +278,7 @@ function simulatePreprocessing(frame, config) {
   const startTime = performance.now();
 
   // Simulate resize operation (1920x1080 -> 192x192)
-  const resizeFactor = (frame.length / 3) / (192 * 192);
+  const resizeFactor = frame.length / 3 / (192 * 192);
 
   // Simulate normalization (Uint8 -> Float32, 0-255 -> 0-1)
   const normalized = new Float32Array(192 * 192 * 3);
@@ -258,7 +296,9 @@ function simulatePreprocessing(frame, config) {
     actualTime,
     simulatedTime: simulateProcessingTime(
       config.performance.preprocessingTime.min +
-      (config.performance.preprocessingTime.max - config.performance.preprocessingTime.min) / 2
+        (config.performance.preprocessingTime.max -
+          config.performance.preprocessingTime.min) /
+          2
     ),
   };
 }
@@ -299,7 +339,9 @@ function simulateFrameProcessorOverhead(config) {
   // Simulate JSI overhead (very minimal)
   return simulateProcessingTime(
     config.performance.frameProcessorOverhead.min +
-    (config.performance.frameProcessorOverhead.max - config.performance.frameProcessorOverhead.min) / 2
+      (config.performance.frameProcessorOverhead.max -
+        config.performance.frameProcessorOverhead.min) /
+        2
   );
 }
 
@@ -411,13 +453,14 @@ function analyzeConfidenceThresholdSensitivity(config) {
   const results = [];
 
   // Run 100 frames for each threshold
-  thresholds.forEach(threshold => {
+  thresholds.forEach((threshold) => {
     let detectedFrames = 0;
     let avgConfidence = 0;
 
     for (let i = 0; i < 100; i++) {
       const landmarks = generatePoseLandmarks('standing', i * 33, config.test.noiseLevel);
-      const confidence = landmarks.reduce((sum, l) => sum + l.visibility, 0) / landmarks.length;
+      const confidence =
+        landmarks.reduce((sum, l) => sum + l.visibility, 0) / landmarks.length;
 
       if (confidence >= threshold) {
         detectedFrames++;
@@ -431,12 +474,18 @@ function analyzeConfidenceThresholdSensitivity(config) {
     results.push({ threshold, detectionRate, avgConfidence });
 
     const bar = '█'.repeat(Math.floor(detectionRate / 2));
-    console.log(`  ${threshold.toFixed(1)}: ${bar} ${detectionRate.toFixed(1)}% detected, avg conf: ${avgConfidence.toFixed(3)}`);
+    console.log(
+      `  ${threshold.toFixed(1)}: ${bar} ${detectionRate.toFixed(1)}% detected, avg conf: ${avgConfidence.toFixed(3)}`
+    );
   });
 
   // Find optimal threshold (highest detection rate with reasonable confidence)
-  const optimal = results.find(r => r.detectionRate > 95 && r.avgConfidence > 0.7) || results[results.length - 1];
-  console.log(`\n  ✅ Optimal threshold: ${optimal.threshold.toFixed(1)} (${optimal.detectionRate.toFixed(1)}% detection, ${optimal.avgConfidence.toFixed(3)} confidence)`);
+  const optimal =
+    results.find((r) => r.detectionRate > 95 && r.avgConfidence > 0.7) ||
+    results[results.length - 1];
+  console.log(
+    `\n  ✅ Optimal threshold: ${optimal.threshold.toFixed(1)} (${optimal.detectionRate.toFixed(1)}% detection, ${optimal.avgConfidence.toFixed(3)} confidence)`
+  );
 
   return results;
 }
@@ -451,7 +500,7 @@ function analyzeFPSSensitivity(config) {
   const fpsSettings = [15, 24, 30, 60];
   const results = [];
 
-  fpsSettings.forEach(fps => {
+  fpsSettings.forEach((fps) => {
     const frameTime = 1000 / fps;
     const pipelineResult = simulateCompletePipeline('bicep_curl', 0, config);
     const canAchieve = pipelineResult.performance.total.simulated < frameTime;
@@ -462,11 +511,15 @@ function analyzeFPSSensitivity(config) {
 
     const status = canAchieve ? '✅' : '❌';
     const bar = '█'.repeat(Math.max(0, Math.floor(headroomPercent / 2)));
-    console.log(`  ${fps} FPS: ${status} ${bar} ${headroomPercent.toFixed(1)}% headroom (${headroom.toFixed(2)}ms)`);
+    console.log(
+      `  ${fps} FPS: ${status} ${bar} ${headroomPercent.toFixed(1)}% headroom (${headroom.toFixed(2)}ms)`
+    );
   });
 
-  const maxAchievable = results.filter(r => r.canAchieve).pop();
-  console.log(`\n  ✅ Maximum achievable FPS: ${maxAchievable ? maxAchievable.fps : '<15'} FPS`);
+  const maxAchievable = results.filter((r) => r.canAchieve).pop();
+  console.log(
+    `\n  ✅ Maximum achievable FPS: ${maxAchievable ? maxAchievable.fps : '<15'} FPS`
+  );
 
   return results;
 }
@@ -487,7 +540,7 @@ function analyzeResolutionSensitivity(config) {
 
   const results = [];
 
-  resolutions.forEach(res => {
+  resolutions.forEach((res) => {
     const tempConfig = { ...config, camera: { ...config.camera, resolution: res } };
 
     // Simulate preprocessing time (scales with input resolution)
@@ -496,7 +549,8 @@ function analyzeResolutionSensitivity(config) {
     const preprocessTime = config.performance.preprocessingTime.max * scaleFactor;
 
     // Inference time doesn't change (fixed model input size)
-    const inferenceTime = (config.performance.inferenceTime.min + config.performance.inferenceTime.max) / 2;
+    const inferenceTime =
+      (config.performance.inferenceTime.min + config.performance.inferenceTime.max) / 2;
 
     const totalTime = preprocessTime + inferenceTime + 1; // +1ms for overhead
     const maxFPS = 1000 / totalTime;
@@ -504,7 +558,9 @@ function analyzeResolutionSensitivity(config) {
     results.push({ ...res, preprocessTime, totalTime, maxFPS });
 
     const bar = '█'.repeat(Math.floor(maxFPS / 2));
-    console.log(`  ${res.name.padEnd(6)}: ${bar} ${maxFPS.toFixed(1)} FPS max (${preprocessTime.toFixed(2)}ms preprocess)`);
+    console.log(
+      `  ${res.name.padEnd(6)}: ${bar} ${maxFPS.toFixed(1)} FPS max (${preprocessTime.toFixed(2)}ms preprocess)`
+    );
   });
 
   console.log(`\n  ✅ Recommended: 1080p (good balance of quality and performance)`);
@@ -546,7 +602,7 @@ function runComprehensiveSimulation(config) {
   };
 
   // Test each scenario
-  config.test.scenarios.forEach(scenario => {
+  config.test.scenarios.forEach((scenario) => {
     console.log(`\n📱 Simulating Scenario: ${scenario}`);
     console.log('─'.repeat(70));
 
@@ -575,10 +631,22 @@ function runComprehensiveSimulation(config) {
       scenarioResults.frames.push(result);
 
       // Update stats
-      scenarioResults.stats.minFPS = Math.min(scenarioResults.stats.minFPS, result.performance.fps);
-      scenarioResults.stats.maxFPS = Math.max(scenarioResults.stats.maxFPS, result.performance.fps);
-      scenarioResults.stats.minConfidence = Math.min(scenarioResults.stats.minConfidence, result.confidence);
-      scenarioResults.stats.maxConfidence = Math.max(scenarioResults.stats.maxConfidence, result.confidence);
+      scenarioResults.stats.minFPS = Math.min(
+        scenarioResults.stats.minFPS,
+        result.performance.fps
+      );
+      scenarioResults.stats.maxFPS = Math.max(
+        scenarioResults.stats.maxFPS,
+        result.performance.fps
+      );
+      scenarioResults.stats.minConfidence = Math.min(
+        scenarioResults.stats.minConfidence,
+        result.confidence
+      );
+      scenarioResults.stats.maxConfidence = Math.max(
+        scenarioResults.stats.maxConfidence,
+        result.confidence
+      );
 
       // Show progress every 10%
       if (i % Math.floor(framesPerScenario / 10) === 0) {
@@ -592,39 +660,77 @@ function runComprehensiveSimulation(config) {
     console.log(''); // New line after progress
 
     // Calculate averages
-    scenarioResults.stats.avgFPS = scenarioResults.frames.reduce((sum, f) => sum + f.performance.fps, 0) / scenarioResults.frames.length;
-    scenarioResults.stats.avgConfidence = scenarioResults.frames.reduce((sum, f) => sum + f.confidence, 0) / scenarioResults.frames.length;
-    scenarioResults.stats.avgInferenceTime = scenarioResults.frames.reduce((sum, f) => sum + f.performance.inference.simulated, 0) / scenarioResults.frames.length;
-    scenarioResults.stats.avgPreprocessingTime = scenarioResults.frames.reduce((sum, f) => sum + f.performance.preprocessing.simulated, 0) / scenarioResults.frames.length;
-    scenarioResults.stats.avgTotalTime = scenarioResults.frames.reduce((sum, f) => sum + f.performance.total.simulated, 0) / scenarioResults.frames.length;
+    scenarioResults.stats.avgFPS =
+      scenarioResults.frames.reduce((sum, f) => sum + f.performance.fps, 0) /
+      scenarioResults.frames.length;
+    scenarioResults.stats.avgConfidence =
+      scenarioResults.frames.reduce((sum, f) => sum + f.confidence, 0) /
+      scenarioResults.frames.length;
+    scenarioResults.stats.avgInferenceTime =
+      scenarioResults.frames.reduce(
+        (sum, f) => sum + f.performance.inference.simulated,
+        0
+      ) / scenarioResults.frames.length;
+    scenarioResults.stats.avgPreprocessingTime =
+      scenarioResults.frames.reduce(
+        (sum, f) => sum + f.performance.preprocessing.simulated,
+        0
+      ) / scenarioResults.frames.length;
+    scenarioResults.stats.avgTotalTime =
+      scenarioResults.frames.reduce((sum, f) => sum + f.performance.total.simulated, 0) /
+      scenarioResults.frames.length;
 
     // Display stats
     console.log(`\n  📊 Results:`);
-    console.log(`     FPS: ${scenarioResults.stats.avgFPS.toFixed(1)} avg (${scenarioResults.stats.minFPS.toFixed(1)} - ${scenarioResults.stats.maxFPS.toFixed(1)})`);
-    console.log(`     Confidence: ${scenarioResults.stats.avgConfidence.toFixed(3)} avg (${scenarioResults.stats.minConfidence.toFixed(3)} - ${scenarioResults.stats.maxConfidence.toFixed(3)})`);
-    console.log(`     Inference: ${scenarioResults.stats.avgInferenceTime.toFixed(2)}ms avg`);
-    console.log(`     Preprocessing: ${scenarioResults.stats.avgPreprocessingTime.toFixed(2)}ms avg`);
-    console.log(`     Total Pipeline: ${scenarioResults.stats.avgTotalTime.toFixed(2)}ms avg`);
+    console.log(
+      `     FPS: ${scenarioResults.stats.avgFPS.toFixed(1)} avg (${scenarioResults.stats.minFPS.toFixed(1)} - ${scenarioResults.stats.maxFPS.toFixed(1)})`
+    );
+    console.log(
+      `     Confidence: ${scenarioResults.stats.avgConfidence.toFixed(3)} avg (${scenarioResults.stats.minConfidence.toFixed(3)} - ${scenarioResults.stats.maxConfidence.toFixed(3)})`
+    );
+    console.log(
+      `     Inference: ${scenarioResults.stats.avgInferenceTime.toFixed(2)}ms avg`
+    );
+    console.log(
+      `     Preprocessing: ${scenarioResults.stats.avgPreprocessingTime.toFixed(2)}ms avg`
+    );
+    console.log(
+      `     Total Pipeline: ${scenarioResults.stats.avgTotalTime.toFixed(2)}ms avg`
+    );
 
     // Check if meets targets
-    const meetsInferenceTarget = scenarioResults.stats.avgInferenceTime <= config.performance.inferenceTime.max;
-    const meetsFPSTarget = scenarioResults.stats.avgFPS >= config.performance.renderingFPS.min;
+    const meetsInferenceTarget =
+      scenarioResults.stats.avgInferenceTime <= config.performance.inferenceTime.max;
+    const meetsFPSTarget =
+      scenarioResults.stats.avgFPS >= config.performance.renderingFPS.min;
 
     console.log(`\n  ✅ Performance Targets:`);
-    console.log(`     Inference Time: ${meetsInferenceTarget ? '✅ PASS' : '❌ FAIL'} (${scenarioResults.stats.avgInferenceTime.toFixed(2)}ms / ${config.performance.inferenceTime.max}ms target)`);
-    console.log(`     FPS Target: ${meetsFPSTarget ? '✅ PASS' : '❌ FAIL'} (${scenarioResults.stats.avgFPS.toFixed(1)} / ${config.performance.renderingFPS.min} FPS target)`);
+    console.log(
+      `     Inference Time: ${meetsInferenceTarget ? '✅ PASS' : '❌ FAIL'} (${scenarioResults.stats.avgInferenceTime.toFixed(2)}ms / ${config.performance.inferenceTime.max}ms target)`
+    );
+    console.log(
+      `     FPS Target: ${meetsFPSTarget ? '✅ PASS' : '❌ FAIL'} (${scenarioResults.stats.avgFPS.toFixed(1)} / ${config.performance.renderingFPS.min} FPS target)`
+    );
 
     results.scenarios[scenario] = scenarioResults;
     results.overall.framesProcessed += scenarioResults.frames.length;
   });
 
   // Calculate overall stats
-  const allFrames = Object.values(results.scenarios).flatMap(s => s.frames);
-  results.overall.avgFPS = allFrames.reduce((sum, f) => sum + f.performance.fps, 0) / allFrames.length;
-  results.overall.avgConfidence = allFrames.reduce((sum, f) => sum + f.confidence, 0) / allFrames.length;
-  results.overall.avgInferenceTime = allFrames.reduce((sum, f) => sum + f.performance.inference.simulated, 0) / allFrames.length;
-  results.overall.avgPreprocessingTime = allFrames.reduce((sum, f) => sum + f.performance.preprocessing.simulated, 0) / allFrames.length;
-  results.overall.avgTotalTime = allFrames.reduce((sum, f) => sum + f.performance.total.simulated, 0) / allFrames.length;
+  const allFrames = Object.values(results.scenarios).flatMap((s) => s.frames);
+  results.overall.avgFPS =
+    allFrames.reduce((sum, f) => sum + f.performance.fps, 0) / allFrames.length;
+  results.overall.avgConfidence =
+    allFrames.reduce((sum, f) => sum + f.confidence, 0) / allFrames.length;
+  results.overall.avgInferenceTime =
+    allFrames.reduce((sum, f) => sum + f.performance.inference.simulated, 0) /
+    allFrames.length;
+  results.overall.avgPreprocessingTime =
+    allFrames.reduce((sum, f) => sum + f.performance.preprocessing.simulated, 0) /
+    allFrames.length;
+  results.overall.avgTotalTime =
+    allFrames.reduce((sum, f) => sum + f.performance.total.simulated, 0) /
+    allFrames.length;
 
   return results;
 }
@@ -639,7 +745,9 @@ async function main() {
   console.log(`  CPU: ${SIMULATION_CONFIG.device.cpu}`);
   console.log(`  GPU: ${SIMULATION_CONFIG.device.gpu}`);
   console.log(`  Memory: ${SIMULATION_CONFIG.device.memory}MB`);
-  console.log(`\n📷 Camera: ${SIMULATION_CONFIG.camera.resolution.width}x${SIMULATION_CONFIG.camera.resolution.height} @ ${SIMULATION_CONFIG.camera.fps} FPS`);
+  console.log(
+    `\n📷 Camera: ${SIMULATION_CONFIG.camera.resolution.width}x${SIMULATION_CONFIG.camera.resolution.height} @ ${SIMULATION_CONFIG.camera.fps} FPS`
+  );
   console.log(`🤖 Model: ${SIMULATION_CONFIG.model.name}`);
   console.log(`  Input: ${SIMULATION_CONFIG.model.inputShape.join('x')}`);
   console.log(`  Output: ${SIMULATION_CONFIG.model.outputShape.join('x')}`);
@@ -660,8 +768,12 @@ async function main() {
   console.log(`  Frames Processed: ${results.overall.framesProcessed}`);
   console.log(`  Average FPS: ${results.overall.avgFPS.toFixed(1)}`);
   console.log(`  Average Confidence: ${results.overall.avgConfidence.toFixed(3)}`);
-  console.log(`  Average Inference Time: ${results.overall.avgInferenceTime.toFixed(2)}ms`);
-  console.log(`  Average Preprocessing Time: ${results.overall.avgPreprocessingTime.toFixed(2)}ms`);
+  console.log(
+    `  Average Inference Time: ${results.overall.avgInferenceTime.toFixed(2)}ms`
+  );
+  console.log(
+    `  Average Preprocessing Time: ${results.overall.avgPreprocessingTime.toFixed(2)}ms`
+  );
   console.log(`  Average Total Time: ${results.overall.avgTotalTime.toFixed(2)}ms`);
 
   // Performance verdict
@@ -672,8 +784,12 @@ async function main() {
   console.log(`\n🏆 Performance Verdict:`);
   if (meetsAllTargets) {
     console.log(`  ✅ EXCELLENT - All performance targets met!`);
-    console.log(`  ✅ Inference: ${results.overall.avgInferenceTime.toFixed(2)}ms (target: <${SIMULATION_CONFIG.performance.inferenceTime.max}ms)`);
-    console.log(`  ✅ FPS: ${results.overall.avgFPS.toFixed(1)} (target: >${SIMULATION_CONFIG.performance.renderingFPS.min} FPS)`);
+    console.log(
+      `  ✅ Inference: ${results.overall.avgInferenceTime.toFixed(2)}ms (target: <${SIMULATION_CONFIG.performance.inferenceTime.max}ms)`
+    );
+    console.log(
+      `  ✅ FPS: ${results.overall.avgFPS.toFixed(1)} (target: >${SIMULATION_CONFIG.performance.renderingFPS.min} FPS)`
+    );
   } else {
     console.log(`  ⚠️ NEEDS OPTIMIZATION - Some targets not met`);
   }

@@ -60,7 +60,7 @@ export const FeedbackMessages_EN: LocalizedFeedbackMessages = {
   shoulder: {
     shoulderHiking: {
       title: 'Shoulder Hiking',
-      description: "Your shoulder is lifting toward your ear during the movement",
+      description: 'Your shoulder is lifting toward your ear during the movement',
       correction: "Keep your shoulder down and relaxed - don't shrug up toward your ear",
     },
     trunkLean: {
@@ -84,7 +84,8 @@ export const FeedbackMessages_EN: LocalizedFeedbackMessages = {
     kneeValgus: {
       title: 'Knee Valgus (Knees Caving In)',
       description: 'Your knees are caving inward - this increases injury risk',
-      correction: 'Push your knees outward - imagine spreading the floor apart with your feet',
+      correction:
+        'Push your knees outward - imagine spreading the floor apart with your feet',
     },
     heelLift: {
       title: 'Heels Lifting',
@@ -94,7 +95,8 @@ export const FeedbackMessages_EN: LocalizedFeedbackMessages = {
     posteriorPelvicTilt: {
       title: 'Butt Tuck',
       description: 'Your lower back is rounding (butt tucking under)',
-      correction: "Keep your chest up and maintain the natural curve in your lower back - don't tuck your tailbone",
+      correction:
+        "Keep your chest up and maintain the natural curve in your lower back - don't tuck your tailbone",
     },
     insufficientDepth: {
       title: 'Not Deep Enough',
@@ -107,7 +109,8 @@ export const FeedbackMessages_EN: LocalizedFeedbackMessages = {
     shoulderCompensation: {
       title: 'Shoulder Moving',
       description: 'Your shoulder/upper arm is moving during the curl',
-      correction: 'Keep your upper arm still and pinned to your side - only your forearm should move',
+      correction:
+        'Keep your upper arm still and pinned to your side - only your forearm should move',
     },
     incompleteExtension: {
       title: 'Not Fully Extending',
@@ -155,20 +158,24 @@ export const FeedbackMessages_ES: LocalizedFeedbackMessages = {
     internalRotation: {
       title: 'Rotación Interna del Hombro',
       description: 'Tu brazo está rotando hacia adentro (pulgar apuntando hacia abajo)',
-      correction: 'Rota tu brazo hacia afuera - mantén el pulgar apuntando hacia arriba o adelante',
+      correction:
+        'Rota tu brazo hacia afuera - mantén el pulgar apuntando hacia arriba o adelante',
     },
     incompleteROM: {
       title: 'Rango de Movimiento Incompleto',
       description: 'No estás alcanzando el rango completo de movimiento',
-      correction: 'Intenta levantar tu brazo más alto - apunta al ángulo objetivo mostrado',
+      correction:
+        'Intenta levantar tu brazo más alto - apunta al ángulo objetivo mostrado',
     },
   },
 
   knee: {
     kneeValgus: {
       title: 'Valgo de Rodilla (Rodillas Hacia Adentro)',
-      description: 'Tus rodillas se están doblando hacia adentro - esto aumenta el riesgo de lesión',
-      correction: 'Empuja tus rodillas hacia afuera - imagina separar el suelo con tus pies',
+      description:
+        'Tus rodillas se están doblando hacia adentro - esto aumenta el riesgo de lesión',
+      correction:
+        'Empuja tus rodillas hacia afuera - imagina separar el suelo con tus pies',
     },
     heelLift: {
       title: 'Talones Levantándose',
@@ -178,7 +185,8 @@ export const FeedbackMessages_ES: LocalizedFeedbackMessages = {
     posteriorPelvicTilt: {
       title: 'Inclinación del Trasero',
       description: 'Tu espalda baja se está redondeando (trasero metiéndose)',
-      correction: 'Mantén tu pecho arriba y la curva natural de tu espalda baja - no metas el coxis',
+      correction:
+        'Mantén tu pecho arriba y la curva natural de tu espalda baja - no metas el coxis',
     },
     insufficientDepth: {
       title: 'No Suficiente Profundidad',
@@ -191,17 +199,20 @@ export const FeedbackMessages_ES: LocalizedFeedbackMessages = {
     shoulderCompensation: {
       title: 'Hombro Moviéndose',
       description: 'Tu hombro/brazo superior se está moviendo durante el curl',
-      correction: 'Mantén tu brazo superior quieto y pegado a tu costado - solo tu antebrazo debe moverse',
+      correction:
+        'Mantén tu brazo superior quieto y pegado a tu costado - solo tu antebrazo debe moverse',
     },
     incompleteExtension: {
       title: 'No Extendiendo Completamente',
       description: 'No estás enderezando tu brazo completamente en la parte inferior',
-      correction: 'Extiende tu brazo completamente en la parte inferior de cada repetición',
+      correction:
+        'Extiende tu brazo completamente en la parte inferior de cada repetición',
     },
     wristDeviation: {
       title: 'Muñeca Doblada',
       description: 'Tu muñeca se está doblando durante el movimiento',
-      correction: 'Mantén tu muñeca recta y neutral - evita doblarla hacia arriba o abajo',
+      correction:
+        'Mantén tu muñeca recta y neutral - evita doblarla hacia arriba o abajo',
     },
   },
 
@@ -229,7 +240,9 @@ export const FeedbackMessages = FeedbackMessages_EN;
 /**
  * Get localized feedback messages
  */
-export function getLocalizedFeedbackMessages(locale: string = 'en'): LocalizedFeedbackMessages {
+export function getLocalizedFeedbackMessages(
+  locale: string = 'en'
+): LocalizedFeedbackMessages {
   switch (locale.toLowerCase().substring(0, 2)) {
     case 'es':
       return FeedbackMessages_ES;

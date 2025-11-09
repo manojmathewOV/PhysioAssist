@@ -35,7 +35,10 @@ const colors = {
 };
 
 const log = {
-  gate: (msg) => console.log(`\n${colors.cyan}${colors.bold}🚪 ${msg}${colors.reset}\n${'='.repeat(80)}\n`),
+  gate: (msg) =>
+    console.log(
+      `\n${colors.cyan}${colors.bold}🚪 ${msg}${colors.reset}\n${'='.repeat(80)}\n`
+    ),
   pass: (msg) => console.log(`${colors.green}✅ PASS: ${msg}${colors.reset}`),
   fail: (msg) => console.log(`${colors.red}❌ FAIL: ${msg}${colors.reset}`),
   info: (msg) => console.log(`${colors.blue}ℹ️  ${msg}${colors.reset}`),
@@ -44,11 +47,41 @@ const log = {
 
 // Gate results
 const gates = {
-  gate0: { name: 'GATE 0: Critical Fix', status: 'PENDING', criteria: [], passed: 0, total: 0 },
-  gate1: { name: 'GATE 1: Core Functionality', status: 'PENDING', criteria: [], passed: 0, total: 0 },
-  gate2: { name: 'GATE 2: Integration & Stability', status: 'PENDING', criteria: [], passed: 0, total: 0 },
-  gate3: { name: 'GATE 3: Production Readiness', status: 'PENDING', criteria: [], passed: 0, total: 0 },
-  gate4: { name: 'GATE 4: Advanced Profiling', status: 'PENDING', criteria: [], passed: 0, total: 0 },
+  gate0: {
+    name: 'GATE 0: Critical Fix',
+    status: 'PENDING',
+    criteria: [],
+    passed: 0,
+    total: 0,
+  },
+  gate1: {
+    name: 'GATE 1: Core Functionality',
+    status: 'PENDING',
+    criteria: [],
+    passed: 0,
+    total: 0,
+  },
+  gate2: {
+    name: 'GATE 2: Integration & Stability',
+    status: 'PENDING',
+    criteria: [],
+    passed: 0,
+    total: 0,
+  },
+  gate3: {
+    name: 'GATE 3: Production Readiness',
+    status: 'PENDING',
+    criteria: [],
+    passed: 0,
+    total: 0,
+  },
+  gate4: {
+    name: 'GATE 4: Advanced Profiling',
+    status: 'PENDING',
+    criteria: [],
+    passed: 0,
+    total: 0,
+  },
 };
 
 function addCriteria(gate, name, testFn) {
@@ -75,12 +108,18 @@ function evaluateGate(gate) {
 
   if (passRate === 100) {
     g.status = 'PASSED';
-    console.log(`\n${colors.green}${colors.bold}✅ ${g.name} PASSED (${g.passed}/${g.total})${colors.reset}\n`);
+    console.log(
+      `\n${colors.green}${colors.bold}✅ ${g.name} PASSED (${g.passed}/${g.total})${colors.reset}\n`
+    );
     return true;
   } else {
     g.status = 'FAILED';
-    console.log(`\n${colors.red}${colors.bold}❌ ${g.name} FAILED (${g.passed}/${g.total})${colors.reset}`);
-    console.log(`${colors.yellow}Cannot proceed to next gate until all criteria pass${colors.reset}\n`);
+    console.log(
+      `\n${colors.red}${colors.bold}❌ ${g.name} FAILED (${g.passed}/${g.total})${colors.reset}`
+    );
+    console.log(
+      `${colors.yellow}Cannot proceed to next gate until all criteria pass${colors.reset}\n`
+    );
     return false;
   }
 }
@@ -100,12 +139,17 @@ log.gate('GATE 0: CRITICAL FIX - Keypoint Mismatch');
 log.info('Validating keypoint indices in goniometerService.ts...');
 
 addCriteria('gate0', 'File exists: goniometerService.ts', () => {
-  const exists = fs.existsSync(path.join(__dirname, '../src/services/goniometerService.ts'));
+  const exists = fs.existsSync(
+    path.join(__dirname, '../src/services/goniometerService.ts')
+  );
   return { pass: exists, message: exists ? 'File found' : 'File not found' };
 });
 
 addCriteria('gate0', 'No invalid keypoint indices (>16)', () => {
-  const content = fs.readFileSync(path.join(__dirname, '../src/services/goniometerService.ts'), 'utf8');
+  const content = fs.readFileSync(
+    path.join(__dirname, '../src/services/goniometerService.ts'),
+    'utf8'
+  );
 
   // Check for invalid indices
   const invalidIndices = [];
@@ -114,7 +158,7 @@ addCriteria('gate0', 'No invalid keypoint indices (>16)', () => {
 
   while ((match = indexPattern.exec(content)) !== null) {
     const indices = [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
-    indices.forEach(idx => {
+    indices.forEach((idx) => {
       if (idx > 16) {
         invalidIndices.push(idx);
       }
@@ -122,18 +166,28 @@ addCriteria('gate0', 'No invalid keypoint indices (>16)', () => {
   }
 
   if (invalidIndices.length > 0) {
-    return { pass: false, message: `Found invalid indices: ${invalidIndices.join(', ')} (max: 16 for MoveNet)` };
+    return {
+      pass: false,
+      message: `Found invalid indices: ${invalidIndices.join(', ')} (max: 16 for MoveNet)`,
+    };
   }
 
   return { pass: true, message: 'All indices valid (0-16)' };
 });
 
 addCriteria('gate0', 'Knee joint indices correct for MoveNet', () => {
-  const content = fs.readFileSync(path.join(__dirname, '../src/services/goniometerService.ts'), 'utf8');
+  const content = fs.readFileSync(
+    path.join(__dirname, '../src/services/goniometerService.ts'),
+    'utf8'
+  );
 
   // Check for left_knee configuration
-  const leftKneeMatch = content.match(/['"']left_knee['"].*?indices:\s*\[(\d+),\s*(\d+),\s*(\d+)\]/);
-  const rightKneeMatch = content.match(/['"']right_knee['"].*?indices:\s*\[(\d+),\s*(\d+),\s*(\d+)\]/);
+  const leftKneeMatch = content.match(
+    /['"']left_knee['"].*?indices:\s*\[(\d+),\s*(\d+),\s*(\d+)\]/
+  );
+  const rightKneeMatch = content.match(
+    /['"']right_knee['"].*?indices:\s*\[(\d+),\s*(\d+),\s*(\d+)\]/
+  );
 
   if (!leftKneeMatch && !rightKneeMatch) {
     return { pass: false, message: 'Knee joint configurations not found' };
@@ -144,16 +198,30 @@ addCriteria('gate0', 'Knee joint indices correct for MoveNet', () => {
   const expectedRightKnee = [12, 14, 16];
 
   if (leftKneeMatch) {
-    const leftIndices = [parseInt(leftKneeMatch[1]), parseInt(leftKneeMatch[2]), parseInt(leftKneeMatch[3])];
+    const leftIndices = [
+      parseInt(leftKneeMatch[1]),
+      parseInt(leftKneeMatch[2]),
+      parseInt(leftKneeMatch[3]),
+    ];
     if (JSON.stringify(leftIndices) !== JSON.stringify(expectedLeftKnee)) {
-      return { pass: false, message: `left_knee indices ${JSON.stringify(leftIndices)} should be ${JSON.stringify(expectedLeftKnee)}` };
+      return {
+        pass: false,
+        message: `left_knee indices ${JSON.stringify(leftIndices)} should be ${JSON.stringify(expectedLeftKnee)}`,
+      };
     }
   }
 
   if (rightKneeMatch) {
-    const rightIndices = [parseInt(rightKneeMatch[1]), parseInt(rightKneeMatch[2]), parseInt(rightKneeMatch[3])];
+    const rightIndices = [
+      parseInt(rightKneeMatch[1]),
+      parseInt(rightKneeMatch[2]),
+      parseInt(rightKneeMatch[3]),
+    ];
     if (JSON.stringify(rightIndices) !== JSON.stringify(expectedRightKnee)) {
-      return { pass: false, message: `right_knee indices ${JSON.stringify(rightIndices)} should be ${JSON.stringify(expectedRightKnee)}` };
+      return {
+        pass: false,
+        message: `right_knee indices ${JSON.stringify(rightIndices)} should be ${JSON.stringify(expectedRightKnee)}`,
+      };
     }
   }
 
@@ -161,26 +229,47 @@ addCriteria('gate0', 'Knee joint indices correct for MoveNet', () => {
 });
 
 addCriteria('gate0', 'Elbow joint indices correct', () => {
-  const content = fs.readFileSync(path.join(__dirname, '../src/services/goniometerService.ts'), 'utf8');
+  const content = fs.readFileSync(
+    path.join(__dirname, '../src/services/goniometerService.ts'),
+    'utf8'
+  );
 
   // MoveNet: shoulder(5/6), elbow(7/8), wrist(9/10)
   const expectedLeftElbow = [5, 7, 9];
   const expectedRightElbow = [6, 8, 10];
 
-  const leftElbowMatch = content.match(/['"']left_elbow['"].*?indices:\s*\[(\d+),\s*(\d+),\s*(\d+)\]/);
-  const rightElbowMatch = content.match(/['"']right_elbow['"].*?indices:\s*\[(\d+),\s*(\d+),\s*(\d+)\]/);
+  const leftElbowMatch = content.match(
+    /['"']left_elbow['"].*?indices:\s*\[(\d+),\s*(\d+),\s*(\d+)\]/
+  );
+  const rightElbowMatch = content.match(
+    /['"']right_elbow['"].*?indices:\s*\[(\d+),\s*(\d+),\s*(\d+)\]/
+  );
 
   if (leftElbowMatch) {
-    const leftIndices = [parseInt(leftElbowMatch[1]), parseInt(leftElbowMatch[2]), parseInt(leftElbowMatch[3])];
+    const leftIndices = [
+      parseInt(leftElbowMatch[1]),
+      parseInt(leftElbowMatch[2]),
+      parseInt(leftElbowMatch[3]),
+    ];
     if (JSON.stringify(leftIndices) !== JSON.stringify(expectedLeftElbow)) {
-      return { pass: false, message: `left_elbow ${JSON.stringify(leftIndices)} should be ${JSON.stringify(expectedLeftElbow)}` };
+      return {
+        pass: false,
+        message: `left_elbow ${JSON.stringify(leftIndices)} should be ${JSON.stringify(expectedLeftElbow)}`,
+      };
     }
   }
 
   if (rightElbowMatch) {
-    const rightIndices = [parseInt(rightElbowMatch[1]), parseInt(rightElbowMatch[2]), parseInt(rightElbowMatch[3])];
+    const rightIndices = [
+      parseInt(rightElbowMatch[1]),
+      parseInt(rightElbowMatch[2]),
+      parseInt(rightElbowMatch[3]),
+    ];
     if (JSON.stringify(rightIndices) !== JSON.stringify(expectedRightElbow)) {
-      return { pass: false, message: `right_elbow ${JSON.stringify(rightIndices)} should be ${JSON.stringify(expectedRightElbow)}` };
+      return {
+        pass: false,
+        message: `right_elbow ${JSON.stringify(rightIndices)} should be ${JSON.stringify(expectedRightElbow)}`,
+      };
     }
   }
 
@@ -297,7 +386,7 @@ if (gate0Passed) {
       const expectedSize = 192 * 192 * 3;
       if (data.length !== expectedSize) return false;
       if (!(data instanceof Uint8Array)) {
-        const hasInvalidValues = data.some(v => v < 0 || v > 255 || Number.isNaN(v));
+        const hasInvalidValues = data.some((v) => v < 0 || v > 255 || Number.isNaN(v));
         if (hasInvalidValues) return false;
       }
       return true;
@@ -330,7 +419,10 @@ if (gate0Passed) {
     };
 
     const result = normalizeValue(5, 0);
-    return { pass: !isNaN(result) && isFinite(result), message: `Returns ${result} for 5/0` };
+    return {
+      pass: !isNaN(result) && isFinite(result),
+      message: `Returns ${result} for 5/0`,
+    };
   });
 
   evaluateGate('gate1');
@@ -357,7 +449,7 @@ if (gates.gate1.status === 'PASSED') {
       '../src/utils/compensatoryMechanisms.ts',
     ];
 
-    const missing = files.filter(f => !fs.existsSync(path.join(__dirname, f)));
+    const missing = files.filter((f) => !fs.existsSync(path.join(__dirname, f)));
 
     if (missing.length > 0) {
       return { pass: false, message: `Missing: ${missing.join(', ')}` };
@@ -373,7 +465,7 @@ if (gates.gate1.status === 'PASSED') {
       '../src/components/simple/SimpleModeUI.tsx',
     ];
 
-    const missing = files.filter(f => !fs.existsSync(path.join(__dirname, f)));
+    const missing = files.filter((f) => !fs.existsSync(path.join(__dirname, f)));
 
     if (missing.length > 0) {
       return { pass: false, message: `Missing: ${missing.join(', ')}` };
@@ -389,8 +481,9 @@ if (gates.gate1.status === 'PASSED') {
     );
 
     // Check for cleanup in useEffect
-    const hasCleanup = poseOverlayContent.includes('return () =>') &&
-                       poseOverlayContent.includes('landmarks.value = []');
+    const hasCleanup =
+      poseOverlayContent.includes('return () =>') &&
+      poseOverlayContent.includes('landmarks.value = []');
 
     if (!hasCleanup) {
       return { pass: false, message: 'Missing cleanup in PoseOverlay' };
@@ -405,7 +498,8 @@ if (gates.gate1.status === 'PASSED') {
       'utf8'
     );
 
-    const hasTryCatch = serviceContent.includes('try {') && serviceContent.includes('} catch');
+    const hasTryCatch =
+      serviceContent.includes('try {') && serviceContent.includes('} catch');
 
     if (!hasTryCatch) {
       return { pass: false, message: 'Missing try-catch in PoseDetectionService' };
@@ -457,7 +551,10 @@ if (gates.gate2.status === 'PASSED') {
 
   addCriteria('gate3', 'Security: Encrypted storage check', () => {
     const exampleContent = fs.readFileSync(
-      path.join(__dirname, '../src/screens/PoseDetectionScreenPatientCentric.example.tsx'),
+      path.join(
+        __dirname,
+        '../src/screens/PoseDetectionScreenPatientCentric.example.tsx'
+      ),
       'utf8'
     );
 
@@ -465,7 +562,10 @@ if (gates.gate2.status === 'PASSED') {
     const hasAsyncStorage = exampleContent.includes('AsyncStorage');
 
     if (hasAsyncStorage && !hasEncryptedStorage) {
-      return { pass: false, message: 'Using AsyncStorage without encryption (HIPAA violation)' };
+      return {
+        pass: false,
+        message: 'Using AsyncStorage without encryption (HIPAA violation)',
+      };
     }
 
     return { pass: true, message: 'Encrypted storage pattern documented' };
@@ -477,8 +577,9 @@ if (gates.gate2.status === 'PASSED') {
       'utf8'
     );
 
-    const hasAccessibility = simpleModeContent.includes('accessible') ||
-                            simpleModeContent.includes('accessibilityLabel');
+    const hasAccessibility =
+      simpleModeContent.includes('accessible') ||
+      simpleModeContent.includes('accessibilityLabel');
 
     if (!hasAccessibility) {
       return { pass: false, message: 'Missing accessibility labels' };
@@ -521,7 +622,7 @@ if (gates.gate2.status === 'PASSED') {
       '../scripts/device-simulation-suite.js',
     ];
 
-    const missing = scripts.filter(s => !fs.existsSync(path.join(__dirname, s)));
+    const missing = scripts.filter((s) => !fs.existsSync(path.join(__dirname, s)));
 
     if (missing.length > 0) {
       return { pass: false, message: `Missing: ${missing.join(', ')}` };
@@ -557,8 +658,8 @@ if (gates.gate3.status === 'PASSED') {
     );
 
     // Check for FPS tracking
-    const hasFpsTracking = poseDetectionContent.includes('fps') ||
-                          poseDetectionContent.includes('frameRate');
+    const hasFpsTracking =
+      poseDetectionContent.includes('fps') || poseDetectionContent.includes('frameRate');
 
     if (!hasFpsTracking) {
       return { pass: false, message: 'No FPS tracking found in pose detection service' };
@@ -577,7 +678,7 @@ if (gates.gate3.status === 'PASSED') {
     let hasCleanup = true;
     let missingFiles = [];
 
-    files.forEach(file => {
+    files.forEach((file) => {
       const filePath = path.join(__dirname, file);
       if (!fs.existsSync(filePath)) {
         missingFiles.push(file);
@@ -587,10 +688,11 @@ if (gates.gate3.status === 'PASSED') {
       const content = fs.readFileSync(filePath, 'utf8');
 
       // Check for cleanup patterns: useEffect cleanup, dispose, release, clear
-      const hasCleanupPattern = content.includes('return () =>') ||
-                               content.includes('.dispose()') ||
-                               content.includes('.release()') ||
-                               content.includes('.clear()');
+      const hasCleanupPattern =
+        content.includes('return () =>') ||
+        content.includes('.dispose()') ||
+        content.includes('.release()') ||
+        content.includes('.clear()');
 
       if (!hasCleanupPattern) {
         hasCleanup = false;
@@ -615,19 +717,21 @@ if (gates.gate3.status === 'PASSED') {
     );
 
     // Check for model initialization (TFLiteModel.load or similar)
-    const hasModelInit = poseDetectionContent.includes('TFLiteModel.load') ||
-                        poseDetectionContent.includes('loadModel') ||
-                        poseDetectionContent.includes('initializeModel') ||
-                        (poseDetectionContent.includes('.load(') && poseDetectionContent.includes('model'));
+    const hasModelInit =
+      poseDetectionContent.includes('TFLiteModel.load') ||
+      poseDetectionContent.includes('loadModel') ||
+      poseDetectionContent.includes('initializeModel') ||
+      (poseDetectionContent.includes('.load(') && poseDetectionContent.includes('model'));
 
     if (!hasModelInit) {
       return { pass: false, message: 'No model initialization found' };
     }
 
     // Check for error handling during model load
-    const hasErrorHandling = poseDetectionContent.includes('try') &&
-                            poseDetectionContent.includes('catch') &&
-                            poseDetectionContent.includes('loadError');
+    const hasErrorHandling =
+      poseDetectionContent.includes('try') &&
+      poseDetectionContent.includes('catch') &&
+      poseDetectionContent.includes('loadError');
 
     if (!hasErrorHandling) {
       return { pass: false, message: 'Model loading lacks error handling' };
@@ -680,14 +784,18 @@ if (gates.gate3.status === 'PASSED') {
 
   addCriteria('gate4', 'Scenarios: App state handling (background/foreground)', () => {
     const exampleScreenContent = fs.readFileSync(
-      path.join(__dirname, '../src/screens/PoseDetectionScreenPatientCentric.example.tsx'),
+      path.join(
+        __dirname,
+        '../src/screens/PoseDetectionScreenPatientCentric.example.tsx'
+      ),
       'utf8'
     );
 
     // Check for AppState handling
-    const hasAppState = exampleScreenContent.includes('AppState') ||
-                       exampleScreenContent.includes('useAppState') ||
-                       exampleScreenContent.includes('useFocusEffect');
+    const hasAppState =
+      exampleScreenContent.includes('AppState') ||
+      exampleScreenContent.includes('useAppState') ||
+      exampleScreenContent.includes('useFocusEffect');
 
     if (!hasAppState) {
       return { pass: false, message: 'No AppState/focus handling found' };
@@ -698,14 +806,18 @@ if (gates.gate3.status === 'PASSED') {
 
   addCriteria('gate4', 'Scenarios: Camera permission handling', () => {
     const exampleScreenContent = fs.readFileSync(
-      path.join(__dirname, '../src/screens/PoseDetectionScreenPatientCentric.example.tsx'),
+      path.join(
+        __dirname,
+        '../src/screens/PoseDetectionScreenPatientCentric.example.tsx'
+      ),
       'utf8'
     );
 
     // Check for camera permission checks
-    const hasPermissionCheck = exampleScreenContent.includes('getCameraPermissionStatus') ||
-                              exampleScreenContent.includes('requestCameraPermission') ||
-                              exampleScreenContent.includes('checkPermission');
+    const hasPermissionCheck =
+      exampleScreenContent.includes('getCameraPermissionStatus') ||
+      exampleScreenContent.includes('requestCameraPermission') ||
+      exampleScreenContent.includes('checkPermission');
 
     if (!hasPermissionCheck) {
       return { pass: false, message: 'No camera permission handling' };
@@ -721,8 +833,9 @@ if (gates.gate3.status === 'PASSED') {
     );
 
     // Check for network error handling
-    const hasNetworkError = youtubeServiceContent.includes('NETWORK_ERROR') ||
-                           youtubeServiceContent.includes('NetworkError');
+    const hasNetworkError =
+      youtubeServiceContent.includes('NETWORK_ERROR') ||
+      youtubeServiceContent.includes('NetworkError');
 
     if (!hasNetworkError) {
       return { pass: false, message: 'No network error handling in YouTube service' };
@@ -740,7 +853,10 @@ if (gates.gate3.status === 'PASSED') {
   // ===== ERROR RECOVERY =====
 
   addCriteria('gate4', 'Recovery: Error boundary implementation', () => {
-    const errorBoundaryPath = path.join(__dirname, '../src/components/common/ErrorBoundary.tsx');
+    const errorBoundaryPath = path.join(
+      __dirname,
+      '../src/components/common/ErrorBoundary.tsx'
+    );
 
     if (!fs.existsSync(errorBoundaryPath)) {
       return { pass: false, message: 'ErrorBoundary component not found' };
@@ -749,7 +865,9 @@ if (gates.gate3.status === 'PASSED') {
     const errorBoundaryContent = fs.readFileSync(errorBoundaryPath, 'utf8');
 
     const hasComponentDidCatch = errorBoundaryContent.includes('componentDidCatch');
-    const hasGetDerivedStateFromError = errorBoundaryContent.includes('getDerivedStateFromError');
+    const hasGetDerivedStateFromError = errorBoundaryContent.includes(
+      'getDerivedStateFromError'
+    );
 
     if (!hasComponentDidCatch && !hasGetDerivedStateFromError) {
       return { pass: false, message: 'ErrorBoundary missing error handling methods' };
@@ -765,9 +883,10 @@ if (gates.gate3.status === 'PASSED') {
     );
 
     // Check for fallback mechanisms
-    const hasFallback = poseDetectionContent.includes('fallback') ||
-                       poseDetectionContent.includes('retry') ||
-                       poseDetectionContent.includes('recovery');
+    const hasFallback =
+      poseDetectionContent.includes('fallback') ||
+      poseDetectionContent.includes('retry') ||
+      poseDetectionContent.includes('recovery');
 
     if (!hasFallback) {
       return { pass: false, message: 'No fallback/retry mechanisms found' };
@@ -785,8 +904,9 @@ if (gates.gate3.status === 'PASSED') {
     );
 
     // Check for confidence threshold
-    const hasConfidenceCheck = goniometerContent.includes('minConfidence') ||
-                              goniometerContent.includes('confidence');
+    const hasConfidenceCheck =
+      goniometerContent.includes('minConfidence') ||
+      goniometerContent.includes('confidence');
 
     if (!hasConfidenceCheck) {
       return { pass: false, message: 'No confidence threshold checking' };
@@ -820,9 +940,33 @@ if (gates.gate3.status === 'PASSED') {
 
     // Test boundary values
     const tests = [
-      { name: '0° angle', points: [[0, 0], [1, 0], [2, 0]], expected: 180 },
-      { name: '180° angle', points: [[2, 0], [1, 0], [0, 0]], expected: 180 },
-      { name: 'Coincident points', points: [[0, 0], [0, 0], [1, 0]], expected: 0 },
+      {
+        name: '0° angle',
+        points: [
+          [0, 0],
+          [1, 0],
+          [2, 0],
+        ],
+        expected: 180,
+      },
+      {
+        name: '180° angle',
+        points: [
+          [2, 0],
+          [1, 0],
+          [0, 0],
+        ],
+        expected: 180,
+      },
+      {
+        name: 'Coincident points',
+        points: [
+          [0, 0],
+          [0, 0],
+          [1, 0],
+        ],
+        expected: 0,
+      },
     ];
 
     for (const test of tests) {
@@ -847,9 +991,10 @@ if (gates.gate3.status === 'PASSED') {
     const poseSliceContent = fs.readFileSync(poseSlicePath, 'utf8');
 
     // Check for timestamp handling
-    const hasTimestamp = poseSliceContent.includes('timestamp') ||
-                        poseSliceContent.includes('Date.now()') ||
-                        poseSliceContent.includes('new Date()');
+    const hasTimestamp =
+      poseSliceContent.includes('timestamp') ||
+      poseSliceContent.includes('Date.now()') ||
+      poseSliceContent.includes('new Date()');
 
     if (!hasTimestamp) {
       return { pass: false, message: 'No timestamp tracking in pose data' };
@@ -866,43 +1011,60 @@ if (gates.gate3.status === 'PASSED') {
 // ============================================================================
 
 console.log('\n' + '='.repeat(80));
-console.log(`${colors.bold}${colors.cyan}GATED DEVELOPMENT VALIDATION COMPLETE${colors.reset}`);
+console.log(
+  `${colors.bold}${colors.cyan}GATED DEVELOPMENT VALIDATION COMPLETE${colors.reset}`
+);
 console.log('='.repeat(80) + '\n');
 
-Object.keys(gates).forEach(gateKey => {
+Object.keys(gates).forEach((gateKey) => {
   const gate = gates[gateKey];
-  const status = gate.status === 'PASSED' ? colors.green + '✅ PASSED' :
-                 gate.status === 'FAILED' ? colors.red + '❌ FAILED' :
-                 colors.yellow + '⏸️  PENDING';
+  const status =
+    gate.status === 'PASSED'
+      ? colors.green + '✅ PASSED'
+      : gate.status === 'FAILED'
+        ? colors.red + '❌ FAILED'
+        : colors.yellow + '⏸️  PENDING';
 
   console.log(`${status} ${gate.name} (${gate.passed}/${gate.total})${colors.reset}`);
 
   if (gate.status === 'FAILED') {
-    gate.criteria.filter(c => c.status === 'FAIL').forEach(c => {
-      console.log(`  ${colors.red}  ❌ ${c.name}: ${c.message}${colors.reset}`);
-    });
+    gate.criteria
+      .filter((c) => c.status === 'FAIL')
+      .forEach((c) => {
+        console.log(`  ${colors.red}  ❌ ${c.name}: ${c.message}${colors.reset}`);
+      });
   }
 });
 
 console.log('\n' + '='.repeat(80));
 
 // Calculate overall readiness
-const passedGates = Object.values(gates).filter(g => g.status === 'PASSED').length;
+const passedGates = Object.values(gates).filter((g) => g.status === 'PASSED').length;
 const totalGates = Object.keys(gates).length;
 const readiness = (passedGates / totalGates) * 100;
 
-console.log(`\n${colors.bold}Overall Readiness: ${passedGates}/${totalGates} gates passed (${readiness.toFixed(0)}%)${colors.reset}\n`);
+console.log(
+  `\n${colors.bold}Overall Readiness: ${passedGates}/${totalGates} gates passed (${readiness.toFixed(0)}%)${colors.reset}\n`
+);
 
 if (readiness === 100) {
-  console.log(`${colors.green}${colors.bold}🎉 ALL GATES PASSED - READY FOR PRODUCTION${colors.reset}\n`);
+  console.log(
+    `${colors.green}${colors.bold}🎉 ALL GATES PASSED - READY FOR PRODUCTION${colors.reset}\n`
+  );
   process.exit(0);
 } else if (readiness >= 75) {
-  console.log(`${colors.yellow}${colors.bold}⚡ MOST GATES PASSED - READY FOR BETA${colors.reset}\n`);
+  console.log(
+    `${colors.yellow}${colors.bold}⚡ MOST GATES PASSED - READY FOR BETA${colors.reset}\n`
+  );
   process.exit(0);
 } else if (readiness >= 50) {
-  console.log(`${colors.yellow}${colors.bold}⚠️  SOME GATES PASSED - CONTINUE DEVELOPMENT${colors.reset}\n`);
+  console.log(
+    `${colors.yellow}${colors.bold}⚠️  SOME GATES PASSED - CONTINUE DEVELOPMENT${colors.reset}\n`
+  );
   process.exit(1);
 } else {
-  console.log(`${colors.red}${colors.bold}❌ CRITICAL GATES FAILED - FIX BEFORE PROCEEDING${colors.reset}\n`);
+  console.log(
+    `${colors.red}${colors.bold}❌ CRITICAL GATES FAILED - FIX BEFORE PROCEEDING${colors.reset}\n`
+  );
   process.exit(1);
 }

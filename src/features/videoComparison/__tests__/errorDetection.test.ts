@@ -41,7 +41,9 @@ function createKeypoint(x: number, y: number, confidence: number = 0.9): KeyPoin
  * Helper: Create mock pose frame
  */
 function createPoseFrame(timestamp: number, keypointsData: number[][]): PoseFrame {
-  const keypoints: KeyPoint[] = keypointsData.map(([x, y, conf]) => createKeypoint(x, y, conf || 0.9));
+  const keypoints: KeyPoint[] = keypointsData.map(([x, y, conf]) =>
+    createKeypoint(x, y, conf || 0.9)
+  );
 
   return {
     timestamp,
@@ -97,21 +99,35 @@ describe('Shoulder Error Detection', () => {
 
     it('should not detect when shoulder position is normal', () => {
       const referencePose = createPoseFrame(0, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [100, 100, 0.9], // left ear
         [200, 100, 0.9], // right ear
         [100, 200, 0.9], // left shoulder
         [200, 200, 0.9], // right shoulder
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
       ]);
 
       const userPose = createPoseFrame(1000, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [100, 100, 0.9], // left ear
         [200, 100, 0.9], // right ear
         [100, 200, 0.9], // left shoulder (same as reference)
         [200, 200, 0.9], // right shoulder
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
       ]);
 
       const error = detectShoulderHiking(userPose, referencePose, 'left');
@@ -123,20 +139,34 @@ describe('Shoulder Error Detection', () => {
     it('should detect trunk lean', () => {
       // Reference: vertical trunk (shoulder directly above hip)
       const referencePose = createPoseFrame(0, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [100, 100, 0.9], // left shoulder
         [200, 100, 0.9], // right shoulder
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [100, 200, 0.9], // left hip
         [200, 200, 0.9], // right hip
       ]);
 
       // User: trunk leaning (shoulder shifted laterally)
       const userPose = createPoseFrame(1000, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [150, 100, 0.9], // left shoulder (shifted right = lean)
         [200, 100, 0.9], // right shoulder
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [100, 200, 0.9], // left hip
         [200, 200, 0.9], // right hip
       ]);
@@ -149,24 +179,41 @@ describe('Shoulder Error Detection', () => {
 
   describe('detectAllShoulderErrors', () => {
     it('should detect multiple errors', () => {
-      const referencePoses = [createPoseFrame(0, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [100, 100, 0.9], [200, 100, 0.9],
-        [100, 200, 0.9], [200, 200, 0.9],
-        [100, 300, 0.9], [200, 300, 0.9],
-        [100, 400, 0.9], [200, 400, 0.9],
-        [100, 500, 0.9], [200, 500, 0.9],
-      ])];
+      const referencePoses = [
+        createPoseFrame(0, [
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [100, 100, 0.9],
+          [200, 100, 0.9],
+          [100, 200, 0.9],
+          [200, 200, 0.9],
+          [100, 300, 0.9],
+          [200, 300, 0.9],
+          [100, 400, 0.9],
+          [200, 400, 0.9],
+          [100, 500, 0.9],
+          [200, 500, 0.9],
+        ]),
+      ];
 
-      const userPoses = [createPoseFrame(1000, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [100, 100, 0.9], [200, 100, 0.9],
-        [100, 150, 0.9], // left shoulder hiked
-        [200, 200, 0.9],
-        [100, 300, 0.9], [200, 300, 0.9],
-        [100, 400, 0.9], [200, 400, 0.9],
-        [100, 500, 0.9], [200, 500, 0.9],
-      ])];
+      const userPoses = [
+        createPoseFrame(1000, [
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [100, 100, 0.9],
+          [200, 100, 0.9],
+          [100, 150, 0.9], // left shoulder hiked
+          [200, 200, 0.9],
+          [100, 300, 0.9],
+          [200, 300, 0.9],
+          [100, 400, 0.9],
+          [200, 400, 0.9],
+          [100, 500, 0.9],
+          [200, 500, 0.9],
+        ]),
+      ];
 
       const errors = detectAllShoulderErrors(userPoses, referencePoses);
       expect(errors.length).toBeGreaterThan(0);
@@ -179,8 +226,17 @@ describe('Knee Error Detection', () => {
     it('should detect critical knee valgus (HIGH INJURY RISK)', () => {
       // Reference: knee aligned with ankle (x-position same)
       const referencePose = createPoseFrame(0, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [100, 200, 0.9], // left hip
         [300, 200, 0.9], // right hip
         [100, 300, 0.9], // left knee (aligned with ankle)
@@ -191,8 +247,17 @@ describe('Knee Error Detection', () => {
 
       // User: knee caving in medially (valgus)
       const userPose = createPoseFrame(1000, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [100, 200, 0.9], // left hip
         [300, 200, 0.9], // right hip
         [120, 300, 0.9], // left knee (CAVING IN - moved medially)
@@ -210,20 +275,43 @@ describe('Knee Error Detection', () => {
 
     it('should not detect when knee alignment is normal', () => {
       const referencePose = createPoseFrame(0, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [100, 200, 0.9], [300, 200, 0.9],
-        [100, 300, 0.9], [300, 300, 0.9],
-        [100, 400, 0.9], [300, 400, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [100, 200, 0.9],
+        [300, 200, 0.9],
+        [100, 300, 0.9],
+        [300, 300, 0.9],
+        [100, 400, 0.9],
+        [300, 400, 0.9],
       ]);
 
       const userPose = createPoseFrame(1000, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [100, 200, 0.9], [300, 200, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [100, 200, 0.9],
+        [300, 200, 0.9],
         [100, 300, 0.9], // left knee (same as reference)
         [300, 300, 0.9],
-        [100, 400, 0.9], [300, 400, 0.9],
+        [100, 400, 0.9],
+        [300, 400, 0.9],
       ]);
 
       const error = detectKneeValgus(userPose, referencePose, 'left');
@@ -233,25 +321,49 @@ describe('Knee Error Detection', () => {
 
   describe('detectAllKneeErrors', () => {
     it('should detect multiple knee errors', () => {
-      const referencePoses = [createPoseFrame(0, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [100, 50, 0.9], [200, 50, 0.9],
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [100, 200, 0.9], [200, 200, 0.9],
-        [100, 300, 0.9], [200, 300, 0.9],
-        [100, 400, 0.9], [200, 400, 0.9],
-      ])];
+      const referencePoses = [
+        createPoseFrame(0, [
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [100, 50, 0.9],
+          [200, 50, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [100, 200, 0.9],
+          [200, 200, 0.9],
+          [100, 300, 0.9],
+          [200, 300, 0.9],
+          [100, 400, 0.9],
+          [200, 400, 0.9],
+        ]),
+      ];
 
-      const userPoses = [createPoseFrame(1000, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [100, 50, 0.9], [200, 50, 0.9],
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [100, 200, 0.9], [200, 200, 0.9],
-        [120, 300, 0.9], // valgus
-        [200, 300, 0.9],
-        [100, 380, 0.9], // heel lift
-        [200, 400, 0.9],
-      ])];
+      const userPoses = [
+        createPoseFrame(1000, [
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [100, 50, 0.9],
+          [200, 50, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [100, 200, 0.9],
+          [200, 200, 0.9],
+          [120, 300, 0.9], // valgus
+          [200, 300, 0.9],
+          [100, 380, 0.9], // heel lift
+          [200, 400, 0.9],
+        ]),
+      ];
 
       const errors = detectAllKneeErrors(userPoses, referencePoses);
       expect(errors.length).toBeGreaterThan(0);
@@ -264,20 +376,34 @@ describe('Elbow Error Detection', () => {
     it('should detect shoulder compensation (momentum/cheating)', () => {
       // Reference: shoulder stable
       const referencePose = createPoseFrame(0, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [100, 100, 0.9], // left shoulder
         [200, 100, 0.9], // right shoulder
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [100, 200, 0.9], // left hip
         [200, 200, 0.9], // right hip
       ]);
 
       // User: shoulder swinging forward
       const userPose = createPoseFrame(1000, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [120, 100, 0.9], // left shoulder (MOVED FORWARD)
         [200, 100, 0.9], // right shoulder
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
+        [0, 0, 0.9],
         [100, 200, 0.9], // left hip
         [200, 200, 0.9], // right hip
       ]);
@@ -290,22 +416,41 @@ describe('Elbow Error Detection', () => {
 
   describe('detectAllElbowErrors', () => {
     it('should detect multiple elbow errors', () => {
-      const referencePoses = [createPoseFrame(0, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [100, 100, 0.9], [200, 100, 0.9],
-        [100, 200, 0.9], [200, 200, 0.9],
-        [100, 300, 0.9], [200, 300, 0.9],
-        [0, 0, 0.9], [0, 0, 0.9],
-      ])];
+      const referencePoses = [
+        createPoseFrame(0, [
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [100, 100, 0.9],
+          [200, 100, 0.9],
+          [100, 200, 0.9],
+          [200, 200, 0.9],
+          [100, 300, 0.9],
+          [200, 300, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+        ]),
+      ];
 
-      const userPoses = [createPoseFrame(1000, [
-        [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9], [0, 0, 0.9],
-        [120, 100, 0.9], // shoulder moved (compensation)
-        [200, 100, 0.9],
-        [100, 200, 0.9], [200, 200, 0.9],
-        [100, 300, 0.9], [200, 300, 0.9],
-        [0, 0, 0.9], [0, 0, 0.9],
-      ])];
+      const userPoses = [
+        createPoseFrame(1000, [
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+          [120, 100, 0.9], // shoulder moved (compensation)
+          [200, 100, 0.9],
+          [100, 200, 0.9],
+          [200, 200, 0.9],
+          [100, 300, 0.9],
+          [200, 300, 0.9],
+          [0, 0, 0.9],
+          [0, 0, 0.9],
+        ]),
+      ];
 
       const errors = detectAllElbowErrors(userPoses, referencePoses);
       expect(errors.length).toBeGreaterThan(0);
@@ -323,7 +468,9 @@ describe('Error Detection Config', () => {
     expect(ErrorDetectionConfig.knee.kneeValgus.critical_percent).toBeGreaterThan(0);
 
     expect(ErrorDetectionConfig.elbow.shoulderCompensation.warning_cm).toBeGreaterThan(0);
-    expect(ErrorDetectionConfig.elbow.shoulderCompensation.critical_cm).toBeGreaterThan(0);
+    expect(ErrorDetectionConfig.elbow.shoulderCompensation.critical_cm).toBeGreaterThan(
+      0
+    );
   });
 
   it('should have critical > warning for all thresholds', () => {

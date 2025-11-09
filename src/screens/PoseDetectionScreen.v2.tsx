@@ -22,11 +22,7 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
-import {
-  Camera,
-  useCameraDevice,
-  useFrameProcessor,
-} from 'react-native-vision-camera';
+import { Camera, useCameraDevice, useFrameProcessor } from 'react-native-vision-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Worklets } from 'react-native-worklets-core';
@@ -247,12 +243,7 @@ const PoseDetectionScreenV2: React.FC = () => {
       />
 
       {/* Skia overlay (60+ FPS) */}
-      <PoseOverlaySkia
-        showConfidence
-        showSkeleton
-        keypointRadius={8}
-        lineWidth={3}
-      />
+      <PoseOverlaySkia showConfidence showSkeleton keypointRadius={8} lineWidth={3} />
 
       {/* Performance overlay */}
       <View style={styles.performanceOverlay}>
@@ -260,9 +251,7 @@ const PoseDetectionScreenV2: React.FC = () => {
         <Text style={styles.performanceText}>
           Confidence: {(confidence * 100).toFixed(0)}%
         </Text>
-        <Text style={styles.performanceText}>
-          GPU: {isInitialized ? '✅' : '❌'}
-        </Text>
+        <Text style={styles.performanceText}>GPU: {isInitialized ? '✅' : '❌'}</Text>
       </View>
 
       {/* Controls */}

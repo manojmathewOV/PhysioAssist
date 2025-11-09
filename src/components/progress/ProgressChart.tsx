@@ -59,10 +59,12 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
     // Simple trend calculation (comparing first half to second half)
     const midPoint = Math.floor(values.length / 2);
     const firstHalfAvg = values.slice(0, midPoint).reduce((a, b) => a + b, 0) / midPoint;
-    const secondHalfAvg = values.slice(midPoint).reduce((a, b) => a + b, 0) / (values.length - midPoint);
+    const secondHalfAvg =
+      values.slice(midPoint).reduce((a, b) => a + b, 0) / (values.length - midPoint);
     const improvement = secondHalfAvg - firstHalfAvg;
 
-    const trend = improvement > 5 ? 'improving' : improvement < -5 ? 'declining' : 'stable';
+    const trend =
+      improvement > 5 ? 'improving' : improvement < -5 ? 'declining' : 'stable';
 
     return { average: Math.round(average), trend, improvement: Math.round(improvement) };
   }, [chartData]);
@@ -86,7 +88,11 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
     const barGap = 8;
 
     return (
-      <ScrollView horizontal showsHorizontalScrollIndicator={true} style={styles.chartScroll}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={true}
+        style={styles.chartScroll}
+      >
         <View style={styles.chartContainer}>
           {/* Y-axis labels */}
           <View style={styles.yAxisLabels}>
@@ -105,7 +111,11 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
               {points.map((point, index) => {
                 const heightPercent = (point.value / maxValue) * 100;
                 const barColor =
-                  point.value >= 80 ? '#4CAF50' : point.value >= 60 ? '#FF9800' : '#F44336';
+                  point.value >= 80
+                    ? '#4CAF50'
+                    : point.value >= 60
+                      ? '#FF9800'
+                      : '#F44336';
 
                 return (
                   <View key={index} style={[styles.barColumn, { width: barWidth }]}>
@@ -122,7 +132,11 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
                     </View>
                     <Text style={styles.barValue}>{point.value}</Text>
                     <Text style={styles.barLabel} numberOfLines={1}>
-                      {point.label || new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {point.label ||
+                        new Date(point.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
                     </Text>
                   </View>
                 );
@@ -146,7 +160,10 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
             {(['7d', '30d', 'all'] as const).map((range) => (
               <TouchableOpacity
                 key={range}
-                style={[styles.dateRangeButton, dateRange === range && styles.dateRangeButtonActive]}
+                style={[
+                  styles.dateRangeButton,
+                  dateRange === range && styles.dateRangeButtonActive,
+                ]}
                 onPress={() => onDateRangeChange(range)}
               >
                 <Text
@@ -180,12 +197,16 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
                     stats.trend === 'improving'
                       ? '#4CAF50'
                       : stats.trend === 'declining'
-                      ? '#F44336'
-                      : '#FF9800',
+                        ? '#F44336'
+                        : '#FF9800',
                 },
               ]}
             >
-              {stats.trend === 'improving' ? '↗️' : stats.trend === 'declining' ? '↘️' : '→'}{' '}
+              {stats.trend === 'improving'
+                ? '↗️'
+                : stats.trend === 'declining'
+                  ? '↘️'
+                  : '→'}{' '}
               {stats.trend}
             </Text>
           </View>
@@ -193,7 +214,10 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>Change</Text>
               <Text
-                style={[styles.statValue, { color: stats.improvement > 0 ? '#4CAF50' : '#F44336' }]}
+                style={[
+                  styles.statValue,
+                  { color: stats.improvement > 0 ? '#4CAF50' : '#F44336' },
+                ]}
               >
                 {stats.improvement > 0 ? '+' : ''}
                 {stats.improvement}
@@ -219,7 +243,7 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: '#F44336' }]} />
-            <Text style={styles.legendText}>Needs Work (<60)</Text>
+            <Text style={styles.legendText}>Needs Work (&lt;60)</Text>
           </View>
         </View>
       )}

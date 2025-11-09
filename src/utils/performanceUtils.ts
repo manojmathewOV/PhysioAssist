@@ -182,17 +182,14 @@ export const useRAFBatch = <T extends (...args: any[]) => any>(
  * batchedDispatch(action3());
  * ```
  */
-export const createBatchedDispatch = (
-  dispatch: any,
-  batchWindow: number = 16
-) => {
+export const createBatchedDispatch = (dispatch: any, batchWindow: number = 16) => {
   let actionQueue: any[] = [];
   let timeoutId: NodeJS.Timeout | null = null;
 
   const flushQueue = () => {
     if (actionQueue.length > 0) {
       batch(() => {
-        actionQueue.forEach(action => dispatch(action));
+        actionQueue.forEach((action) => dispatch(action));
       });
       actionQueue = [];
     }

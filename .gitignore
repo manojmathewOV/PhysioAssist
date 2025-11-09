@@ -114,3 +114,6 @@ metro.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# TensorFlow models (downloaded via postinstall)
+assets/models/*.tflite

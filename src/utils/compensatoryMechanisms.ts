@@ -12,6 +12,7 @@
 
 import { Frame } from 'react-native-vision-camera';
 import { PoseLandmark } from '../types/pose';
+import { analyzeFrame } from './realFrameAnalysis';
 
 // ============================================================================
 // Types & Interfaces
@@ -90,11 +91,16 @@ const STABILITY_THRESHOLD = 0.02; // Variance threshold for tremor detection
 
 /**
  * Analyzes lighting conditions and provides patient-friendly guidance
+ *
+ * Gate 1 Update: Now uses real frame analysis with ITU-R BT.601 standard
  */
-export const checkLightingConditions = (frame: Frame): LightingAssessment => {
-  const brightness = analyzeBrightness(frame);
-  const contrast = analyzeContrast(frame);
-  const shadows = detectHarshShadows(frame);
+export const checkLightingConditions = async (
+  frame: Frame
+): Promise<LightingAssessment> => {
+  // Use real frame analysis from realFrameAnalysis.ts
+  const analysis = await analyzeFrame(frame, true);
+  const brightness = analysis.brightness;
+  const shadows = analysis.shadowScore;
 
   if (brightness < BRIGHTNESS_THRESHOLD.LOW) {
     return {
@@ -140,51 +146,28 @@ export const checkLightingConditions = (frame: Frame): LightingAssessment => {
 };
 
 /**
- * Analyzes frame brightness (simplified - would use actual pixel data in production)
+ * Legacy mock functions removed (Gate 1)
+ *
+ * These mock implementations have been replaced with real computer vision
+ * algorithms in src/utils/realFrameAnalysis.ts:
+ *
+ * - analyzeBrightness() → realFrameAnalysis.analyzeBrightness()
+ *   Uses ITU-R BT.601 standard: Y = 0.299R + 0.587G + 0.114B
+ *
+ * - analyzeContrast() → realFrameAnalysis.analyzeContrast()
+ *   Uses standard deviation of luminance values
+ *
+ * - detectHarshShadows() → realFrameAnalysis.detectShadows()
+ *   Uses local variance analysis with grid-based approach
+ *
+ * All functionality now accessed via analyzeFrame() which returns:
+ * { brightness, contrast, shadowScore, histogram, processingTimeMs }
  */
-const analyzeBrightness = (frame: Frame): number => {
-  // In production: Analyze actual pixel data
-  // For now: Return mock value based on frame properties
-  // Range: 0.0 (black) to 1.0 (white)
-
-  // TODO: Implement actual brightness analysis
-  // const pixelData = getPixelData(frame);
-  // const avgBrightness = calculateAverageBrightness(pixelData);
-  // return avgBrightness;
-
-  return 0.5; // Mock: Assume medium brightness
-};
-
-/**
- * Analyzes frame contrast
- */
-const analyzeContrast = (frame: Frame): number => {
-  // TODO: Implement actual contrast analysis
-  // const pixelData = getPixelData(frame);
-  // const standardDeviation = calculateStdDev(pixelData);
-  // return standardDeviation / 255;
-
-  return 0.5; // Mock: Assume medium contrast
-};
-
-/**
- * Detects harsh shadows in frame
- */
-const detectHarshShadows = (frame: Frame): number => {
-  // TODO: Implement shadow detection
-  // Look for high-contrast edges and dark regions near person
-  // const shadowScore = analyzeShadowRegions(frame);
-  // return shadowScore;
-
-  return 0.2; // Mock: Assume low shadow level
-};
 
 /**
  * Gets adaptive lighting settings based on conditions
  */
-export const getAdaptiveLightingSettings = (
-  brightness: number
-): AdaptiveSettings => {
+export const getAdaptiveLightingSettings = (brightness: number): AdaptiveSettings => {
   if (brightness < BRIGHTNESS_THRESHOLD.OPTIMAL_MIN) {
     // Low light mode
     return {
@@ -264,11 +247,11 @@ const calculateBodyHeight = (landmarks: PoseLandmark[]): number => {
 
   // Find highest point (nose or eyes)
   const headLandmarks = landmarks.slice(0, 5); // Nose, eyes, ears
-  const minY = Math.min(...headLandmarks.map(l => l.y));
+  const minY = Math.min(...headLandmarks.map((l) => l.y));
 
   // Find lowest point (ankles or feet)
   const feetLandmarks = landmarks.slice(15, 17); // Ankles
-  const maxY = Math.max(...feetLandmarks.map(l => l.y));
+  const maxY = Math.max(...feetLandmarks.map((l) => l.y));
 
   return maxY - minY;
 };
@@ -315,20 +298,24 @@ export const getAdaptiveDistanceSettings = (
 
 /**
  * Assesses overall environment conditions
+ *
+ * Gate 1 Update: Now async due to real frame analysis
  */
-export const assessEnvironment = (
+export const assessEnvironment = async (
   frame: Frame,
   landmarks: PoseLandmark[],
   screenHeight: number
-): EnvironmentConditions => {
-  const lightingCheck = checkLightingConditions(frame);
+): Promise<EnvironmentConditions> => {
+  const lightingCheck = await checkLightingConditions(frame);
   const distanceCheck = checkPatientDistance(landmarks, screenHeight);
 
   // Assess lighting
   let lighting: 'poor' | 'good' | 'excellent';
-  if (lightingCheck.status === 'good' &&
-      lightingCheck.brightness >= BRIGHTNESS_THRESHOLD.OPTIMAL_MIN &&
-      lightingCheck.brightness <= BRIGHTNESS_THRESHOLD.OPTIMAL_MAX) {
+  if (
+    lightingCheck.status === 'good' &&
+    lightingCheck.brightness >= BRIGHTNESS_THRESHOLD.OPTIMAL_MIN &&
+    lightingCheck.brightness <= BRIGHTNESS_THRESHOLD.OPTIMAL_MAX
+  ) {
     lighting = 'excellent';
   } else if (lightingCheck.canProceed) {
     lighting = 'good';
@@ -338,8 +325,10 @@ export const assessEnvironment = (
 
   // Assess space
   let space: 'limited' | 'adequate' | 'spacious';
-  if (distanceCheck.bodyFillPercentage >= BODY_FILL_THRESHOLD.OPTIMAL_MIN &&
-      distanceCheck.bodyFillPercentage <= BODY_FILL_THRESHOLD.OPTIMAL_MAX) {
+  if (
+    distanceCheck.bodyFillPercentage >= BODY_FILL_THRESHOLD.OPTIMAL_MIN &&
+    distanceCheck.bodyFillPercentage <= BODY_FILL_THRESHOLD.OPTIMAL_MAX
+  ) {
     space = 'adequate';
   } else if (distanceCheck.bodyFillPercentage > BODY_FILL_THRESHOLD.OPTIMAL_MAX) {
     space = 'limited';
@@ -399,7 +388,9 @@ export const selectOptimalTier = (
 /**
  * Gets settings for specific accuracy tier
  */
-export const getTierSettings = (tier: AccuracyTier): {
+export const getTierSettings = (
+  tier: AccuracyTier
+): {
   minConfidence: number;
   smoothing: number;
   guidance: 'full' | 'moderate' | 'minimal';
@@ -410,7 +401,7 @@ export const getTierSettings = (tier: AccuracyTier): {
 } => {
   const settings = {
     simple: {
-      minConfidence: 0.20,
+      minConfidence: 0.2,
       smoothing: 0.85, // Heavy smoothing for tremors
       guidance: 'full' as const,
       autoRecovery: true,
@@ -419,8 +410,8 @@ export const getTierSettings = (tier: AccuracyTier): {
       showTechnicalInfo: false,
     },
     standard: {
-      minConfidence: 0.30,
-      smoothing: 0.50,
+      minConfidence: 0.3,
+      smoothing: 0.5,
       guidance: 'moderate' as const,
       autoRecovery: true,
       simplifiedUI: false,
@@ -428,8 +419,8 @@ export const getTierSettings = (tier: AccuracyTier): {
       showTechnicalInfo: false,
     },
     professional: {
-      minConfidence: 0.40,
-      smoothing: 0.30,
+      minConfidence: 0.4,
+      smoothing: 0.3,
       guidance: 'minimal' as const,
       autoRecovery: false,
       simplifiedUI: false,
@@ -491,7 +482,7 @@ const calculateLandmarkVariance = (history: PoseLandmark[][]): number => {
 
   // Calculate average position for each landmark
   const avgPositions = history[0].map((_, landmarkIndex) => {
-    const positions = history.map(frame => frame[landmarkIndex]);
+    const positions = history.map((frame) => frame[landmarkIndex]);
     const avgX = positions.reduce((sum, p) => sum + p.x, 0) / positions.length;
     const avgY = positions.reduce((sum, p) => sum + p.y, 0) / positions.length;
     return { x: avgX, y: avgY };
@@ -499,7 +490,7 @@ const calculateLandmarkVariance = (history: PoseLandmark[][]): number => {
 
   // Calculate variance from average
   let totalVariance = 0;
-  history.forEach(frame => {
+  history.forEach((frame) => {
     frame.forEach((landmark, index) => {
       const avg = avgPositions[index];
       const dx = landmark.x - avg.x;
@@ -551,7 +542,7 @@ export const getComprehensiveAdaptiveSettings = (
   const spaceSettings = getAdaptiveDistanceSettings(environment.space);
 
   // Apply patient-specific adjustments
-  let patientAdjustments: Partial<AdaptiveSettings> = {};
+  const patientAdjustments: Partial<AdaptiveSettings> = {};
 
   if (patientProfile.hasTremor) {
     const tremorSettings = getTremorCompensationSettings();
@@ -568,10 +559,8 @@ export const getComprehensiveAdaptiveSettings = (
 
   // Combine all settings (priority: patient > environment > tier > base)
   return {
-    minConfidence: patientAdjustments.minConfidence ||
-                   tierSettings.minConfidence,
-    smoothing: patientAdjustments.smoothing ||
-               tierSettings.smoothing,
+    minConfidence: patientAdjustments.minConfidence || tierSettings.minConfidence,
+    smoothing: patientAdjustments.smoothing || tierSettings.smoothing,
     exposureCompensation: lightingSettings.exposureCompensation,
     minDistance: spaceSettings.minDistance,
     fov: spaceSettings.fov,
@@ -635,13 +624,15 @@ export const translateToPatientLanguage = {
 /**
  * Gets patient-friendly error message
  */
-export const getPatientFriendlyError = (technicalError: string): {
+export const getPatientFriendlyError = (
+  technicalError: string
+): {
   title: string;
   message: string;
   actions: string[];
   helpText: string;
 } => {
-  const errorKey = Object.keys(translateToPatientLanguage.errors).find(key =>
+  const errorKey = Object.keys(translateToPatientLanguage.errors).find((key) =>
     technicalError.toLowerCase().includes(key.toLowerCase())
   );
 

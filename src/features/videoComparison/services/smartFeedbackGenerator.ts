@@ -84,7 +84,9 @@ function calculatePriority(error: DetectedError, frequency: number): number {
 /**
  * Group errors by type and count frequency
  */
-function groupAndCountErrors(errors: DetectedError[]): Map<string, { errors: DetectedError[]; count: number }> {
+function groupAndCountErrors(
+  errors: DetectedError[]
+): Map<string, { errors: DetectedError[]; count: number }> {
   const grouped = new Map<string, { errors: DetectedError[]; count: number }>();
 
   for (const error of errors) {
@@ -129,11 +131,13 @@ function getFeedbackMessage(
     wrist_deviation: messages.elbow.wristDeviation,
   };
 
-  return errorTypeMap[error.type] || {
-    title: 'Movement Error',
-    description: 'Movement pattern differs from reference',
-    correction: 'Review the reference video and try again',
-  };
+  return (
+    errorTypeMap[error.type] || {
+      title: 'Movement Error',
+      description: 'Movement pattern differs from reference',
+      correction: 'Review the reference video and try again',
+    }
+  );
 }
 
 /**
@@ -196,7 +200,7 @@ function calculateOverallScore(errors: DetectedError[]): number {
     // Deduct points based on error severity
     // Critical errors = -10 to -15 points
     // Warning errors = -5 to -10 points
-    const deduction = (injuryRisk / 10) + (severity / 5);
+    const deduction = injuryRisk / 10 + severity / 5;
     score -= Math.min(deduction, 20); // Cap deduction at 20 points per error
   }
 
@@ -206,7 +210,11 @@ function calculateOverallScore(errors: DetectedError[]): number {
 /**
  * Generate summary message
  */
-function generateSummary(errorCount: number, score: number, locale: 'en' | 'es' = 'en'): string {
+function generateSummary(
+  errorCount: number,
+  score: number,
+  locale: 'en' | 'es' = 'en'
+): string {
   if (errorCount === 0) {
     return locale === 'en'
       ? 'Perfect form! No errors detected.'

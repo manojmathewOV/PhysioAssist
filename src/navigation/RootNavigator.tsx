@@ -56,7 +56,9 @@ const MainTabs = () => {
 const RootNavigator = () => {
   // Connect to Redux auth state (HIPAA-compliant secure authentication)
   const isAuthenticated = useSelector((state: RootState) => state.user.isAuthenticated);
-  const hasCompletedOnboarding = useSelector((state: RootState) => state.user.hasCompletedOnboarding);
+  const hasCompletedOnboarding = useSelector(
+    (state: RootState) => state.user.hasCompletedOnboarding
+  );
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

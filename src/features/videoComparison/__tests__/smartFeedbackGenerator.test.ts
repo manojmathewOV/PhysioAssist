@@ -73,7 +73,11 @@ describe('SmartFeedbackGenerator', () => {
       expect(beginnerFeedback.errors.length).toBeLessThanOrEqual(2);
 
       // Intermediate should see max 3 errors
-      const intermediateFeedback = SmartFeedbackGenerator.generate(errors, 'intermediate', 'en');
+      const intermediateFeedback = SmartFeedbackGenerator.generate(
+        errors,
+        'intermediate',
+        'en'
+      );
       expect(intermediateFeedback.errors.length).toBeLessThanOrEqual(3);
 
       // Advanced should see max 4 errors
@@ -120,8 +124,16 @@ describe('SmartFeedbackGenerator', () => {
         },
       ];
 
-      const oneErrorFeedback = SmartFeedbackGenerator.generate(oneError, 'intermediate', 'en');
-      const threeErrorFeedback = SmartFeedbackGenerator.generate(threeErrors, 'intermediate', 'en');
+      const oneErrorFeedback = SmartFeedbackGenerator.generate(
+        oneError,
+        'intermediate',
+        'en'
+      );
+      const threeErrorFeedback = SmartFeedbackGenerator.generate(
+        threeErrors,
+        'intermediate',
+        'en'
+      );
 
       expect(threeErrorFeedback.overallScore).toBeLessThan(oneErrorFeedback.overallScore);
     });
@@ -213,7 +225,11 @@ describe('SmartFeedbackGenerator', () => {
         },
       ];
 
-      const liveFeedback = SmartFeedbackGenerator.generateLiveFeedback(errors, 'intermediate', 'en');
+      const liveFeedback = SmartFeedbackGenerator.generateLiveFeedback(
+        errors,
+        'intermediate',
+        'en'
+      );
 
       expect(liveFeedback).not.toBeNull();
       expect(liveFeedback?.error.type).toBe('knee_valgus'); // Highest priority
@@ -221,7 +237,11 @@ describe('SmartFeedbackGenerator', () => {
     });
 
     it('should return null when no errors', () => {
-      const liveFeedback = SmartFeedbackGenerator.generateLiveFeedback([], 'intermediate', 'en');
+      const liveFeedback = SmartFeedbackGenerator.generateLiveFeedback(
+        [],
+        'intermediate',
+        'en'
+      );
       expect(liveFeedback).toBeNull();
     });
   });
@@ -338,8 +358,16 @@ describe('SmartFeedbackGenerator', () => {
         });
       }
 
-      const infrequentFeedback = SmartFeedbackGenerator.generate(infrequentError, 'intermediate', 'en');
-      const frequentFeedback = SmartFeedbackGenerator.generate(frequentErrors, 'intermediate', 'en');
+      const infrequentFeedback = SmartFeedbackGenerator.generate(
+        infrequentError,
+        'intermediate',
+        'en'
+      );
+      const frequentFeedback = SmartFeedbackGenerator.generate(
+        frequentErrors,
+        'intermediate',
+        'en'
+      );
 
       // Frequent error should have higher priority
       if (infrequentFeedback.errors.length > 0 && frequentFeedback.errors.length > 0) {

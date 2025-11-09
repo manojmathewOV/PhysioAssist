@@ -57,7 +57,7 @@ describe('TensorFlow.js Smoke Tests', () => {
     const afterCreation = tf.memory();
     expect(afterCreation.numTensors).toBeGreaterThanOrEqual(initialMemory.numTensors + 3);
 
-    tensors.forEach(t => t.dispose());
+    tensors.forEach((t) => t.dispose());
 
     const afterDisposal = tf.memory();
     expect(afterDisposal.numTensors).toBeLessThanOrEqual(afterCreation.numTensors);

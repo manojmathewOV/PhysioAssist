@@ -14,6 +14,9 @@ export interface DeviceHealth {
   thermalState: ThermalState;
   batteryLevel: number; // 0-1
   isLowPowerMode: boolean;
+  memoryUsage: number; // MB
+  memoryWarning: boolean; // true if > 300MB
+  memoryCritical: boolean; // true if > 500MB
   timestamp: number;
 }
 
@@ -33,10 +36,18 @@ export interface InferenceRecommendation {
 export class DeviceHealthMonitor {
   private static instance: DeviceHealthMonitor;
 
+  // Memory thresholds (in MB) - from stress testing recommendations
+  private readonly MEMORY_WARNING_THRESHOLD = 300;
+  private readonly MEMORY_CLEANUP_THRESHOLD = 400;
+  private readonly MEMORY_CRITICAL_THRESHOLD = 500;
+
   private currentHealth: DeviceHealth = {
     thermalState: 'nominal',
     batteryLevel: 1.0,
     isLowPowerMode: false,
+    memoryUsage: 100, // Initial estimate
+    memoryWarning: false,
+    memoryCritical: false,
     timestamp: Date.now(),
   };
 
@@ -65,7 +76,19 @@ export class DeviceHealthMonitor {
    * Get recommended inference settings based on device health
    */
   getInferenceRecommendation(): InferenceRecommendation {
-    const { thermalState, batteryLevel, isLowPowerMode } = this.currentHealth;
+    const { thermalState, batteryLevel, isLowPowerMode, memoryCritical, memoryWarning } =
+      this.currentHealth;
+
+    // Critical memory - stop inference temporarily
+    if (memoryCritical) {
+      telemetryService.trackMemoryWarning('critical_stop');
+      return {
+        interval_ms: 5000, // Very slow
+        resolution: '540p',
+        maxFPS: 5,
+        reason: 'Critical memory usage - pausing to allow cleanup',
+      };
+    }
 
     // Critical thermal state - very conservative
     if (thermalState === 'critical') {
@@ -78,19 +101,24 @@ export class DeviceHealthMonitor {
       };
     }
 
-    // Serious thermal state or very low battery
-    if (thermalState === 'serious' || batteryLevel < 0.15) {
-      telemetryService.trackThermalThrottle('serious');
+    // Memory warning or serious thermal state or very low battery
+    if (memoryWarning || thermalState === 'serious' || batteryLevel < 0.15) {
+      if (memoryWarning) {
+        telemetryService.trackMemoryWarning('warning_throttle');
+      }
+      if (thermalState === 'serious') {
+        telemetryService.trackThermalThrottle('serious');
+      }
       return {
         interval_ms: 1000,
         resolution: '720p',
         maxFPS: 15,
-        reason: 'Device hot or low battery - reduced performance',
+        reason: 'High memory, heat, or low battery - reduced performance',
       };
     }
 
     // Fair thermal state or low battery or low power mode
-    if (thermalState === 'fair' || batteryLevel < 0.30 || isLowPowerMode) {
+    if (thermalState === 'fair' || batteryLevel < 0.3 || isLowPowerMode) {
       return {
         interval_ms: 750,
         resolution: '720p',
@@ -112,7 +140,18 @@ export class DeviceHealthMonitor {
    * Check if should pause/stop inference
    */
   shouldPauseInference(): boolean {
-    return this.currentHealth.thermalState === 'critical' || this.currentHealth.batteryLevel < 0.10;
+    return (
+      this.currentHealth.thermalState === 'critical' ||
+      this.currentHealth.batteryLevel < 0.1 ||
+      this.currentHealth.memoryCritical
+    );
+  }
+
+  /**
+   * Check if should trigger garbage collection
+   */
+  shouldTriggerCleanup(): boolean {
+    return this.currentHealth.memoryUsage >= this.MEMORY_CLEANUP_THRESHOLD;
   }
 
   /**
@@ -123,7 +162,7 @@ export class DeviceHealthMonitor {
 
     // Return unsubscribe function
     return () => {
-      this.listeners = this.listeners.filter(l => l !== callback);
+      this.listeners = this.listeners.filter((l) => l !== callback);
     };
   }
 
@@ -155,21 +194,31 @@ export class DeviceHealthMonitor {
    */
   private async checkHealth(): Promise<void> {
     try {
+      const memoryUsage = await this.getMemoryUsage();
+      const memoryWarning = memoryUsage >= this.MEMORY_WARNING_THRESHOLD;
+      const memoryCritical = memoryUsage >= this.MEMORY_CRITICAL_THRESHOLD;
+
       const health: DeviceHealth = {
         thermalState: await this.getThermalState(),
         batteryLevel: await this.getBatteryLevel(),
         isLowPowerMode: await this.getIsLowPowerMode(),
+        memoryUsage,
+        memoryWarning,
+        memoryCritical,
         timestamp: Date.now(),
       };
 
       // Detect state changes
       const thermalChanged = health.thermalState !== this.currentHealth.thermalState;
-      const batteryChanged = Math.abs(health.batteryLevel - this.currentHealth.batteryLevel) > 0.05;
+      const batteryChanged =
+        Math.abs(health.batteryLevel - this.currentHealth.batteryLevel) > 0.05;
+      const memoryChanged =
+        Math.abs(health.memoryUsage - this.currentHealth.memoryUsage) > 50; // 50MB threshold
 
       this.currentHealth = health;
 
       // Notify listeners if significant change
-      if (thermalChanged || batteryChanged) {
+      if (thermalChanged || batteryChanged || memoryChanged) {
         this.notifyListeners();
       }
 
@@ -178,10 +227,19 @@ export class DeviceHealthMonitor {
         console.warn('[DeviceHealth] CRITICAL: Device overheating!');
       }
 
-      if (health.batteryLevel < 0.10) {
+      if (health.batteryLevel < 0.1) {
         console.warn('[DeviceHealth] CRITICAL: Battery very low!');
       }
 
+      if (health.memoryCritical) {
+        console.warn(
+          `[DeviceHealth] CRITICAL: Memory usage very high! ${memoryUsage}MB / ${this.MEMORY_CRITICAL_THRESHOLD}MB`
+        );
+      } else if (health.memoryWarning) {
+        console.warn(
+          `[DeviceHealth] WARNING: Memory usage elevated: ${memoryUsage}MB / ${this.MEMORY_WARNING_THRESHOLD}MB`
+        );
+      }
     } catch (error) {
       console.error('[DeviceHealth] Failed to check health:', error);
     }
@@ -204,7 +262,6 @@ export class DeviceHealthMonitor {
       // Mock implementation - replace with actual native bridge
       const mockState = 'nominal';
       return mockState as ThermalState;
-
     } catch (error) {
       console.error('[DeviceHealth] Failed to get thermal state:', error);
       return 'nominal';
@@ -224,7 +281,6 @@ export class DeviceHealthMonitor {
       // Mock implementation - replace with actual native bridge
       const mockLevel = 1.0;
       return mockLevel;
-
     } catch (error) {
       console.error('[DeviceHealth] Failed to get battery level:', error);
       return 1.0;
@@ -246,7 +302,6 @@ export class DeviceHealthMonitor {
 
       // Mock implementation
       return false;
-
     } catch (error) {
       console.error('[DeviceHealth] Failed to check low power mode:', error);
       return false;
@@ -254,10 +309,39 @@ export class DeviceHealthMonitor {
   }
 
   /**
+   * Get current memory usage in MB
+   * Uses performance.memory API on web, estimates on native
+   */
+  private async getMemoryUsage(): Promise<number> {
+    try {
+      // Try performance.memory API (available on web and some environments)
+      if (typeof performance !== 'undefined' && (performance as any).memory) {
+        const memoryInfo = (performance as any).memory;
+        // usedJSHeapSize is in bytes, convert to MB
+        const usedMB = memoryInfo.usedJSHeapSize / (1024 * 1024);
+        return Math.round(usedMB);
+      }
+
+      // For React Native, would need native bridge
+      // TODO: Implement native bridge to get actual memory usage
+      // const { DeviceInfo } = NativeModules;
+      // const memoryMB = await DeviceInfo.getMemoryUsage();
+
+      // Fallback: Estimate based on typical app usage
+      // Real implementation would query native memory APIs
+      const estimatedMB = 150; // Conservative estimate for React Native app
+      return estimatedMB;
+    } catch (error) {
+      console.error('[DeviceHealth] Failed to get memory usage:', error);
+      return 150; // Safe default
+    }
+  }
+
+  /**
    * Notify all listeners of health change
    */
   private notifyListeners(): void {
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(this.currentHealth);
       } catch (error) {
@@ -276,7 +360,7 @@ export class DeviceHealthMonitor {
       return 'Device overheating! Taking a break is recommended.';
     }
 
-    if (batteryLevel < 0.10) {
+    if (batteryLevel < 0.1) {
       return 'Battery very low! Please charge your device.';
     }
 
@@ -284,7 +368,7 @@ export class DeviceHealthMonitor {
       return 'Device is warm. Performance may be reduced.';
     }
 
-    if (batteryLevel < 0.20) {
+    if (batteryLevel < 0.2) {
       return 'Low battery. Consider charging soon.';
     }
 

@@ -70,4 +70,5 @@ export const VideoComparisonEvents = {
   OFFLINE_LIBRARY_USED: 'video_comparison_offline_library_used',
 } as const;
 
-export type VideoComparisonEvent = typeof VideoComparisonEvents[keyof typeof VideoComparisonEvents];
+export type VideoComparisonEvent =
+  (typeof VideoComparisonEvents)[keyof typeof VideoComparisonEvents];

@@ -5,7 +5,7 @@
  * Reduces setup failure from 60% → 10%
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,9 +14,17 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import { Frame, useCameraDevice } from 'react-native-vision-camera';
+import {
+  Frame,
+  Camera,
+  useCameraDevice,
+  useFrameProcessor,
+} from 'react-native-vision-camera';
+import { Worklets } from 'react-native-worklets-core';
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import { useSelector } from 'react-redux';
+import { RootState } from '@store/index';
 
 import {
   checkLightingConditions,
@@ -24,6 +32,7 @@ import {
   LightingAssessment,
   DistanceAssessment,
 } from '../../utils/compensatoryMechanisms';
+import { PoseLandmark } from '../../types/pose';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -35,17 +44,20 @@ interface SetupWizardProps {
 
 type SetupStep = 'lighting' | 'distance' | 'practice' | 'complete';
 
-const SetupWizard: React.FC<SetupWizardProps> = ({
-  visible,
-  onComplete,
-  onSkip,
-}) => {
+const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }) => {
   const [currentStep, setCurrentStep] = useState<SetupStep>('lighting');
   const [lightingStatus, setLightingStatus] = useState<LightingAssessment | null>(null);
   const [distanceStatus, setDistanceStatus] = useState<DistanceAssessment | null>(null);
   const [practiceAngle, setPracticeAngle] = useState<number>(0);
 
   const fadeAnim = useState(new Animated.Value(0))[0];
+
+  // VisionCamera setup (Gate 1: Real frame capture)
+  const device = useCameraDevice('front');
+  const latestFrameRef = useRef<Frame | null>(null);
+
+  // Get pose landmarks from Redux (populated by PoseDetectionScreen)
+  const { landmarks } = useSelector((state: RootState) => state.pose.poseData || {});
 
   useEffect(() => {
     if (visible) {
@@ -57,27 +69,51 @@ const SetupWizard: React.FC<SetupWizardProps> = ({
     }
   }, [visible]);
 
-  // Mock frame and landmarks for demonstration
-  // In production, these would come from actual camera feed
-  const mockFrame = {} as Frame;
-  const mockLandmarks = [];
+  /**
+   * Frame Processor - Captures latest frame for analysis
+   * Gate 1: Real frame capture (no more mocks!)
+   */
+  const frameProcessor = useFrameProcessor((frame) => {
+    'worklet';
+    // Store latest frame in ref for analysis
+    Worklets.runOnJS(updateLatestFrame)(frame);
+  }, []);
 
-  const handleLightingCheck = () => {
-    const assessment = checkLightingConditions(mockFrame);
-    setLightingStatus(assessment);
+  const updateLatestFrame = (frame: Frame) => {
+    latestFrameRef.current = frame;
+  };
 
-    if (assessment.canProceed) {
-      ReactNativeHapticFeedback.trigger('notificationSuccess');
-      setTimeout(() => {
-        setCurrentStep('distance');
-      }, 1000);
-    } else {
-      ReactNativeHapticFeedback.trigger('notificationWarning');
+  const handleLightingCheck = async () => {
+    const frame = latestFrameRef.current;
+
+    if (!frame) {
+      console.warn('⚠️ No frame available yet');
+      return;
+    }
+
+    try {
+      // Gate 1: Use real frame analysis (async)
+      const assessment = await checkLightingConditions(frame);
+      setLightingStatus(assessment);
+
+      if (assessment.canProceed) {
+        ReactNativeHapticFeedback.trigger('notificationSuccess');
+        setTimeout(() => {
+          setCurrentStep('distance');
+        }, 1000);
+      } else {
+        ReactNativeHapticFeedback.trigger('notificationWarning');
+      }
+    } catch (error) {
+      console.error('❌ Error checking lighting:', error);
+      ReactNativeHapticFeedback.trigger('notificationError');
     }
   };
 
   const handleDistanceCheck = () => {
-    const assessment = checkPatientDistance(mockLandmarks, SCREEN_HEIGHT);
+    // Gate 1: Use real landmarks from Redux (populated by PoseDetectionScreen)
+    const landmarkArray: PoseLandmark[] = landmarks || [];
+    const assessment = checkPatientDistance(landmarkArray, SCREEN_HEIGHT);
     setDistanceStatus(assessment);
 
     if (assessment.status === 'perfect') {
@@ -111,8 +147,19 @@ const SetupWizard: React.FC<SetupWizardProps> = ({
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+      {/* VisionCamera for frame capture (Gate 1: Real camera integration) */}
+      {device && visible && (
+        <Camera
+          style={StyleSheet.absoluteFill}
+          device={device}
+          isActive={visible}
+          frameProcessor={frameProcessor}
+          pixelFormat="yuv"
+        />
+      )}
+
       <LinearGradient
-        colors={['#1a1a1a', '#0d0d0d']}
+        colors={['rgba(26, 26, 26, 0.85)', 'rgba(13, 13, 13, 0.85)']}
         style={styles.gradient}
       >
         {/* Skip Button */}
@@ -124,27 +171,36 @@ const SetupWizard: React.FC<SetupWizardProps> = ({
 
         {/* Progress Indicator */}
         <View style={styles.progressContainer}>
-          <View style={[styles.progressDot, currentStep === 'lighting' && styles.progressDotActive]} />
+          <View
+            style={[
+              styles.progressDot,
+              currentStep === 'lighting' && styles.progressDotActive,
+            ]}
+          />
           <View style={styles.progressLine} />
-          <View style={[styles.progressDot, currentStep === 'distance' && styles.progressDotActive]} />
+          <View
+            style={[
+              styles.progressDot,
+              currentStep === 'distance' && styles.progressDotActive,
+            ]}
+          />
           <View style={styles.progressLine} />
-          <View style={[styles.progressDot, currentStep === 'practice' && styles.progressDotActive]} />
+          <View
+            style={[
+              styles.progressDot,
+              currentStep === 'practice' && styles.progressDotActive,
+            ]}
+          />
         </View>
 
         {/* Step Content */}
         <View style={styles.content}>
           {currentStep === 'lighting' && (
-            <LightingCheckStep
-              status={lightingStatus}
-              onCheck={handleLightingCheck}
-            />
+            <LightingCheckStep status={lightingStatus} onCheck={handleLightingCheck} />
           )}
 
           {currentStep === 'distance' && (
-            <DistanceCheckStep
-              status={distanceStatus}
-              onCheck={handleDistanceCheck}
-            />
+            <DistanceCheckStep status={distanceStatus} onCheck={handleDistanceCheck} />
           )}
 
           {currentStep === 'practice' && (
@@ -155,9 +211,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({
             />
           )}
 
-          {currentStep === 'complete' && (
-            <CompleteStep />
-          )}
+          {currentStep === 'complete' && <CompleteStep />}
         </View>
       </LinearGradient>
     </Animated.View>
@@ -173,10 +227,7 @@ interface LightingCheckStepProps {
   onCheck: () => void;
 }
 
-const LightingCheckStep: React.FC<LightingCheckStepProps> = ({
-  status,
-  onCheck,
-}) => {
+const LightingCheckStep: React.FC<LightingCheckStepProps> = ({ status, onCheck }) => {
   return (
     <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>💡 Check Lighting</Text>
@@ -210,14 +261,8 @@ const LightingCheckStep: React.FC<LightingCheckStepProps> = ({
       )}
 
       {/* Action Button */}
-      <TouchableOpacity
-        style={styles.actionButton}
-        onPress={onCheck}
-      >
-        <LinearGradient
-          colors={['#4CAF50', '#45a049']}
-          style={styles.buttonGradient}
-        >
+      <TouchableOpacity style={styles.actionButton} onPress={onCheck}>
+        <LinearGradient colors={['#4CAF50', '#45a049']} style={styles.buttonGradient}>
           <Text style={styles.buttonText}>
             {status ? 'Check Again' : 'Check Lighting'}
           </Text>
@@ -240,16 +285,11 @@ interface DistanceCheckStepProps {
   onCheck: () => void;
 }
 
-const DistanceCheckStep: React.FC<DistanceCheckStepProps> = ({
-  status,
-  onCheck,
-}) => {
+const DistanceCheckStep: React.FC<DistanceCheckStepProps> = ({ status, onCheck }) => {
   return (
     <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>📏 Check Distance</Text>
-      <Text style={styles.stepDescription}>
-        Stand where your whole body is visible
-      </Text>
+      <Text style={styles.stepDescription}>Stand where your whole body is visible</Text>
 
       {/* Live Preview with Guide */}
       <View style={styles.previewContainer}>
@@ -270,14 +310,8 @@ const DistanceCheckStep: React.FC<DistanceCheckStepProps> = ({
       </View>
 
       {/* Action Button */}
-      <TouchableOpacity
-        style={styles.actionButton}
-        onPress={onCheck}
-      >
-        <LinearGradient
-          colors={['#4CAF50', '#45a049']}
-          style={styles.buttonGradient}
-        >
+      <TouchableOpacity style={styles.actionButton} onPress={onCheck}>
+        <LinearGradient colors={['#4CAF50', '#45a049']} style={styles.buttonGradient}>
           <Text style={styles.buttonText}>
             {status ? 'Check Again' : 'Check Position'}
           </Text>
@@ -309,7 +343,7 @@ const PracticeStep: React.FC<PracticeStepProps> = ({
   // Simulate angle increase for practice
   useEffect(() => {
     const interval = setInterval(() => {
-      onAngleChange(prevAngle => {
+      onAngleChange((prevAngle) => {
         const newAngle = Math.min(prevAngle + 5, 90);
         if (newAngle >= 45 && prevAngle < 45) {
           onComplete();
@@ -337,20 +371,13 @@ const PracticeStep: React.FC<PracticeStepProps> = ({
 
         {/* Progress Arc */}
         <View style={styles.progressArc}>
-          <View
-            style={[
-              styles.progressArcFill,
-              { width: `${progress}%` },
-            ]}
-          />
+          <View style={[styles.progressArcFill, { width: `${progress}%` }]} />
         </View>
       </View>
 
       {/* Coaching Message */}
       <View style={styles.coachingContainer}>
-        {currentAngle < 30 && (
-          <Text style={styles.coachingText}>Bend your knee...</Text>
-        )}
+        {currentAngle < 30 && <Text style={styles.coachingText}>Bend your knee...</Text>}
         {currentAngle >= 30 && currentAngle < 60 && (
           <Text style={styles.coachingText}>Keep going! 👍</Text>
         )}
@@ -362,9 +389,7 @@ const PracticeStep: React.FC<PracticeStepProps> = ({
       {/* Success Message */}
       {currentAngle >= 45 && (
         <View style={styles.successContainer}>
-          <Text style={styles.successText}>
-            ✅ Perfect! You're ready to start!
-          </Text>
+          <Text style={styles.successText}>✅ Perfect! You're ready to start!</Text>
         </View>
       )}
     </View>
@@ -398,9 +423,7 @@ const CompleteStep: React.FC = () => {
         </View>
       </View>
 
-      <Text style={styles.completeNote}>
-        Starting in a moment...
-      </Text>
+      <Text style={styles.completeNote}>Starting in a moment...</Text>
     </View>
   );
 };

@@ -143,9 +143,11 @@ class ThermalSimulator {
     // Update throttling
     if (this.temperature > STRESS_CONFIG.thermalThrottling.throttleThreshold) {
       this.isThrottling = true;
-      const excessHeat = this.temperature - STRESS_CONFIG.thermalThrottling.throttleThreshold;
+      const excessHeat =
+        this.temperature - STRESS_CONFIG.thermalThrottling.throttleThreshold;
       const heatRange = 1 - STRESS_CONFIG.thermalThrottling.throttleThreshold;
-      this.throttleAmount = (excessHeat / heatRange) * STRESS_CONFIG.thermalThrottling.maxThrottle;
+      this.throttleAmount =
+        (excessHeat / heatRange) * STRESS_CONFIG.thermalThrottling.maxThrottle;
     } else {
       this.isThrottling = false;
       this.throttleAmount = 0;
@@ -185,7 +187,9 @@ function testExtendedSession() {
   const checkpoints = [0, 0.25, 0.5, 0.75, 1.0];
   const results = [];
 
-  console.log(`Testing ${totalFrames.toLocaleString()} frames over ${duration / 60} minutes...\n`);
+  console.log(
+    `Testing ${totalFrames.toLocaleString()} frames over ${duration / 60} minutes...\n`
+  );
 
   for (let i = 0; i < totalFrames; i++) {
     const progress = i / totalFrames;
@@ -222,7 +226,8 @@ function testExtendedSession() {
     thermal.update(1.0, 1 / fps);
 
     // Calculate current inference time (affected by thermal throttling)
-    const currentInference = baselineInference * thermal.getStatus().performanceMultiplier;
+    const currentInference =
+      baselineInference * thermal.getStatus().performanceMultiplier;
 
     // Check for critical conditions
     const memStatus = memory.getStatus();
@@ -232,7 +237,9 @@ function testExtendedSession() {
       warnings++;
       if (memStatus.current > 700) {
         crashes++;
-        console.log(`  ⚠️  OOM CRASH at frame ${i.toLocaleString()} (${(i / fps / 60).toFixed(1)}min) - Memory: ${memStatus.current.toFixed(1)}MB`);
+        console.log(
+          `  ⚠️  OOM CRASH at frame ${i.toLocaleString()} (${(i / fps / 60).toFixed(1)}min) - Memory: ${memStatus.current.toFixed(1)}MB`
+        );
         // Simulate app restart
         memory.currentMemory = memory.baselineMemory;
         memory.leaks = [];
@@ -242,12 +249,14 @@ function testExtendedSession() {
     // SIGSEGV risk after many inferences (Pitfall #9)
     if (i > 10000 && i % 1000 === 0 && Math.random() < 0.01) {
       crashes++;
-      console.log(`  💥 SIGSEGV CRASH at frame ${i.toLocaleString()} - Native memory corruption`);
+      console.log(
+        `  💥 SIGSEGV CRASH at frame ${i.toLocaleString()} - Native memory corruption`
+      );
     }
 
     // Report at checkpoints
     if (checkpoints.includes(Number(progress.toFixed(2)))) {
-      const minutes = (i / fps) / 60;
+      const minutes = i / fps / 60;
       const thermalStatus = thermal.getStatus();
 
       results.push({
@@ -263,11 +272,13 @@ function testExtendedSession() {
         warnings,
       });
 
-      console.log(`  [${(progress * 100).toFixed(0).padStart(3)}%] ${minutes.toFixed(0).padStart(3)}min | ` +
-                  `Mem: ${memStatus.current.toFixed(0).padStart(3)}MB (${memStatus.leaked.toFixed(1)}MB leaked) | ` +
-                  `Temp: ${thermalStatus.temperature} | ` +
-                  `Inference: ${currentInference.toFixed(1)}ms | ` +
-                  `Crashes: ${crashes}`);
+      console.log(
+        `  [${(progress * 100).toFixed(0).padStart(3)}%] ${minutes.toFixed(0).padStart(3)}min | ` +
+          `Mem: ${memStatus.current.toFixed(0).padStart(3)}MB (${memStatus.leaked.toFixed(1)}MB leaked) | ` +
+          `Temp: ${thermalStatus.temperature} | ` +
+          `Inference: ${currentInference.toFixed(1)}ms | ` +
+          `Crashes: ${crashes}`
+      );
     }
   }
 
@@ -278,19 +289,32 @@ function testExtendedSession() {
   const finalThermal = thermal.getStatus();
 
   console.log(`  Total Frames: ${totalFrames.toLocaleString()}`);
-  console.log(`  Final Memory: ${finalMemory.current.toFixed(1)}MB (started at ${memory.baselineMemory}MB)`);
+  console.log(
+    `  Final Memory: ${finalMemory.current.toFixed(1)}MB (started at ${memory.baselineMemory}MB)`
+  );
   console.log(`  Memory Leaked: ${finalMemory.leaked.toFixed(2)}MB`);
-  console.log(`  Memory Growth: ${((finalMemory.current / memory.baselineMemory - 1) * 100).toFixed(1)}%`);
+  console.log(
+    `  Memory Growth: ${((finalMemory.current / memory.baselineMemory - 1) * 100).toFixed(1)}%`
+  );
   console.log(`  Final Temperature: ${finalThermal.temperature}`);
-  console.log(`  Thermal Throttling: ${finalThermal.isThrottling ? 'YES' : 'NO'} (${finalThermal.throttleAmount})`);
+  console.log(
+    `  Thermal Throttling: ${finalThermal.isThrottling ? 'YES' : 'NO'} (${finalThermal.throttleAmount})`
+  );
   console.log(`  Total Crashes: ${crashes}`);
   console.log(`  Total Warnings: ${warnings}`);
 
   // Verdict
   const passed = crashes === 0 && finalMemory.current < 300;
-  console.log(`\n  ${passed ? '✅ PASSED' : '❌ FAILED'} - ${passed ? 'Stable over 2 hours' : 'Stability issues detected'}`);
+  console.log(
+    `\n  ${passed ? '✅ PASSED' : '❌ FAILED'} - ${passed ? 'Stable over 2 hours' : 'Stability issues detected'}`
+  );
 
-  return { passed, crashes, warnings, memoryGrowth: finalMemory.current - memory.baselineMemory };
+  return {
+    passed,
+    crashes,
+    warnings,
+    memoryGrowth: finalMemory.current - memory.baselineMemory,
+  };
 }
 
 // ============================================================================
@@ -311,7 +335,7 @@ function testMemoryPressure() {
 
   const results = [];
 
-  scenarios.forEach(scenario => {
+  scenarios.forEach((scenario) => {
     console.log(`  Testing: ${scenario.name} (${scenario.startMem}MB starting memory)`);
 
     const memory = new MemorySimulator(scenario.startMem);
@@ -321,7 +345,9 @@ function testMemoryPressure() {
 
     for (let i = 0; i < targetFrames; i++) {
       // Allocate memory based on workload
-      const allocAmount = { light: 0.5, medium: 1.0, heavy: 2.0, extreme: 5.0 }[scenario.workload];
+      const allocAmount = { light: 0.5, medium: 1.0, heavy: 2.0, extreme: 5.0 }[
+        scenario.workload
+      ];
       memory.allocate(allocAmount, 'Frame + Leak');
 
       // Free most but not all (simulating leaks)
@@ -329,7 +355,9 @@ function testMemoryPressure() {
 
       // Check OOM
       if (memory.currentMemory > 800) {
-        console.log(`    💥 OOM KILLED at frame ${i} (${memory.currentMemory.toFixed(1)}MB)`);
+        console.log(
+          `    💥 OOM KILLED at frame ${i} (${memory.currentMemory.toFixed(1)}MB)`
+        );
         survived = false;
         survivedFrames = i;
         break;
@@ -347,15 +375,19 @@ function testMemoryPressure() {
       pressure: status.pressure.toFixed(1),
     });
 
-    console.log(`    ${survived ? '✅ Survived' : '❌ Crashed'} | ` +
-                `Frames: ${survivedFrames}/${targetFrames} | ` +
-                `Final: ${status.current.toFixed(1)}MB | ` +
-                `Pressure: ${status.pressure.toFixed(0)}%\n`);
+    console.log(
+      `    ${survived ? '✅ Survived' : '❌ Crashed'} | ` +
+        `Frames: ${survivedFrames}/${targetFrames} | ` +
+        `Final: ${status.current.toFixed(1)}MB | ` +
+        `Pressure: ${status.pressure.toFixed(0)}%\n`
+    );
   });
 
   // Summary
-  const passedScenarios = results.filter(r => r.survived).length;
-  console.log(`📊 Memory Pressure Results: ${passedScenarios}/${scenarios.length} scenarios passed\n`);
+  const passedScenarios = results.filter((r) => r.survived).length;
+  console.log(
+    `📊 Memory Pressure Results: ${passedScenarios}/${scenarios.length} scenarios passed\n`
+  );
 
   return { results, passed: passedScenarios >= 3 }; // At least 3/4 should pass
 }
@@ -375,7 +407,7 @@ function testRapidStateChanges() {
     { name: 'Worst Case (60 FPS unbatched)', updatesPerSec: 60, batched: false },
   ];
 
-  scenarios.forEach(scenario => {
+  scenarios.forEach((scenario) => {
     console.log(`  Testing: ${scenario.name}`);
 
     let totalTime = 0;
@@ -436,7 +468,7 @@ function testGPUDelegateFallback() {
     { name: 'GPU Crashes Mid-Session', gpuWorks: 'crashes', expectedTime: 40 },
   ];
 
-  scenarios.forEach(scenario => {
+  scenarios.forEach((scenario) => {
     console.log(`  Scenario: ${scenario.name}`);
 
     let currentDelegate = scenario.gpuWorks === true ? 'GPU' : 'CPU';
@@ -486,13 +518,15 @@ function parameterFineTuning() {
   console.log('  FPS | CPU Load | Battery | UX Smoothness | Recommendation');
   console.log('  ' + '─'.repeat(66));
 
-  frequencies.forEach(fps => {
-    const cpuLoad = (fps / 60 * 100).toFixed(0) + '%';
+  frequencies.forEach((fps) => {
+    const cpuLoad = ((fps / 60) * 100).toFixed(0) + '%';
     const battery = fps < 15 ? 'Excellent' : fps < 30 ? 'Good' : 'Moderate';
     const smoothness = fps < 10 ? 'Acceptable' : fps < 20 ? 'Good' : 'Excellent';
     const recommended = fps === 10;
 
-    console.log(`  ${fps.toString().padStart(3)}  | ${cpuLoad.padEnd(8)} | ${battery.padEnd(9)} | ${smoothness.padEnd(13)} | ${recommended ? '✅ OPTIMAL' : ''}`);
+    console.log(
+      `  ${fps.toString().padStart(3)}  | ${cpuLoad.padEnd(8)} | ${battery.padEnd(9)} | ${smoothness.padEnd(13)} | ${recommended ? '✅ OPTIMAL' : ''}`
+    );
   });
 
   console.log('\n  🎯 Recommended: 10 FPS (current setting)');
@@ -505,11 +539,18 @@ function parameterFineTuning() {
     { name: 'Warning Threshold', value: 300, action: 'Show warning' },
     { name: 'Cleanup Threshold', value: 400, action: 'Force cleanup' },
     { name: 'Critical Threshold', value: 500, action: 'Stop detection' },
-    { name: 'Reload Threshold', value: 10000, action: 'Reload model', unit: 'inferences' },
+    {
+      name: 'Reload Threshold',
+      value: 10000,
+      action: 'Reload model',
+      unit: 'inferences',
+    },
   ];
 
-  thresholds.forEach(t => {
-    console.log(`  ${t.name.padEnd(20)}: ${t.value.toString().padStart(6)} ${t.unit || 'MB'.padEnd(11)} → ${t.action}`);
+  thresholds.forEach((t) => {
+    console.log(
+      `  ${t.name.padEnd(20)}: ${t.value.toString().padStart(6)} ${t.unit || 'MB'.padEnd(11)} → ${t.action}`
+    );
   });
 
   console.log('\n3. Thermal Throttling Parameters');
@@ -600,7 +641,7 @@ async function main() {
     const recommendedConfig = parameterFineTuning();
 
     // Calculate results
-    results.totalPassed = results.tests.filter(t => t.passed).length;
+    results.totalPassed = results.tests.filter((t) => t.passed).length;
     results.totalFailed = results.tests.length - results.totalPassed;
 
     // Final Summary
@@ -635,8 +676,9 @@ async function main() {
     console.log('  📝 Saved to: recommended-config.json\n');
 
     console.log('🎉 Stress testing complete!');
-    console.log(`\nFinal Score: ${results.totalPassed * 25}/${results.tests.length * 25} (${((results.totalPassed / results.tests.length) * 100).toFixed(0)}%)`);
-
+    console.log(
+      `\nFinal Score: ${results.totalPassed * 25}/${results.tests.length * 25} (${((results.totalPassed / results.tests.length) * 100).toFixed(0)}%)`
+    );
   } catch (error) {
     console.error('\n❌ Stress testing failed:', error);
     process.exit(1);

@@ -16,9 +16,18 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { detectAllShoulderErrors, ShoulderError } from '../src/features/videoComparison/errorDetection/shoulderErrors';
-import { detectAllKneeErrors, KneeError } from '../src/features/videoComparison/errorDetection/kneeErrors';
-import { detectAllElbowErrors, ElbowError } from '../src/features/videoComparison/errorDetection/elbowErrors';
+import {
+  detectAllShoulderErrors,
+  ShoulderError,
+} from '../src/features/videoComparison/errorDetection/shoulderErrors';
+import {
+  detectAllKneeErrors,
+  KneeError,
+} from '../src/features/videoComparison/errorDetection/kneeErrors';
+import {
+  detectAllElbowErrors,
+  ElbowError,
+} from '../src/features/videoComparison/errorDetection/elbowErrors';
 import { SmartFeedbackGenerator } from '../src/features/videoComparison/services/smartFeedbackGenerator';
 import { ErrorDetectionConfig } from '../src/features/videoComparison/config/errorDetectionConfig';
 import { PoseFrame } from '../src/features/videoComparison/types/pose';
@@ -89,11 +98,15 @@ function parseArgs(): {
   }
 
   if (!parsed.referenceVideo || !parsed.userVideo || !parsed.exerciseType) {
-    console.error('Usage: npm run clinical:validate -- --reference <path> --user <path> --exercise <type>');
+    console.error(
+      'Usage: npm run clinical:validate -- --reference <path> --user <path> --exercise <type>'
+    );
     console.error('Options:');
     console.error('  --reference       Path to reference video');
     console.error('  --user            Path to user video');
-    console.error('  --exercise        Exercise type (shoulder_abduction, squat, bicep_curl)');
+    console.error(
+      '  --exercise        Exercise type (shoulder_abduction, squat, bicep_curl)'
+    );
     console.error('  --ground-truth    Optional: Path to ground truth JSON file');
     console.error('  --output          Optional: Path to save results JSON');
     process.exit(1);
@@ -234,7 +247,9 @@ function generateRecommendations(
 
   // Good balance
   if (metrics.f1Score >= 0.85) {
-    recommendations.push('✅ Good threshold balance - thresholds appear well-calibrated.');
+    recommendations.push(
+      '✅ Good threshold balance - thresholds appear well-calibrated.'
+    );
   }
 
   // Analyze specific error types
@@ -284,7 +299,9 @@ async function runValidation(): Promise<void> {
   console.log(`  Reference Video: ${args.referenceVideo}`);
   console.log(`  User Video: ${args.userVideo}`);
   console.log(`  Exercise Type: ${args.exerciseType}`);
-  console.log(`  Ground Truth: ${args.groundTruthFile || 'None (will report detected errors only)'}`);
+  console.log(
+    `  Ground Truth: ${args.groundTruthFile || 'None (will report detected errors only)'}`
+  );
   console.log('');
 
   // Check files exist

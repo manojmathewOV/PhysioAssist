@@ -6,14 +6,7 @@
  */
 
 import React from 'react';
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  StyleSheet,
-  Modal,
-  Animated,
-} from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, Modal, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
 interface LoadingOverlayProps {
@@ -58,12 +51,7 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-    >
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       <View style={styles.overlay}>
         <LinearGradient
           colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.9)']}
@@ -95,17 +83,13 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
                     ]}
                   />
                 </View>
-                <Text style={styles.progressText}>
-                  {Math.round(progress * 100)}%
-                </Text>
+                <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
               </View>
             )}
 
             {/* Estimated Time */}
             {estimatedTime !== undefined && estimatedTime > 0 && (
-              <Text style={styles.timeText}>
-                {formatTimeRemaining(estimatedTime)}
-              </Text>
+              <Text style={styles.timeText}>{formatTimeRemaining(estimatedTime)}</Text>
             )}
           </View>
         </LinearGradient>
