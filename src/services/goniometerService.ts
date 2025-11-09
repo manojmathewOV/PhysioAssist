@@ -1,5 +1,7 @@
 import { PoseLandmark, JointAngle, AngleCalculationConfig } from '@types/pose';
 import { Vector3D } from '@types/common';
+import { AnatomicalPlane } from '@types/biomechanics';
+import { angleBetweenVectors, projectVectorOntoPlane } from '@utils/vectorMath';
 
 export class GoniometerService {
   private readonly config: AngleCalculationConfig;
@@ -9,7 +11,7 @@ export class GoniometerService {
     this.config = {
       smoothingWindow: 5,
       minConfidence: 0.5,
-      use3D: false,
+      use3D: true, // ✅ Enable 3D calculations by default for Gate 9
       ...config,
     };
   }
@@ -123,6 +125,52 @@ export class GoniometerService {
     const angleRadians = Math.acos(Math.max(-1, Math.min(1, cosAngle)));
 
     return (angleRadians * 180) / Math.PI;
+  }
+
+  /**
+   * Calculate angle between two vectors in a specific anatomical plane
+   * Projects vectors onto the plane before calculating the angle
+   *
+   * @param vector1 - First 3D vector
+   * @param vector2 - Second 3D vector
+   * @param plane - Anatomical plane for measurement
+   * @param jointName - Name of the joint being measured
+   * @returns Joint angle with plane information
+   *
+   * @example
+   * const humerusVector = subtract3D(elbow, shoulder);
+   * const thoraxVector = subtract3D(shoulderCenter, hipCenter);
+   * const angle = goniometer.calculateAngleInPlane(
+   *   humerusVector,
+   *   thoraxVector,
+   *   scapularPlane,
+   *   'left_shoulder_abduction'
+   * );
+   */
+  calculateAngleInPlane(
+    vector1: Vector3D,
+    vector2: Vector3D,
+    plane: AnatomicalPlane,
+    jointName: string
+  ): JointAngle {
+    // Project vectors onto the anatomical plane
+    const v1Projected = projectVectorOntoPlane(vector1, plane.normal);
+    const v2Projected = projectVectorOntoPlane(vector2, plane.normal);
+
+    // Calculate angle between projected vectors
+    const angle = angleBetweenVectors(v1Projected, v2Projected);
+
+    return {
+      jointName,
+      angle,
+      confidence: 0.9, // High confidence for plane-projected angles
+      isValid: true,
+      vectors: {
+        BA: v1Projected,
+        BC: v2Projected,
+      },
+      plane: plane.name,
+    };
   }
 
   /**

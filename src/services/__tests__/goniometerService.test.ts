@@ -1,5 +1,7 @@
-import { goniometerService } from '../goniometerService';
+import { goniometerService, GoniometerService } from '../goniometerService';
 import { PoseLandmark } from '../../types/pose';
+import { AnatomicalPlane } from '@types/biomechanics';
+import { Vector3D } from '@types/common';
 
 describe('GoniometerService', () => {
   beforeEach(() => {
@@ -117,10 +119,10 @@ describe('GoniometerService', () => {
       const jointName = 'rightElbow';
 
       // Add multiple angle readings
-      const angle1 = goniometerService.smoothAngle(jointName, 90);
-      const angle2 = goniometerService.smoothAngle(jointName, 92);
-      const angle3 = goniometerService.smoothAngle(jointName, 88);
-      const angle4 = goniometerService.smoothAngle(jointName, 91);
+      goniometerService.smoothAngle(jointName, 90);
+      goniometerService.smoothAngle(jointName, 92);
+      goniometerService.smoothAngle(jointName, 88);
+      goniometerService.smoothAngle(jointName, 91);
       const angle5 = goniometerService.smoothAngle(jointName, 89);
 
       // The smoothed angle should be close to the average
@@ -174,6 +176,337 @@ describe('GoniometerService', () => {
 
       expect(elbowAngle).toBe(45);
       expect(kneeAngle).toBeCloseTo(121, 1); // Should be smoothed with history
+    });
+  });
+
+  describe('Gate 9 Enhancements: 3D Mode and Plane-Aware Calculations', () => {
+    describe('Default 3D Mode', () => {
+      it('should enable 3D mode by default', () => {
+        const freshService = new GoniometerService();
+        const pointA: PoseLandmark = {
+          x: 0,
+          y: 0,
+          z: 1,
+          visibility: 1,
+          name: 'pointA',
+          index: 0,
+        };
+        const pointB: PoseLandmark = {
+          x: 0,
+          y: 0,
+          z: 0,
+          visibility: 1,
+          name: 'pointB',
+          index: 1,
+        };
+        const pointC: PoseLandmark = {
+          x: 1,
+          y: 0,
+          z: 0,
+          visibility: 1,
+          name: 'pointC',
+          index: 2,
+        };
+
+        const result = freshService.calculateAngle(pointA, pointB, pointC, 'test3D');
+
+        // Should calculate 3D angle (90 degrees in 3D space)
+        expect(result.angle).toBeCloseTo(90, 0);
+        expect(result.isValid).toBe(true);
+      });
+
+      it('should allow 2D mode via configuration override', () => {
+        const service2D = new GoniometerService({ use3D: false });
+        const pointA: PoseLandmark = {
+          x: 0,
+          y: 1,
+          z: 0,
+          visibility: 1,
+          name: 'pointA',
+          index: 0,
+        };
+        const pointB: PoseLandmark = {
+          x: 0,
+          y: 0,
+          z: 0,
+          visibility: 1,
+          name: 'pointB',
+          index: 1,
+        };
+        const pointC: PoseLandmark = {
+          x: 1,
+          y: 0,
+          z: 0,
+          visibility: 1,
+          name: 'pointC',
+          index: 2,
+        };
+
+        const result = service2D.calculateAngle(pointA, pointB, pointC, 'test2D');
+
+        expect(result.angle).toBeCloseTo(90, 0); // Still works in 2D
+      });
+    });
+
+    describe('calculateAngleInPlane', () => {
+      const service = new GoniometerService();
+
+      it('should calculate angle in sagittal plane (flexion/extension)', () => {
+        // Sagittal plane: normal is Z-axis (lateral direction)
+        const sagittalPlane: AnatomicalPlane = {
+          name: 'sagittal',
+          normal: { x: 0, y: 0, z: 1 },
+          point: { x: 0, y: 0, z: 0 },
+        };
+
+        // Two vectors in XY plane (sagittal plane)
+        const vector1: Vector3D = { x: 0, y: 1, z: 0 }; // Superior
+        const vector2: Vector3D = { x: 1, y: 0, z: 0 }; // Anterior
+
+        const result = service.calculateAngleInPlane(
+          vector1,
+          vector2,
+          sagittalPlane,
+          'sagittal_test'
+        );
+
+        expect(result.angle).toBeCloseTo(90, 1);
+        expect(result.plane).toBe('sagittal');
+        expect(result.isValid).toBe(true);
+      });
+
+      it('should calculate angle in coronal plane (abduction/adduction)', () => {
+        // Coronal plane: normal is X-axis (anterior direction)
+        const coronalPlane: AnatomicalPlane = {
+          name: 'coronal',
+          normal: { x: 1, y: 0, z: 0 },
+          point: { x: 0, y: 0, z: 0 },
+        };
+
+        // Two vectors in YZ plane (coronal plane)
+        const vector1: Vector3D = { x: 0, y: 1, z: 0 }; // Superior
+        const vector2: Vector3D = { x: 0, y: 0, z: 1 }; // Lateral
+
+        const result = service.calculateAngleInPlane(
+          vector1,
+          vector2,
+          coronalPlane,
+          'coronal_test'
+        );
+
+        expect(result.angle).toBeCloseTo(90, 1);
+        expect(result.plane).toBe('coronal');
+      });
+
+      it('should calculate angle in scapular plane (30-40° from coronal)', () => {
+        // Scapular plane: 35° anterior to coronal
+        const angle35 = 35 * (Math.PI / 180);
+        const scapularPlane: AnatomicalPlane = {
+          name: 'scapular',
+          normal: {
+            x: Math.sin(angle35),
+            y: 0,
+            z: Math.cos(angle35),
+          },
+          point: { x: 0, y: 0, z: 0 },
+          rotation: 35,
+        };
+
+        // Humerus vector (arm raised)
+        const humerusVector: Vector3D = { x: 0.5, y: 0.8, z: 0.3 };
+        // Thorax vertical
+        const thoraxVector: Vector3D = { x: 0, y: 1, z: 0 };
+
+        const result = service.calculateAngleInPlane(
+          humerusVector,
+          thoraxVector,
+          scapularPlane,
+          'shoulder_abduction_scapular'
+        );
+
+        expect(result.plane).toBe('scapular');
+        expect(result.isValid).toBe(true);
+        expect(result.angle).toBeGreaterThan(0);
+        expect(result.angle).toBeLessThan(180);
+      });
+
+      it('should project 3D vectors onto plane before calculation', () => {
+        const sagittalPlane: AnatomicalPlane = {
+          name: 'sagittal',
+          normal: { x: 0, y: 0, z: 1 },
+          point: { x: 0, y: 0, z: 0 },
+        };
+
+        // Vectors with Z components (out of sagittal plane)
+        const vector1: Vector3D = { x: 1, y: 1, z: 0.5 };
+        const vector2: Vector3D = { x: 1, y: -1, z: 0.8 };
+
+        const result = service.calculateAngleInPlane(
+          vector1,
+          vector2,
+          sagittalPlane,
+          'projected_test'
+        );
+
+        // Z components should be projected out, leaving XY angle calculation
+        expect(result.isValid).toBe(true);
+        expect(result.vectors?.BA.z).toBeCloseTo(0, 5); // Projected vector should have no Z
+        expect(result.vectors?.BC.z).toBeCloseTo(0, 5);
+      });
+
+      it('should return high confidence for plane-projected angles', () => {
+        const coronalPlane: AnatomicalPlane = {
+          name: 'coronal',
+          normal: { x: 1, y: 0, z: 0 },
+          point: { x: 0, y: 0, z: 0 },
+        };
+
+        const vector1: Vector3D = { x: 0, y: 1, z: 0 };
+        const vector2: Vector3D = { x: 0, y: 0, z: 1 };
+
+        const result = service.calculateAngleInPlane(
+          vector1,
+          vector2,
+          coronalPlane,
+          'confidence_test'
+        );
+
+        expect(result.confidence).toBe(0.9); // High confidence for plane calculations
+      });
+
+      it('should handle parallel vectors correctly', () => {
+        const sagittalPlane: AnatomicalPlane = {
+          name: 'sagittal',
+          normal: { x: 0, y: 0, z: 1 },
+          point: { x: 0, y: 0, z: 0 },
+        };
+
+        // Parallel vectors
+        const vector1: Vector3D = { x: 1, y: 2, z: 0 };
+        const vector2: Vector3D = { x: 2, y: 4, z: 0 };
+
+        const result = service.calculateAngleInPlane(
+          vector1,
+          vector2,
+          sagittalPlane,
+          'parallel_test'
+        );
+
+        expect(result.angle).toBeCloseTo(0, 1); // 0 degrees for parallel
+      });
+
+      it('should handle perpendicular vectors correctly', () => {
+        const transversePlane: AnatomicalPlane = {
+          name: 'transverse',
+          normal: { x: 0, y: 1, z: 0 },
+          point: { x: 0, y: 0, z: 0 },
+        };
+
+        // Perpendicular vectors in transverse plane
+        const vector1: Vector3D = { x: 1, y: 0, z: 0 };
+        const vector2: Vector3D = { x: 0, y: 0, z: 1 };
+
+        const result = service.calculateAngleInPlane(
+          vector1,
+          vector2,
+          transversePlane,
+          'perpendicular_test'
+        );
+
+        expect(result.angle).toBeCloseTo(90, 1); // 90 degrees for perpendicular
+      });
+
+      it('should include vectors in result for validation', () => {
+        const coronalPlane: AnatomicalPlane = {
+          name: 'coronal',
+          normal: { x: 1, y: 0, z: 0 },
+          point: { x: 0, y: 0, z: 0 },
+        };
+
+        const vector1: Vector3D = { x: 0.5, y: 1, z: 0.5 };
+        const vector2: Vector3D = { x: 0.3, y: 0, z: 1 };
+
+        const result = service.calculateAngleInPlane(
+          vector1,
+          vector2,
+          coronalPlane,
+          'vectors_test'
+        );
+
+        expect(result.vectors).toBeDefined();
+        expect(result.vectors?.BA).toBeDefined();
+        expect(result.vectors?.BC).toBeDefined();
+        // Vectors should be normalized (magnitude ~1)
+        const mag1 = Math.sqrt(
+          result.vectors!.BA.x ** 2 +
+            result.vectors!.BA.y ** 2 +
+            result.vectors!.BA.z ** 2
+        );
+        const mag2 = Math.sqrt(
+          result.vectors!.BC.x ** 2 +
+            result.vectors!.BC.y ** 2 +
+            result.vectors!.BC.z ** 2
+        );
+        expect(mag1).toBeCloseTo(1, 1);
+        expect(mag2).toBeCloseTo(1, 1);
+      });
+    });
+
+    describe('Integration: 3D + Plane-Aware Calculations', () => {
+      it('should work with both calculateAngle (3D) and calculateAngleInPlane', () => {
+        const service = new GoniometerService();
+
+        // Test 3D angle calculation
+        const pointA: PoseLandmark = {
+          x: 0,
+          y: 0,
+          z: 1,
+          visibility: 1,
+          name: 'pointA',
+          index: 0,
+        };
+        const pointB: PoseLandmark = {
+          x: 0,
+          y: 0,
+          z: 0,
+          visibility: 1,
+          name: 'pointB',
+          index: 1,
+        };
+        const pointC: PoseLandmark = {
+          x: 1,
+          y: 0,
+          z: 0,
+          visibility: 1,
+          name: 'pointC',
+          index: 2,
+        };
+
+        const angle3D = service.calculateAngle(pointA, pointB, pointC, 'test3D');
+        expect(angle3D.angle).toBeCloseTo(90, 0);
+
+        // Test plane-aware calculation
+        const sagittalPlane: AnatomicalPlane = {
+          name: 'sagittal',
+          normal: { x: 0, y: 0, z: 1 },
+          point: { x: 0, y: 0, z: 0 },
+        };
+        const vector1: Vector3D = { x: 0, y: 1, z: 0 };
+        const vector2: Vector3D = { x: 1, y: 0, z: 0 };
+
+        const angleInPlane = service.calculateAngleInPlane(
+          vector1,
+          vector2,
+          sagittalPlane,
+          'testPlane'
+        );
+        expect(angleInPlane.angle).toBeCloseTo(90, 0);
+
+        // Both should work correctly
+        expect(angle3D.isValid).toBe(true);
+        expect(angleInPlane.isValid).toBe(true);
+        expect(angleInPlane.plane).toBe('sagittal');
+      });
     });
   });
 });

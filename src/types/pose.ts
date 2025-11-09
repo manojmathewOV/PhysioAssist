@@ -1,3 +1,5 @@
+import { Vector3D } from './common';
+
 export interface PoseLandmark {
   x: number;
   y: number;
@@ -32,6 +34,8 @@ export interface JointAngle {
     BA: Vector3D;
     BC: Vector3D;
   };
+  /** Optional: Anatomical plane in which angle was measured */
+  plane?: 'sagittal' | 'coronal' | 'transverse' | 'scapular';
 }
 
 export interface AngleCalculationConfig {
@@ -40,8 +44,5 @@ export interface AngleCalculationConfig {
   use3D?: boolean;
 }
 
-export interface Vector3D {
-  x: number;
-  y: number;
-  z: number;
-}
+// Re-export Vector3D from common for backward compatibility
+export type { Vector3D } from './common';
