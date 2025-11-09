@@ -20,6 +20,7 @@ import {
   PatientProfile,
   EnvironmentConditions,
 } from '../utils/compensatoryMechanisms';
+import { PoseLandmarkFilter } from '../utils/smoothing';
 
 // MoveNet keypoint names (17 total)
 const MOVENET_KEYPOINTS = [
@@ -70,8 +71,12 @@ export class PoseDetectionServiceV2 {
 
   // Patient-centric adaptive settings
   private adaptiveSettings: AdaptiveSettings | null = null;
-  private smoothingFactor: number = 0.5; // Default smoothing
+  private smoothingFactor: number = 0.5; // Default smoothing (deprecated - use filter below)
   private minConfidenceThreshold: number = 0.3; // Default confidence
+
+  // Gate 2: One-Euro filter for jitter reduction
+  private landmarkFilter: PoseLandmarkFilter;
+  private filteringEnabled: boolean = true;
 
   constructor(config: PoseDetectionConfig = {}) {
     this.config = {
@@ -81,6 +86,15 @@ export class PoseDetectionServiceV2 {
       enableSegmentation: false, // Not supported by MoveNet
       frameSkipRate: config.frameSkipRate || 1, // Process every frame with fast TFLite
     };
+
+    // Gate 2: Initialize One-Euro filter with clinical defaults
+    // Parameters from smoothing.ts clinical thresholds:
+    // - minCutoff: 1.0 Hz (baseline smoothing)
+    // - beta: 0.007 (speed responsiveness)
+    // - dCutoff: 1.0 Hz (velocity smoothing)
+    // - minVisibility: 0.5 (trust threshold for MoveNet confidence)
+    this.landmarkFilter = new PoseLandmarkFilter(1.0, 0.007, 1.0, 0.5);
+    this.filteringEnabled = this.config.smoothLandmarks;
   }
 
   /**
@@ -183,7 +197,7 @@ export class PoseDetectionServiceV2 {
       const output = this.model.run(inputTensor);
 
       // Parse MoveNet output: [1, 1, 17, 3] → [{x, y, score}...]
-      const landmarks = this.parseMoveNetOutput(output);
+      let landmarks = this.parseMoveNetOutput(output);
 
       // Calculate confidence score
       const confidence = this.calculateConfidence(landmarks);
@@ -192,6 +206,27 @@ export class PoseDetectionServiceV2 {
       const confidenceThreshold = this.adaptiveSettings?.minConfidence || this.minConfidenceThreshold;
       if (confidence < confidenceThreshold) {
         return null;
+      }
+
+      // Gate 2: Apply One-Euro filter for smoothing (if enabled)
+      if (this.filteringEnabled && this.landmarkFilter) {
+        const timestamp = performance.now() / 1000; // Convert to seconds
+        // Convert MoveNet landmarks to format expected by filter
+        const landmarksWithZ = landmarks.map(lm => ({
+          x: lm.x,
+          y: lm.y,
+          z: 0, // MoveNet doesn't have Z, use 0
+          visibility: lm.score, // Use MoveNet score as visibility
+        }));
+
+        const smoothed = this.landmarkFilter.filterPose(landmarksWithZ, timestamp);
+
+        // Convert back to MoveNet format
+        landmarks = smoothed.map(lm => ({
+          x: lm.x,
+          y: lm.y,
+          score: lm.visibility || 0,
+        }));
       }
 
       const inferenceTime = performance.now() - startTime;
@@ -323,11 +358,23 @@ export class PoseDetectionServiceV2 {
   }
 
   /**
-   * Reset performance tracking
+   * Reset performance tracking and smoothing filter
+   *
+   * Gate 2: Also resets One-Euro filter state
+   * Call when:
+   * - New exercise session starts
+   * - Patient moves out of frame (tracking lost)
+   * - Camera switches
    */
   resetPerformanceStats(): void {
     this.inferenceTimeSum = 0;
     this.inferenceCount = 0;
+
+    // Gate 2: Reset One-Euro filter
+    if (this.landmarkFilter) {
+      this.landmarkFilter.reset();
+      console.log('🔄 One-Euro filter reset');
+    }
   }
 
   /**
@@ -347,6 +394,8 @@ export class PoseDetectionServiceV2 {
 
   /**
    * Cleanup resources
+   *
+   * Gate 2: Also resets One-Euro filter
    */
   async cleanup(): Promise<void> {
     if (this.model) {
@@ -355,6 +404,12 @@ export class PoseDetectionServiceV2 {
     }
     this.isInitialized = false;
     this.poseDataCallback = undefined;
+
+    // Gate 2: Reset filter on cleanup
+    if (this.landmarkFilter) {
+      this.landmarkFilter.reset();
+    }
+
     console.log('🧹 PoseDetectionService V2 cleaned up');
   }
 
