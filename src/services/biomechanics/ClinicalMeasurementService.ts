@@ -28,16 +28,23 @@ import {
 } from '@types/clinicalMeasurement';
 import { GoniometerServiceV2 } from '../goniometerService.v2';
 import { AnatomicalReferenceService } from './AnatomicalReferenceService';
+import { CompensationDetectionService } from './CompensationDetectionService';
 import { Vector3D } from '@types/common';
 import { angleBetweenVectors, projectVectorOntoPlane, crossProduct, dotProduct } from '@utils/vectorMath';
 
 /**
  * Clinical-grade joint measurement service
  * Transforms raw joint angles into clinically meaningful measurements
+ *
+ * Gate 10A + 10B Integration:
+ * - Uses CompensationDetectionService for ISB-compliant compensation detection
+ * - Leverages cached anatomical frames from Gate 9B.5
+ * - Schema-agnostic via Gate 9B.6 goniometer
  */
 export class ClinicalMeasurementService {
   private goniometer: GoniometerServiceV2;
   private anatomicalService: AnatomicalReferenceService;
+  private compensationDetector: CompensationDetectionService;
   private clinicalThresholds: ClinicalThresholds;
   private compensationConfig: CompensationDetectionConfig;
 
@@ -47,6 +54,7 @@ export class ClinicalMeasurementService {
   ) {
     this.goniometer = new GoniometerServiceV2();
     this.anatomicalService = new AnatomicalReferenceService();
+    this.compensationDetector = new CompensationDetectionService();
     this.clinicalThresholds = {
       ...DEFAULT_CLINICAL_THRESHOLDS,
       ...thresholds,
@@ -690,10 +698,16 @@ export class ClinicalMeasurementService {
   /**
    * Detect compensation patterns during movement
    *
-   * Gate 10A: Basic compensation detection (placeholder)
-   * Gate 10B: Full compensation detection service (comprehensive)
+   * Gate 10B Integration: Uses CompensationDetectionService for comprehensive,
+   * ISB-compliant compensation detection.
    *
-   * Current implementation: Trunk lean and trunk rotation only
+   * Detects 6 compensation types:
+   * - Trunk lean (lateral flexion)
+   * - Trunk rotation (transverse plane)
+   * - Shoulder hiking (scapular elevation)
+   * - Elbow flexion drift (unintended flexion)
+   * - Hip hike (pelvic elevation)
+   * - Contralateral lean (opposite side lean)
    *
    * @param poseData - Processed pose data
    * @param jointName - Joint being measured (for context)
@@ -703,69 +717,12 @@ export class ClinicalMeasurementService {
     poseData: ProcessedPoseData,
     jointName: string
   ): CompensationPattern[] {
-    const compensations: CompensationPattern[] = [];
-
-    if (!poseData.cachedAnatomicalFrames) {
-      return compensations;
-    }
-
-    const { thorax, global } = poseData.cachedAnatomicalFrames;
-
-    // Compensation 1: Trunk lean (thorax Y-axis deviation from vertical)
-    const trunkLeanAngle = angleBetweenVectors(thorax.yAxis, global.yAxis);
-    const trunkLeanThreshold = this.compensationConfig.trunkLean.threshold;
-
-    if (trunkLeanAngle > trunkLeanThreshold) {
-      let severity: CompensationPattern['severity'];
-      if (trunkLeanAngle >= this.compensationConfig.trunkLean.severityThresholds.severe) {
-        severity = 'severe';
-      } else if (trunkLeanAngle >= this.compensationConfig.trunkLean.severityThresholds.moderate) {
-        severity = 'moderate';
-      } else if (trunkLeanAngle >= this.compensationConfig.trunkLean.severityThresholds.mild) {
-        severity = 'mild';
-      } else {
-        severity = 'minimal';
-      }
-
-      compensations.push({
-        type: 'trunk_lean',
-        severity,
-        magnitude: trunkLeanAngle,
-        affectsJoint: jointName,
-        clinicalNote: `Trunk lean detected: ${trunkLeanAngle.toFixed(1)}° from vertical. This may inflate measured ROM. True joint ROM may be lower.`,
-      });
-    }
-
-    // Compensation 2: Trunk rotation (thorax Z-axis deviation from frontal)
-    const trunkRotationAngle = angleBetweenVectors(thorax.zAxis, global.zAxis);
-    const trunkRotationThreshold = this.compensationConfig.trunkRotation.threshold;
-
-    if (trunkRotationAngle > trunkRotationThreshold) {
-      let severity: CompensationPattern['severity'];
-      if (trunkRotationAngle >= this.compensationConfig.trunkRotation.severityThresholds.severe) {
-        severity = 'severe';
-      } else if (
-        trunkRotationAngle >= this.compensationConfig.trunkRotation.severityThresholds.moderate
-      ) {
-        severity = 'moderate';
-      } else if (
-        trunkRotationAngle >= this.compensationConfig.trunkRotation.severityThresholds.mild
-      ) {
-        severity = 'mild';
-      } else {
-        severity = 'minimal';
-      }
-
-      compensations.push({
-        type: 'trunk_rotation',
-        severity,
-        magnitude: trunkRotationAngle,
-        affectsJoint: jointName,
-        clinicalNote: `Trunk rotation detected: ${trunkRotationAngle.toFixed(1)}°. Maintain frontal orientation for accurate measurement.`,
-      });
-    }
-
-    return compensations;
+    // Delegate to CompensationDetectionService (Gate 10B)
+    return this.compensationDetector.detectCompensations(
+      poseData,
+      undefined, // No previous frame for static measurements
+      jointName // Movement context for filtering relevant compensations
+    );
   }
 
   // =============================================================================
