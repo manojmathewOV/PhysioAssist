@@ -4727,5 +4727,2087 @@ describe('Performance Benchmarks', () => {
 
 ---
 
-**Next**: Section 9 will specify Gate 10C (Clinical Validation Protocol) for synthetic data generation, ground truth creation, and validation metrics.
+## Section 9: Gate 10C - Clinical Validation Protocol
+
+### 9.1 Objective & Success Criteria
+
+**Objective**: Establish rigorous validation protocol to verify clinical accuracy of anatomical measurements and compensation detection. Create synthetic test data with known ground truth to validate against clinical accuracy benchmarks.
+
+**Success Criteria**:
+- [ ] Synthetic test data generator for all 5 clinical measurements
+- [ ] Ground truth angles defined with ±0.1° precision
+- [ ] ±5° Mean Absolute Error (MAE) for all measurements (clinical accuracy target)
+- [ ] >80% sensitivity for moderate/severe compensations
+- [ ] >80% specificity for compensation detection (low false positives)
+- [ ] 100+ synthetic test cases covering normal and pathological ROM
+- [ ] Automated validation pipeline
+- [ ] Clinical validation report generator
+
+---
+
+### 9.2 Validation Strategy Overview
+
+**Three-Tier Validation Approach**:
+
+1. **Unit-Level Validation** (Already covered in Sections 6-8)
+   - Individual function correctness
+   - Frame calculation accuracy
+   - Angle calculation precision
+   - Compensation detection logic
+
+2. **Integration-Level Validation** (This section)
+   - End-to-end measurement pipeline
+   - Synthetic data with known ground truth
+   - Statistical validation (MAE, RMSE, R²)
+   - Compensation detection accuracy
+
+3. **Clinical-Level Validation** (Future work, Gate 10D)
+   - Real patient data comparison
+   - Physical goniometer correlation
+   - Physiotherapist validation study
+   - IRB approval and clinical trial
+
+**This Section Focus**: Integration-level validation using synthetic data with mathematically precise ground truth.
+
+---
+
+### 9.3 Synthetic Test Data Generation
+
+**Approach**: Generate ProcessedPoseData with landmarks positioned at known anatomical configurations, then verify measurements match expected ground truth.
+
+**Synthetic Data Generator Class**:
+```typescript
+// src/testing/SyntheticPoseDataGenerator.ts
+
+import { ProcessedPoseData, PoseLandmark } from '../types/pose';
+import { Vector3D } from '../utils/vectorMath';
+import * as vectorMath from '../utils/vectorMath';
+
+/**
+ * Synthetic Pose Data Generator for Clinical Validation
+ *
+ * Generates ProcessedPoseData with landmarks positioned at precise
+ * anatomical configurations with known ground truth angles.
+ *
+ * Use cases:
+ * - Validate goniometer accuracy
+ * - Test clinical measurement functions
+ * - Verify compensation detection
+ * - Generate test data for edge cases
+ */
+export class SyntheticPoseDataGenerator {
+  /**
+   * Generate shoulder flexion pose at specified angle
+   *
+   * Ground truth: Shoulder flexion angle in sagittal plane
+   *
+   * @param angle Target flexion angle (0-180°)
+   * @param schemaId 'movenet-17' or 'mediapipe-33'
+   * @param options Additional options (elbow angle, trunk lean, etc.)
+   * @returns ProcessedPoseData with known ground truth
+   */
+  public generateShoulderFlexion(
+    angle: number,
+    schemaId: string = 'movenet-17',
+    options: {
+      elbowAngle?: number; // Default: 180° (extended)
+      trunkLean?: number; // Lateral trunk lean in degrees (default: 0)
+      shoulderHiking?: number; // Shoulder elevation in cm (default: 0)
+      side?: 'left' | 'right'; // Default: 'right'
+      viewOrientation?: 'frontal' | 'sagittal' | 'lateral'; // Default: 'sagittal'
+    } = {}
+  ): { poseData: ProcessedPoseData; groundTruth: GroundTruth } {
+    const {
+      elbowAngle = 180,
+      trunkLean = 0,
+      shoulderHiking = 0,
+      side = 'right',
+      viewOrientation = 'sagittal',
+    } = options;
+
+    // Define anatomical reference points in normalized coordinates
+    const hipMidpoint: Vector3D = { x: 0.5, y: 0.6, z: 0.5 }; // Center of frame
+    const shoulderHeight = 0.4; // 40cm above hip in normalized space
+    const upperArmLength = 0.25; // 25cm
+    const forearmLength = 0.25; // 25cm
+
+    // Calculate shoulder position (with optional hiking)
+    const shoulderY = hipMidpoint.y - shoulderHeight - (shoulderHiking / 100);
+    const shoulder: Vector3D = {
+      x: side === 'right' ? hipMidpoint.x + 0.15 : hipMidpoint.x - 0.15,
+      y: shoulderY,
+      z: hipMidpoint.z,
+    };
+
+    // Calculate elbow position based on shoulder flexion angle
+    // Flexion is rotation in sagittal plane (around Z-axis)
+    const flexionRad = (angle * Math.PI) / 180;
+    const elbow: Vector3D = {
+      x: shoulder.x + upperArmLength * Math.sin(flexionRad),
+      y: shoulder.y - upperArmLength * Math.cos(flexionRad),
+      z: shoulder.z,
+    };
+
+    // Calculate wrist position based on elbow angle
+    const elbowFlexionRad = ((180 - elbowAngle) * Math.PI) / 180;
+    const wrist: Vector3D = {
+      x: elbow.x + forearmLength * Math.sin(flexionRad + elbowFlexionRad),
+      y: elbow.y - forearmLength * Math.cos(flexionRad + elbowFlexionRad),
+      z: elbow.z,
+    };
+
+    // Generate full skeleton
+    const landmarks = this.generateFullSkeleton(
+      schemaId,
+      {
+        shoulder,
+        elbow,
+        wrist,
+        hipMidpoint,
+        trunkLean,
+        side,
+      }
+    );
+
+    const poseData: ProcessedPoseData = {
+      landmarks,
+      timestamp: Date.now(),
+      schemaId,
+      viewOrientation,
+      qualityScore: 0.95,
+      hasDepth: false,
+    };
+
+    const groundTruth: GroundTruth = {
+      primaryMeasurement: {
+        joint: `${side}_shoulder`,
+        angle,
+        plane: 'sagittal',
+        movement: 'flexion',
+      },
+      secondaryMeasurements: [
+        {
+          joint: `${side}_elbow`,
+          angle: elbowAngle,
+          expectedDeviation: Math.abs(elbowAngle - 180),
+        },
+      ],
+      compensations: this.generateCompensationGroundTruth(trunkLean, shoulderHiking),
+      testCase: `shoulder_flexion_${angle}deg`,
+    };
+
+    return { poseData, groundTruth };
+  }
+
+  /**
+   * Generate shoulder abduction pose at specified angle
+   */
+  public generateShoulderAbduction(
+    angle: number,
+    schemaId: string = 'movenet-17',
+    options: {
+      scapularRotation?: number; // Scapular upward rotation (default: auto-calculated)
+      trunkLean?: number;
+      side?: 'left' | 'right';
+    } = {}
+  ): { poseData: ProcessedPoseData; groundTruth: GroundTruth } {
+    // Implementation similar to flexion but in scapular plane (35° from coronal)
+    // ...
+  }
+
+  /**
+   * Generate shoulder rotation pose (internal/external)
+   */
+  public generateShoulderRotation(
+    angle: number,
+    direction: 'internal' | 'external',
+    schemaId: string = 'movenet-17',
+    options: {
+      elbowAngle?: number; // Must be ~90° for rotation measurement
+      side?: 'left' | 'right';
+    } = {}
+  ): { poseData: ProcessedPoseData; groundTruth: GroundTruth } {
+    // Implementation with elbow at 90° and forearm rotation
+    // ...
+  }
+
+  /**
+   * Generate full skeleton from key joint positions
+   *
+   * Fills in all required landmarks (head, torso, hips, legs) based on
+   * provided shoulder/elbow/wrist positions and trunk configuration.
+   */
+  private generateFullSkeleton(
+    schemaId: string,
+    config: {
+      shoulder: Vector3D;
+      elbow: Vector3D;
+      wrist: Vector3D;
+      hipMidpoint: Vector3D;
+      trunkLean: number;
+      side: 'left' | 'right';
+    }
+  ): PoseLandmark[] {
+    const landmarks: PoseLandmark[] = [];
+
+    // Generate landmarks based on schema
+    if (schemaId === 'movenet-17') {
+      // MoveNet-17 keypoints
+      landmarks.push(
+        this.createLandmark(config.hipMidpoint.x, config.hipMidpoint.y - 0.5, 0.98), // 0: nose
+        this.createLandmark(config.hipMidpoint.x - 0.02, config.hipMidpoint.y - 0.52, 0.97), // 1: left eye
+        this.createLandmark(config.hipMidpoint.x + 0.02, config.hipMidpoint.y - 0.52, 0.97), // 2: right eye
+        // ... all 17 keypoints
+      );
+    } else if (schemaId === 'mediapipe-33') {
+      // MediaPipe-33 keypoints
+      // ... all 33 keypoints
+    }
+
+    // Apply trunk lean if specified
+    if (config.trunkLean !== 0) {
+      this.applyTrunkLean(landmarks, config.trunkLean);
+    }
+
+    return landmarks;
+  }
+
+  /**
+   * Create landmark with specified position and confidence
+   */
+  private createLandmark(x: number, y: number, confidence: number = 0.95): PoseLandmark {
+    return {
+      x,
+      y,
+      z: 0.5, // Default depth
+      confidence,
+    };
+  }
+
+  /**
+   * Apply trunk lean transformation to landmarks
+   */
+  private applyTrunkLean(landmarks: PoseLandmark[], leanAngle: number): void {
+    // Rotate torso landmarks around hip midpoint
+    const leanRad = (leanAngle * Math.PI) / 180;
+    // ... rotation transformation
+  }
+
+  /**
+   * Generate ground truth for compensations
+   */
+  private generateCompensationGroundTruth(
+    trunkLean: number,
+    shoulderHiking: number
+  ): GroundTruthCompensation[] {
+    const compensations: GroundTruthCompensation[] = [];
+
+    if (trunkLean > 0) {
+      compensations.push({
+        type: 'trunk_lean',
+        magnitude: trunkLean,
+        expectedSeverity: this.classifySeverity(trunkLean, 'degrees'),
+      });
+    }
+
+    if (shoulderHiking > 0) {
+      compensations.push({
+        type: 'shoulder_hiking',
+        magnitude: shoulderHiking,
+        expectedSeverity: this.classifySeverity(shoulderHiking, 'cm'),
+      });
+    }
+
+    return compensations;
+  }
+
+  /**
+   * Classify severity based on magnitude
+   */
+  private classifySeverity(
+    magnitude: number,
+    unit: 'degrees' | 'cm'
+  ): 'minimal' | 'mild' | 'moderate' | 'severe' {
+    const thresholds = unit === 'degrees'
+      ? { mild: 5, moderate: 10, severe: 15 }
+      : { mild: 1, moderate: 2, severe: 3 };
+
+    if (magnitude < thresholds.mild) return 'minimal';
+    if (magnitude < thresholds.moderate) return 'mild';
+    if (magnitude < thresholds.severe) return 'moderate';
+    return 'severe';
+  }
+}
+
+/**
+ * Ground truth data structure
+ */
+export interface GroundTruth {
+  primaryMeasurement: {
+    joint: string;
+    angle: number; // Known true angle
+    plane: 'sagittal' | 'coronal' | 'transverse' | 'scapular';
+    movement: string;
+  };
+  secondaryMeasurements: Array<{
+    joint: string;
+    angle: number;
+    expectedDeviation?: number;
+  }>;
+  compensations: GroundTruthCompensation[];
+  testCase: string;
+}
+
+export interface GroundTruthCompensation {
+  type: string;
+  magnitude: number;
+  expectedSeverity: 'minimal' | 'mild' | 'moderate' | 'severe';
+}
+```
+
+---
+
+### 9.4 Validation Test Suite
+
+**Test Case Coverage**:
+
+**Shoulder Flexion** (30 test cases):
+- Normal ROM: 0°, 30°, 60°, 90°, 120°, 150°, 180° (7 cases)
+- Pathological ROM: 40°, 70°, 100° (limited ROM) (3 cases)
+- With compensations: 120° + 10° trunk lean, 90° + 15° elbow flexion (10 cases)
+- Edge cases: 0° (resting), 180° (maximum), 185° (overshoot) (3 cases)
+- Bilateral: Left vs right shoulder (7 cases)
+
+**Shoulder Abduction** (30 test cases):
+- Similar coverage to flexion
+- Scapulohumeral rhythm validation (5 additional cases)
+
+**Shoulder Rotation** (20 test cases):
+- Internal rotation: 0°, 20°, 40°, 60°, 70° (5 cases)
+- External rotation: 0°, 30°, 60°, 90° (4 cases)
+- With elbow angle variations: 85°, 90°, 95° (6 cases)
+- Bilateral (5 cases)
+
+**Elbow Flexion** (15 test cases):
+- ROM: 0°, 45°, 90°, 135°, 150° (5 cases)
+- With shoulder stabilization check (5 cases)
+- Bilateral (5 cases)
+
+**Knee Flexion** (15 test cases):
+- ROM: 0°, 30°, 60°, 90°, 120°, 135° (6 cases)
+- With hip hike compensation (5 cases)
+- Bilateral (4 cases)
+
+**Total**: 110 test cases
+
+---
+
+### 9.5 Validation Metrics
+
+**Primary Metrics**:
+
+1. **Mean Absolute Error (MAE)**
+   ```typescript
+   MAE = (1/n) * Σ|measured_angle - ground_truth_angle|
+   Target: ≤5° for all measurements
+   ```
+
+2. **Root Mean Square Error (RMSE)**
+   ```typescript
+   RMSE = sqrt((1/n) * Σ(measured_angle - ground_truth_angle)²)
+   Target: ≤7° for all measurements
+   ```
+
+3. **Coefficient of Determination (R²)**
+   ```typescript
+   R² = 1 - (SS_res / SS_tot)
+   Target: ≥0.95 (excellent correlation)
+   ```
+
+4. **Maximum Error**
+   ```typescript
+   Max_Error = max(|measured_angle - ground_truth_angle|)
+   Target: ≤10° for any single measurement
+   ```
+
+**Compensation Detection Metrics**:
+
+1. **Sensitivity (True Positive Rate)**
+   ```typescript
+   Sensitivity = TP / (TP + FN)
+   Target: ≥80% for moderate/severe compensations
+   ```
+
+2. **Specificity (True Negative Rate)**
+   ```typescript
+   Specificity = TN / (TN + FP)
+   Target: ≥80% (low false positive rate)
+   ```
+
+3. **Precision**
+   ```typescript
+   Precision = TP / (TP + FP)
+   Target: ≥75%
+   ```
+
+4. **F1 Score**
+   ```typescript
+   F1 = 2 * (Precision * Sensitivity) / (Precision + Sensitivity)
+   Target: ≥0.77
+   ```
+
+---
+
+### 9.6 Validation Pipeline Implementation
+
+**Automated Validation Pipeline**:
+```typescript
+// src/testing/ValidationPipeline.ts
+
+import { SyntheticPoseDataGenerator, GroundTruth } from './SyntheticPoseDataGenerator';
+import { ClinicalMeasurementService } from '../services/biomechanics/ClinicalMeasurementService';
+import { AnatomicalReferenceService } from '../services/biomechanics/AnatomicalReferenceService';
+
+/**
+ * Clinical Validation Pipeline
+ *
+ * Runs synthetic test cases through measurement pipeline and
+ * compares results against ground truth.
+ */
+export class ValidationPipeline {
+  private generator: SyntheticPoseDataGenerator;
+  private clinicalService: ClinicalMeasurementService;
+  private anatomicalService: AnatomicalReferenceService;
+
+  constructor() {
+    this.generator = new SyntheticPoseDataGenerator();
+    this.clinicalService = new ClinicalMeasurementService();
+    this.anatomicalService = new AnatomicalReferenceService();
+  }
+
+  /**
+   * Run full validation suite
+   *
+   * Executes all 110 test cases and generates validation report
+   */
+  public async runFullValidation(): Promise<ValidationReport> {
+    console.log('Starting clinical validation...\n');
+
+    const results: ValidationResult[] = [];
+
+    // Shoulder flexion tests (30 cases)
+    results.push(...await this.validateShoulderFlexion());
+
+    // Shoulder abduction tests (30 cases)
+    results.push(...await this.validateShoulderAbduction());
+
+    // Shoulder rotation tests (20 cases)
+    results.push(...await this.validateShoulderRotation());
+
+    // Elbow flexion tests (15 cases)
+    results.push(...await this.validateElbowFlexion());
+
+    // Knee flexion tests (15 cases)
+    results.push(...await this.validateKneeFlexion());
+
+    // Calculate aggregate metrics
+    const report = this.generateReport(results);
+
+    return report;
+  }
+
+  /**
+   * Validate shoulder flexion measurements
+   */
+  private async validateShoulderFlexion(): Promise<ValidationResult[]> {
+    const results: ValidationResult[] = [];
+    const testAngles = [0, 30, 60, 90, 120, 150, 180];
+
+    for (const angle of testAngles) {
+      const { poseData, groundTruth } = this.generator.generateShoulderFlexion(angle);
+
+      // Add cached frames
+      poseData.cachedAnatomicalFrames = {
+        global: this.anatomicalService.calculateGlobalFrame(poseData.landmarks),
+        thorax: this.anatomicalService.calculateThoraxFrame(poseData.landmarks),
+        // ... other frames
+      };
+
+      // Measure
+      const measurement = this.clinicalService.measureShoulderFlexion(poseData, 'right');
+
+      // Validate
+      const error = Math.abs(measurement.measurement.angle - groundTruth.primaryMeasurement.angle);
+
+      results.push({
+        testCase: groundTruth.testCase,
+        groundTruth: groundTruth.primaryMeasurement.angle,
+        measured: measurement.measurement.angle,
+        error,
+        passed: error <= 5, // ±5° tolerance
+        compensationMatches: this.validateCompensations(
+          measurement.compensations,
+          groundTruth.compensations
+        ),
+      });
+    }
+
+    return results;
+  }
+
+  /**
+   * Validate compensation detection
+   */
+  private validateCompensations(
+    detected: CompensationPattern[],
+    expected: GroundTruthCompensation[]
+  ): boolean {
+    // Check if all expected compensations were detected
+    for (const exp of expected) {
+      const match = detected.find(d => d.type === exp.type);
+      if (!match) return false;
+      if (match.severity !== exp.expectedSeverity) return false;
+    }
+
+    // Check for false positives (detected but not expected)
+    const falsePositives = detected.filter(
+      d => !expected.find(e => e.type === d.type)
+    );
+
+    return falsePositives.length === 0;
+  }
+
+  /**
+   * Generate validation report
+   */
+  private generateReport(results: ValidationResult[]): ValidationReport {
+    const errors = results.map(r => r.error);
+    const mae = errors.reduce((sum, e) => sum + e, 0) / errors.length;
+    const rmse = Math.sqrt(
+      errors.reduce((sum, e) => sum + e * e, 0) / errors.length
+    );
+    const maxError = Math.max(...errors);
+    const passRate = (results.filter(r => r.passed).length / results.length) * 100;
+
+    // Compensation metrics
+    const compensationResults = results.filter(r => r.compensationMatches !== undefined);
+    const compensationAccuracy = compensationResults.length > 0
+      ? (compensationResults.filter(r => r.compensationMatches).length / compensationResults.length) * 100
+      : 0;
+
+    return {
+      totalTests: results.length,
+      passed: results.filter(r => r.passed).length,
+      failed: results.filter(r => !r.passed).length,
+      passRate,
+      metrics: {
+        mae,
+        rmse,
+        maxError,
+        r2: this.calculateR2(results),
+      },
+      compensationMetrics: {
+        accuracy: compensationAccuracy,
+        sensitivity: this.calculateSensitivity(results),
+        specificity: this.calculateSpecificity(results),
+      },
+      detailedResults: results,
+      timestamp: new Date().toISOString(),
+      status: mae <= 5 && compensationAccuracy >= 80 ? 'PASS' : 'FAIL',
+    };
+  }
+
+  /**
+   * Calculate R² (coefficient of determination)
+   */
+  private calculateR2(results: ValidationResult[]): number {
+    const mean = results.reduce((sum, r) => sum + r.groundTruth, 0) / results.length;
+    const ssTot = results.reduce((sum, r) => sum + Math.pow(r.groundTruth - mean, 2), 0);
+    const ssRes = results.reduce((sum, r) => sum + Math.pow(r.groundTruth - r.measured, 2), 0);
+    return 1 - (ssRes / ssTot);
+  }
+
+  /**
+   * Calculate sensitivity for compensation detection
+   */
+  private calculateSensitivity(results: ValidationResult[]): number {
+    // Implementation based on TP and FN counts
+    // ...
+    return 0.85; // Placeholder
+  }
+
+  /**
+   * Calculate specificity for compensation detection
+   */
+  private calculateSpecificity(results: ValidationResult[]): number {
+    // Implementation based on TN and FP counts
+    // ...
+    return 0.82; // Placeholder
+  }
+}
+
+/**
+ * Validation result for single test case
+ */
+export interface ValidationResult {
+  testCase: string;
+  groundTruth: number;
+  measured: number;
+  error: number;
+  passed: boolean;
+  compensationMatches?: boolean;
+}
+
+/**
+ * Overall validation report
+ */
+export interface ValidationReport {
+  totalTests: number;
+  passed: number;
+  failed: number;
+  passRate: number;
+  metrics: {
+    mae: number;
+    rmse: number;
+    maxError: number;
+    r2: number;
+  };
+  compensationMetrics: {
+    accuracy: number;
+    sensitivity: number;
+    specificity: number;
+  };
+  detailedResults: ValidationResult[];
+  timestamp: string;
+  status: 'PASS' | 'FAIL';
+}
+```
+
+---
+
+### 9.7 Running Validation
+
+**Test Command**:
+```bash
+npm run validate:clinical
+```
+
+**Expected Output**:
+```
+Clinical Validation Report
+==========================
+
+Test Suite: Shoulder Flexion (30 tests)
+  ✓ 0° flexion: error = 0.2° (PASS)
+  ✓ 30° flexion: error = 1.1° (PASS)
+  ✓ 60° flexion: error = 2.3° (PASS)
+  ✓ 90° flexion: error = 3.1° (PASS)
+  ✓ 120° flexion: error = 4.2° (PASS)
+  ✓ 150° flexion: error = 3.8° (PASS)
+  ✓ 180° flexion: error = 4.9° (PASS)
+  ...
+  Pass Rate: 93.3% (28/30)
+
+Test Suite: Shoulder Abduction (30 tests)
+  Pass Rate: 90.0% (27/30)
+
+Test Suite: Shoulder Rotation (20 tests)
+  Pass Rate: 85.0% (17/20)
+
+Test Suite: Elbow Flexion (15 tests)
+  Pass Rate: 100% (15/15)
+
+Test Suite: Knee Flexion (15 tests)
+  Pass Rate: 93.3% (14/15)
+
+==========================
+Overall Results
+==========================
+Total Tests: 110
+Passed: 101
+Failed: 9
+Pass Rate: 91.8%
+
+Metrics:
+  MAE: 3.2° ✓ (target: ≤5°)
+  RMSE: 4.1° ✓ (target: ≤7°)
+  Max Error: 8.7° ✓ (target: ≤10°)
+  R²: 0.97 ✓ (target: ≥0.95)
+
+Compensation Detection:
+  Accuracy: 87.5% ✓ (target: ≥80%)
+  Sensitivity: 85.2% ✓ (target: ≥80%)
+  Specificity: 82.1% ✓ (target: ≥80%)
+
+STATUS: PASS ✓
+
+Detailed report saved to: validation-report-2025-11-09.json
+```
+
+---
+
+### 9.8 Validation Report Format
+
+**JSON Report Structure**:
+```json
+{
+  "timestamp": "2025-11-09T14:30:00.000Z",
+  "status": "PASS",
+  "totalTests": 110,
+  "passed": 101,
+  "failed": 9,
+  "passRate": 91.8,
+  "metrics": {
+    "mae": 3.2,
+    "rmse": 4.1,
+    "maxError": 8.7,
+    "r2": 0.97
+  },
+  "compensationMetrics": {
+    "accuracy": 87.5,
+    "sensitivity": 85.2,
+    "specificity": 82.1,
+    "precision": 83.4,
+    "f1Score": 0.84
+  },
+  "testSuites": [
+    {
+      "name": "Shoulder Flexion",
+      "totalTests": 30,
+      "passed": 28,
+      "failed": 2,
+      "mae": 2.8,
+      "failedCases": [
+        {
+          "testCase": "shoulder_flexion_120deg_trunk_lean_15",
+          "groundTruth": 120,
+          "measured": 126.2,
+          "error": 6.2,
+          "reason": "Trunk lean compensation not fully corrected"
+        }
+      ]
+    }
+  ],
+  "detailedResults": [ /* ... all 110 results ... */ ]
+}
+```
+
+---
+
+### 9.9 Definition of Done
+
+**Functional Criteria**:
+- [ ] SyntheticPoseDataGenerator implemented for all 5 measurement types
+- [ ] 110+ test cases defined with ground truth
+- [ ] ValidationPipeline automated and runnable via npm command
+- [ ] Validation report generator with JSON and human-readable output
+
+**Accuracy Criteria**:
+- [ ] MAE ≤5° across all test cases
+- [ ] RMSE ≤7° across all test cases
+- [ ] Max error ≤10° for any single test
+- [ ] R² ≥0.95 (excellent correlation)
+- [ ] Compensation detection accuracy ≥80%
+- [ ] Sensitivity ≥80% for moderate/severe compensations
+- [ ] Specificity ≥80% (low false positives)
+
+**Documentation Criteria**:
+- [ ] Validation methodology documented
+- [ ] Test case catalog with descriptions
+- [ ] Ground truth calculation methodology
+- [ ] How to run validation and interpret results
+- [ ] Troubleshooting guide for validation failures
+
+**Integration Criteria**:
+- [ ] Validation runs in CI/CD pipeline
+- [ ] Automated regression detection
+- [ ] Validation report archived for each build
+- [ ] Failing validation blocks deployment
+
+---
+
+## Section 10: Comprehensive Testing Strategy
+
+### 10.1 Test Pyramid Overview
+
+**Testing Layers**:
+
+```
+         ┌─────────────────┐
+         │   E2E Tests     │  5% - Full workflow validation
+         │   (~10 tests)   │
+         ├─────────────────┤
+         │ Integration     │  25% - Component integration
+         │ Tests (~50)     │
+         ├─────────────────┤
+         │  Unit Tests     │  70% - Individual functions
+         │  (~150 tests)   │
+         └─────────────────┘
+```
+
+**Total Test Count**: ~210 tests across Gates 9B-10C
+
+**Coverage Target**: >90% code coverage
+
+---
+
+### 10.2 Unit Tests (150 tests)
+
+**Gate 9B.5 - Frame Caching** (20 tests):
+- Cache initialization and configuration
+- LRU eviction policy
+- TTL expiration (16ms)
+- Spatial bucketing (round to 0.01)
+- Cache hit/miss tracking
+- Memory footprint validation
+
+**Gate 9B.6 - Goniometer Refactor** (30 tests):
+- Schema-aware landmark retrieval
+- Plane projection accuracy
+- Y-X-Y Euler angle decomposition
+- Joint angle calculation for all joints
+- Frame-based measurement vs raw measurement comparison
+
+**Gate 10A - Clinical Measurements** (50 tests):
+- Shoulder flexion (10 tests)
+- Shoulder abduction + scapulohumeral rhythm (10 tests)
+- Shoulder rotation (10 tests)
+- Elbow flexion (10 tests)
+- Knee flexion (10 tests)
+
+**Gate 10B - Compensation Detection** (25 tests):
+- Trunk lean detection (5 tests)
+- Trunk rotation detection (5 tests)
+- Shoulder hiking detection (5 tests)
+- Elbow flexion drift (5 tests)
+- Hip hike detection (5 tests)
+
+**AnatomicalReferenceService** (25 tests):
+- Already implemented (27 existing tests)
+- Frame calculation accuracy
+- ISB compliance validation
+
+---
+
+### 10.3 Integration Tests (50 tests)
+
+**Frame Caching Integration** (10 tests):
+```typescript
+describe('Frame Caching Integration', () => {
+  it('should attach cached frames to ProcessedPoseData', () => {
+    const poseData = createMockPoseData();
+    const cache = new AnatomicalFrameCache();
+
+    const enriched = cache.getCachedFrames(poseData);
+
+    expect(enriched.cachedAnatomicalFrames).toBeDefined();
+    expect(enriched.cachedAnatomicalFrames.global).toBeDefined();
+    expect(enriched.cachedAnatomicalFrames.thorax).toBeDefined();
+  });
+
+  it('should reuse cached frames within TTL window', () => {
+    const cache = new AnatomicalFrameCache();
+    const poseData1 = createMockPoseData({ timestamp: 1000 });
+    const poseData2 = createMockPoseData({ timestamp: 1010 }); // 10ms later
+
+    const result1 = cache.getCachedFrames(poseData1);
+    const result2 = cache.getCachedFrames(poseData2);
+
+    expect(cache.getStats().hitRate).toBeGreaterThan(0);
+  });
+
+  it('should evict frames after TTL expiration', () => { /* ... */ });
+});
+```
+
+**Goniometer → Clinical Measurement Pipeline** (15 tests):
+```typescript
+describe('Goniometer Integration', () => {
+  it('should measure shoulder flexion using cached frames', () => {
+    const poseData = createMockPoseDataWithFrames({
+      shoulderAngle: 90,
+    });
+
+    const measurement = clinicalService.measureShoulderFlexion(poseData, 'right');
+
+    expect(measurement.measurement.angle).toBeCloseTo(90, 1);
+    expect(measurement.referenceFrames).toContain('thorax');
+    expect(measurement.quality.grade).toBe('excellent');
+  });
+
+  it('should detect compensations during measurement', () => {
+    const poseData = createMockPoseDataWithFrames({
+      shoulderAngle: 120,
+      trunkLean: 12, // moderate compensation
+    });
+
+    const measurement = clinicalService.measureShoulderFlexion(poseData, 'right');
+
+    expect(measurement.compensations.length).toBeGreaterThan(0);
+    expect(measurement.compensations[0].type).toBe('trunk_lean');
+    expect(measurement.compensations[0].severity).toBe('moderate');
+  });
+});
+```
+
+**End-to-End Pipeline** (25 tests):
+```typescript
+describe('Full Measurement Pipeline', () => {
+  it('should process pose through all gates (9B.5 → 10C)', async () => {
+    // Simulate full pipeline: raw pose → cached frames → measurement → validation
+    const rawLandmarks = createMockLandmarks({ shoulderFlexion: 120 });
+
+    // Gate 9B.5: Frame caching
+    const poseData: ProcessedPoseData = {
+      landmarks: rawLandmarks,
+      timestamp: Date.now(),
+      schemaId: 'movenet-17',
+      viewOrientation: 'sagittal',
+    };
+
+    const cache = new AnatomicalFrameCache();
+    const enrichedPose = cache.getCachedFrames(poseData);
+
+    // Gate 10A: Clinical measurement
+    const clinicalService = new ClinicalMeasurementService();
+    const measurement = clinicalService.measureShoulderFlexion(enrichedPose, 'right');
+
+    // Validate
+    expect(measurement.measurement.angle).toBeCloseTo(120, 5);
+    expect(enrichedPose.cachedAnatomicalFrames).toBeDefined();
+    expect(cache.getStats().totalRequests).toBe(1);
+  });
+});
+```
+
+---
+
+### 10.4 E2E Tests (10 tests)
+
+**Real-World Scenario Tests**:
+```typescript
+describe('E2E Clinical Scenarios', () => {
+  it('should measure shoulder ROM progression over time', async () => {
+    // Simulate patient doing 5 shoulder flexion reps
+    const reps = [];
+    for (let i = 0; i < 5; i++) {
+      const angle = 90 + (i * 10); // Progressive improvement
+      const { poseData } = generator.generateShoulderFlexion(angle);
+
+      const cache = new AnatomicalFrameCache();
+      const enriched = cache.getCachedFrames(poseData);
+      const measurement = clinicalService.measureShoulderFlexion(enriched, 'right');
+
+      reps.push(measurement);
+    }
+
+    // Validate progression
+    expect(reps[0].measurement.angle).toBeCloseTo(90, 5);
+    expect(reps[4].measurement.angle).toBeCloseTo(130, 5);
+    expect(reps.every(r => r.quality.grade !== 'poor')).toBe(true);
+  });
+
+  it('should handle schema switching (MoveNet → MediaPipe)', () => {
+    // Test with MoveNet-17
+    const moveNetPose = generator.generateShoulderFlexion(120, 'movenet-17');
+    const measurement1 = clinicalService.measureShoulderFlexion(
+      cache.getCachedFrames(moveNetPose.poseData),
+      'right'
+    );
+
+    // Test with MediaPipe-33
+    const mediaPipePose = generator.generateShoulderFlexion(120, 'mediapipe-33');
+    const measurement2 = clinicalService.measureShoulderFlexion(
+      cache.getCachedFrames(mediaPipePose.poseData),
+      'right'
+    );
+
+    // Both should produce same angle
+    expect(Math.abs(measurement1.measurement.angle - measurement2.measurement.angle)).toBeLessThan(2);
+  });
+
+  it('should maintain <120ms performance under load', async () => { /* ... */ });
+});
+```
+
+---
+
+### 10.5 Test Organization
+
+**Directory Structure**:
+```
+src/
+├── services/
+│   └── biomechanics/
+│       ├── AnatomicalReferenceService.ts
+│       ├── AnatomicalReferenceService.test.ts
+│       ├── ClinicalMeasurementService.ts
+│       ├── ClinicalMeasurementService.test.ts
+│       ├── CompensationDetectionService.ts
+│       ├── CompensationDetectionService.test.ts
+│       └── __tests__/
+│           ├── integration/
+│           │   ├── frameCaching.integration.test.ts
+│           │   ├── goniometer.integration.test.ts
+│           │   └── pipeline.integration.test.ts
+│           └── e2e/
+│               └── clinicalScenarios.e2e.test.ts
+├── testing/
+│   ├── SyntheticPoseDataGenerator.ts
+│   ├── SyntheticPoseDataGenerator.test.ts
+│   ├── ValidationPipeline.ts
+│   └── ValidationPipeline.test.ts
+└── utils/
+    ├── vectorMath.ts
+    └── vectorMath.test.ts
+```
+
+**Naming Conventions**:
+- Unit tests: `*.test.ts` (co-located with source)
+- Integration tests: `*.integration.test.ts`
+- E2E tests: `*.e2e.test.ts`
+- Test helpers: `__tests__/helpers/`
+
+---
+
+### 10.6 Test Commands
+
+**package.json scripts**:
+```json
+{
+  "scripts": {
+    "test": "jest",
+    "test:unit": "jest --testPathPattern='\\.test\\.ts$'",
+    "test:integration": "jest --testPathPattern='\\.integration\\.test\\.ts$'",
+    "test:e2e": "jest --testPathPattern='\\.e2e\\.test\\.ts$'",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:gates": "jest --testPathPattern='(AnatomicalReference|ClinicalMeasurement|Compensation)'",
+    "validate:clinical": "ts-node src/testing/ValidationPipeline.ts"
+  }
+}
+```
+
+**CI/CD Pipeline**:
+```yaml
+# .github/workflows/test.yml
+name: Test Suite
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Run clinical validation
+        run: npm run validate:clinical
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage/lcov.info
+
+      - name: Archive validation report
+        uses: actions/upload-artifact@v2
+        with:
+          name: validation-report
+          path: validation-report-*.json
+```
+
+---
+
+### 10.7 Coverage Requirements
+
+**Overall Target**: >90% code coverage
+
+**Per-Component Targets**:
+- AnatomicalReferenceService: >95% (already at 100%)
+- ClinicalMeasurementService: >90%
+- CompensationDetectionService: >90%
+- GoniometerService: >85%
+- SyntheticPoseDataGenerator: >85%
+- ValidationPipeline: >80%
+
+**Coverage Report**:
+```bash
+npm run test:coverage
+```
+
+**Expected Output**:
+```
+-----------------------|---------|----------|---------|---------|
+File                   | % Stmts | % Branch | % Funcs | % Lines |
+-----------------------|---------|----------|---------|---------|
+All files              |   92.34 |    88.21 |   94.12 |   92.89 |
+ biomechanics/         |   94.56 |    91.23 |   96.34 |   95.12 |
+  AnatomicalReference  |   100.0 |    100.0 |   100.0 |   100.0 |
+  ClinicalMeasurement  |   91.23 |    87.45 |   93.21 |   92.34 |
+  CompensationDetect   |   93.45 |    89.12 |   95.67 |   94.23 |
+ testing/              |   87.34 |    82.45 |   89.23 |   88.12 |
+  SyntheticGenerator   |   88.23 |    84.56 |   90.12 |   89.34 |
+  ValidationPipeline   |   86.45 |    80.34 |   88.34 |   86.90 |
+-----------------------|---------|----------|---------|---------|
+```
+
+---
+
+### 10.8 Definition of Done
+
+**Functional Criteria**:
+- [ ] 150+ unit tests implemented and passing
+- [ ] 50+ integration tests implemented and passing
+- [ ] 10+ E2E tests implemented and passing
+- [ ] All test commands working (unit, integration, e2e, coverage)
+- [ ] CI/CD pipeline configured and running
+
+**Coverage Criteria**:
+- [ ] Overall coverage >90%
+- [ ] No file <80% coverage
+- [ ] All critical paths covered
+
+**Quality Criteria**:
+- [ ] All tests pass consistently (no flaky tests)
+- [ ] Test execution time <60s for unit tests
+- [ ] Test execution time <120s for full suite
+- [ ] Coverage reports generated and archived
+
+**Documentation Criteria**:
+- [ ] Testing guide for new contributors
+- [ ] How to run tests locally
+- [ ] How to add new tests
+- [ ] CI/CD pipeline documentation
+
+---
+
+## Section 11: Performance Benchmarking
+
+### 11.1 Performance Budget
+
+**Target Performance** (per frame):
+- ML Inference: 30-50ms (existing)
+- Frame Calculation: <10ms (Gate 9B.5 optimization)
+- Goniometer Measurement: <5ms (Gate 9B.6)
+- Clinical Measurement: <10ms (Gate 10A)
+- Compensation Detection: <5ms (Gate 10B)
+- **Total Budget: <120ms/frame** (8+ FPS for real-time)
+
+**Current Baseline** (before optimization):
+- Frame Calculation: ~18ms (will optimize to ~9ms with caching)
+
+---
+
+### 11.2 Benchmark Test Suite
+
+**Performance Test File**:
+```typescript
+// src/services/biomechanics/__tests__/performance.benchmark.test.ts
+
+describe('Performance Benchmarks', () => {
+  const ITERATIONS = 1000;
+  const cache = new AnatomicalFrameCache();
+  const clinicalService = new ClinicalMeasurementService();
+
+  beforeEach(() => {
+    cache.clear();
+  });
+
+  it('should calculate global frame in <5ms', () => {
+    const landmarks = createMockLandmarks();
+    const anatomicalService = new AnatomicalReferenceService();
+
+    const start = performance.now();
+    for (let i = 0; i < ITERATIONS; i++) {
+      anatomicalService.calculateGlobalFrame(landmarks);
+    }
+    const end = performance.now();
+    const avgTime = (end - start) / ITERATIONS;
+
+    expect(avgTime).toBeLessThan(5);
+    console.log(`Global frame calculation: ${avgTime.toFixed(2)}ms`);
+  });
+
+  it('should achieve >80% cache hit rate', () => {
+    const poseSequence = createPoseSequence(60); // 60 frames (2 seconds at 30fps)
+
+    for (const pose of poseSequence) {
+      cache.getCachedFrames(pose);
+    }
+
+    const stats = cache.getStats();
+    expect(stats.hitRate).toBeGreaterThan(0.8);
+    console.log(`Cache hit rate: ${(stats.hitRate * 100).toFixed(1)}%`);
+  });
+
+  it('should measure shoulder flexion in <10ms', () => {
+    const poseData = createMockPoseDataWithFrames({ shoulderAngle: 120 });
+
+    const start = performance.now();
+    for (let i = 0; i < ITERATIONS; i++) {
+      clinicalService.measureShoulderFlexion(poseData, 'right');
+    }
+    const end = performance.now();
+    const avgTime = (end - start) / ITERATIONS;
+
+    expect(avgTime).toBeLessThan(10);
+    console.log(`Shoulder flexion measurement: ${avgTime.toFixed(2)}ms`);
+  });
+
+  it('should complete full pipeline in <120ms', () => {
+    const landmarks = createMockLandmarks({ shoulderFlexion: 120 });
+
+    const times = [];
+    for (let i = 0; i < 100; i++) {
+      const start = performance.now();
+
+      // Full pipeline
+      const poseData: ProcessedPoseData = {
+        landmarks,
+        timestamp: Date.now() + i,
+        schemaId: 'movenet-17',
+        viewOrientation: 'sagittal',
+      };
+
+      const enriched = cache.getCachedFrames(poseData);
+      const measurement = clinicalService.measureShoulderFlexion(enriched, 'right');
+
+      const end = performance.now();
+      times.push(end - start);
+    }
+
+    const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
+    const p95 = times.sort()[Math.floor(times.length * 0.95)];
+
+    expect(avgTime).toBeLessThan(120);
+    expect(p95).toBeLessThan(150);
+
+    console.log(`Pipeline avg: ${avgTime.toFixed(2)}ms, p95: ${p95.toFixed(2)}ms`);
+  });
+});
+```
+
+---
+
+### 11.3 Performance Monitoring
+
+**Metrics to Track**:
+1. Frame calculation time (before/after caching)
+2. Cache hit rate (target: >80%)
+3. Memory usage (target: <1MB for 60-frame cache)
+4. Clinical measurement time per joint
+5. Compensation detection time
+6. End-to-end latency (pose → measurement)
+
+**Regression Detection**:
+- Run benchmarks in CI/CD
+- Compare against baseline
+- Alert if performance degrades >10%
+
+---
+
+### 11.4 Optimization Checklist
+
+**Frame Caching Optimizations**:
+- [ ] LRU cache with TTL implemented
+- [ ] Spatial bucketing (round to 0.01) implemented
+- [ ] Cache hit rate >80% in real-world scenarios
+- [ ] Memory footprint <1MB
+
+**Goniometer Optimizations**:
+- [ ] Use cached frames (no recalculation)
+- [ ] Vectorized plane projection
+- [ ] Minimize object allocations
+
+**Clinical Measurement Optimizations**:
+- [ ] Reuse cached frames
+- [ ] Lazy compensation detection (only when requested)
+- [ ] Batch processing support
+
+---
+
+### 11.5 Definition of Done
+
+**Performance Criteria**:
+- [ ] Frame calculation <10ms (cached)
+- [ ] Clinical measurement <10ms per joint
+- [ ] Compensation detection <5ms
+- [ ] Full pipeline <120ms (p95)
+- [ ] Cache hit rate >80%
+- [ ] Memory footprint <1MB
+
+**Testing Criteria**:
+- [ ] Performance benchmarks implemented
+- [ ] Benchmarks run in CI/CD
+- [ ] Regression detection configured
+- [ ] Performance reports generated
+
+---
+
+## Section 12: Clinical Accuracy Validation
+
+### 12.1 Validation Phases
+
+**Phase 1: Synthetic Validation** (Gate 10C - This Release):
+- 110+ synthetic test cases
+- MAE ≤5° target
+- Automated validation pipeline
+- **Status**: Specified in Section 9
+
+**Phase 2: Physical Goniometer Comparison** (Gate 10D - Future):
+- 50+ real measurements with physical goniometer
+- Inter-rater reliability study
+- Bland-Altman analysis
+- **Status**: Not in scope for this release
+
+**Phase 3: Clinical Trial** (Gate 10E - Future):
+- 100+ patients
+- Physiotherapist validation
+- IRB approval required
+- **Status**: Not in scope for this release
+
+---
+
+### 12.2 Accuracy Targets
+
+**Clinical Accuracy Tiers** (from research):
+- **Excellent**: ±2° MAE (research-grade motion capture)
+- **Good**: ±5° MAE (clinical ROM assessment) ← **Our Target**
+- **Acceptable**: ±10° MAE (telehealth screening)
+
+**Our Targets**:
+- MAE: ≤5° (good clinical accuracy)
+- RMSE: ≤7°
+- R²: ≥0.95 (excellent correlation)
+- Sensitivity: ≥80% for moderate/severe compensations
+- Specificity: ≥80%
+
+---
+
+### 12.3 Validation Checkpoints
+
+**Pre-Implementation**:
+- [ ] Review ISB standards
+- [ ] Define ground truth methodology
+- [ ] Create synthetic test data generator
+
+**During Implementation**:
+- [ ] Unit test each component
+- [ ] Integration test pipeline
+- [ ] Run benchmark tests
+
+**Post-Implementation**:
+- [ ] Run full validation suite (110 tests)
+- [ ] Generate validation report
+- [ ] Review failed cases
+- [ ] Document accuracy limitations
+
+**Pre-Deployment**:
+- [ ] Validation passing (MAE ≤5°)
+- [ ] All tests passing
+- [ ] Performance benchmarks met
+- [ ] Documentation complete
+
+---
+
+### 12.4 Definition of Done
+
+**Accuracy Criteria**:
+- [ ] Synthetic validation passing (MAE ≤5°)
+- [ ] All 110 test cases pass
+- [ ] Compensation detection ≥80% accuracy
+- [ ] Validation report generated
+
+**Documentation Criteria**:
+- [ ] Accuracy limitations documented
+- [ ] Known edge cases documented
+- [ ] Validation methodology documented
+- [ ] Future validation roadmap (Phases 2-3)
+
+---
+
+## Section 13: Integration Checklist
+
+### 13.1 Pre-Integration Checklist
+
+**Code Readiness**:
+- [ ] All unit tests passing (150+)
+- [ ] All integration tests passing (50+)
+- [ ] All E2E tests passing (10+)
+- [ ] Test coverage >90%
+- [ ] No TypeScript errors
+- [ ] No linting errors
+- [ ] Performance benchmarks met
+
+**Documentation Readiness**:
+- [ ] API documentation complete
+- [ ] Integration guide written
+- [ ] Migration guide written
+- [ ] Example code provided
+- [ ] Known limitations documented
+
+**Validation Readiness**:
+- [ ] Clinical validation passing (MAE ≤5°)
+- [ ] Validation report generated
+- [ ] Edge cases tested
+- [ ] Regression tests in place
+
+---
+
+### 13.2 Integration Steps
+
+**Step 1: Gate 9B.5 - Frame Caching**
+```typescript
+// 1. Extend ProcessedPoseData type
+interface ProcessedPoseData {
+  // ... existing fields
+  cachedAnatomicalFrames?: {
+    global: AnatomicalReferenceFrame;
+    thorax: AnatomicalReferenceFrame;
+    pelvis: AnatomicalReferenceFrame;
+    // ... segment frames
+  };
+}
+
+// 2. Initialize cache in pose detection service
+class PoseDetectionServiceV2 {
+  private frameCache = new AnatomicalFrameCache({
+    maxSize: 60,
+    ttl: 16, // ms
+    spatialPrecision: 0.01
+  });
+
+  processPose(landmarks: PoseLandmark[]): ProcessedPoseData {
+    const poseData = { /* ... */ };
+    return this.frameCache.getCachedFrames(poseData);
+  }
+}
+```
+
+**Step 2: Gate 9B.6 - Goniometer Refactor**
+```typescript
+// 1. Update GoniometerService constructor
+class GoniometerService {
+  constructor(
+    private schemaRegistry = PoseSchemaRegistry.getInstance()
+  ) {}
+
+  // 2. Update joint measurement methods
+  measureJoint(
+    poseData: ProcessedPoseData,
+    jointName: string
+  ): JointMeasurement {
+    // Use cached frames if available
+    const frames = poseData.cachedAnatomicalFrames;
+    if (!frames) {
+      throw new Error('Cached frames required');
+    }
+
+    // Schema-aware landmark retrieval
+    const schema = this.schemaRegistry.get(poseData.schemaId);
+    // ...
+  }
+}
+```
+
+**Step 3: Gate 10A - Clinical Measurements**
+```typescript
+// 1. Initialize ClinicalMeasurementService
+const clinicalService = new ClinicalMeasurementService({
+  shoulder: {
+    forwardFlexion: { target: 160, minAcceptable: 120 },
+    // ... custom thresholds
+  }
+});
+
+// 2. Use in application
+const measurement = clinicalService.measureShoulderFlexion(
+  poseData, // with cached frames
+  'right'
+);
+
+// 3. Display results
+console.log(`Angle: ${measurement.measurement.angle}°`);
+console.log(`Quality: ${measurement.quality.grade}`);
+console.log(`Compensations: ${measurement.compensations.length}`);
+```
+
+**Step 4: Gate 10B - Compensation Detection**
+```typescript
+// Already integrated in ClinicalMeasurementService
+// No additional integration needed - compensations automatically detected
+```
+
+**Step 5: Gate 10C - Validation**
+```typescript
+// Run validation pipeline
+npm run validate:clinical
+
+// Review validation report
+// validation-report-YYYY-MM-DD.json
+```
+
+---
+
+### 13.3 Rollout Strategy
+
+**Phase 1: Internal Testing** (Week 1)
+- Deploy to staging environment
+- Internal team testing
+- Performance monitoring
+- Bug fixes
+
+**Phase 2: Beta Testing** (Week 2)
+- Select beta users (physiotherapists)
+- Collect feedback
+- Accuracy validation with real patients
+- Refinements
+
+**Phase 3: Production Rollout** (Week 3)
+- Feature flag enabled for 10% of users
+- Monitor metrics (accuracy, performance, errors)
+- Gradual rollout to 50%, then 100%
+
+---
+
+### 13.4 Rollback Plan
+
+**Rollback Triggers**:
+- Accuracy degradation (MAE >7°)
+- Performance regression (>150ms latency)
+- Crash rate increase >1%
+- User complaints >10% of sessions
+
+**Rollback Procedure**:
+1. Disable feature flag
+2. Revert to previous goniometer implementation
+3. Investigate root cause
+4. Fix and re-deploy
+
+---
+
+### 13.5 Definition of Done
+
+**Integration Criteria**:
+- [ ] All gates integrated (9B.5 → 10C)
+- [ ] End-to-end workflow tested
+- [ ] Performance benchmarks met
+- [ ] Validation passing
+
+**Deployment Criteria**:
+- [ ] Staging deployment successful
+- [ ] Beta testing complete
+- [ ] Production rollout plan approved
+- [ ] Rollback plan tested
+
+---
+
+## Section 14: Migration Guide
+
+### 14.1 Breaking Changes
+
+**GoniometerService API Changes**:
+
+**Before (Old API)**:
+```typescript
+const goniometer = new GoniometerService();
+const angle = goniometer.measureElbowAngle(landmarks);
+```
+
+**After (New API)**:
+```typescript
+const goniometer = new GoniometerService();
+const measurement = goniometer.measureJoint(
+  poseData, // Now requires full ProcessedPoseData
+  'left_elbow'
+);
+const angle = measurement.angle;
+```
+
+**Migration Path**:
+```typescript
+// Option 1: Update to new API (recommended)
+const clinicalService = new ClinicalMeasurementService();
+const measurement = clinicalService.measureElbowFlexion(poseData, 'left');
+
+// Option 2: Keep old API (deprecated, will be removed in v2.0)
+const angle = goniometer.measureElbowAngle(landmarks); // Still works but logs warning
+```
+
+---
+
+### 14.2 Deprecation Timeline
+
+**v1.8** (This Release):
+- New APIs introduced (ClinicalMeasurementService)
+- Old APIs deprecated but still functional
+- Deprecation warnings in console
+
+**v1.9** (Next Release):
+- Old APIs marked for removal
+- Migration guide published
+- Final warnings
+
+**v2.0** (Future Release):
+- Old APIs removed
+- Breaking changes enforced
+
+---
+
+### 14.3 Migration Steps
+
+**Step 1: Update Dependencies**
+```bash
+npm install @physioassist/biomechanics@latest
+```
+
+**Step 2: Update Imports**
+```typescript
+// Old
+import { GoniometerService } from './services/goniometerService';
+
+// New
+import { ClinicalMeasurementService } from './services/biomechanics/ClinicalMeasurementService';
+import { CompensationDetectionService } from './services/biomechanics/CompensationDetectionService';
+```
+
+**Step 3: Update Code**
+```typescript
+// Old
+const goniometer = new GoniometerService();
+const shoulderAngle = goniometer.measureShoulderAngle(landmarks);
+
+// New
+const clinicalService = new ClinicalMeasurementService();
+const poseDataWithFrames = frameCache.getCachedFrames(poseData);
+const measurement = clinicalService.measureShoulderFlexion(poseDataWithFrames, 'right');
+const shoulderAngle = measurement.measurement.angle;
+```
+
+**Step 4: Update Tests**
+```typescript
+// Update test assertions to match new data structure
+expect(measurement.measurement.angle).toBeCloseTo(90, 5);
+expect(measurement.quality.grade).toBe('excellent');
+expect(measurement.compensations).toHaveLength(0);
+```
+
+---
+
+### 14.4 Backward Compatibility
+
+**Compatibility Layer**:
+```typescript
+// src/services/goniometerService.ts (deprecated)
+
+/**
+ * @deprecated Use ClinicalMeasurementService instead
+ * This API will be removed in v2.0
+ */
+export class GoniometerService {
+  private clinicalService = new ClinicalMeasurementService();
+  private frameCache = new AnatomicalFrameCache();
+
+  /**
+   * @deprecated Use clinicalService.measureShoulderFlexion() instead
+   */
+  measureShoulderAngle(landmarks: PoseLandmark[]): number {
+    console.warn(
+      'GoniometerService.measureShoulderAngle() is deprecated. ' +
+      'Use ClinicalMeasurementService.measureShoulderFlexion() instead.'
+    );
+
+    // Convert to new format
+    const poseData: ProcessedPoseData = {
+      landmarks,
+      timestamp: Date.now(),
+      schemaId: 'movenet-17', // Assume MoveNet
+    };
+
+    const enriched = this.frameCache.getCachedFrames(poseData);
+    const measurement = this.clinicalService.measureShoulderFlexion(enriched, 'right');
+
+    return measurement.measurement.angle;
+  }
+}
+```
+
+---
+
+### 14.5 Definition of Done
+
+**Migration Criteria**:
+- [ ] Migration guide written
+- [ ] Backward compatibility layer implemented
+- [ ] Deprecation warnings added
+- [ ] Example code provided
+
+**Documentation Criteria**:
+- [ ] Breaking changes documented
+- [ ] Deprecation timeline published
+- [ ] Migration examples provided
+- [ ] FAQ for common migration issues
+
+---
+
+## Section 15: Success Metrics
+
+### 15.1 Technical Success Metrics
+
+**Performance**:
+- [ ] Frame calculation: <10ms (50% improvement from 18ms baseline)
+- [ ] Cache hit rate: >80%
+- [ ] Full pipeline: <120ms (p95)
+- [ ] Memory usage: <1MB for frame cache
+
+**Accuracy**:
+- [ ] MAE: ≤5° (clinical accuracy target)
+- [ ] RMSE: ≤7°
+- [ ] R²: ≥0.95
+- [ ] Compensation detection: >80% sensitivity/specificity
+
+**Quality**:
+- [ ] Test coverage: >90%
+- [ ] 210+ tests passing
+- [ ] Zero critical bugs
+- [ ] Documentation complete
+
+---
+
+### 15.2 Clinical Success Metrics
+
+**Measurement Quality**:
+- [ ] >90% of measurements graded "good" or "excellent"
+- [ ] <5% of measurements fail due to poor quality
+- [ ] Compensation detection identifies clinically significant patterns
+
+**User Experience**:
+- [ ] Real-time measurement feedback (<120ms)
+- [ ] Clear visual indicators of measurement quality
+- [ ] Actionable compensation detection feedback
+
+---
+
+### 15.3 Business Success Metrics
+
+**Adoption**:
+- [ ] 80% of users opt-in to new measurement system
+- [ ] >1000 measurements per week
+- [ ] Positive feedback from physiotherapists
+
+**Clinical Value**:
+- [ ] Measurements used in clinical decision-making
+- [ ] Compensation patterns detected and acted upon
+- [ ] ROM progression tracked over time
+
+---
+
+### 15.4 Monitoring Dashboard
+
+**Key Metrics to Monitor**:
+```typescript
+interface MetricsDashboard {
+  performance: {
+    avgFrameCalcTime: number; // ms
+    avgClinicalMeasurementTime: number; // ms
+    cacheHitRate: number; // 0-1
+    p95Latency: number; // ms
+  };
+  accuracy: {
+    avgMeasurementQuality: 'excellent' | 'good' | 'fair' | 'poor';
+    compensationDetectionRate: number; // % of measurements with compensations
+  };
+  usage: {
+    totalMeasurements: number;
+    measurementsByJoint: {
+      shoulder: number;
+      elbow: number;
+      knee: number;
+    };
+    activeUsers: number;
+  };
+  errors: {
+    measurementFailures: number;
+    validationFailures: number;
+    cacheErrors: number;
+  };
+}
+```
+
+---
+
+### 15.5 Success Criteria Summary
+
+**MVP Success** (Minimum Viable Product):
+- [ ] All technical metrics met
+- [ ] Validation passing (MAE ≤5°)
+- [ ] Performance targets met
+- [ ] Zero critical bugs
+- [ ] Documentation complete
+
+**Full Success** (Ideal State):
+- [ ] All MVP criteria met
+- [ ] >90% user adoption
+- [ ] Positive clinical feedback
+- [ ] Used in real patient care
+- [ ] Foundation for future gates (10D-10E)
+
+---
+
+## Appendices
+
+### Appendix A: ISB Standards Reference
+
+**International Society of Biomechanics (ISB) Recommendations**:
+
+**Coordinate System** (Wu et al. 2005):
+- **X-axis**: Anterior (forward)
+- **Y-axis**: Superior (upward)
+- **Z-axis**: Lateral (rightward)
+- **Handedness**: Right-handed coordinate system
+
+**Shoulder Joint Angles**:
+- **Plane of Elevation**: Rotation about vertical axis (Y)
+- **Elevation**: Rotation in plane of elevation
+- **Axial Rotation**: Rotation about humerus long axis
+- **Sequence**: Y-X-Y Euler angles (ISB standard)
+
+**Scapulohumeral Rhythm**:
+- Normal ratio: 2:1 to 3:1 (glenohumeral:scapulothoracic)
+- First 30° abduction: Primarily glenohumeral
+- 30-180° abduction: Combined glenohumeral + scapular
+
+**References**:
+1. Wu et al. (2005). ISB recommendation on definitions of joint coordinate systems. Journal of Biomechanics.
+2. Karduna et al. (2001). Dynamic measurements of three-dimensional scapular kinematics. Journal of Biomechanical Engineering.
+
+---
+
+### Appendix B: Research Citations
+
+**Clinical Accuracy Benchmarks**:
+1. Öhberg et al. (2024). "Validation of AI-based pose estimation for clinical goniometry." Journal of Physiotherapy Research.
+2. Stenum et al. (2021). "Two-dimensional video-based analysis of human gait using pose estimation." PLoS Computational Biology.
+
+**Compensation Patterns**:
+1. Frontiers in Physiology (2024). "Exploring the interplay of trunk and shoulder rotation strength: a cross-sport analysis."
+2. Nature Scientific Reports (2023). "Assessing knee joint biomechanics and trunk posture according to medial osteoarthritis severity."
+
+**Pose Estimation Accuracy**:
+1. Nakano et al. (2020). "Evaluation of 3D markerless motion capture accuracy using OpenPose." Gait & Posture.
+2. Viswakumar et al. (2019). "Human gait analysis using OpenPose." IEEE Conference on Image Processing.
+
+---
+
+### Appendix C: Glossary
+
+**Anatomical Terms**:
+- **Abduction**: Movement away from body midline
+- **Adduction**: Movement toward body midline
+- **Flexion**: Decreasing joint angle
+- **Extension**: Increasing joint angle
+- **Internal Rotation**: Rotation toward body midline
+- **External Rotation**: Rotation away from body midline
+
+**Technical Terms**:
+- **ISB**: International Society of Biomechanics
+- **ROM**: Range of Motion
+- **MAE**: Mean Absolute Error
+- **RMSE**: Root Mean Square Error
+- **R²**: Coefficient of Determination
+- **LRU**: Least Recently Used (cache eviction policy)
+- **TTL**: Time To Live (cache expiration)
+
+**Biomechanical Terms**:
+- **Scapulohumeral Rhythm**: Coordination between shoulder blade and arm during abduction
+- **Glenohumeral Joint**: Ball-and-socket shoulder joint
+- **Scapulothoracic Joint**: Shoulder blade gliding on rib cage
+- **Compensation**: Alternative movement strategy used when primary movement is restricted
+
+---
+
+### Appendix D: Code Example - Complete Integration
+
+**Full Integration Example**:
+```typescript
+// app/services/ClinicalAnalysisService.ts
+
+import { ProcessedPoseData } from '../types/pose';
+import { AnatomicalFrameCache } from '../services/biomechanics/AnatomicalFrameCache';
+import { ClinicalMeasurementService } from '../services/biomechanics/ClinicalMeasurementService';
+import { ValidationPipeline } from '../testing/ValidationPipeline';
+
+/**
+ * Clinical Analysis Service
+ *
+ * High-level service that orchestrates pose analysis through all gates
+ */
+export class ClinicalAnalysisService {
+  private frameCache: AnatomicalFrameCache;
+  private clinicalService: ClinicalMeasurementService;
+
+  constructor() {
+    // Initialize with optimal configuration
+    this.frameCache = new AnatomicalFrameCache({
+      maxSize: 60, // 2 seconds at 30fps
+      ttl: 16, // 16ms (60fps tolerance)
+      spatialPrecision: 0.01, // 1cm bucketing
+    });
+
+    this.clinicalService = new ClinicalMeasurementService({
+      shoulder: {
+        forwardFlexion: { target: 160, minAcceptable: 120 },
+        abduction: { target: 160, minAcceptable: 120 },
+        externalRotation: { target: 90, elbowAngleTolerance: 10 },
+      },
+    });
+  }
+
+  /**
+   * Analyze pose and return clinical measurements
+   */
+  public analyzePose(poseData: ProcessedPoseData, joint: string, side: 'left' | 'right') {
+    // Gate 9B.5: Add cached anatomical frames
+    const enrichedPose = this.frameCache.getCachedFrames(poseData);
+
+    // Gates 9B.6 + 10A + 10B: Clinical measurement with compensations
+    let measurement;
+    switch (joint) {
+      case 'shoulder_flexion':
+        measurement = this.clinicalService.measureShoulderFlexion(enrichedPose, side);
+        break;
+      case 'shoulder_abduction':
+        measurement = this.clinicalService.measureShoulderAbduction(enrichedPose, side);
+        break;
+      case 'shoulder_rotation':
+        measurement = this.clinicalService.measureShoulderRotation(enrichedPose, side);
+        break;
+      case 'elbow':
+        measurement = this.clinicalService.measureElbowFlexion(enrichedPose, side);
+        break;
+      case 'knee':
+        measurement = this.clinicalService.measureKneeFlexion(enrichedPose, side);
+        break;
+      default:
+        throw new Error(`Unknown joint: ${joint}`);
+    }
+
+    // Format for UI
+    return {
+      angle: measurement.measurement.angle,
+      percentOfNormal: measurement.percentOfNormal,
+      quality: measurement.quality.grade,
+      compensations: measurement.compensations.map(c => ({
+        type: c.type,
+        severity: c.severity,
+        note: c.clinicalNote,
+      })),
+      recommendations: measurement.quality.recommendations,
+    };
+  }
+
+  /**
+   * Get cache performance statistics
+   */
+  public getCacheStats() {
+    return this.frameCache.getStats();
+  }
+
+  /**
+   * Run clinical validation (for testing)
+   */
+  public async runValidation() {
+    const pipeline = new ValidationPipeline();
+    return await pipeline.runFullValidation();
+  }
+}
+```
+
+**Usage in React Component**:
+```typescript
+// app/components/ClinicalMeasurement.tsx
+
+import React, { useState, useEffect } from 'react';
+import { ClinicalAnalysisService } from '../services/ClinicalAnalysisService';
+
+export function ClinicalMeasurement({ poseData }) {
+  const [analysis, setAnalysis] = useState(null);
+  const [service] = useState(() => new ClinicalAnalysisService());
+
+  useEffect(() => {
+    if (poseData) {
+      const result = service.analyzePose(poseData, 'shoulder_flexion', 'right');
+      setAnalysis(result);
+    }
+  }, [poseData, service]);
+
+  if (!analysis) return <div>Waiting for pose data...</div>;
+
+  return (
+    <div className="clinical-measurement">
+      <h2>Shoulder Flexion (Right)</h2>
+
+      <div className="angle-display">
+        <span className="angle">{analysis.angle.toFixed(1)}°</span>
+        <span className="percent">{analysis.percentOfNormal.toFixed(0)}% of normal</span>
+      </div>
+
+      <div className={`quality-badge quality-${analysis.quality}`}>
+        Quality: {analysis.quality}
+      </div>
+
+      {analysis.compensations.length > 0 && (
+        <div className="compensations">
+          <h3>Compensations Detected:</h3>
+          {analysis.compensations.map((comp, i) => (
+            <div key={i} className={`compensation severity-${comp.severity}`}>
+              <strong>{comp.type}</strong>: {comp.note}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {analysis.recommendations.length > 0 && (
+        <div className="recommendations">
+          <h3>Recommendations:</h3>
+          <ul>
+            {analysis.recommendations.map((rec, i) => (
+              <li key={i}>{rec}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+**END OF ULTRA-DETAILED KICKSTART PLAN**
+
+**Document Statistics**:
+- **Total Lines**: ~6,800
+- **Sections**: 15 + 4 Appendices
+- **Code Examples**: 50+
+- **Test Specifications**: 210+ tests
+- **Validation Test Cases**: 110 cases
+- **Gates Covered**: 9B.5, 9B.6, 10A, 10B, 10C
+
+**Implementation Readiness**: ✅ Ready for kickstart in parallel window/session
 
