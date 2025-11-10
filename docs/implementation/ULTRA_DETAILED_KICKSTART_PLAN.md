@@ -3064,3 +3064,1668 @@ npm run test -- ShoulderROMTracker
 
 **Next**: Section 7 will specify Gate 10A (Clinical Measurement Service) for joint-specific measurement functions with compensation detection and quality assessment.
 
+
+---
+
+## 7. GATE 10A: CLINICAL MEASUREMENT SERVICE
+
+**Objective**: Implement joint-specific clinical measurement functions with primary/secondary joint architecture, leveraging refactored goniometer and cached anatomical frames.
+
+**Prerequisites**: Gates 9B.5, 9B.6 complete ✅
+
+**Estimated Effort**: 5-7 days, 50+ tests
+
+---
+
+### 7.1 Objective & Success Criteria
+
+#### Vision
+
+Transform raw joint angles into **clinically meaningful measurements** that:
+- Follow ISB standards for accuracy
+- Detect and quantify compensation patterns
+- Provide confidence scoring for reliability assessment
+- Include both absolute clinical targets AND reference-relative scores
+- Enable multi-angle capture workflows (frontal, sagittal, posterior views)
+
+#### From Raw Angles to Clinical Measurements
+
+**Current state** (after Gate 9B.6):
+```typescript
+// Goniometer provides: angle + confidence
+const elbowMeasurement = goniometer.calculateJointAngle(poseData, 'left_elbow');
+// Output: { angle: 90°, confidence: 0.85 }
+```
+
+**Needed for clinical use**:
+```typescript
+// ClinicalMeasurementService provides: comprehensive measurement context
+const shoulderMeasurement = clinicalService.measureShoulderFlexion(poseData, 'left');
+// Output: {
+//   primaryJoint: { name: 'left_shoulder', angle: 150°, type: 'flexion', targetAngle: 160°, percentOfTarget: 94% },
+//   secondaryJoints: { left_elbow: { angle: 5°, withinTolerance: true, purpose: 'validation' } },
+//   compensations: [{ type: 'trunk_lean', severity: 'mild', magnitude: 12° }],
+//   quality: { overall: 'good', landmarkVisibility: 0.88, orientationMatch: 1.0 },
+//   referenceFrames: { global, local: humerusFrame, measurementPlane: sagittalPlane },
+//   clinicalNote: "Trunk lean detected. True shoulder ROM may be less than measured."
+// }
+```
+
+#### Success Criteria
+
+**Functional Targets**:
+- ✅ Joint-specific measurement functions implemented:
+  - Shoulder: forward flexion, abduction, external/internal rotation
+  - Elbow: flexion/extension
+  - Knee: flexion/extension
+- ✅ Primary/secondary joint architecture (measure elbow during shoulder rotation check)
+- ✅ Orientation requirements enforced (sagittal view for flexion, frontal for abduction)
+- ✅ Clinical thresholds configurable (e.g., 160° target for shoulder flexion)
+- ✅ Scapulohumeral rhythm calculation (glenohumeral vs. scapulothoracic ratio)
+
+**Accuracy Targets**:
+- ✅ ±10° MAE on synthetic test data (vs. known ground truth)
+- ✅ Compensation detection: >80% sensitivity for moderate/severe compensations
+- ✅ Quality assessment correlates with measurement reliability (r > 0.7)
+
+**Performance Targets**:
+- ✅ Single clinical measurement: <20ms (including angle calculation + compensation detection)
+- ✅ Multi-joint measurement (primary + 2 secondary): <50ms
+
+---
+
+### 7.2 Service Architecture
+
+#### 7.2.1 ClinicalMeasurementService Class
+
+**File**: `src/services/biomechanics/ClinicalMeasurementService.ts` (NEW)
+
+```typescript
+/**
+ * Clinical-grade joint measurement service
+ * Produces ClinicalJointMeasurement with compensation detection and quality scoring
+ */
+export class ClinicalMeasurementService {
+  private goniometer: GoniometerService;
+  private anatomicalService: AnatomicalReferenceService;
+  private clinicalThresholds: ClinicalThresholds;
+
+  constructor(thresholds?: Partial<ClinicalThresholds>) {
+    this.goniometer = new GoniometerService();
+    this.anatomicalService = new AnatomicalReferenceService();
+    this.clinicalThresholds = {
+      ...DEFAULT_CLINICAL_THRESHOLDS,
+      ...thresholds,
+    };
+  }
+
+  // Shoulder measurements
+  public measureShoulderFlexion(poseData: ProcessedPoseData, side: 'left' | 'right'): ClinicalJointMeasurement;
+  public measureShoulderAbduction(poseData: ProcessedPoseData, side: 'left' | 'right'): ClinicalJointMeasurement;
+  public measureShoulderRotation(poseData: ProcessedPoseData, side: 'left' | 'right', targetElbowAngle?: number): ClinicalJointMeasurement;
+
+  // Elbow measurements
+  public measureElbowFlexion(poseData: ProcessedPoseData, side: 'left' | 'right'): ClinicalJointMeasurement;
+
+  // Knee measurements
+  public measureKneeFlexion(poseData: ProcessedPoseData, side: 'left' | 'right'): ClinicalJointMeasurement;
+
+  // Quality assessment
+  private assessMeasurementQuality(poseData: ProcessedPoseData, requiredLandmarks: string[]): MeasurementQuality;
+
+  // Compensation detection (detailed in Gate 10B)
+  private detectCompensations(poseData: ProcessedPoseData, jointName: string): CompensationPattern[];
+}
+```
+
+---
+
+#### 7.2.2 Clinical Thresholds Configuration
+
+```typescript
+export interface ClinicalThresholds {
+  shoulder: {
+    forwardFlexion: { target: number; minAcceptable: number };
+    abduction: { target: number; minAcceptable: number };
+    externalRotation: { target: number; elbowAngleTolerance: number };
+    internalRotation: { target: number };
+    scapulohumeralRhythm: { min: number; max: number }; // Ratio range: 2:1 to 3:1
+  };
+  elbow: {
+    flexion: { target: number; minAcceptable: number };
+    extension: { target: number };
+  };
+  knee: {
+    flexion: { target: number; minAcceptable: number };
+    extension: { target: number };
+  };
+}
+
+const DEFAULT_CLINICAL_THRESHOLDS: ClinicalThresholds = {
+  shoulder: {
+    forwardFlexion: { target: 160, minAcceptable: 120 },
+    abduction: { target: 160, minAcceptable: 120 },
+    externalRotation: { target: 90, elbowAngleTolerance: 10 },
+    internalRotation: { target: 70 },
+    scapulohumeralRhythm: { min: 2.0, max: 3.5 }, // 2:1 to 3.5:1 acceptable
+  },
+  elbow: {
+    flexion: { target: 150, minAcceptable: 130 },
+    extension: { target: 0 }, // Full extension = 0°
+  },
+  knee: {
+    flexion: { target: 135, minAcceptable: 110 },
+    extension: { target: 0 },
+  },
+};
+```
+
+---
+
+### 7.3 Joint-Specific Measurement Functions
+
+#### 7.3.1 Shoulder Forward Flexion
+
+**Measurement Specification** (ISB standard + clinical requirements):
+- **Plane**: Sagittal plane (project humerus vector onto sagittal)
+- **Reference**: Humerus Y-axis angle from vertical (thorax Y-axis)
+- **Orientation required**: Sagittal or frontal view
+- **Secondary joints**: Elbow (should be extended), trunk (check for lean)
+- **Clinical target**: 160° (normal ROM)
+
+**Implementation**:
+
+```typescript
+/**
+ * Measure shoulder forward flexion in sagittal plane
+ * Clinical target: 160° (normal ROM for healthy adults)
+ */
+public measureShoulderFlexion(
+  poseData: ProcessedPoseData,
+  side: 'left' | 'right'
+): ClinicalJointMeasurement {
+  // 1. Validate orientation
+  if (!['sagittal', 'frontal'].includes(poseData.viewOrientation!)) {
+    throw new Error(
+      `Shoulder flexion requires sagittal or frontal view. Current: ${poseData.viewOrientation}`
+    );
+  }
+
+  // 2. Get cached frames
+  const { global, thorax } = poseData.cachedAnatomicalFrames!;
+  const humerusFrame = poseData.cachedAnatomicalFrames![`${side}_humerus`];
+
+  if (!humerusFrame) {
+    throw new Error(`${side} humerus frame not available. Check landmark visibility.`);
+  }
+
+  // 3. Define sagittal plane
+  const sagittalPlane = this.anatomicalService.calculateSagittalPlane(thorax);
+
+  // 4. Project humerus Y-axis onto sagittal plane
+  const humerusVector = humerusFrame.yAxis;
+  const humerusProjected = projectVectorOntoPlane(humerusVector, sagittalPlane.normal);
+
+  // 5. Calculate angle from vertical (thorax Y-axis)
+  const flexionAngle = angleBetweenVectors(humerusProjected, thorax.yAxis);
+
+  // 6. Measure secondary joints
+  const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
+  const secondaryJoints = {
+    [`${side}_elbow`]: {
+      angle: elbowMeasurement.angle,
+      withinTolerance: Math.abs(elbowMeasurement.angle - 180) < 15, // Should be extended (≈180°)
+      tolerance: 15,
+      purpose: 'validation' as const,
+      deviation: 180 - elbowMeasurement.angle,
+      warning: elbowMeasurement.angle < 165 ? 'Elbow not fully extended. May affect measurement accuracy.' : undefined,
+    },
+  };
+
+  // 7. Detect compensations
+  const compensations = this.detectCompensations(poseData, `${side}_shoulder_flexion`);
+
+  // 8. Assess quality
+  const quality = this.assessMeasurementQuality(poseData, [
+    `${side}_shoulder`,
+    `${side}_elbow`,
+    `${side}_wrist`,
+    `${side}_hip`,
+  ]);
+
+  // 9. Compare to clinical target
+  const targetAngle = this.clinicalThresholds.shoulder.forwardFlexion.target;
+  const percentOfTarget = (flexionAngle / targetAngle) * 100;
+
+  return {
+    primaryJoint: {
+      name: `${side}_shoulder`,
+      type: 'shoulder',
+      angle: flexionAngle,
+      angleType: 'flexion',
+      targetAngle,
+      percentOfTarget,
+      clinicalGrade:
+        flexionAngle >= targetAngle
+          ? 'excellent'
+          : flexionAngle >= this.clinicalThresholds.shoulder.forwardFlexion.minAcceptable
+          ? 'good'
+          : 'limited',
+    },
+    secondaryJoints,
+    referenceFrames: {
+      global,
+      local: humerusFrame,
+      measurementPlane: sagittalPlane,
+    },
+    compensations,
+    quality,
+    timestamp: poseData.timestamp,
+  };
+}
+```
+
+**Clinical Interpretation**:
+```typescript
+// Example outputs:
+// 1. Healthy ROM:
+//    angle: 160°, percentOfTarget: 100%, clinicalGrade: 'excellent', compensations: []
+
+// 2. Limited ROM with compensation:
+//    angle: 140°, percentOfTarget: 87.5%, clinicalGrade: 'good',
+//    compensations: [{ type: 'trunk_lean', severity: 'mild', magnitude: 10° }]
+
+// 3. Severe limitation:
+//    angle: 100°, percentOfTarget: 62.5%, clinicalGrade: 'limited',
+//    compensations: [{ type: 'trunk_lean', severity: 'moderate', magnitude: 20° }]
+```
+
+---
+
+#### 7.3.2 Shoulder Abduction with Scapulohumeral Rhythm
+
+**Measurement Specification**:
+- **Plane**: Scapular plane (35° anterior to coronal)
+- **Primary measurement**: Total abduction (humerus angle from vertical)
+- **Advanced**: Scapulohumeral rhythm (glenohumeral vs. scapulothoracic contribution)
+  - Normal ratio: 2:1 to 3:1
+  - Calculation: Track shoulder line tilt during abduction
+- **Orientation required**: Frontal or posterior view
+- **Clinical target**: 160° total abduction
+
+**Implementation**:
+
+```typescript
+/**
+ * Measure shoulder abduction with scapulohumeral rhythm analysis
+ * Separates glenohumeral (true shoulder) from scapulothoracic (scapular) motion
+ */
+public measureShoulderAbduction(
+  poseData: ProcessedPoseData,
+  side: 'left' | 'right'
+): ClinicalJointMeasurement {
+  // 1. Validate orientation
+  if (!['frontal', 'posterior'].includes(poseData.viewOrientation!)) {
+    throw new Error(`Shoulder abduction requires frontal or posterior view. Current: ${poseData.viewOrientation}`);
+  }
+
+  // 2. Get cached frames
+  const { global, thorax } = poseData.cachedAnatomicalFrames!;
+  const humerusFrame = poseData.cachedAnatomicalFrames![`${side}_humerus`];
+
+  if (!humerusFrame) {
+    throw new Error(`${side} humerus frame not available.`);
+  }
+
+  // 3. Define scapular plane (35° from coronal)
+  const scapularPlane = this.anatomicalService.calculateScapularPlane(thorax, 35);
+
+  // 4. Total abduction: Humerus angle from vertical in scapular plane
+  const humerusProjected = projectVectorOntoPlane(humerusFrame.yAxis, scapularPlane.normal);
+  const totalAbduction = angleBetweenVectors(humerusProjected, thorax.yAxis);
+
+  // 5. Scapular upward rotation (scapulothoracic contribution)
+  const scapularRotation = this.calculateScapularUpwardRotation(poseData, thorax);
+
+  // 6. Glenohumeral contribution (estimate)
+  // Assumption: Total abduction = glenohumeral + scapulothoracic
+  const glenohumeralContribution = totalAbduction - scapularRotation;
+
+  // 7. Calculate scapulohumeral rhythm ratio
+  const rhythmRatio =
+    scapularRotation > 0 ? glenohumeralContribution / scapularRotation : Infinity;
+
+  // 8. Detect abnormal rhythm
+  const rhythmNormal =
+    rhythmRatio >= this.clinicalThresholds.shoulder.scapulohumeralRhythm.min &&
+    rhythmRatio <= this.clinicalThresholds.shoulder.scapulohumeralRhythm.max;
+
+  // 9. Build measurement result
+  const targetAngle = this.clinicalThresholds.shoulder.abduction.target;
+
+  return {
+    primaryJoint: {
+      name: `${side}_shoulder`,
+      type: 'shoulder',
+      angle: totalAbduction,
+      angleType: 'abduction',
+      targetAngle,
+      percentOfTarget: (totalAbduction / targetAngle) * 100,
+      components: {
+        glenohumeral: glenohumeralContribution,
+        scapulothoracic: scapularRotation,
+        rhythm: rhythmRatio,
+        rhythmNormal,
+      },
+    },
+    secondaryJoints: {},
+    referenceFrames: {
+      global,
+      local: humerusFrame,
+      measurementPlane: scapularPlane,
+    },
+    compensations: rhythmNormal
+      ? []
+      : [
+          {
+            type: 'shoulder_hiking' as const,
+            severity: rhythmRatio < 2.0 ? 'moderate' : 'mild',
+            magnitude: scapularRotation,
+            affectsJoint: `${side}_shoulder`,
+            clinicalNote: `Abnormal scapulohumeral rhythm (${rhythmRatio.toFixed(1)}:1). Normal range: 2:1 to 3:1. Excessive scapular movement may indicate glenohumeral restriction.`,
+          },
+        ],
+    quality: this.assessMeasurementQuality(poseData, [
+      `${side}_shoulder`,
+      `${side}_elbow`,
+      'left_shoulder',
+      'right_shoulder', // Need both shoulders for scapular tilt
+    ]),
+    timestamp: poseData.timestamp,
+  };
+}
+
+/**
+ * Calculate scapular upward rotation from shoulder line tilt
+ * Approximates scapulothoracic contribution to abduction
+ */
+private calculateScapularUpwardRotation(
+  poseData: ProcessedPoseData,
+  thoraxFrame: AnatomicalReferenceFrame
+): number {
+  const leftShoulder = poseData.landmarks.find((lm) => lm.name === 'left_shoulder');
+  const rightShoulder = poseData.landmarks.find((lm) => lm.name === 'right_shoulder');
+
+  if (!leftShoulder || !rightShoulder) {
+    return 0; // Cannot calculate without both shoulders
+  }
+
+  // Shoulder line vector
+  const shoulderLine = {
+    x: rightShoulder.x - leftShoulder.x,
+    y: rightShoulder.y - leftShoulder.y,
+    z: rightShoulder.z - leftShoulder.z,
+  };
+
+  // Project onto coronal plane (YZ plane of thorax)
+  const coronalPlane = this.anatomicalService.calculateCoronalPlane(thoraxFrame);
+  const shoulderLineProjected = projectVectorOntoPlane(shoulderLine, coronalPlane.normal);
+
+  // Angle from horizontal (Z-axis)
+  const tiltAngle = angleBetweenVectors(shoulderLineProjected, thoraxFrame.zAxis);
+
+  // Scapular upward rotation ≈ shoulder line tilt angle
+  // (This is a 2D approximation; true scapular rotation requires scapula landmarks)
+  return Math.abs(tiltAngle - 90); // 90° = horizontal, deviation = rotation
+}
+```
+
+---
+
+#### 7.3.3 Shoulder External/Internal Rotation
+
+**Measurement Specification**:
+- **Gating condition**: Elbow must be at 90° flexion (±10° tolerance)
+- **Plane**: Transverse plane (forearm rotation in horizontal plane)
+- **Reference**: Forearm axis angle from anterior (thorax X-axis)
+- **Orientation required**: Frontal view
+- **Clinical target**: 90° external rotation, 70° internal rotation
+
+**Implementation**:
+
+```typescript
+/**
+ * Measure shoulder external/internal rotation
+ * CRITICAL: Requires elbow at 90° flexion for valid measurement
+ */
+public measureShoulderRotation(
+  poseData: ProcessedPoseData,
+  side: 'left' | 'right',
+  targetElbowAngle: number = 90
+): ClinicalJointMeasurement {
+  // 1. Measure elbow angle first (gating condition)
+  const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
+  const elbowDeviation = Math.abs(elbowMeasurement.angle - targetElbowAngle);
+  const elbowInTolerance =
+    elbowDeviation <= this.clinicalThresholds.shoulder.externalRotation.elbowAngleTolerance;
+
+  if (!elbowInTolerance) {
+    console.warn(
+      `Elbow angle (${elbowMeasurement.angle.toFixed(1)}°) deviates from target (${targetElbowAngle}°) by ${elbowDeviation.toFixed(1)}°. Measurement may be inaccurate.`
+    );
+  }
+
+  // 2. Get frames
+  const { global, thorax } = poseData.cachedAnatomicalFrames!;
+  const forearmFrame = poseData.cachedAnatomicalFrames![`${side}_forearm`];
+
+  if (!forearmFrame) {
+    throw new Error(`${side} forearm frame not available.`);
+  }
+
+  // 3. Define transverse plane
+  const transversePlane = this.anatomicalService.calculateTransversePlane(thorax);
+
+  // 4. Project forearm Y-axis onto transverse plane
+  const forearmProjected = projectVectorOntoPlane(forearmFrame.yAxis, transversePlane.normal);
+
+  // 5. Calculate rotation angle from anterior (thorax X-axis)
+  const rotationAngle = angleBetweenVectors(forearmProjected, thorax.xAxis);
+
+  // 6. Determine rotation direction (internal vs. external)
+  // Cross product to determine sign
+  const crossProduct = {
+    x: forearmProjected.y * thorax.xAxis.z - forearmProjected.z * thorax.xAxis.y,
+    y: forearmProjected.z * thorax.xAxis.x - forearmProjected.x * thorax.xAxis.z,
+    z: forearmProjected.x * thorax.xAxis.y - forearmProjected.y * thorax.xAxis.x,
+  };
+
+  const dotWithY = crossProduct.x * thorax.yAxis.x + crossProduct.y * thorax.yAxis.y + crossProduct.z * thorax.yAxis.z;
+  const isExternalRotation = side === 'left' ? dotWithY > 0 : dotWithY < 0;
+
+  const signedRotation = isExternalRotation ? rotationAngle : -rotationAngle;
+
+  // 7. Secondary joints
+  const secondaryJoints = {
+    [`${side}_elbow`]: {
+      angle: elbowMeasurement.angle,
+      withinTolerance: elbowInTolerance,
+      tolerance: this.clinicalThresholds.shoulder.externalRotation.elbowAngleTolerance,
+      purpose: 'gating' as const,
+      deviation: elbowDeviation,
+      warning: !elbowInTolerance
+        ? `Elbow should be at ${targetElbowAngle}° for valid rotation measurement.`
+        : undefined,
+    },
+  };
+
+  // 8. Compensations
+  const compensations: CompensationPattern[] = [];
+
+  if (!elbowInTolerance) {
+    compensations.push({
+      type: 'elbow_flexion' as const,
+      severity: elbowDeviation > 20 ? 'moderate' : 'mild',
+      magnitude: elbowDeviation,
+      affectsJoint: `${side}_shoulder`,
+      clinicalNote: `Elbow flexion deviates by ${elbowDeviation.toFixed(1)}° from required ${targetElbowAngle}°. This invalidates rotation measurement.`,
+    });
+  }
+
+  return {
+    primaryJoint: {
+      name: `${side}_shoulder`,
+      type: 'shoulder',
+      angle: Math.abs(signedRotation),
+      angleType: isExternalRotation ? 'external_rotation' : 'internal_rotation',
+      targetAngle: isExternalRotation
+        ? this.clinicalThresholds.shoulder.externalRotation.target
+        : this.clinicalThresholds.shoulder.internalRotation.target,
+      signedAngle: signedRotation, // Preserve sign for direction
+    },
+    secondaryJoints,
+    referenceFrames: {
+      global,
+      local: forearmFrame,
+      measurementPlane: transversePlane,
+    },
+    compensations,
+    quality: this.assessMeasurementQuality(poseData, [
+      `${side}_shoulder`,
+      `${side}_elbow`,
+      `${side}_wrist`,
+    ]),
+    timestamp: poseData.timestamp,
+  };
+}
+```
+
+---
+
+(Continuing with Section 7 specifications for elbow, knee, quality assessment, and test suite...)
+
+
+#### 7.3.4 Elbow Flexion/Extension
+
+**Implementation** (simplified - single-axis hinge joint):
+
+```typescript
+/**
+ * Measure elbow flexion in sagittal plane
+ * Simple hinge joint - straightforward measurement
+ */
+public measureElbowFlexion(
+  poseData: ProcessedPoseData,
+  side: 'left' | 'right'
+): ClinicalJointMeasurement {
+  // Use refactored goniometer (already plane-projected)
+  const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
+
+  // Check shoulder stabilization (shoulder should remain static during elbow movement)
+  const shoulderMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_shoulder`);
+
+  return {
+    primaryJoint: {
+      name: `${side}_elbow`,
+      type: 'elbow',
+      angle: elbowMeasurement.angle,
+      angleType: 'flexion',
+      targetAngle: this.clinicalThresholds.elbow.flexion.target,
+      percentOfTarget: (elbowMeasurement.angle / this.clinicalThresholds.elbow.flexion.target) * 100,
+    },
+    secondaryJoints: {
+      [`${side}_shoulder`]: {
+        angle: shoulderMeasurement.angle,
+        withinTolerance: true, // For context only
+        purpose: 'reference' as const,
+      },
+    },
+    referenceFrames: {
+      global: poseData.cachedAnatomicalFrames!.global,
+      local: poseData.cachedAnatomicalFrames![`${side}_forearm`]!,
+      measurementPlane: elbowMeasurement.measurementPlane,
+    },
+    compensations: this.detectCompensations(poseData, `${side}_elbow`),
+    quality: this.assessMeasurementQuality(poseData, [
+      `${side}_shoulder`,
+      `${side}_elbow`,
+      `${side}_wrist`,
+    ]),
+    timestamp: poseData.timestamp,
+  };
+}
+```
+
+---
+
+#### 7.3.5 Knee Flexion/Extension
+
+Similar to elbow (single-axis hinge joint in sagittal plane). Implementation follows same pattern with knee-specific clinical thresholds.
+
+---
+
+### 7.4 Quality Assessment
+
+```typescript
+/**
+ * Assess measurement quality based on multiple factors
+ * Returns quality score and recommendations for improvement
+ */
+private assessMeasurementQuality(
+  poseData: ProcessedPoseData,
+  requiredLandmarks: string[]
+): MeasurementQuality {
+  // Factor 1: Landmark visibility (weighted average)
+  const visibilities = requiredLandmarks
+    .map((name) => poseData.landmarks.find((lm) => lm.name === name)?.visibility || 0)
+    .filter((v) => v > 0);
+
+  const landmarkVisibility = visibilities.reduce((sum, v) => sum + v, 0) / visibilities.length;
+
+  // Factor 2: Frame stability (check if cached frames have high confidence)
+  const frameConfidences = [
+    poseData.cachedAnatomicalFrames?.global.confidence || 0,
+    poseData.cachedAnatomicalFrames?.thorax.confidence || 0,
+  ];
+  const frameStability = frameConfidences.reduce((sum, c) => sum + c, 0) / frameConfidences.length;
+
+  // Factor 3: Orientation match (does view orientation match requirements?)
+  const orientationMatch = poseData.viewOrientation ? 1.0 : 0.5;
+
+  // Factor 4: Overall quality score (weighted average)
+  const overallScore =
+    0.5 * landmarkVisibility + 0.3 * frameStability + 0.2 * orientationMatch;
+
+  // Determine overall grade
+  let overall: 'excellent' | 'good' | 'fair' | 'poor';
+  if (overallScore >= 0.85) overall = 'excellent';
+  else if (overallScore >= 0.7) overall = 'good';
+  else if (overallScore >= 0.5) overall = 'fair';
+  else overall = 'poor';
+
+  // Generate recommendations
+  const recommendations: string[] = [];
+  if (landmarkVisibility < 0.7) {
+    recommendations.push('Improve lighting or camera position to increase landmark visibility.');
+  }
+  if (frameStability < 0.7) {
+    recommendations.push('Reduce camera shake or body movement for more stable measurements.');
+  }
+  if (!poseData.viewOrientation) {
+    recommendations.push('Ensure camera orientation is detected (frontal, sagittal, or posterior).');
+  }
+
+  return {
+    depthReliability: poseData.hasDepth ? 0.9 : 0.6, // Higher confidence with real depth
+    landmarkVisibility,
+    frameStability,
+    overall,
+    recommendations,
+  };
+}
+```
+
+---
+
+### 7.5 Test Suite (50+ Tests)
+
+Comprehensive testing for clinical measurements. Full test specifications available in separate testing document.
+
+**Test Categories**:
+1. Shoulder flexion tests (10 tests)
+2. Shoulder abduction tests (10 tests)
+3. Shoulder rotation tests (10 tests)
+4. Elbow/knee tests (10 tests)
+5. Quality assessment tests (10 tests)
+
+---
+
+### 7.6 Definition of Done
+
+**Functional Criteria**:
+- [ ] All 5 measurement functions implemented (shoulder x3, elbow, knee)
+- [ ] Clinical thresholds configurable
+- [ ] Quality assessment working
+- [ ] Scapulohumeral rhythm calculation validated
+
+**Accuracy Criteria**:
+- [ ] ±10° MAE on synthetic test data
+- [ ] Compensation detection >80% sensitivity
+
+**Test Criteria**:
+- [ ] 50+ tests passing
+- [ ] Test coverage >90%
+
+**Documentation Criteria**:
+- [ ] Clinical interpretation guide
+- [ ] API documentation
+- [ ] Integration examples
+
+---
+
+## Section 8: Gate 10B - Compensation Detection Service
+
+### 8.1 Objective & Success Criteria
+
+**Objective**: Upgrade existing 2D compensation detection to 3D anatomical frame-based system that integrates with ClinicalMeasurementService. Transform basic pixel-based detection into ISB-compliant, schema-aware compensation analysis.
+
+**Current State Analysis**:
+- ✅ `CompensationPattern` type defined in `src/types/biomechanics.ts:97`
+- ✅ Basic 2D detection in `src/features/videoComparison/errorDetection/shoulderErrors.ts`
+- ✅ 4 compensation types implemented: shoulder hiking, trunk lean, internal rotation, incomplete ROM
+- ❌ Detection uses 2D pixel distances and angles (not ISB-compliant)
+- ❌ Hardcoded MoveNet-17 indices
+- ❌ No integration with cached anatomical frames
+- ❌ No schema-awareness
+- ❌ Missing trunk rotation and elbow flexion drift detection
+
+**Success Criteria**:
+- [ ] All 6 compensation types implemented: trunk lean, trunk rotation, shoulder hiking, elbow flexion, hip hike, contralateral lean
+- [ ] Detection uses cached anatomical frames (no frame recalculation)
+- [ ] Schema-agnostic (works with MoveNet-17 and MediaPipe-33)
+- [ ] Severity grading: minimal (<5°), mild (5-10°), moderate (10-15°), severe (>15°)
+- [ ] >80% sensitivity/specificity for moderate/severe compensations (clinical validation)
+- [ ] <5ms per compensation check (performance target)
+- [ ] Integrated with ClinicalMeasurementService
+- [ ] 25+ unit tests passing
+
+---
+
+### 8.2 Research Findings: Clinical Compensation Detection
+
+**ISB Standards for Compensation Analysis** (2024 research):
+- **Trunk lean**: Lateral deviation of thorax frame from vertical >10° during shoulder abduction indicates compensation
+- **Trunk rotation**: Transverse plane rotation of thorax >15° during sagittal/coronal movements
+- **Shoulder hiking**: Scapular elevation >2cm (superior translation of AC joint relative to sternum)
+- **Scapulohumeral rhythm breakdown**: Ratio outside 2:1 to 3:1 range indicates compensation
+
+**Detection Thresholds** (from recent biomechanics literature):
+- **Minimal compensation** (<5°/1cm): Normal movement variation, clinically insignificant
+- **Mild compensation** (5-10°/1-2cm): Noteworthy but not clinically significant
+- **Moderate compensation** (10-15°/2-3cm): Clinically significant, requires intervention
+- **Severe compensation** (>15°/>3cm): Major dysfunction, immediate clinical attention
+
+**Key Insight from 2024 Frontiers Study**: Trunk rotational strength directly correlates with shoulder movement quality. Detecting trunk rotation compensations is critical for shoulder rehabilitation assessment.
+
+---
+
+### 8.3 Compensation Detection Architecture
+
+**Service Design**:
+```typescript
+// src/services/biomechanics/CompensationDetectionService.ts
+
+import { ProcessedPoseData, PoseLandmark } from '../../types/pose';
+import { CompensationPattern, AnatomicalReferenceFrame } from '../../types/biomechanics';
+import { PoseSchemaRegistry } from '../poseDetection/PoseSchemaRegistry';
+import { Vector3D } from '../../utils/vectorMath';
+import * as vectorMath from '../../utils/vectorMath';
+
+/**
+ * Compensation Detection Service
+ *
+ * Detects biomechanical compensations using cached anatomical frames.
+ * All detection methods are schema-agnostic and ISB-compliant.
+ *
+ * Integration with Gate 9B.5:
+ * - Uses cached frames from ProcessedPoseData.cachedAnatomicalFrames
+ * - No redundant frame calculations
+ * - <5ms per compensation check
+ *
+ * Integration with Gate 10A:
+ * - Called by ClinicalMeasurementService
+ * - Returns CompensationPattern[] attached to ClinicalJointMeasurement
+ */
+export class CompensationDetectionService {
+  private schemaRegistry: PoseSchemaRegistry;
+
+  constructor() {
+    this.schemaRegistry = PoseSchemaRegistry.getInstance();
+  }
+
+  /**
+   * Detect all compensations for a given movement
+   *
+   * @param poseData Current pose with cached frames
+   * @param previousPoseData Previous frame for temporal analysis (optional)
+   * @param movement Movement being performed (for context-specific detection)
+   * @returns Array of detected compensation patterns
+   */
+  public detectCompensations(
+    poseData: ProcessedPoseData,
+    previousPoseData?: ProcessedPoseData,
+    movement?: string
+  ): CompensationPattern[] {
+    const compensations: CompensationPattern[] = [];
+
+    // Validate cached frames exist
+    if (!poseData.cachedAnatomicalFrames) {
+      console.warn('No cached anatomical frames - cannot detect compensations');
+      return compensations;
+    }
+
+    const frames = poseData.cachedAnatomicalFrames;
+
+    // Detect trunk compensations (global frame analysis)
+    const trunkLean = this.detectTrunkLean(frames.global, poseData.viewOrientation);
+    if (trunkLean) compensations.push(trunkLean);
+
+    const trunkRotation = this.detectTrunkRotation(frames.global, poseData.viewOrientation);
+    if (trunkRotation) compensations.push(trunkRotation);
+
+    // Detect shoulder compensations (if shoulder movement)
+    if (movement?.includes('shoulder')) {
+      const shoulderHiking = this.detectShoulderHiking(
+        poseData.landmarks,
+        frames.thorax,
+        poseData.schemaId
+      );
+      if (shoulderHiking) compensations.push(shoulderHiking);
+
+      const elbowFlexion = this.detectElbowFlexionDrift(
+        poseData.landmarks,
+        frames.left_forearm || frames.right_forearm,
+        poseData.schemaId
+      );
+      if (elbowFlexion) compensations.push(elbowFlexion);
+    }
+
+    // Detect hip hike (if lower extremity movement)
+    if (movement?.includes('knee') || movement?.includes('hip')) {
+      const hipHike = this.detectHipHike(
+        poseData.landmarks,
+        frames.pelvis,
+        poseData.schemaId
+      );
+      if (hipHike) compensations.push(hipHike);
+    }
+
+    return compensations;
+  }
+
+  // Individual detection methods follow...
+}
+```
+
+**Severity Grading Function**:
+```typescript
+/**
+ * Grade compensation severity based on magnitude
+ *
+ * Clinical thresholds:
+ * - minimal: <5° or <1cm (normal variation)
+ * - mild: 5-10° or 1-2cm (noteworthy)
+ * - moderate: 10-15° or 2-3cm (clinically significant)
+ * - severe: >15° or >3cm (major dysfunction)
+ */
+private gradeSeverity(
+  magnitude: number,
+  unit: 'degrees' | 'cm'
+): 'minimal' | 'mild' | 'moderate' | 'severe' {
+  const thresholds = unit === 'degrees'
+    ? { mild: 5, moderate: 10, severe: 15 }
+    : { mild: 1, moderate: 2, severe: 3 };
+
+  if (magnitude < thresholds.mild) return 'minimal';
+  if (magnitude < thresholds.moderate) return 'mild';
+  if (magnitude < thresholds.severe) return 'moderate';
+  return 'severe';
+}
+```
+
+---
+
+### 8.4 Trunk Lean Detection
+
+**Clinical Context**: Lateral trunk flexion during shoulder abduction/flexion. Patient leans away from lifting side to compensate for weakness or achieve greater ROM. Common in rotator cuff pathology.
+
+**ISB-Compliant Algorithm**:
+```typescript
+/**
+ * Detect Trunk Lean (Lateral Flexion)
+ *
+ * Method:
+ * 1. Extract global frame Y-axis (superior direction)
+ * 2. Calculate angle between Y-axis and vertical (0, 1, 0)
+ * 3. Lateral component = projection onto coronal plane
+ * 4. Grade severity based on deviation angle
+ *
+ * Thresholds:
+ * - minimal: <5° (normal postural variation)
+ * - mild: 5-10°
+ * - moderate: 10-15° (clinically significant)
+ * - severe: >15°
+ *
+ * @param globalFrame Cached global anatomical frame
+ * @param viewOrientation Current view orientation
+ * @returns CompensationPattern or null
+ */
+private detectTrunkLean(
+  globalFrame: AnatomicalReferenceFrame,
+  viewOrientation?: string
+): CompensationPattern | null {
+  // Only detect in frontal or lateral views
+  if (viewOrientation !== 'frontal' && viewOrientation !== 'lateral') {
+    return null;
+  }
+
+  // Global frame Y-axis should point superior
+  const yAxis = globalFrame.yAxis;
+
+  // Reference vertical vector (true vertical = [0, 1, 0])
+  const vertical: Vector3D = { x: 0, y: 1, z: 0 };
+
+  // Calculate angle between Y-axis and vertical
+  const angleFromVertical = vectorMath.angleBetween(yAxis, vertical);
+
+  // For lateral lean, we want the lateral (coronal plane) component
+  // Project Y-axis onto coronal plane (XY plane, normal = Z-axis)
+  const coronalNormal: Vector3D = { x: 0, y: 0, z: 1 };
+  const yAxisInCoronalPlane = vectorMath.projectVectorOntoPlane(yAxis, coronalNormal);
+
+  // Calculate lateral deviation
+  const lateralDeviation = vectorMath.angleBetween(yAxisInCoronalPlane, vertical);
+
+  // Grade severity
+  const severity = this.gradeSeverity(lateralDeviation, 'degrees');
+
+  // Only report mild or worse
+  if (severity === 'minimal') {
+    return null;
+  }
+
+  return {
+    type: 'trunk_lean',
+    severity,
+    magnitude: lateralDeviation,
+    affectsJoint: 'thorax',
+    clinicalNote: `Lateral trunk lean of ${lateralDeviation.toFixed(1)}° detected. ` +
+      `Patient may be compensating for shoulder weakness or ROM limitation.`,
+    frameType: 'global',
+    detectionConfidence: globalFrame.confidence,
+  };
+}
+```
+
+**Validation Checkpoints**:
+- [ ] Detects 10° lateral lean in synthetic test data
+- [ ] Returns null for <5° deviation (minimal)
+- [ ] Correctly grades severity: 7° = mild, 12° = moderate, 18° = severe
+- [ ] Only detects in frontal/lateral views (returns null in sagittal)
+- [ ] Execution time <2ms
+
+---
+
+### 8.5 Trunk Rotation Detection
+
+**Clinical Context**: Transverse plane rotation of trunk during sagittal/coronal plane movements. Patient rotates torso instead of moving target joint. Indicates poor motor control or core instability.
+
+**ISB-Compliant Algorithm**:
+```typescript
+/**
+ * Detect Trunk Rotation (Transverse Plane)
+ *
+ * Method:
+ * 1. Extract global frame X-axis (anterior direction)
+ * 2. Project X-axis onto transverse plane (XZ plane)
+ * 3. Calculate rotation from expected orientation
+ * 4. Expected orientation depends on viewOrientation
+ *
+ * Thresholds:
+ * - minimal: <5° (normal variation)
+ * - mild: 5-10°
+ * - moderate: 10-15° (clinically significant)
+ * - severe: >15°
+ *
+ * @param globalFrame Cached global anatomical frame
+ * @param viewOrientation Current view orientation
+ * @returns CompensationPattern or null
+ */
+private detectTrunkRotation(
+  globalFrame: AnatomicalReferenceFrame,
+  viewOrientation?: string
+): CompensationPattern | null {
+  // Need viewOrientation to determine expected trunk orientation
+  if (!viewOrientation) {
+    return null;
+  }
+
+  // Global frame X-axis should point anterior
+  const xAxis = globalFrame.xAxis;
+
+  // Project X-axis onto transverse plane (XZ plane, normal = Y-axis)
+  const transverseNormal: Vector3D = { x: 0, y: 1, z: 0 };
+  const xAxisInTransversePlane = vectorMath.projectVectorOntoPlane(xAxis, transverseNormal);
+
+  // Determine expected orientation based on view
+  let expectedOrientation: Vector3D;
+  switch (viewOrientation) {
+    case 'frontal':
+      // In frontal view, anterior should point toward camera
+      expectedOrientation = { x: 0, y: 0, z: -1 }; // Toward camera (negative Z)
+      break;
+    case 'sagittal':
+      // In sagittal (lateral) view, anterior should point lateral
+      expectedOrientation = { x: 1, y: 0, z: 0 }; // Right (positive X)
+      break;
+    case 'lateral':
+      expectedOrientation = { x: -1, y: 0, z: 0 }; // Left (negative X)
+      break;
+    default:
+      return null;
+  }
+
+  // Calculate rotation from expected orientation
+  const rotationDeviation = vectorMath.angleBetween(
+    xAxisInTransversePlane,
+    expectedOrientation
+  );
+
+  // Grade severity
+  const severity = this.gradeSeverity(rotationDeviation, 'degrees');
+
+  // Only report mild or worse
+  if (severity === 'minimal') {
+    return null;
+  }
+
+  return {
+    type: 'trunk_rotation',
+    severity,
+    magnitude: rotationDeviation,
+    affectsJoint: 'thorax',
+    clinicalNote: `Trunk rotation of ${rotationDeviation.toFixed(1)}° detected. ` +
+      `Patient may have core instability or poor motor control.`,
+    frameType: 'global',
+    detectionConfidence: globalFrame.confidence,
+  };
+}
+```
+
+**Validation Checkpoints**:
+- [ ] Detects 12° trunk rotation in synthetic test data
+- [ ] Correctly determines expected orientation for all view types
+- [ ] Returns null for <5° deviation
+- [ ] Execution time <2ms
+
+---
+
+### 8.6 Shoulder Hiking Detection
+
+**Clinical Context**: Scapular elevation during shoulder abduction/flexion. Patient elevates shoulder girdle to achieve greater ROM. Indicates rotator cuff weakness, subacromial impingement, or capsular restriction.
+
+**ISB-Compliant Algorithm**:
+```typescript
+/**
+ * Detect Shoulder Hiking (Scapular Elevation)
+ *
+ * Method:
+ * 1. Get shoulder landmark and ear landmark (schema-agnostic)
+ * 2. Calculate vertical distance (Y-axis difference)
+ * 3. Normalize using torso height as reference
+ * 4. Compare to baseline (resting shoulder position)
+ *
+ * Thresholds (normalized):
+ * - minimal: <5% of torso height (~1cm)
+ * - mild: 5-10% (~1-2cm)
+ * - moderate: 10-15% (~2-3cm)
+ * - severe: >15% (>3cm)
+ *
+ * @param landmarks Pose landmarks
+ * @param thoraxFrame Cached thorax frame
+ * @param schemaId Schema identifier for landmark lookup
+ * @returns CompensationPattern or null
+ */
+private detectShoulderHiking(
+  landmarks: PoseLandmark[],
+  thoraxFrame: AnatomicalReferenceFrame | undefined,
+  schemaId: string
+): CompensationPattern | null {
+  if (!thoraxFrame) {
+    return null;
+  }
+
+  // Get schema to look up landmark indices
+  const schema = this.schemaRegistry.get(schemaId);
+  if (!schema) {
+    return null;
+  }
+
+  // Get shoulder and ear landmarks (schema-agnostic)
+  const shoulderLeft = schema.getKeypoint(landmarks, 'left_shoulder');
+  const shoulderRight = schema.getKeypoint(landmarks, 'right_shoulder');
+  const earLeft = schema.getKeypoint(landmarks, 'left_ear');
+  const earRight = schema.getKeypoint(landmarks, 'right_ear');
+
+  if (!shoulderLeft || !shoulderRight || !earLeft || !earRight) {
+    return null;
+  }
+
+  // Check which side is elevated (analyze both)
+  const leftElevation = this.calculateShoulderElevation(
+    shoulderLeft,
+    earLeft,
+    thoraxFrame
+  );
+  const rightElevation = this.calculateShoulderElevation(
+    shoulderRight,
+    earRight,
+    thoraxFrame
+  );
+
+  // Use maximum elevation
+  const maxElevation = Math.max(leftElevation, rightElevation);
+  const side = leftElevation > rightElevation ? 'left' : 'right';
+
+  // Calculate torso height for normalization
+  const hipMidpoint = thoraxFrame.origin; // Torso frame origin is hip midpoint
+  const shoulderMidpoint = {
+    x: (shoulderLeft.x + shoulderRight.x) / 2,
+    y: (shoulderLeft.y + shoulderRight.y) / 2,
+    z: ((shoulderLeft.z || 0) + (shoulderRight.z || 0)) / 2,
+  };
+  const torsoHeight = Math.abs(shoulderMidpoint.y - hipMidpoint.y);
+
+  // Normalize elevation as percentage of torso height
+  const elevationPercent = (maxElevation / torsoHeight) * 100;
+
+  // Grade severity based on percentage thresholds
+  const severity = this.gradeSeverityPercent(elevationPercent);
+
+  if (severity === 'minimal') {
+    return null;
+  }
+
+  // Convert percentage to approximate cm (assuming avg torso height ~50cm)
+  const elevationCm = (elevationPercent / 100) * 50;
+
+  return {
+    type: 'shoulder_hiking',
+    severity,
+    magnitude: elevationCm,
+    affectsJoint: `${side}_shoulder`,
+    clinicalNote: `${side === 'left' ? 'Left' : 'Right'} shoulder hiking detected ` +
+      `(~${elevationCm.toFixed(1)}cm elevation). May indicate rotator cuff weakness ` +
+      `or subacromial impingement.`,
+    frameType: 'thorax',
+    detectionConfidence: thoraxFrame.confidence,
+  };
+}
+
+/**
+ * Calculate shoulder elevation (vertical distance from ear)
+ */
+private calculateShoulderElevation(
+  shoulder: PoseLandmark,
+  ear: PoseLandmark,
+  thoraxFrame: AnatomicalReferenceFrame
+): number {
+  // In anatomical position, ear should be ~15-20cm above shoulder
+  // Hiking decreases this distance
+
+  const normalDistance = 0.15; // 15cm in meters (normalized coordinate space)
+  const currentDistance = Math.abs(ear.y - shoulder.y);
+
+  // Elevation = how much closer the shoulder is to the ear
+  const elevation = Math.max(0, normalDistance - currentDistance);
+
+  return elevation;
+}
+
+/**
+ * Grade severity based on percentage thresholds
+ */
+private gradeSeverityPercent(
+  percent: number
+): 'minimal' | 'mild' | 'moderate' | 'severe' {
+  if (percent < 5) return 'minimal';
+  if (percent < 10) return 'mild';
+  if (percent < 15) return 'moderate';
+  return 'severe';
+}
+```
+
+**Validation Checkpoints**:
+- [ ] Detects 2cm shoulder hiking in synthetic test data
+- [ ] Correctly normalizes using torso height
+- [ ] Works with both MoveNet-17 and MediaPipe-33 schemas
+- [ ] Analyzes both shoulders and reports maximum
+- [ ] Execution time <3ms
+
+---
+
+### 8.7 Elbow Flexion Drift Detection
+
+**Clinical Context**: Unintended elbow flexion during shoulder flexion/abduction movements (when elbow should remain extended). Indicates shoulder weakness or poor motor control.
+
+**ISB-Compliant Algorithm**:
+```typescript
+/**
+ * Detect Elbow Flexion Drift
+ *
+ * Method:
+ * 1. Get elbow angle using goniometer service
+ * 2. During shoulder flexion/abduction, elbow should be ~180° (extended)
+ * 3. Detect deviation from extension
+ *
+ * Thresholds:
+ * - minimal: 175-180° (normal variation)
+ * - mild: 165-175° (5-15° flexion)
+ * - moderate: 150-165° (15-30° flexion)
+ * - severe: <150° (>30° flexion)
+ *
+ * @param landmarks Pose landmarks
+ * @param forearmFrame Cached forearm frame
+ * @param schemaId Schema identifier
+ * @returns CompensationPattern or null
+ */
+private detectElbowFlexionDrift(
+  landmarks: PoseLandmark[],
+  forearmFrame: AnatomicalReferenceFrame | undefined,
+  schemaId: string
+): CompensationPattern | null {
+  if (!forearmFrame) {
+    return null;
+  }
+
+  // Get schema
+  const schema = this.schemaRegistry.get(schemaId);
+  if (!schema) {
+    return null;
+  }
+
+  // Get elbow joint landmarks
+  const shoulder = schema.getKeypoint(landmarks, 'left_shoulder') ||
+                   schema.getKeypoint(landmarks, 'right_shoulder');
+  const elbow = schema.getKeypoint(landmarks, 'left_elbow') ||
+                schema.getKeypoint(landmarks, 'right_elbow');
+  const wrist = schema.getKeypoint(landmarks, 'left_wrist') ||
+                schema.getKeypoint(landmarks, 'right_wrist');
+
+  if (!shoulder || !elbow || !wrist) {
+    return null;
+  }
+
+  // Calculate elbow angle
+  const upperArm: Vector3D = {
+    x: elbow.x - shoulder.x,
+    y: elbow.y - shoulder.y,
+    z: (elbow.z || 0) - (shoulder.z || 0),
+  };
+
+  const forearm: Vector3D = {
+    x: wrist.x - elbow.x,
+    y: wrist.y - elbow.y,
+    z: (wrist.z || 0) - (elbow.z || 0),
+  };
+
+  const elbowAngle = vectorMath.angleBetween(upperArm, forearm);
+
+  // Expected: ~180° (straight arm)
+  // Deviation from extension
+  const flexionAmount = 180 - elbowAngle;
+
+  // Grade severity based on flexion amount
+  let severity: 'minimal' | 'mild' | 'moderate' | 'severe';
+  if (flexionAmount < 5) {
+    severity = 'minimal';
+  } else if (flexionAmount < 15) {
+    severity = 'mild';
+  } else if (flexionAmount < 30) {
+    severity = 'moderate';
+  } else {
+    severity = 'severe';
+  }
+
+  if (severity === 'minimal') {
+    return null;
+  }
+
+  // Determine side
+  const side = forearmFrame.frameType?.includes('left') ? 'left' : 'right';
+
+  return {
+    type: 'elbow_flexion',
+    severity,
+    magnitude: flexionAmount,
+    affectsJoint: `${side}_shoulder`,
+    clinicalNote: `Elbow flexion of ${flexionAmount.toFixed(1)}° detected during ` +
+      `shoulder movement. Elbow should remain extended. May indicate shoulder weakness.`,
+    frameType: 'forearm',
+    detectionConfidence: forearmFrame.confidence,
+  };
+}
+```
+
+**Validation Checkpoints**:
+- [ ] Detects 20° elbow flexion drift in synthetic test data
+- [ ] Correctly grades: 8° = mild, 18° = moderate, 35° = severe
+- [ ] Works with both arms
+- [ ] Execution time <2ms
+
+---
+
+### 8.8 Hip Hike Detection
+
+**Clinical Context**: Pelvic elevation during lower extremity movements. Patient hikes hip on swing leg side to clear foot during gait or hip/knee flexion. Indicates hip abductor weakness or poor pelvic control.
+
+**ISB-Compliant Algorithm**:
+```typescript
+/**
+ * Detect Hip Hike (Pelvic Elevation)
+ *
+ * Method:
+ * 1. Get pelvis frame (origin at hip midpoint)
+ * 2. Calculate pelvic tilt in coronal plane
+ * 3. Measure deviation from horizontal
+ *
+ * Thresholds:
+ * - minimal: <3° (normal variation)
+ * - mild: 3-5°
+ * - moderate: 5-8°
+ * - severe: >8°
+ *
+ * @param landmarks Pose landmarks
+ * @param pelvisFrame Cached pelvis frame
+ * @param schemaId Schema identifier
+ * @returns CompensationPattern or null
+ */
+private detectHipHike(
+  landmarks: PoseLandmark[],
+  pelvisFrame: AnatomicalReferenceFrame | undefined,
+  schemaId: string
+): CompensationPattern | null {
+  if (!pelvisFrame) {
+    return null;
+  }
+
+  // Get schema
+  const schema = this.schemaRegistry.get(schemaId);
+  if (!schema) {
+    return null;
+  }
+
+  // Get hip landmarks
+  const leftHip = schema.getKeypoint(landmarks, 'left_hip');
+  const rightHip = schema.getKeypoint(landmarks, 'right_hip');
+
+  if (!leftHip || !rightHip) {
+    return null;
+  }
+
+  // Calculate hip line (left hip to right hip)
+  const hipLine: Vector3D = {
+    x: rightHip.x - leftHip.x,
+    y: rightHip.y - leftHip.y,
+    z: (rightHip.z || 0) - (leftHip.z || 0),
+  };
+
+  // In coronal plane, horizontal reference is X-axis
+  const horizontal: Vector3D = { x: 1, y: 0, z: 0 };
+
+  // Project hip line onto coronal plane (XY plane)
+  const coronalNormal: Vector3D = { x: 0, y: 0, z: 1 };
+  const hipLineInCoronalPlane = vectorMath.projectVectorOntoPlane(hipLine, coronalNormal);
+
+  // Calculate angle from horizontal
+  const tiltAngle = vectorMath.angleBetween(hipLineInCoronalPlane, horizontal);
+
+  // Grade severity (stricter thresholds for hip hike)
+  let severity: 'minimal' | 'mild' | 'moderate' | 'severe';
+  if (tiltAngle < 3) {
+    severity = 'minimal';
+  } else if (tiltAngle < 5) {
+    severity = 'mild';
+  } else if (tiltAngle < 8) {
+    severity = 'moderate';
+  } else {
+    severity = 'severe';
+  }
+
+  if (severity === 'minimal') {
+    return null;
+  }
+
+  // Determine which hip is hiked (higher Y value = lower on screen = hiked in image coords)
+  const side = leftHip.y < rightHip.y ? 'left' : 'right';
+
+  return {
+    type: 'hip_hike',
+    severity,
+    magnitude: tiltAngle,
+    affectsJoint: `${side}_hip`,
+    clinicalNote: `${side === 'left' ? 'Left' : 'Right'} hip hike of ${tiltAngle.toFixed(1)}° ` +
+      `detected. May indicate hip abductor weakness or poor pelvic control.`,
+    frameType: 'pelvis',
+    detectionConfidence: pelvisFrame.confidence,
+  };
+}
+```
+
+**Validation Checkpoints**:
+- [ ] Detects 6° hip hike in synthetic test data
+- [ ] Correctly identifies hiked side
+- [ ] Stricter thresholds (3° vs 5° for trunk)
+- [ ] Execution time <2ms
+
+---
+
+### 8.9 Integration with ClinicalMeasurementService
+
+**Updated ClinicalJointMeasurement Flow**:
+```typescript
+// In ClinicalMeasurementService.measureShoulderFlexion()
+
+public measureShoulderFlexion(
+  poseData: ProcessedPoseData,
+  side: 'left' | 'right'
+): ClinicalJointMeasurement {
+  // ... existing angle measurement code ...
+
+  // NEW: Detect compensations
+  const compensations = this.compensationDetector.detectCompensations(
+    poseData,
+    undefined, // no previous frame needed for static measurements
+    `${side}_shoulder_flexion` // movement context
+  );
+
+  // Filter compensations relevant to shoulder flexion
+  const relevantCompensations = compensations.filter(comp =>
+    comp.type === 'trunk_lean' ||
+    comp.type === 'trunk_rotation' ||
+    comp.type === 'shoulder_hiking' ||
+    comp.type === 'elbow_flexion'
+  );
+
+  // Adjust quality grade if severe compensations detected
+  let qualityGrade = measurementQuality.grade;
+  const hasSevereCompensation = relevantCompensations.some(
+    comp => comp.severity === 'severe'
+  );
+  if (hasSevereCompensation && qualityGrade === 'excellent') {
+    qualityGrade = 'good'; // Downgrade due to compensation
+  }
+
+  return {
+    primaryJoint: `${side}_shoulder`,
+    measurement: {
+      angle: shoulderFlexionAngle,
+      plane: 'sagittal',
+      method: 'plane_projection',
+    },
+    secondaryJoints: [
+      {
+        joint: `${side}_elbow`,
+        angle: elbowAngle,
+        expectedAngle: 180,
+        deviation: Math.abs(elbowAngle - 180),
+      }
+    ],
+    referenceFrames: ['thorax', `${side}_humerus`],
+    compensations: relevantCompensations, // INTEGRATED HERE
+    percentOfNormal: (shoulderFlexionAngle / 160) * 100,
+    clinicalContext: {
+      target: 160,
+      normativeRange: { min: 150, max: 180 },
+      patientHistory: [],
+    },
+    quality: {
+      ...measurementQuality,
+      grade: qualityGrade, // Adjusted grade
+    },
+    timestamp: poseData.timestamp,
+  };
+}
+```
+
+**Constructor Update**:
+```typescript
+export class ClinicalMeasurementService {
+  private schemaRegistry: PoseSchemaRegistry;
+  private anatomicalReferenceService: AnatomicalReferenceService;
+  private goniometerService: GoniometerService;
+  private compensationDetector: CompensationDetectionService; // NEW
+  private clinicalThresholds: ClinicalThresholds;
+
+  constructor(
+    customThresholds?: Partial<ClinicalThresholds>
+  ) {
+    this.schemaRegistry = PoseSchemaRegistry.getInstance();
+    this.anatomicalReferenceService = new AnatomicalReferenceService();
+    this.goniometerService = new GoniometerService();
+    this.compensationDetector = new CompensationDetectionService(); // NEW
+    this.clinicalThresholds = {
+      ...DEFAULT_CLINICAL_THRESHOLDS,
+      ...customThresholds,
+    };
+  }
+}
+```
+
+---
+
+### 8.10 Test Suite Specification
+
+**Test Coverage Requirements**: >90% coverage, 25+ tests
+
+**Unit Tests** (15 tests):
+```typescript
+describe('CompensationDetectionService', () => {
+  describe('detectTrunkLean', () => {
+    it('should detect 10° lateral lean as moderate', () => {
+      const globalFrame = createMockGlobalFrame({ lateralTilt: 10 });
+      const compensation = service.detectTrunkLean(globalFrame, 'frontal');
+
+      expect(compensation).not.toBeNull();
+      expect(compensation!.type).toBe('trunk_lean');
+      expect(compensation!.severity).toBe('moderate');
+      expect(compensation!.magnitude).toBeCloseTo(10, 1);
+    });
+
+    it('should return null for <5° deviation (minimal)', () => {
+      const globalFrame = createMockGlobalFrame({ lateralTilt: 3 });
+      const compensation = service.detectTrunkLean(globalFrame, 'frontal');
+
+      expect(compensation).toBeNull();
+    });
+
+    it('should return null in sagittal view', () => {
+      const globalFrame = createMockGlobalFrame({ lateralTilt: 12 });
+      const compensation = service.detectTrunkLean(globalFrame, 'sagittal');
+
+      expect(compensation).toBeNull();
+    });
+  });
+
+  describe('detectTrunkRotation', () => {
+    it('should detect 15° trunk rotation as moderate', () => { /* ... */ });
+    it('should use correct expected orientation for each view', () => { /* ... */ });
+  });
+
+  describe('detectShoulderHiking', () => {
+    it('should detect 2cm shoulder elevation as moderate', () => { /* ... */ });
+    it('should normalize using torso height', () => { /* ... */ });
+    it('should work with MoveNet-17', () => { /* ... */ });
+    it('should work with MediaPipe-33', () => { /* ... */ });
+  });
+
+  describe('detectElbowFlexionDrift', () => {
+    it('should detect 20° elbow flexion as moderate', () => { /* ... */ });
+    it('should grade severity correctly', () => { /* ... */ });
+  });
+
+  describe('detectHipHike', () => {
+    it('should detect 6° hip hike as moderate', () => { /* ... */ });
+    it('should identify correct hiked side', () => { /* ... */ });
+  });
+
+  describe('gradeSeverity', () => {
+    it('should grade degrees correctly', () => {
+      expect(service['gradeSeverity'](3, 'degrees')).toBe('minimal');
+      expect(service['gradeSeverity'](7, 'degrees')).toBe('mild');
+      expect(service['gradeSeverity'](12, 'degrees')).toBe('moderate');
+      expect(service['gradeSeverity'](18, 'degrees')).toBe('severe');
+    });
+  });
+});
+```
+
+**Integration Tests** (10 tests):
+```typescript
+describe('Compensation Detection Integration', () => {
+  it('should integrate with ClinicalMeasurementService', () => {
+    const poseData = createMockPoseDataWithCompensation({
+      shoulderAngle: 120,
+      trunkLean: 12, // moderate compensation
+      elbowFlexion: 165, // mild compensation
+    });
+
+    const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
+
+    expect(measurement.compensations).toHaveLength(2);
+    expect(measurement.compensations[0].type).toBe('trunk_lean');
+    expect(measurement.compensations[0].severity).toBe('moderate');
+    expect(measurement.compensations[1].type).toBe('elbow_flexion');
+    expect(measurement.quality.grade).toBe('good'); // downgraded due to compensation
+  });
+
+  it('should detect multiple compensations in single movement', () => { /* ... */ });
+  it('should filter compensations by movement context', () => { /* ... */ });
+  it('should use cached frames (no recalculation)', () => { /* ... */ });
+  it('should execute all detection in <5ms', () => { /* ... */ });
+});
+```
+
+---
+
+### 8.11 Performance Benchmarks
+
+**Target Performance**:
+- Single compensation detection: <2ms
+- All compensations (6 checks): <5ms
+- Integration with ClinicalMeasurementService: <15ms total (including angle calculation)
+
+**Benchmark Test**:
+```typescript
+describe('Performance Benchmarks', () => {
+  it('should detect trunk lean in <2ms', () => {
+    const start = performance.now();
+    for (let i = 0; i < 100; i++) {
+      service.detectTrunkLean(mockGlobalFrame, 'frontal');
+    }
+    const end = performance.now();
+    const avgTime = (end - start) / 100;
+
+    expect(avgTime).toBeLessThan(2);
+  });
+
+  it('should detect all compensations in <5ms', () => {
+    const start = performance.now();
+    service.detectCompensations(mockPoseData, undefined, 'shoulder_flexion');
+    const end = performance.now();
+
+    expect(end - start).toBeLessThan(5);
+  });
+});
+```
+
+---
+
+### 8.12 Definition of Done
+
+**Functional Criteria**:
+- [ ] All 6 compensation types implemented: trunk lean, trunk rotation, shoulder hiking, elbow flexion, hip hike, contralateral lean
+- [ ] Schema-agnostic implementation using PoseSchemaRegistry
+- [ ] Uses cached anatomical frames (no redundant calculations)
+- [ ] ISB-compliant detection algorithms (plane projection, frame-based)
+- [ ] Severity grading: minimal/mild/moderate/severe
+- [ ] Integrated with ClinicalMeasurementService
+
+**Accuracy Criteria**:
+- [ ] >80% sensitivity for moderate/severe compensations (clinical validation)
+- [ ] >80% specificity (low false positive rate)
+- [ ] ±2° accuracy for angle-based compensations (trunk lean, trunk rotation, hip hike)
+- [ ] ±1cm accuracy for distance-based compensations (shoulder hiking)
+
+**Performance Criteria**:
+- [ ] <2ms per individual compensation detection
+- [ ] <5ms for all compensations in single frame
+- [ ] <15ms total for ClinicalMeasurementService with compensation detection
+- [ ] Zero frame recalculations (uses cached frames only)
+
+**Test Criteria**:
+- [ ] 25+ unit tests passing
+- [ ] 10+ integration tests passing
+- [ ] Test coverage >90%
+- [ ] Performance benchmarks passing
+
+**Documentation Criteria**:
+- [ ] Clinical interpretation guide for each compensation type
+- [ ] API documentation with code examples
+- [ ] Integration guide for ClinicalMeasurementService
+- [ ] Severity grading reference table
+
+---
+
+**Next**: Section 9 will specify Gate 10C (Clinical Validation Protocol) for synthetic data generation, ground truth creation, and validation metrics.
+
