@@ -6811,3 +6811,762 @@ export function ClinicalMeasurement({ poseData }) {
 
 **Implementation Readiness**: ✅ Ready for kickstart in parallel window/session
 
+---
+
+# ADDENDUM: Additional Information from Codebase Analysis
+
+This addendum contains new implementation details discovered from analysis of planning documents and existing codebase implementations that were not included in the original plan.
+
+## A.1: Fifth Clinical Measurement - Internal Rotation Behind Back
+
+**Source**: `docs/gates/GATE_10_CLINICAL_JOINT_MEASUREMENT.md`
+
+The original plan (Section 7) specified 4 clinical measurements. A **5th measurement** exists for shoulder internal rotation:
+
+### Clinical Context
+
+**Movement**: Internal Rotation Behind Back (IR-BB)
+- **Starting Position**: Arm behind back, hand reaching up spine
+- **Required View**: Posterior
+- **Clinical Significance**: Tests combined shoulder extension + internal rotation + adduction
+- **Common Limitations**: Frozen shoulder, rotator cuff pathology, posterior capsule tightness
+
+### Measurement Approach
+
+**Method**: Landmark-based reach tracking
+1. Track hand landmark position (wrist or index finger)
+2. Establish spine reference markers (posterior superior iliac spines, vertebral landmarks)
+3. Calculate vertical displacement of hand relative to spine levels
+4. Provide categorical grade + quantitative measurement
+
+**Spine Level References** (superior to inferior):
+- T8 (inferior angle of scapula)
+- T12 (lower thoracic)
+- L2 (mid-lumbar)
+- L5 (lumbosacral junction)
+- Sacrum/PSIS (posterior superior iliac spine)
+
+### Implementation Specification
+
+Add to `ClinicalMeasurementService.ts`:
+
+```typescript
+/**
+ * Measure Shoulder Internal Rotation Behind Back
+ *
+ * Clinical measurement of combined IR/extension/adduction.
+ * Requires posterior view.
+ *
+ * @returns Categorical grade + vertebral level + quantitative displacement
+ */
+export interface InternalRotationBehindBackMeasurement {
+  side: 'left' | 'right';
+  reachLevel: 'hip' | 'sacrum' | 'L5' | 'L2' | 'T12' | 'T8' | 'scapula' | 'unable';
+  vertebralDisplacement_cm: number; // Distance from PSIS
+  percentOfNormal: number; // Normal = T8 level (100%)
+  quality: 'excellent' | 'good' | 'fair' | 'poor';
+  clinicalNote: string;
+}
+
+class ClinicalMeasurementService {
+  /**
+   * Measure shoulder internal rotation behind back
+   */
+  public measureInternalRotationBehindBack(
+    poseData: ProcessedPoseData,
+    side: 'left' | 'right',
+    viewOrientation?: string
+  ): InternalRotationBehindBackMeasurement | null {
+    // Validate view
+    if (viewOrientation !== 'posterior') {
+      console.warn('IR-BB requires posterior view');
+      return null;
+    }
+
+    const wristKey = side === 'left' ? 'left_wrist' : 'right_wrist';
+    const wrist = poseData.landmarks[wristKey];
+
+    if (!wrist || wrist.confidence < CONFIDENCE_THRESHOLD) {
+      return null;
+    }
+
+    // Get spine reference landmarks
+    const leftHip = poseData.landmarks['left_hip'];
+    const rightHip = poseData.landmarks['right_hip'];
+    const leftShoulder = poseData.landmarks['left_shoulder'];
+    const rightShoulder = poseData.landmarks['right_shoulder'];
+
+    if (!leftHip || !rightHip || !leftShoulder || !rightShoulder) {
+      return null;
+    }
+
+    // Calculate PSIS reference (approximated by hip landmarks in posterior view)
+    const psisY = (leftHip.y + rightHip.y) / 2;
+
+    // Calculate spine levels (approximate vertebral positions)
+    const shoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+    const spineLength = Math.abs(psisY - shoulderY);
+
+    const spineLevels = {
+      hip: psisY + spineLength * 0.1,
+      sacrum: psisY,
+      L5: psisY - spineLength * 0.15,
+      L2: psisY - spineLength * 0.35,
+      T12: psisY - spineLength * 0.55,
+      T8: psisY - spineLength * 0.75,
+      scapula: shoulderY,
+    };
+
+    // Determine reach level
+    const wristY = wrist.y;
+    let reachLevel: InternalRotationBehindBackMeasurement['reachLevel'] = 'hip';
+
+    if (wristY <= spineLevels.scapula) reachLevel = 'scapula';
+    else if (wristY <= spineLevels.T8) reachLevel = 'T8';
+    else if (wristY <= spineLevels.T12) reachLevel = 'T12';
+    else if (wristY <= spineLevels.L2) reachLevel = 'L2';
+    else if (wristY <= spineLevels.L5) reachLevel = 'L5';
+    else if (wristY <= spineLevels.sacrum) reachLevel = 'sacrum';
+    else reachLevel = 'hip';
+
+    // Calculate vertical displacement from PSIS (cm)
+    const pixelDisplacement = Math.abs(wristY - psisY);
+    const shoulderWidthPixels = Math.abs(leftShoulder.x - rightShoulder.x);
+    const displacementCm = (pixelDisplacement / shoulderWidthPixels) * 40; // 40cm avg shoulder width
+
+    // Normal ROM = reaching T8 level (scapular inferior angle)
+    const normalDisplacement = Math.abs(spineLevels.T8 - psisY);
+    const normalDisplacementCm = (normalDisplacement / shoulderWidthPixels) * 40;
+    const percentOfNormal = Math.min(100, (displacementCm / normalDisplacementCm) * 100);
+
+    // Quality assessment
+    let quality: InternalRotationBehindBackMeasurement['quality'];
+    if (percentOfNormal >= 90) quality = 'excellent';
+    else if (percentOfNormal >= 75) quality = 'good';
+    else if (percentOfNormal >= 50) quality = 'fair';
+    else quality = 'poor';
+
+    const clinicalNote = `${side} hand reaches ${reachLevel} level (${displacementCm.toFixed(1)}cm from PSIS, ${percentOfNormal.toFixed(0)}% of normal).`;
+
+    return {
+      side,
+      reachLevel,
+      vertebralDisplacement_cm: displacementCm,
+      percentOfNormal,
+      quality,
+      clinicalNote,
+    };
+  }
+}
+```
+
+### Validation Test Cases
+
+Add to Section 9 validation suite:
+
+```typescript
+// Test Case 91: IR-BB Full ROM
+{
+  id: 'TC-091',
+  measurement: 'shoulder_internal_rotation_behind_back',
+  side: 'right',
+  view: 'posterior',
+  groundTruth: { reachLevel: 'T8', displacement_cm: 30, percentOfNormal: 100 },
+  tolerance: { displacement_cm: 3, percentOfNormal: 10 },
+}
+
+// Test Case 92: IR-BB Limited ROM (Frozen Shoulder)
+{
+  id: 'TC-092',
+  measurement: 'shoulder_internal_rotation_behind_back',
+  side: 'left',
+  view: 'posterior',
+  groundTruth: { reachLevel: 'sacrum', displacement_cm: 8, percentOfNormal: 27 },
+  tolerance: { displacement_cm: 2, percentOfNormal: 10 },
+}
+
+// Test Case 93: IR-BB Moderate Limitation
+{
+  id: 'TC-093',
+  measurement: 'shoulder_internal_rotation_behind_back',
+  side: 'right',
+  view: 'posterior',
+  groundTruth: { reachLevel: 'L2', displacement_cm: 18, percentOfNormal: 60 },
+  tolerance: { displacement_cm: 3, percentOfNormal: 10 },
+}
+```
+
+### Integration Requirements
+
+1. **UI**: Add "Internal Rotation Behind Back" to joint measurement options
+2. **View Detection**: Ensure posterior view is available/selected
+3. **Spine Landmark Mapping**: May require custom MediaPipe/MoveNet mapping for spine approximation
+4. **Clinical Documentation**: Add IR-BB reference values to clinical notes
+
+---
+
+## A.2: Anatomical Reference Chains for Clinical Documentation
+
+**Source**: `src/constants/joints.ts`
+
+The existing codebase defines **anatomical reference chains** for each joint type. These provide structured clinical context and should be incorporated into clinical measurement outputs.
+
+### Reference Chain Definitions
+
+```typescript
+export const ANATOMICAL_REFERENCE_CHAINS: Record<JointType, string[]> = {
+  shoulder: [
+    "Thoracic spine alignment",
+    "Scapula tracking relative to rib cage",
+    "Glenohumeral joint center",
+    "Humerus longitudinal axis",
+    "Forearm axis (elbow-wrist)"
+  ],
+
+  hip: [
+    "Pelvic alignment (ASIS-PSIS)",
+    "Femoral head center",
+    "Femur longitudinal axis",
+    "Knee joint center",
+    "Lower leg axis (knee-ankle)"
+  ],
+
+  knee: [
+    "Hip alignment",
+    "Femur longitudinal axis",
+    "Knee joint center (medial/lateral condyles)",
+    "Tibia longitudinal axis",
+    "Ankle joint center"
+  ],
+
+  ankle: [
+    "Knee alignment",
+    "Lower leg axis (tibia-fibula)",
+    "Ankle joint center (malleoli)",
+    "Foot longitudinal axis",
+    "Ground contact points"
+  ],
+
+  spine: [
+    "Pelvic tilt (ASIS-PSIS relationship)",
+    "Lumbar lordosis (L1-L5)",
+    "Thoracic kyphosis (T1-T12)",
+    "Cervical lordosis (C1-C7)",
+    "Head position relative to torso"
+  ]
+};
+```
+
+### Integration into Clinical Measurements
+
+**Enhance `ClinicalMeasurementResult` interface**:
+
+```typescript
+export interface ClinicalMeasurementResult {
+  // ... existing fields ...
+
+  anatomicalChain?: {
+    joint: JointType;
+    referencePoints: string[]; // From ANATOMICAL_REFERENCE_CHAINS
+    integrityNotes: string[]; // e.g., "Scapula tracking appears limited"
+  };
+}
+```
+
+**Implementation in `ClinicalMeasurementService`**:
+
+```typescript
+private enrichWithAnatomicalContext(
+  result: ClinicalMeasurementResult,
+  jointType: JointType,
+  frameSet: AnatomicalFrameSet
+): void {
+  const chain = ANATOMICAL_REFERENCE_CHAINS[jointType];
+  const integrityNotes: string[] = [];
+
+  // Analyze anatomical chain integrity
+  if (jointType === 'shoulder') {
+    // Check thorax frame quality
+    if (frameSet.torso.confidence < 0.7) {
+      integrityNotes.push("Thoracic spine alignment uncertain - may affect scapular tracking assessment");
+    }
+
+    // Check scapular plane quality (if available)
+    if (frameSet.leftScapula && frameSet.leftScapula.confidence < 0.6) {
+      integrityNotes.push("Scapula tracking cannot be assessed - landmarks occluded");
+    }
+  }
+
+  result.anatomicalChain = {
+    joint: jointType,
+    referencePoints: chain,
+    integrityNotes,
+  };
+}
+```
+
+### Clinical Report Enhancement
+
+When generating clinical reports, include anatomical chain information:
+
+```
+**Shoulder Flexion Assessment (Right)**
+Angle: 142° (79% of normal)
+Quality: Good
+
+**Anatomical Reference Chain**:
+1. ✅ Thoracic spine alignment - confirmed
+2. ⚠️  Scapula tracking relative to rib cage - limited visibility
+3. ✅ Glenohumeral joint center - well-defined
+4. ✅ Humerus longitudinal axis - clear
+5. ✅ Forearm axis - confirmed
+
+**Integrity Notes**:
+- Scapula tracking cannot be assessed - landmarks occluded
+```
+
+---
+
+## A.3: View-Specific UI Guidance Text
+
+**Source**: `src/constants/joints.ts`
+
+The existing codebase defines **view-specific guidance text** for each joint measurement to help users position themselves correctly.
+
+### Guidance Text Definitions
+
+```typescript
+export const VIEW_GUIDANCE: Record<JointType, Record<ViewOrientation, string>> = {
+  shoulder: {
+    sagittal: "Stand sideways to camera. Raise arm forward/backward.",
+    frontal: "Face camera directly. Raise arm out to side.",
+    posterior: "Turn your back to camera. Reach behind back."
+  },
+
+  hip: {
+    sagittal: "Stand sideways to camera. Lift leg forward/backward.",
+    frontal: "Face camera. Lift leg out to side.",
+    posterior: "Turn away from camera. Extend leg backward."
+  },
+
+  knee: {
+    sagittal: "Stand sideways. Bend and straighten knee.",
+    frontal: "Face camera. Weight on one leg, flex other knee.",
+    posterior: "Not typically used for knee measurements."
+  },
+
+  ankle: {
+    sagittal: "Stand sideways. Point toes up/down.",
+    frontal: "Face camera. Tilt foot side to side.",
+    posterior: "Turn away. Rise onto toes."
+  },
+
+  spine: {
+    sagittal: "Stand sideways. Show full body profile.",
+    frontal: "Face camera. Stand tall, full body visible.",
+    posterior: "Turn away. Show full back view."
+  }
+};
+```
+
+### Integration into UI
+
+**Example: `WebPoseDetectionScreen.tsx` integration**:
+
+```typescript
+const GuidanceDisplay: React.FC<{ joint: JointType; view: ViewOrientation }> = ({ joint, view }) => {
+  const guidance = VIEW_GUIDANCE[joint][view];
+
+  return (
+    <div className="guidance-box">
+      <Icon name="info-circle" />
+      <p className="guidance-text">{guidance}</p>
+    </div>
+  );
+};
+
+// In main component
+{selectedJoint && currentView && (
+  <GuidanceDisplay joint={selectedJoint} view={currentView} />
+)}
+```
+
+**Recommendation**: Display guidance text prominently during:
+1. Joint selection screen
+2. Camera setup phase
+3. During recording (persistent overlay)
+4. After errors (if wrong view detected)
+
+---
+
+## A.4: Existing Codebase Implementations to Leverage
+
+**Source**: Analysis of `src/services/PoseDetectionService.v2.ts`, `src/services/goniometerService.ts`, `src/types/pose.ts`, `src/utils/anatomicalFrames.ts`, `src/utils/vectorMath.ts`
+
+### Summary of Existing Infrastructure
+
+The codebase already contains **substantial infrastructure** that can be leveraged rather than rebuilt from scratch:
+
+#### 1. **PoseSchemaRegistry** (✅ Production-Ready)
+
+**Location**: `src/services/PoseDetectionService.v2.ts`
+
+- Already implements schema registration and mapping
+- Supports MoveNet-17 and MediaPipe-33 (Blazepose/Holistic)
+- Provides `getLandmark(schema, keyName)` abstraction
+- Integrated into pose detection pipeline
+
+**Action**: **USE AS-IS**. No changes needed.
+
+```typescript
+// Example usage (already working)
+const registry = PoseSchemaRegistry.getInstance();
+const leftShoulder = registry.getLandmark(poseData.schemaId, 'left_shoulder', poseData.landmarks);
+```
+
+#### 2. **AnatomicalFrame Computation** (✅ 80% Complete)
+
+**Location**: `src/utils/anatomicalFrames.ts`
+
+- Computes torso and pelvis anatomical frames
+- Uses cross-product method for orthogonal axes
+- Returns `AnatomicalFrameSet` structure
+
+**Action**: **EXTEND** with additional frame types (scapula, femur, etc.) as specified in Section 4.
+
+```typescript
+// Existing implementation
+export function computeAnatomicalFrames(
+  poseData: ProcessedPoseData
+): AnatomicalFrameSet {
+  const torso = computeTorsoFrame(poseData);
+  const pelvis = computePelvisFrame(poseData);
+
+  return { torso, pelvis };
+}
+```
+
+**TODO**: Add `computeScapulaFrame()`, `computeFemurFrame()`, etc.
+
+#### 3. **VectorMath Utilities** (✅ Production-Ready)
+
+**Location**: `src/utils/vectorMath.ts`
+
+- Complete 3D vector operations library
+- Includes: cross product, dot product, normalize, project, angle calculation
+- Already tested and used in production
+
+**Action**: **USE AS-IS**. All required operations already exist.
+
+```typescript
+// Available functions
+export const vectorMath = {
+  crossProduct,
+  dotProduct,
+  normalize,
+  projectVectorOntoPlane,
+  angleBetween,
+  subtract,
+  add,
+  magnitude,
+};
+```
+
+#### 4. **GoniometerService Plane Associations** (✅ 60% Complete)
+
+**Location**: `src/services/goniometerService.ts`
+
+- `JOINT_DEFINITIONS` already maps movements to anatomical planes
+- `getPlaneNormal()` helper already implemented
+- Frame-aware measurement architecture partially in place
+
+**Action**: **REFACTOR** to use cached anatomical frames (Section 6 work).
+
+```typescript
+// Existing JOINT_DEFINITIONS
+const JOINT_DEFINITIONS = {
+  shoulder: {
+    flexion: { plane: 'sagittal', ... },
+    abduction: { plane: 'frontal', ... },
+    // ...
+  },
+  // ...
+};
+
+// TODO: Replace inline frame calculation with cached frames
+```
+
+#### 5. **ViewOrientation Metadata** (✅ Complete)
+
+**Location**: `src/types/pose.ts`
+
+- `ViewOrientation` type already defined
+- Already captured in `ProcessedPoseData.metadata.viewOrientation`
+- Already used in view-specific logic
+
+**Action**: **USE AS-IS**. Ensure all new measurement functions consume this metadata.
+
+```typescript
+export type ViewOrientation = 'sagittal' | 'frontal' | 'posterior';
+
+export interface ProcessedPoseData {
+  // ...
+  metadata: {
+    viewOrientation?: ViewOrientation;
+    cameraAzimuth?: number;
+    // ...
+  };
+}
+```
+
+### Implementation Strategy
+
+**DO NOT rebuild from scratch**. Instead:
+
+1. **Extend `anatomicalFrames.ts`**: Add missing frame types (scapula, femur, tibia)
+2. **Refactor `goniometerService.ts`**: Replace inline frame calculations with cached frames from `AnatomicalReferenceService`
+3. **Build `ClinicalMeasurementService`**: New service that uses existing goniometer + frames
+4. **Build `CompensationDetectionService`**: New service that uses cached frames
+5. **Integrate caching layer**: Wrap `computeAnatomicalFrames()` with LRU cache (Section 5)
+
+**Estimated effort reduction**: **~40% less implementation work** by leveraging existing code.
+
+---
+
+## A.5: Clinical Validation Artifacts Checklist
+
+**Source**: `docs/planning/DEVELOPER_ACTION_PLAN.md`
+
+This checklist should be completed for each implementation sprint to ensure clinical validity:
+
+### Sprint 1 Artifacts (Frame Caching + Schema)
+- [ ] Performance benchmark report showing cache hit rates
+- [ ] Schema mapping test results (MoveNet ↔ MediaPipe)
+- [ ] Frame calculation time measurements (before/after optimization)
+- [ ] Code coverage report (>90% for core utilities)
+
+### Sprint 2 Artifacts (Goniometer Refactor)
+- [ ] Joint angle accuracy validation report (MAE ≤5°)
+- [ ] Plane projection correctness tests (30 test cases)
+- [ ] Comparison with previous implementation (regression testing)
+- [ ] Clinical review of sample measurements
+
+### Sprint 3 Artifacts (Clinical Measurements)
+- [ ] Clinical measurement validation report (110 test cases)
+- [ ] Synthetic pose data generation suite
+- [ ] Ground truth comparison results (RMSE, R²)
+- [ ] Normal ROM reference documentation
+- [ ] Clinical interpretation examples (good/fair/poor grades)
+
+### Sprint 4 Artifacts (Compensation Detection)
+- [ ] Compensation detection sensitivity/specificity report
+- [ ] False positive/negative analysis
+- [ ] Clinical review of detected compensations
+- [ ] Multi-view validation results
+- [ ] Integration testing with full pipeline
+
+### Final Validation Artifacts
+- [ ] End-to-end system validation report
+- [ ] Performance benchmarking under realistic conditions
+- [ ] Clinical accuracy summary (all 5 measurements)
+- [ ] Compensation detection summary (all 6 patterns)
+- [ ] User acceptance testing results
+- [ ] Migration validation (legacy vs new system comparison)
+- [ ] Production readiness checklist
+
+**Artifact Storage**: Store all validation artifacts in `/docs/validation/artifacts/` with naming convention `YYYY-MM-DD_SprintN_ArtifactName.md`.
+
+---
+
+## A.6: Multi-Clip Workflow Requirements
+
+**Source**: `docs/planning/3D_ANATOMICAL_ROADMAP_INTEGRATION.md`
+
+The clinical measurement system must support **multi-clip analysis** workflows:
+
+### Workflow Scenario
+
+**Use Case**: Patient performs multiple exercises across different recording sessions
+
+1. **Clip 1**: Shoulder flexion (sagittal view) - recorded during Session A
+2. **Clip 2**: Shoulder abduction (frontal view) - recorded during Session B
+3. **Clip 3**: Shoulder internal rotation behind back (posterior view) - recorded during Session C
+
+**Requirement**: System must analyze clips independently and aggregate results into unified clinical report.
+
+### Implementation Requirements
+
+#### 1. **Clip-Level Metadata Persistence**
+
+Each analyzed clip must store:
+```typescript
+export interface ClipAnalysisMetadata {
+  clipId: string;
+  timestamp: Date;
+  jointType: JointType;
+  movementType: string; // 'flexion', 'abduction', etc.
+  viewOrientation: ViewOrientation;
+  duration_sec: number;
+  frameCount: number;
+  analysisVersion: string; // e.g., 'v2.1.0' for reproducibility
+}
+```
+
+#### 2. **Cross-Clip Aggregation Service**
+
+```typescript
+class ClinicalReportAggregator {
+  /**
+   * Aggregate measurements from multiple clips into unified report
+   */
+  public aggregateMultiClipReport(
+    clipAnalyses: Array<{
+      metadata: ClipAnalysisMetadata;
+      measurements: ClinicalMeasurementResult[];
+      compensations: CompensationPattern[];
+    }>
+  ): AggregatedClinicalReport {
+    // Group by joint type
+    const byJoint = this.groupByJoint(clipAnalyses);
+
+    // Generate joint-specific summaries
+    const jointSummaries = Object.keys(byJoint).map(joint => {
+      return this.summarizeJoint(joint, byJoint[joint]);
+    });
+
+    // Identify cross-movement patterns
+    const crossPatterns = this.identifyCrossMovementPatterns(clipAnalyses);
+
+    return {
+      patientId: clipAnalyses[0].metadata.patientId,
+      reportDate: new Date(),
+      clipsAnalyzed: clipAnalyses.length,
+      jointSummaries,
+      crossPatterns,
+      overallRecommendations: this.generateRecommendations(jointSummaries, crossPatterns),
+    };
+  }
+}
+```
+
+#### 3. **Temporal Tracking**
+
+Track measurements over time (multiple sessions):
+
+```typescript
+export interface TemporalMeasurementSeries {
+  jointType: JointType;
+  movementType: string;
+  dataPoints: Array<{
+    sessionDate: Date;
+    angle: number;
+    percentOfNormal: number;
+    compensations: string[];
+  }>;
+  trend: 'improving' | 'stable' | 'declining';
+  changePercent: number; // First to last measurement
+}
+```
+
+#### 4. **UI Requirements**
+
+- **Clip Library View**: Display all analyzed clips with thumbnails and metadata
+- **Multi-Select**: Allow selection of multiple clips for aggregated analysis
+- **Timeline View**: Show measurements over time (line chart)
+- **Comparison View**: Side-by-side comparison of 2-3 clips
+
+### Integration Points
+
+- **Storage**: Persist clip analyses to database/local storage with unique `clipId`
+- **Export**: Support exporting aggregated reports as PDF/JSON
+- **Sharing**: Enable sharing multi-clip reports with clinicians
+
+---
+
+## A.7: Sprint-Level Validation Checklist
+
+**Source**: `docs/planning/DEVELOPER_ACTION_PLAN.md`
+
+This checklist should be completed at the END of each sprint before merging to main:
+
+### Sprint 1 Validation Checklist ✅
+
+**Frame Caching + Schema Infrastructure**
+
+- [ ] All unit tests pass (150 tests)
+- [ ] Cache hit rate >80% in benchmark tests
+- [ ] Frame calculation time <10ms average
+- [ ] Schema mapping 100% correct for all 33 MediaPipe landmarks
+- [ ] Schema mapping 100% correct for all 17 MoveNet landmarks
+- [ ] No memory leaks in cache (TTL cleanup working)
+- [ ] TypeScript strict mode errors = 0
+- [ ] ESLint warnings = 0
+- [ ] Code review completed by 2+ developers
+- [ ] Performance benchmarks documented in `/docs/validation/sprint1_performance.md`
+
+### Sprint 2 Validation Checklist ✅
+
+**Goniometer Refactor**
+
+- [ ] All 50 integration tests pass
+- [ ] MAE ≤5° on 30 validation test cases
+- [ ] Plane projection correctness validated
+- [ ] Frame-aware measurements working for all 5 joint types
+- [ ] Regression tests pass (new vs old implementation)
+- [ ] View orientation metadata correctly consumed
+- [ ] Edge cases handled (occluded landmarks, low confidence)
+- [ ] TypeScript strict mode errors = 0
+- [ ] Code review completed
+- [ ] Clinical accuracy report documented in `/docs/validation/sprint2_clinical_accuracy.md`
+
+### Sprint 3 Validation Checklist ✅
+
+**Clinical Measurements**
+
+- [ ] All 5 clinical measurement functions implemented
+- [ ] 110 synthetic test cases pass (MAE ≤5°, RMSE ≤7°, R² ≥0.95)
+- [ ] Normal ROM references validated against clinical literature
+- [ ] Quality grading (excellent/good/fair/poor) clinically reviewed
+- [ ] Compensation warnings correctly triggered
+- [ ] Multi-view measurements working (sagittal/frontal/posterior)
+- [ ] Clinical interpretation examples documented
+- [ ] Unit + integration tests pass (50 tests)
+- [ ] Code review completed
+- [ ] Clinical validation report documented in `/docs/validation/sprint3_clinical_validation.md`
+
+### Sprint 4 Validation Checklist ✅
+
+**Compensation Detection**
+
+- [ ] All 6 compensation patterns implemented
+- [ ] Sensitivity ≥80%, Specificity ≥80% on validation set
+- [ ] False positive rate <10%
+- [ ] False negative rate <10%
+- [ ] Clinical review of sample detections completed
+- [ ] Multi-view detection working correctly
+- [ ] Compensation severity grading validated
+- [ ] Integration with clinical measurements working
+- [ ] E2E tests pass (10 tests)
+- [ ] Code review completed
+- [ ] Compensation detection report documented in `/docs/validation/sprint4_compensation_detection.md`
+
+### Final Integration Validation Checklist ✅
+
+**System-Wide Validation**
+
+- [ ] All 210+ tests pass (150 unit + 50 integration + 10 E2E)
+- [ ] Code coverage >90%
+- [ ] Performance targets met (<120ms total latency)
+- [ ] Clinical accuracy targets met (MAE ≤5° across all measurements)
+- [ ] Compensation detection targets met (≥80% sensitivity/specificity)
+- [ ] Migration guide tested with legacy system
+- [ ] Production deployment checklist completed
+- [ ] User acceptance testing passed
+- [ ] Clinical stakeholder sign-off received
+- [ ] Documentation complete (API docs, clinical guides, developer guides)
+- [ ] Ready for production deployment ✅
+
+---
+
+**END OF ADDENDUM**
+
