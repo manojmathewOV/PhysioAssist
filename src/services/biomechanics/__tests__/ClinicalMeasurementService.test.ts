@@ -281,8 +281,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       expect(measurement.compensations.length).toBeGreaterThan(0);
       const trunkLeanComp = measurement.compensations.find((c) => c.type === 'trunk_lean');
       expect(trunkLeanComp).toBeDefined();
-      expect(trunkLeanComp?.severity).toMatch(/mild|moderate/);
-      expect(trunkLeanComp?.magnitude).toBeGreaterThan(10);
+      // With tight thresholds: 20° is severe (>15°)
+      expect(trunkLeanComp?.severity).toBe('severe');
+      expect(trunkLeanComp?.magnitude).toBeCloseTo(20, 1);
     });
 
     it('should warn if elbow not fully extended', () => {
