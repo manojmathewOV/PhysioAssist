@@ -219,7 +219,7 @@ export class AnatomicalReferenceService {
     const elbow = landmarks[elbowIdx];
 
     // Origin: shoulder joint center
-    const origin = shoulder;
+    const origin: Vector3D = { x: shoulder.x, y: shoulder.y, z: shoulder.z ?? 0 };
 
     // Y-axis: shoulder to elbow (longitudinal humerus axis)
     const yAxis = normalize(subtract3D(elbow, shoulder));

@@ -1,4 +1,5 @@
-import { Vector3D } from '@types/common';
+import { Vector3D } from '../types/common';
+import { PoseLandmark } from '../types/pose';
 
 /**
  * Lightweight 3D vector math utilities for biomechanics calculations
@@ -7,6 +8,11 @@ import { Vector3D } from '@types/common';
  * Based on ISB standards and clinical biomechanics requirements
  * Reference: Wu et al. (2005) - ISB recommendation on definitions of joint coordinate systems
  */
+
+/**
+ * Type for any object with 3D coordinates (Vector3D, PoseLandmark, etc.)
+ */
+type Point3D = { x: number; y: number; z: number } | PoseLandmark;
 
 /**
  * Calculate midpoint between two 3D points
@@ -22,11 +28,11 @@ import { Vector3D } from '@types/common';
  * const pelvisCenter = midpoint3D(leftHip, rightHip);
  * // Result: { x: 0.5, y: 0.5, z: 0 }
  */
-export function midpoint3D(p1: Vector3D, p2: Vector3D): Vector3D {
+export function midpoint3D(p1: Point3D, p2: Point3D): Vector3D {
   return {
     x: (p1.x + p2.x) / 2,
     y: (p1.y + p2.y) / 2,
-    z: (p1.z + p2.z) / 2,
+    z: ((p1.z ?? 0) + (p2.z ?? 0)) / 2,
   };
 }
 
@@ -44,11 +50,11 @@ export function midpoint3D(p1: Vector3D, p2: Vector3D): Vector3D {
  * const trunkVector = subtract3D(shoulder, hip);
  * // Result: { x: 0, y: 0.4, z: 0 } (pointing upward)
  */
-export function subtract3D(p1: Vector3D, p2: Vector3D): Vector3D {
+export function subtract3D(p1: Point3D, p2: Point3D): Vector3D {
   return {
     x: p1.x - p2.x,
     y: p1.y - p2.y,
-    z: p1.z - p2.z,
+    z: (p1.z ?? 0) - (p2.z ?? 0),
   };
 }
 
@@ -64,15 +70,16 @@ export function subtract3D(p1: Vector3D, p2: Vector3D): Vector3D {
  * const unitVector = normalize(vector);
  * // Result: { x: 0.6, y: 0.8, z: 0 } (magnitude = 1)
  */
-export function normalize(v: Vector3D): Vector3D {
-  const mag = Math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2);
+export function normalize(v: Point3D): Vector3D {
+  const z = v.z ?? 0;
+  const mag = Math.sqrt(v.x ** 2 + v.y ** 2 + z ** 2);
   if (mag === 0) {
-    return v; // Return original to avoid division by zero
+    return { x: v.x, y: v.y, z }; // Return as Vector3D to avoid division by zero
   }
   return {
     x: v.x / mag,
     y: v.y / mag,
-    z: v.z / mag,
+    z: z / mag,
   };
 }
 
@@ -91,10 +98,12 @@ export function normalize(v: Vector3D): Vector3D {
  * const zAxis = crossProduct(xAxis, yAxis);
  * // Result: { x: 0, y: 0, z: 1 }
  */
-export function crossProduct(v1: Vector3D, v2: Vector3D): Vector3D {
+export function crossProduct(v1: Point3D, v2: Point3D): Vector3D {
+  const z1 = v1.z ?? 0;
+  const z2 = v2.z ?? 0;
   return {
-    x: v1.y * v2.z - v1.z * v2.y,
-    y: v1.z * v2.x - v1.x * v2.z,
+    x: v1.y * z2 - z1 * v2.y,
+    y: z1 * v2.x - v1.x * z2,
     z: v1.x * v2.y - v1.y * v2.x,
   };
 }
@@ -114,8 +123,8 @@ export function crossProduct(v1: Vector3D, v2: Vector3D): Vector3D {
  * const dot = dotProduct(v1, v2);
  * // Result: 0 (perpendicular vectors)
  */
-export function dotProduct(v1: Vector3D, v2: Vector3D): number {
-  return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+export function dotProduct(v1: Point3D, v2: Point3D): number {
+  return v1.x * v2.x + v1.y * v2.y + (v1.z ?? 0) * (v2.z ?? 0);
 }
 
 /**
@@ -130,8 +139,9 @@ export function dotProduct(v1: Vector3D, v2: Vector3D): number {
  * const length = magnitude(vector);
  * // Result: 5
  */
-export function magnitude(v: Vector3D): number {
-  return Math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2);
+export function magnitude(v: Point3D): number {
+  const z = v.z ?? 0;
+  return Math.sqrt(v.x ** 2 + v.y ** 2 + z ** 2);
 }
 
 /**
@@ -149,7 +159,7 @@ export function magnitude(v: Vector3D): number {
  * const angle = angleBetweenVectors(up, right);
  * // Result: 90 degrees
  */
-export function angleBetweenVectors(v1: Vector3D, v2: Vector3D): number {
+export function angleBetweenVectors(v1: Point3D, v2: Point3D): number {
   const dot = dotProduct(v1, v2);
   const mags = magnitude(v1) * magnitude(v2);
 
@@ -181,14 +191,16 @@ export function angleBetweenVectors(v1: Vector3D, v2: Vector3D): number {
  * // Result: { x: 0.5, y: 0.7, z: 0 } (z-component removed)
  */
 export function projectVectorOntoPlane(
-  vector: Vector3D,
-  planeNormal: Vector3D
+  vector: Point3D,
+  planeNormal: Point3D
 ): Vector3D {
   const dot = dotProduct(vector, planeNormal);
+  const vz = vector.z ?? 0;
+  const pnz = planeNormal.z ?? 0;
   const projected = {
     x: vector.x - dot * planeNormal.x,
     y: vector.y - dot * planeNormal.y,
-    z: vector.z - dot * planeNormal.z,
+    z: vz - dot * pnz,
   };
   return normalize(projected);
 }
