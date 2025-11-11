@@ -132,6 +132,7 @@ export class SyntheticPoseDataGenerator {
     options: {
       scapularRotation?: number; // Scapular upward rotation (default: auto-calculated)
       trunkLean?: number;
+      shoulderHiking?: number; // Shoulder elevation in cm (default: 0)
       side?: 'left' | 'right';
       viewOrientation?: 'frontal' | 'posterior';
     } = {}
@@ -228,6 +229,7 @@ export class SyntheticPoseDataGenerator {
     angle: number,
     schemaId: 'movenet-17' | 'mediapipe-33' = 'movenet-17',
     options: {
+      trunkLean?: number; // Trunk lean in degrees (default: 0)
       side?: 'left' | 'right';
       viewOrientation?: 'sagittal' | 'frontal';
     } = {}

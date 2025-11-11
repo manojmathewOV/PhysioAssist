@@ -112,6 +112,9 @@ export interface MeasurementQuality {
   /** Orientation match (does view match requirements?) */
   orientationMatch?: number; // 0-1
 
+  /** Quality warnings about the measurement */
+  warnings?: string[];
+
   /** Recommendations for improvement */
   recommendations: string[];
 }

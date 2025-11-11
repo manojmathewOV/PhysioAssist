@@ -1,5 +1,6 @@
 import { PoseLandmark } from '../../types/pose';
 import { AnatomicalReferenceFrame, AnatomicalPlane } from '../../types/biomechanics';
+import { Vector3D } from '../../types/common';
 import { midpoint3D, subtract3D, normalize, crossProduct } from '../../utils/vectorMath';
 
 /**

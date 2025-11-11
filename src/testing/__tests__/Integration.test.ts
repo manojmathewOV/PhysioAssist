@@ -120,7 +120,7 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const enrichedValidPose = addAnatomicalFrames(validPose, frameCache, anatomicalService);
       const validMeasurement = measurementService.measureShoulderRotation(enrichedValidPose, 'right');
 
-      expect(validMeasurement.quality.warnings.length).toBe(0);
+      expect(validMeasurement.quality.warnings?.length ?? 0).toBe(0);
 
       // Invalid: elbow at 120° (not at 90°)
       const { poseData: invalidPose } = poseGenerator.generateShoulderRotation(45, 'movenet-17', {
@@ -130,8 +130,8 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const enrichedInvalidPose = addAnatomicalFrames(invalidPose, frameCache, anatomicalService);
       const invalidMeasurement = measurementService.measureShoulderRotation(enrichedInvalidPose, 'right');
 
-      expect(invalidMeasurement.quality.warnings.length).toBeGreaterThan(0);
-      expect(invalidMeasurement.quality.warnings.some((w) => w.includes('elbow'))).toBe(true);
+      expect(invalidMeasurement.quality.warnings?.length ?? 0).toBeGreaterThan(0);
+      expect(invalidMeasurement.quality.warnings?.some((w) => w.includes('elbow'))).toBe(true);
     });
   });
 
