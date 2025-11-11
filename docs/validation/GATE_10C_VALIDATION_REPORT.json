@@ -1,13 +1,13 @@
 {
   "totalTests": 114,
-  "passed": 16,
-  "failed": 98,
-  "passRate": 14.035087719298245,
+  "passed": 15,
+  "failed": 99,
+  "passRate": 13.157894736842104,
   "metrics": {
-    "mae": 69.58387222777615,
-    "rmse": 87.3531409558404,
+    "mae": 71.16281959619721,
+    "rmse": 88.965059215215,
     "maxError": 180,
-    "r2": -0.9168194935422407
+    "r2": -0.9882139226544209
   },
   "compensationMetrics": {
     "accuracy": 47.368421052631575,
@@ -24,7 +24,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": false,
-      "timestamp": 1762892192766
+      "timestamp": 1762892405737
     },
     {
       "testCase": "shoulder_flexion_left_30deg",
@@ -33,7 +33,7 @@
       "error": 30,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192766
+      "timestamp": 1762892405737
     },
     {
       "testCase": "shoulder_flexion_left_60deg",
@@ -42,7 +42,7 @@
       "error": 60,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192766
+      "timestamp": 1762892405738
     },
     {
       "testCase": "shoulder_flexion_left_90deg",
@@ -51,7 +51,7 @@
       "error": 90,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192767
+      "timestamp": 1762892405738
     },
     {
       "testCase": "shoulder_flexion_left_90deg_trunk_lean",
@@ -60,7 +60,7 @@
       "error": 75.00000000000003,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192767
+      "timestamp": 1762892405739
     },
     {
       "testCase": "shoulder_flexion_left_120deg",
@@ -69,7 +69,7 @@
       "error": 120,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192768
+      "timestamp": 1762892405739
     },
     {
       "testCase": "shoulder_flexion_left_120deg_trunk_lean",
@@ -78,7 +78,7 @@
       "error": 45.00000000000003,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192768
+      "timestamp": 1762892405739
     },
     {
       "testCase": "shoulder_flexion_left_150deg",
@@ -87,7 +87,7 @@
       "error": 150,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192769
+      "timestamp": 1762892405740
     },
     {
       "testCase": "shoulder_flexion_left_150deg_trunk_lean",
@@ -96,7 +96,7 @@
       "error": 15.000000000000028,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192769
+      "timestamp": 1762892405740
     },
     {
       "testCase": "shoulder_flexion_left_180deg",
@@ -105,7 +105,7 @@
       "error": 180,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192770
+      "timestamp": 1762892405741
     },
     {
       "testCase": "shoulder_flexion_left_180deg_trunk_lean",
@@ -114,7 +114,7 @@
       "error": 14.999999999999972,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192770
+      "timestamp": 1762892405741
     },
     {
       "testCase": "shoulder_flexion_right_0deg",
@@ -123,7 +123,7 @@
       "error": 180,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192770
+      "timestamp": 1762892405741
     },
     {
       "testCase": "shoulder_flexion_right_30deg",
@@ -132,7 +132,7 @@
       "error": 150,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192771
+      "timestamp": 1762892405742
     },
     {
       "testCase": "shoulder_flexion_right_60deg",
@@ -141,7 +141,7 @@
       "error": 120,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192771
+      "timestamp": 1762892405742
     },
     {
       "testCase": "shoulder_flexion_right_90deg",
@@ -150,7 +150,7 @@
       "error": 90,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192771
+      "timestamp": 1762892405742
     },
     {
       "testCase": "shoulder_flexion_right_90deg_trunk_lean",
@@ -159,7 +159,7 @@
       "error": 90,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192772
+      "timestamp": 1762892405742
     },
     {
       "testCase": "shoulder_flexion_right_120deg",
@@ -168,7 +168,7 @@
       "error": 60,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192772
+      "timestamp": 1762892405742
     },
     {
       "testCase": "shoulder_flexion_right_120deg_trunk_lean",
@@ -177,7 +177,7 @@
       "error": 60,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192772
+      "timestamp": 1762892405743
     },
     {
       "testCase": "shoulder_flexion_right_150deg",
@@ -186,7 +186,7 @@
       "error": 30,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192772
+      "timestamp": 1762892405743
     },
     {
       "testCase": "shoulder_flexion_right_150deg_trunk_lean",
@@ -195,7 +195,7 @@
       "error": 30,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192772
+      "timestamp": 1762892405748
     },
     {
       "testCase": "shoulder_flexion_right_180deg",
@@ -204,7 +204,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": false,
-      "timestamp": 1762892192772
+      "timestamp": 1762892405748
     },
     {
       "testCase": "shoulder_flexion_right_180deg_trunk_lean",
@@ -213,7 +213,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": false,
-      "timestamp": 1762892192772
+      "timestamp": 1762892405748
     },
     {
       "testCase": "shoulder_abduction_left_0deg",
@@ -222,7 +222,7 @@
       "error": 180,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192777
+      "timestamp": 1762892405749
     },
     {
       "testCase": "shoulder_abduction_left_30deg",
@@ -231,7 +231,7 @@
       "error": 124.68876994613069,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192777
+      "timestamp": 1762892405749
     },
     {
       "testCase": "shoulder_abduction_left_60deg",
@@ -240,7 +240,7 @@
       "error": 65.1767377752017,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192777
+      "timestamp": 1762892405750
     },
     {
       "testCase": "shoulder_abduction_left_90deg",
@@ -249,7 +249,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": true,
-      "timestamp": 1762892192778
+      "timestamp": 1762892405750
     },
     {
       "testCase": "shoulder_abduction_left_90deg_shoulder_hiking",
@@ -258,7 +258,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": true,
-      "timestamp": 1762892192778
+      "timestamp": 1762892405750
     },
     {
       "testCase": "shoulder_abduction_left_120deg",
@@ -267,7 +267,7 @@
       "error": 65.17673777520167,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192778
+      "timestamp": 1762892405750
     },
     {
       "testCase": "shoulder_abduction_left_120deg_shoulder_hiking",
@@ -276,7 +276,7 @@
       "error": 65.17673777520167,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192778
+      "timestamp": 1762892405750
     },
     {
       "testCase": "shoulder_abduction_left_150deg",
@@ -285,7 +285,7 @@
       "error": 124.68876994613069,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192778
+      "timestamp": 1762892405750
     },
     {
       "testCase": "shoulder_abduction_left_150deg_shoulder_hiking",
@@ -294,7 +294,7 @@
       "error": 124.68876994613069,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192779
+      "timestamp": 1762892405751
     },
     {
       "testCase": "shoulder_abduction_left_180deg",
@@ -303,7 +303,7 @@
       "error": 180,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192779
+      "timestamp": 1762892405752
     },
     {
       "testCase": "shoulder_abduction_left_180deg_shoulder_hiking",
@@ -312,16 +312,16 @@
       "error": 180,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192779
+      "timestamp": 1762892405752
     },
     {
       "testCase": "shoulder_abduction_right_0deg",
       "groundTruth": 0,
-      "measured": 0,
-      "error": 0,
-      "passed": true,
+      "measured": 180,
+      "error": 180,
+      "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192779
+      "timestamp": 1762892405752
     },
     {
       "testCase": "shoulder_abduction_right_30deg",
@@ -330,7 +330,7 @@
       "error": 124.68876994613069,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192779
+      "timestamp": 1762892405753
     },
     {
       "testCase": "shoulder_abduction_right_60deg",
@@ -339,7 +339,7 @@
       "error": 65.1767377752017,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192780
+      "timestamp": 1762892405753
     },
     {
       "testCase": "shoulder_abduction_right_90deg",
@@ -348,7 +348,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": true,
-      "timestamp": 1762892192780
+      "timestamp": 1762892405753
     },
     {
       "testCase": "shoulder_abduction_right_90deg_shoulder_hiking",
@@ -357,7 +357,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": true,
-      "timestamp": 1762892192780
+      "timestamp": 1762892405753
     },
     {
       "testCase": "shoulder_abduction_right_120deg",
@@ -366,7 +366,7 @@
       "error": 65.17673777520167,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192780
+      "timestamp": 1762892405754
     },
     {
       "testCase": "shoulder_abduction_right_120deg_shoulder_hiking",
@@ -375,7 +375,7 @@
       "error": 65.17673777520167,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192781
+      "timestamp": 1762892405754
     },
     {
       "testCase": "shoulder_abduction_right_150deg",
@@ -384,7 +384,7 @@
       "error": 124.68876994613069,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192781
+      "timestamp": 1762892405754
     },
     {
       "testCase": "shoulder_abduction_right_150deg_shoulder_hiking",
@@ -393,7 +393,7 @@
       "error": 124.68876994613069,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192781
+      "timestamp": 1762892405754
     },
     {
       "testCase": "shoulder_abduction_right_180deg",
@@ -402,7 +402,7 @@
       "error": 180,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192781
+      "timestamp": 1762892405754
     },
     {
       "testCase": "shoulder_abduction_right_180deg_shoulder_hiking",
@@ -411,7 +411,7 @@
       "error": 180,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192782
+      "timestamp": 1762892405755
     },
     {
       "testCase": "shoulder_rotation_left_-60deg",
@@ -420,7 +420,7 @@
       "error": 150,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192786
+      "timestamp": 1762892405760
     },
     {
       "testCase": "shoulder_rotation_left_-45deg",
@@ -429,7 +429,7 @@
       "error": 135,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192787
+      "timestamp": 1762892405760
     },
     {
       "testCase": "shoulder_rotation_left_-30deg",
@@ -438,7 +438,7 @@
       "error": 120,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192788
+      "timestamp": 1762892405761
     },
     {
       "testCase": "shoulder_rotation_left_-15deg",
@@ -447,7 +447,7 @@
       "error": 105,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192788
+      "timestamp": 1762892405761
     },
     {
       "testCase": "shoulder_rotation_left_0deg",
@@ -456,7 +456,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": false,
-      "timestamp": 1762892192788
+      "timestamp": 1762892405762
     },
     {
       "testCase": "shoulder_rotation_left_15deg",
@@ -465,7 +465,7 @@
       "error": 75,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192789
+      "timestamp": 1762892405763
     },
     {
       "testCase": "shoulder_rotation_left_30deg",
@@ -474,7 +474,7 @@
       "error": 60,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192789
+      "timestamp": 1762892405763
     },
     {
       "testCase": "shoulder_rotation_left_45deg",
@@ -483,7 +483,7 @@
       "error": 45,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192790
+      "timestamp": 1762892405763
     },
     {
       "testCase": "shoulder_rotation_left_60deg",
@@ -492,7 +492,7 @@
       "error": 30,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192790
+      "timestamp": 1762892405764
     },
     {
       "testCase": "shoulder_rotation_left_90deg",
@@ -501,7 +501,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": true,
-      "timestamp": 1762892192791
+      "timestamp": 1762892405764
     },
     {
       "testCase": "shoulder_rotation_right_-60deg",
@@ -510,7 +510,7 @@
       "error": 150,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192791
+      "timestamp": 1762892405765
     },
     {
       "testCase": "shoulder_rotation_right_-45deg",
@@ -519,7 +519,7 @@
       "error": 135,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192792
+      "timestamp": 1762892405765
     },
     {
       "testCase": "shoulder_rotation_right_-30deg",
@@ -528,7 +528,7 @@
       "error": 120,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192792
+      "timestamp": 1762892405766
     },
     {
       "testCase": "shoulder_rotation_right_-15deg",
@@ -537,7 +537,7 @@
       "error": 105,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192793
+      "timestamp": 1762892405766
     },
     {
       "testCase": "shoulder_rotation_right_0deg",
@@ -546,7 +546,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": false,
-      "timestamp": 1762892192793
+      "timestamp": 1762892405767
     },
     {
       "testCase": "shoulder_rotation_right_15deg",
@@ -555,7 +555,7 @@
       "error": 75,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192794
+      "timestamp": 1762892405768
     },
     {
       "testCase": "shoulder_rotation_right_30deg",
@@ -564,7 +564,7 @@
       "error": 60,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192794
+      "timestamp": 1762892405768
     },
     {
       "testCase": "shoulder_rotation_right_45deg",
@@ -573,7 +573,7 @@
       "error": 45,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192795
+      "timestamp": 1762892405769
     },
     {
       "testCase": "shoulder_rotation_right_60deg",
@@ -582,7 +582,7 @@
       "error": 30,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192795
+      "timestamp": 1762892405769
     },
     {
       "testCase": "shoulder_rotation_right_90deg",
@@ -591,7 +591,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": true,
-      "timestamp": 1762892192796
+      "timestamp": 1762892405770
     },
     {
       "testCase": "elbow_flexion_left_0deg",
@@ -600,7 +600,7 @@
       "error": 36,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192796
+      "timestamp": 1762892405771
     },
     {
       "testCase": "elbow_flexion_left_30deg",
@@ -609,7 +609,7 @@
       "error": 42,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192797
+      "timestamp": 1762892405771
     },
     {
       "testCase": "elbow_flexion_left_60deg",
@@ -618,7 +618,7 @@
       "error": 48,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192797
+      "timestamp": 1762892405771
     },
     {
       "testCase": "elbow_flexion_left_90deg",
@@ -627,7 +627,7 @@
       "error": 54,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192797
+      "timestamp": 1762892405771
     },
     {
       "testCase": "elbow_flexion_left_120deg",
@@ -636,7 +636,7 @@
       "error": 24,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192797
+      "timestamp": 1762892405771
     },
     {
       "testCase": "elbow_flexion_left_150deg",
@@ -645,7 +645,7 @@
       "error": 42,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192797
+      "timestamp": 1762892405771
     },
     {
       "testCase": "elbow_flexion_right_0deg",
@@ -654,7 +654,7 @@
       "error": 36,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192797
+      "timestamp": 1762892405771
     },
     {
       "testCase": "elbow_flexion_right_30deg",
@@ -663,7 +663,7 @@
       "error": 42,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192797
+      "timestamp": 1762892405771
     },
     {
       "testCase": "elbow_flexion_right_60deg",
@@ -672,7 +672,7 @@
       "error": 48,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192797
+      "timestamp": 1762892405772
     },
     {
       "testCase": "elbow_flexion_right_90deg",
@@ -681,7 +681,7 @@
       "error": 54,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192798
+      "timestamp": 1762892405772
     },
     {
       "testCase": "elbow_flexion_right_120deg",
@@ -690,7 +690,7 @@
       "error": 24,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192798
+      "timestamp": 1762892405772
     },
     {
       "testCase": "elbow_flexion_right_150deg",
@@ -699,7 +699,7 @@
       "error": 42,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192798
+      "timestamp": 1762892405772
     },
     {
       "testCase": "elbow_flexion_right_90deg_trunk_lean",
@@ -708,7 +708,7 @@
       "error": 18,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192798
+      "timestamp": 1762892405772
     },
     {
       "testCase": "elbow_flexion_right_120deg_trunk_lean",
@@ -717,7 +717,7 @@
       "error": 48,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192798
+      "timestamp": 1762892405772
     },
     {
       "testCase": "elbow_flexion_right_150deg_trunk_lean",
@@ -726,7 +726,7 @@
       "error": 114,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192798
+      "timestamp": 1762892405772
     },
     {
       "testCase": "knee_flexion_left_0deg",
@@ -735,7 +735,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": false,
-      "timestamp": 1762892192799
+      "timestamp": 1762892405773
     },
     {
       "testCase": "knee_flexion_left_30deg",
@@ -744,7 +744,7 @@
       "error": 30,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192799
+      "timestamp": 1762892405774
     },
     {
       "testCase": "knee_flexion_left_60deg",
@@ -753,7 +753,7 @@
       "error": 60,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192799
+      "timestamp": 1762892405774
     },
     {
       "testCase": "knee_flexion_left_90deg",
@@ -762,7 +762,7 @@
       "error": 45,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192799
+      "timestamp": 1762892405774
     },
     {
       "testCase": "knee_flexion_left_120deg",
@@ -771,7 +771,7 @@
       "error": 48,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192800
+      "timestamp": 1762892405774
     },
     {
       "testCase": "knee_flexion_left_135deg",
@@ -780,7 +780,7 @@
       "error": 27,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192800
+      "timestamp": 1762892405774
     },
     {
       "testCase": "knee_flexion_right_0deg",
@@ -789,7 +789,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": false,
-      "timestamp": 1762892192800
+      "timestamp": 1762892405774
     },
     {
       "testCase": "knee_flexion_right_30deg",
@@ -798,7 +798,7 @@
       "error": 30,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192800
+      "timestamp": 1762892405774
     },
     {
       "testCase": "knee_flexion_right_60deg",
@@ -807,7 +807,7 @@
       "error": 60,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192800
+      "timestamp": 1762892405775
     },
     {
       "testCase": "knee_flexion_right_90deg",
@@ -816,7 +816,7 @@
       "error": 45,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192800
+      "timestamp": 1762892405775
     },
     {
       "testCase": "knee_flexion_right_120deg",
@@ -825,7 +825,7 @@
       "error": 48,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192801
+      "timestamp": 1762892405775
     },
     {
       "testCase": "knee_flexion_right_135deg",
@@ -834,7 +834,7 @@
       "error": 27,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192801
+      "timestamp": 1762892405775
     },
     {
       "testCase": "knee_flexion_right_60deg_hip_hike",
@@ -843,7 +843,7 @@
       "error": 48,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192801
+      "timestamp": 1762892405775
     },
     {
       "testCase": "knee_flexion_right_90deg_hip_hike",
@@ -852,7 +852,7 @@
       "error": 54,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192801
+      "timestamp": 1762892405775
     },
     {
       "testCase": "knee_flexion_right_120deg_hip_hike",
@@ -861,7 +861,7 @@
       "error": 24,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192801
+      "timestamp": 1762892405775
     },
     {
       "testCase": "edge_shoulder_flexion_left_near_zero",
@@ -870,7 +870,7 @@
       "error": 179,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192802
+      "timestamp": 1762892405776
     },
     {
       "testCase": "edge_shoulder_abduction_right_near_zero",
@@ -879,7 +879,7 @@
       "error": 2,
       "passed": true,
       "compensationMatches": false,
-      "timestamp": 1762892192802
+      "timestamp": 1762892405776
     },
     {
       "testCase": "edge_elbow_flexion_left_near_zero",
@@ -888,7 +888,7 @@
       "error": 71,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192802
+      "timestamp": 1762892405776
     },
     {
       "testCase": "edge_knee_flexion_right_near_zero",
@@ -897,7 +897,7 @@
       "error": 106,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192802
+      "timestamp": 1762892405776
     },
     {
       "testCase": "edge_shoulder_flexion_left_max_rom",
@@ -906,7 +906,7 @@
       "error": 0,
       "passed": true,
       "compensationMatches": false,
-      "timestamp": 1762892192802
+      "timestamp": 1762892405776
     },
     {
       "testCase": "edge_shoulder_abduction_right_max_rom",
@@ -915,7 +915,7 @@
       "error": 180,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192802
+      "timestamp": 1762892405777
     },
     {
       "testCase": "edge_elbow_flexion_left_max_rom",
@@ -924,7 +924,7 @@
       "error": 114,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192803
+      "timestamp": 1762892405777
     },
     {
       "testCase": "edge_knee_flexion_right_max_rom",
@@ -933,7 +933,7 @@
       "error": 27,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192803
+      "timestamp": 1762892405777
     },
     {
       "testCase": "edge_shoulder_flexion_multiple_compensations",
@@ -942,7 +942,7 @@
       "error": 30,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192803
+      "timestamp": 1762892405777
     },
     {
       "testCase": "edge_shoulder_flexion_multiple_compensations",
@@ -951,7 +951,7 @@
       "error": 60,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192803
+      "timestamp": 1762892405777
     },
     {
       "testCase": "edge_shoulder_abduction_multiple_compensations",
@@ -960,7 +960,7 @@
       "error": 124.57031283462169,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192803
+      "timestamp": 1762892405778
     },
     {
       "testCase": "edge_shoulder_abduction_multiple_compensations",
@@ -969,7 +969,7 @@
       "error": 67.79807480386536,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192804
+      "timestamp": 1762892405778
     },
     {
       "testCase": "edge_elbow_flexion_multiple_compensations",
@@ -978,7 +978,7 @@
       "error": 120,
       "passed": false,
       "compensationMatches": false,
-      "timestamp": 1762892192804
+      "timestamp": 1762892405778
     },
     {
       "testCase": "edge_knee_flexion_multiple_compensations",
@@ -987,7 +987,7 @@
       "error": 24,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192804
+      "timestamp": 1762892405778
     },
     {
       "testCase": "edge_bilateral_left_shoulder_60deg",
@@ -996,7 +996,7 @@
       "error": 120,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192804
+      "timestamp": 1762892405778
     },
     {
       "testCase": "edge_bilateral_right_shoulder_60deg",
@@ -1005,7 +1005,7 @@
       "error": 120,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192804
+      "timestamp": 1762892405778
     },
     {
       "testCase": "edge_bilateral_left_shoulder_90deg",
@@ -1014,7 +1014,7 @@
       "error": 90,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192804
+      "timestamp": 1762892405779
     },
     {
       "testCase": "edge_bilateral_right_shoulder_90deg",
@@ -1023,7 +1023,7 @@
       "error": 90,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192804
+      "timestamp": 1762892405779
     },
     {
       "testCase": "edge_bilateral_left_shoulder_120deg",
@@ -1032,7 +1032,7 @@
       "error": 60,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192805
+      "timestamp": 1762892405779
     },
     {
       "testCase": "edge_bilateral_right_shoulder_120deg",
@@ -1041,15 +1041,15 @@
       "error": 60,
       "passed": false,
       "compensationMatches": true,
-      "timestamp": 1762892192805
+      "timestamp": 1762892405779
     }
   ],
-  "timestamp": "2025-11-11T20:16:32.805Z",
+  "timestamp": "2025-11-11T20:20:05.779Z",
   "status": "FAIL",
   "notes": [
-    "MAE (69.58°) exceeds target (5°)",
-    "RMSE (87.35°) exceeds target (7°)",
-    "R² (-0.917) below target (0.95)",
+    "MAE (71.16°) exceeds target (5°)",
+    "RMSE (88.97°) exceeds target (7°)",
+    "R² (-0.988) below target (0.95)",
     "Specificity (9.1%) below target (80%)"
   ]
 }

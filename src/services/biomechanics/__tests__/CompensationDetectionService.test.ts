@@ -54,9 +54,9 @@ describe('CompensationDetectionService - Gate 10B', () => {
     return {
       origin: { x: 0.5, y: 0.4, z: 0.5 },
       xAxis: {
-        x: Math.cos(rotationRad),
+        x: Math.sin(rotationRad), // Rotation in transverse plane from expected frontal (0,0,-1)
         y: 0,
-        z: Math.sin(rotationRad),
+        z: -Math.cos(rotationRad), // Negative Z for frontal view
       },
       yAxis: {
         x: Math.sin(lateralRad),
