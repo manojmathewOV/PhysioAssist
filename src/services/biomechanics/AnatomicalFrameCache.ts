@@ -64,6 +64,9 @@ export class AnatomicalFrameCache {
   // Configuration
   private spatialBucketingPrecision: number = 2; // Decimal places for bucketing
 
+  // Counter for ensuring unique keys when landmarks are missing
+  private keyCounter: number = 0;
+
   /**
    * Create a new anatomical frame cache
    *
@@ -174,16 +177,20 @@ export class AnatomicalFrameCache {
 
     // Fallback if shoulders not found (edge case: occlusion)
     if (!leftShoulder || !rightShoulder) {
-      // Use timestamp-based key to force cache miss
+      // Use counter-based key to force cache miss (each call gets unique key)
       // This ensures we don't share frames across poses where key landmarks are missing
-      return `${frameType}_${Date.now()}`;
+      return `${frameType}_missing_${this.keyCounter++}`;
     }
 
     // Round positions to spatialBucketingPrecision for bucketing
-    const lsX = leftShoulder.x.toFixed(this.spatialBucketingPrecision);
-    const lsY = leftShoulder.y.toFixed(this.spatialBucketingPrecision);
-    const rsX = rightShoulder.x.toFixed(this.spatialBucketingPrecision);
-    const rsY = rightShoulder.y.toFixed(this.spatialBucketingPrecision);
+    // Use Math.floor for consistent bucketing (not toFixed which rounds to nearest)
+    const multiplier = Math.pow(10, this.spatialBucketingPrecision);
+    const bucket = (val: number) => Math.floor(val * multiplier) / multiplier;
+
+    const lsX = bucket(leftShoulder.x).toFixed(this.spatialBucketingPrecision);
+    const lsY = bucket(leftShoulder.y).toFixed(this.spatialBucketingPrecision);
+    const rsX = bucket(rightShoulder.x).toFixed(this.spatialBucketingPrecision);
+    const rsY = bucket(rightShoulder.y).toFixed(this.spatialBucketingPrecision);
 
     return `${frameType}_${lsX}_${lsY}_${rsX}_${rsY}`;
   }
