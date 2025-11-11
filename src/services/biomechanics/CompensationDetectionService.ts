@@ -203,7 +203,7 @@ export class CompensationDetectionService {
       type: 'trunk_lean',
       severity,
       magnitude: deviation,
-      affectsJoint: movement || 'thorax', // Use movement context if available
+      affectsJoint: 'thorax', // Trunk lean always affects thorax, regardless of movement
       clinicalNote: `${leanType === 'lateral' ? 'Lateral' : 'Forward/backward'} trunk lean of ${deviation.toFixed(1)}° from vertical detected. ` +
         `This compensation may reduce true shoulder ROM and indicate weakness or mobility restriction.`,
     };
