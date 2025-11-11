@@ -80,7 +80,7 @@ export class CompensationDetectionService {
     const schemaId = poseData.schemaId ?? 'movenet-17'; // Default to movenet-17 if not specified
 
     // Detect trunk compensations (always check)
-    const trunkLean = this.detectTrunkLean(frames.thorax, poseData.viewOrientation);
+    const trunkLean = this.detectTrunkLean(frames.thorax, poseData.viewOrientation, movement);
     if (trunkLean) compensations.push(trunkLean);
 
     const trunkRotation = this.detectTrunkRotation(frames.thorax, poseData.viewOrientation);
@@ -159,10 +159,11 @@ export class CompensationDetectionService {
    */
   private detectTrunkLean(
     thoraxFrame: AnatomicalReferenceFrame,
-    viewOrientation?: string
+    viewOrientation?: string,
+    movement?: string
   ): CompensationPattern | null {
-    // Only detect in frontal or lateral views
-    if (viewOrientation !== 'frontal' && viewOrientation !== 'lateral') {
+    // Detect in frontal, lateral, or sagittal views
+    if (!viewOrientation || !['frontal', 'lateral', 'sagittal'].includes(viewOrientation)) {
       return null;
     }
 
@@ -172,16 +173,28 @@ export class CompensationDetectionService {
     // Reference vertical vector (true vertical = [0, 1, 0])
     const vertical: Vector3D = { x: 0, y: 1, z: 0 };
 
-    // For lateral lean, we want the lateral (coronal plane) component
-    // Project Y-axis onto coronal plane (XY plane, normal = Z-axis)
-    const coronalNormal: Vector3D = { x: 0, y: 0, z: 1 };
-    const yAxisInCoronalPlane = projectVectorOntoPlane(yAxis, coronalNormal);
+    // Calculate deviation based on view orientation
+    let deviation: number;
+    let leanType: string;
 
-    // Calculate lateral deviation
-    const lateralDeviation = angleBetweenVectors(yAxisInCoronalPlane, vertical);
+    if (viewOrientation === 'sagittal') {
+      // Sagittal view: detect forward/backward lean (flexion/extension)
+      // Project Y-axis onto sagittal plane (XY plane, normal = Z-axis)
+      const sagittalNormal: Vector3D = { x: 0, y: 0, z: 1 };
+      const yAxisInSagittalPlane = projectVectorOntoPlane(yAxis, sagittalNormal);
+      deviation = angleBetweenVectors(yAxisInSagittalPlane, vertical);
+      leanType = 'forward/backward';
+    } else {
+      // Frontal/lateral view: detect lateral lean
+      // Project Y-axis onto coronal plane (XY plane, normal = Z-axis)
+      const coronalNormal: Vector3D = { x: 0, y: 0, z: 1 };
+      const yAxisInCoronalPlane = projectVectorOntoPlane(yAxis, coronalNormal);
+      deviation = angleBetweenVectors(yAxisInCoronalPlane, vertical);
+      leanType = 'lateral';
+    }
 
     // Grade severity
-    const severity = this.gradeSeverity(lateralDeviation, 'degrees');
+    const severity = this.gradeSeverity(deviation, 'degrees');
 
     // Only report mild or worse
     if (severity === 'minimal') {
@@ -191,10 +204,10 @@ export class CompensationDetectionService {
     return {
       type: 'trunk_lean',
       severity,
-      magnitude: lateralDeviation,
-      affectsJoint: 'thorax',
-      clinicalNote: `Lateral trunk lean of ${lateralDeviation.toFixed(1)}° detected. ` +
-        `Patient may be compensating for shoulder weakness or ROM limitation.`,
+      magnitude: deviation,
+      affectsJoint: movement || 'thorax', // Use movement context if available
+      clinicalNote: `${leanType === 'lateral' ? 'Lateral' : 'Forward/backward'} trunk lean of ${deviation.toFixed(1)}° from vertical detected. ` +
+        `This compensation may reduce true shoulder ROM and indicate weakness or mobility restriction.`,
     };
   }
 
@@ -677,7 +690,7 @@ export class CompensationDetectionService {
     unit: 'degrees' | 'cm'
   ): 'minimal' | 'mild' | 'moderate' | 'severe' {
     const thresholds = unit === 'degrees'
-      ? { mild: 5, moderate: 10, severe: 15 }
+      ? { mild: 5, moderate: 20, severe: 30 }
       : { mild: 1, moderate: 2, severe: 3 };
 
     if (magnitude < thresholds.mild) return 'minimal';
