@@ -77,6 +77,7 @@ export class CompensationDetectionService {
     }
 
     const frames = poseData.cachedAnatomicalFrames;
+    const schemaId = poseData.schemaId ?? 'movenet-17'; // Default to movenet-17 if not specified
 
     // Detect trunk compensations (always check)
     const trunkLean = this.detectTrunkLean(frames.thorax, poseData.viewOrientation);
@@ -93,7 +94,7 @@ export class CompensationDetectionService {
         poseData.landmarks,
         frames.thorax,
         side,
-        poseData.schemaId
+        schemaId
       );
       if (shoulderHiking) compensations.push(shoulderHiking);
 
@@ -101,7 +102,7 @@ export class CompensationDetectionService {
         poseData.landmarks,
         frames[`${side}_forearm`],
         side,
-        poseData.schemaId
+        schemaId
       );
       if (elbowFlexion) compensations.push(elbowFlexion);
     }
@@ -111,7 +112,7 @@ export class CompensationDetectionService {
       const hipHike = this.detectHipHike(
         poseData.landmarks,
         frames.pelvis,
-        poseData.schemaId
+        schemaId
       );
       if (hipHike) compensations.push(hipHike);
     }
