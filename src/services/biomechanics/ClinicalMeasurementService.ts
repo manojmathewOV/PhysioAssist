@@ -733,11 +733,21 @@ export class ClinicalMeasurementService {
     jointName: string
   ): CompensationPattern[] {
     // Delegate to CompensationDetectionService (Gate 10B)
-    return this.compensationDetector.detectCompensations(
+    const allCompensations = this.compensationDetector.detectCompensations(
       poseData,
       undefined, // No previous frame for static measurements
       jointName // Movement context for filtering relevant compensations
     );
+
+    // Filter compensations based on ClinicalMeasurementService's thresholds
+    // (may be different/looser than CompensationDetectionService's built-in thresholds)
+    return allCompensations.filter((comp) => {
+      const config = this.compensationConfig[comp.type];
+      if (!config) return true; // Keep if no config defined
+
+      // Check if magnitude exceeds the threshold
+      return comp.magnitude >= config.threshold;
+    });
   }
 
   // =============================================================================
