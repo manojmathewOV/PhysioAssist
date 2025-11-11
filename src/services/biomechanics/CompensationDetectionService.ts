@@ -178,9 +178,10 @@ export class CompensationDetectionService {
 
     if (viewOrientation === 'sagittal') {
       // Sagittal view: detect forward/backward lean
-      // Look at X component of Y-axis (forward/backward deviation)
-      const xDeviation = Math.abs(yAxis.x);
-      deviation = Math.asin(Math.min(xDeviation, 1)) * (180 / Math.PI);
+      // Look at Z component of Y-axis (anterior/posterior deviation)
+      // Note: In mock coordinate system, Z represents anterior/posterior axis
+      const zDeviation = Math.abs(yAxis.z ?? 0);
+      deviation = Math.asin(Math.min(zDeviation, 1)) * (180 / Math.PI);
       leanType = 'forward/backward';
     } else {
       // Frontal/lateral view: detect lateral lean
