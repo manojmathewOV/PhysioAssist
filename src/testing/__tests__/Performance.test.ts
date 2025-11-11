@@ -118,12 +118,15 @@ describe('Performance Benchmarks', () => {
       // Prime the cache
       addAnatomicalFrames(poseData, cache, anatomicalService);
 
+      // Calculate global frame for thorax calculation
+      const global = cache.get('global', poseData.landmarks, (lms) => anatomicalService.calculateGlobalFrame(lms));
+
       // Measure cache lookup
       const iterations = 1000;
       const startTime = Date.now();
 
       for (let i = 0; i < iterations; i++) {
-        cache.get('thorax', poseData.landmarks, (lms) => anatomicalService.calculateThoraxFrame(lms, poseData.schemaId));
+        cache.get('thorax', poseData.landmarks, (lms) => anatomicalService.calculateThoraxFrame(lms, global));
       }
 
       const endTime = Date.now();
@@ -341,7 +344,7 @@ describe('Performance Benchmarks', () => {
 
   describe('Memory Efficiency', () => {
     it('should handle cache eviction without memory leaks', () => {
-      const cache = new AnatomicalFrameCache({ maxSize: 50, ttl: 16 }); // Small cache
+      const cache = new AnatomicalFrameCache(50, 16); // Small cache (maxSize, ttl)
 
       // Generate many different poses
       for (let i = 0; i < 200; i++) {
@@ -365,14 +368,14 @@ function addAnatomicalFrames(
 ): ProcessedPoseData {
   const landmarks = poseData.landmarks;
 
-  const global = cache.get('global', landmarks, (lms) => anatomicalService.calculateGlobalFrame(lms, poseData.schemaId));
-  const thorax = cache.get('thorax', landmarks, (lms) => anatomicalService.calculateThoraxFrame(lms, poseData.schemaId));
+  const global = cache.get('global', landmarks, (lms) => anatomicalService.calculateGlobalFrame(lms));
+  const thorax = cache.get('thorax', landmarks, (lms) => anatomicalService.calculateThoraxFrame(lms, global));
   const pelvis = cache.get('pelvis', landmarks, (lms) => anatomicalService.calculatePelvisFrame(lms, poseData.schemaId));
   const left_humerus = cache.get('left_humerus', landmarks, (lms) =>
-    anatomicalService.calculateHumerusFrame(lms, 'left', poseData.schemaId)
+    anatomicalService.calculateHumerusFrame(lms, 'left', thorax)
   );
   const right_humerus = cache.get('right_humerus', landmarks, (lms) =>
-    anatomicalService.calculateHumerusFrame(lms, 'right', poseData.schemaId)
+    anatomicalService.calculateHumerusFrame(lms, 'right', thorax)
   );
   const left_forearm = cache.get('left_forearm', landmarks, (lms) =>
     anatomicalService.calculateForearmFrame(lms, 'left', poseData.schemaId)

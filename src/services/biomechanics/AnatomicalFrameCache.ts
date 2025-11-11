@@ -45,6 +45,7 @@ export interface CacheStats {
   maxSize: number;
   hits: number;
   misses: number;
+  evictions: number;
   hitRate: number;
   averageLookupTime: number;
   memoryUsage: number; // Estimated memory in bytes
@@ -262,6 +263,7 @@ export class AnatomicalFrameCache {
       maxSize: this.maxSize,
       hits: this.hits,
       misses: this.misses,
+      evictions: 0, // TODO: Track evictions when LRU eviction is implemented
       hitRate,
       averageLookupTime,
       memoryUsage,

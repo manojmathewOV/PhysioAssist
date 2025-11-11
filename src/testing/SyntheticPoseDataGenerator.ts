@@ -382,6 +382,31 @@ export class SyntheticPoseDataGenerator {
   }
 
   /**
+   * Generate shoulder rotation pose at specified angle
+   * TODO: Implement proper shoulder rotation pose generation
+   *
+   * @param angle Target rotation angle
+   * @param schemaId Schema identifier
+   * @param options Additional options (elbow angle, side)
+   * @returns ProcessedPoseData with known ground truth
+   */
+  public generateShoulderRotation(
+    angle: number,
+    schemaId: 'movenet-17' | 'mediapipe-33' = 'movenet-17',
+    options: {
+      elbowAngle?: number;
+      side?: 'left' | 'right';
+    } = {}
+  ): { poseData: ProcessedPoseData; groundTruth: GroundTruth } {
+    // Stub implementation - uses shoulder abduction as placeholder
+    // TODO: Implement proper shoulder rotation with elbow gating
+    return this.generateShoulderAbduction(angle, schemaId, {
+      side: options.side,
+      viewOrientation: 'frontal',
+    });
+  }
+
+  /**
    * Generate full skeleton from key joint positions
    *
    * Fills in all required landmarks (head, torso, hips, legs) based on

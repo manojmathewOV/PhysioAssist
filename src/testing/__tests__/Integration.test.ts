@@ -225,7 +225,7 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
         side: 'right',
       });
 
-      const cache = new AnatomicalFrameCache({ maxSize: 100, ttl: 1000 }); // Small cache for testing
+      const cache = new AnatomicalFrameCache(100, 1000); // Small cache for testing (maxSize, ttl)
 
       // Process all frames
       poseSequence.frames.forEach((frame) => {

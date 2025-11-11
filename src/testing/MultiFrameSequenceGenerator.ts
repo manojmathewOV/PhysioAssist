@@ -451,11 +451,11 @@ export class MultiFrameSequenceGenerator {
     );
 
     const left_humerus = this.frameCache.get('left_humerus', landmarks, (lms) =>
-      this.anatomicalService.calculateHumerusFrame(lms, 'left', poseData.schemaId)
+      this.anatomicalService.calculateHumerusFrame(lms, 'left', thorax)
     );
 
     const right_humerus = this.frameCache.get('right_humerus', landmarks, (lms) =>
-      this.anatomicalService.calculateHumerusFrame(lms, 'right', poseData.schemaId)
+      this.anatomicalService.calculateHumerusFrame(lms, 'right', thorax)
     );
 
     const left_forearm = this.frameCache.get('left_forearm', landmarks, (lms) =>
