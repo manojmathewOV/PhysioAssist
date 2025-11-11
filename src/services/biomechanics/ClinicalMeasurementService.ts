@@ -241,7 +241,12 @@ export class ClinicalMeasurementService {
 
     // 4. Total abduction: Humerus angle from vertical in scapular plane
     const humerusProjected = projectVectorOntoPlane(humerusFrame.yAxis, scapularPlane.normal);
-    const totalAbduction = angleBetweenVectors(humerusProjected, thorax.yAxis);
+    const angleFromVertical = angleBetweenVectors(humerusProjected, thorax.yAxis);
+
+    // Convert to clinical abduction angle
+    // Geometric: 0° = arm overhead, 180° = arm down
+    // Clinical: 0° = arm down, 180° = arm overhead
+    const totalAbduction = 180 - angleFromVertical;
 
     // 5. Scapular upward rotation (scapulothoracic contribution)
     const scapularRotation = this.calculateScapularUpwardRotation(poseData, thorax);
