@@ -165,7 +165,7 @@ export class ClinicalMeasurementService {
       clinicalGrade = 'excellent';
     } else if (flexionAngle >= minAcceptable) {
       clinicalGrade = 'good';
-    } else if (flexionAngle >= minAcceptable * 0.75) {
+    } else if (flexionAngle > minAcceptable * 0.75) {
       clinicalGrade = 'fair';
     } else {
       clinicalGrade = 'limited';
