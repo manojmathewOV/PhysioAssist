@@ -1083,7 +1083,8 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
 
       const trunkComp = measurement.compensations.find((c) => c.type === 'trunk_lean');
-      expect(trunkComp?.affectsJoint).toBe('left_shoulder_flexion');
+      // Trunk lean affects the thorax, not the specific joint being measured
+      expect(trunkComp?.affectsJoint).toBe('thorax');
     });
 
     it('should detect multiple compensations simultaneously', () => {

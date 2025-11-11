@@ -739,15 +739,42 @@ export class ClinicalMeasurementService {
       jointName // Movement context for filtering relevant compensations
     );
 
-    // Filter compensations based on ClinicalMeasurementService's thresholds
+    // Filter and adjust compensations based on ClinicalMeasurementService's thresholds
     // (may be different/looser than CompensationDetectionService's built-in thresholds)
-    return allCompensations.filter((comp) => {
-      const config = this.compensationConfig[comp.type];
-      if (!config) return true; // Keep if no config defined
+    return allCompensations
+      .filter((comp) => {
+        // Convert snake_case to camelCase for config lookup
+        const configKey = comp.type.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+        const config = this.compensationConfig[configKey as keyof typeof this.compensationConfig];
+        if (!config) return true; // Keep if no config defined
 
-      // Check if magnitude exceeds the threshold
-      return comp.magnitude >= config.threshold;
-    });
+        // Check if magnitude exceeds the threshold
+        return comp.magnitude >= config.threshold;
+      })
+      .map((comp) => {
+        // Recalculate severity based on ClinicalMeasurementService's severityThresholds
+        const configKey = comp.type.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+        const config = this.compensationConfig[configKey as keyof typeof this.compensationConfig];
+
+        if (config && config.severityThresholds) {
+          const { minimal, mild, moderate, severe } = config.severityThresholds;
+          let newSeverity: 'minimal' | 'mild' | 'moderate' | 'severe';
+
+          if (comp.magnitude < mild) {
+            newSeverity = 'minimal';
+          } else if (comp.magnitude < moderate) {
+            newSeverity = 'mild';
+          } else if (comp.magnitude < severe) {
+            newSeverity = 'moderate';
+          } else {
+            newSeverity = 'severe';
+          }
+
+          return { ...comp, severity: newSeverity };
+        }
+
+        return comp;
+      });
   }
 
   // =============================================================================
