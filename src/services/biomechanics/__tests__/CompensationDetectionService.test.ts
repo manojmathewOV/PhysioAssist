@@ -138,8 +138,22 @@ describe('CompensationDetectionService - Gate 10B', () => {
         pelvis: createMockThoraxFrame(),
         left_humerus: undefined,
         right_humerus: undefined,
-        left_forearm: undefined,
-        right_forearm: undefined,
+        left_forearm: {
+          origin: { x: 0.35, y: 0.45, z: 0 },
+          xAxis: { x: 1, y: 0, z: 0 },
+          yAxis: { x: 0, y: 1, z: 0 },
+          zAxis: { x: 0, y: 0, z: 1 },
+          frameType: 'forearm',
+          confidence: 0.9,
+        },
+        right_forearm: {
+          origin: { x: 0.65, y: 0.45, z: 0 },
+          xAxis: { x: 1, y: 0, z: 0 },
+          yAxis: { x: 0, y: 1, z: 0 },
+          zAxis: { x: 0, y: 0, z: 1 },
+          frameType: 'forearm',
+          confidence: 0.9,
+        },
       },
     };
   }
