@@ -173,16 +173,14 @@ export class CompensationDetectionService {
     // Reference vertical vector (true vertical = [0, 1, 0])
     const vertical: Vector3D = { x: 0, y: 1, z: 0 };
 
-    // Calculate deviation based on view orientation
     let deviation: number;
     let leanType: string;
 
     if (viewOrientation === 'sagittal') {
-      // Sagittal view: detect forward/backward lean (flexion/extension)
-      // Project Y-axis onto sagittal plane (XY plane, normal = Z-axis)
-      const sagittalNormal: Vector3D = { x: 0, y: 0, z: 1 };
-      const yAxisInSagittalPlane = projectVectorOntoPlane(yAxis, sagittalNormal);
-      deviation = angleBetweenVectors(yAxisInSagittalPlane, vertical);
+      // Sagittal view: detect forward/backward lean
+      // Look at X component of Y-axis (forward/backward deviation)
+      const xDeviation = Math.abs(yAxis.x);
+      deviation = Math.asin(Math.min(xDeviation, 1)) * (180 / Math.PI);
       leanType = 'forward/backward';
     } else {
       // Frontal/lateral view: detect lateral lean
@@ -690,7 +688,7 @@ export class CompensationDetectionService {
     unit: 'degrees' | 'cm'
   ): 'minimal' | 'mild' | 'moderate' | 'severe' {
     const thresholds = unit === 'degrees'
-      ? { mild: 5, moderate: 20, severe: 30 }
+      ? { mild: 5, moderate: 10, severe: 15 }
       : { mild: 1, moderate: 2, severe: 3 };
 
     if (magnitude < thresholds.mild) return 'minimal';
