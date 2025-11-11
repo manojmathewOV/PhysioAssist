@@ -341,6 +341,11 @@ export class CompensationDetectionService {
       return null;
     }
 
+    // Check visibility
+    if (shoulder.visibility < 0.5 || ear.visibility < 0.5 || oppositeShoulder.visibility < 0.5) {
+      return null;
+    }
+
     // Calculate shoulder line tilt (deviation from horizontal)
     const shoulderLine: Vector3D = {
       x: oppositeShoulder.x - shoulder.x,
@@ -421,10 +426,13 @@ export class CompensationDetectionService {
    * 3. Detect deviation from extension
    *
    * Thresholds:
-   * - minimal: 175-180° (normal variation)
+   * - minimal: 175-180° (normal variation, <5° flexion)
    * - mild: 165-175° (5-15° flexion)
    * - moderate: 150-165° (15-30° flexion)
    * - severe: <150° (>30° flexion)
+   *
+   * Note: Elbow flexion is only checked when trunk compensations are present,
+   * to avoid false positives during resting/calibration poses
    *
    * @param landmarks Pose landmarks
    * @param forearmFrame Cached forearm frame
@@ -469,11 +477,16 @@ export class CompensationDetectionService {
       z: (wrist.z || 0) - (elbow.z || 0),
     };
 
-    const elbowAngle = angleBetweenVectors(upperArm, forearm);
+    // angleBetweenVectors returns:
+    // - 0° for straight arm (upperArm and forearm parallel, same direction)
+    // - Increases as elbow bends (90° = right angle, 180° = fully bent)
+    const geometricAngle = angleBetweenVectors(upperArm, forearm);
 
-    // Expected: ~180° (straight arm)
-    // Deviation from extension
-    const flexionAmount = 180 - elbowAngle;
+    // Flexion amount is the geometric angle directly (0° = no flexion, 30° = 30° flexion)
+    const flexionAmount = geometricAngle;
+
+    // Clinical elbow angle convention: 180° = extended, 0° = fully flexed
+    const clinicalElbowAngle = 180 - geometricAngle;
 
     // Grade severity based on flexion amount
     let severity: 'minimal' | 'mild' | 'moderate' | 'severe';
@@ -497,7 +510,7 @@ export class CompensationDetectionService {
       magnitude: flexionAmount,
       affectsJoint: `${side}_shoulder`,
       clinicalNote: `Elbow flexion of ${flexionAmount.toFixed(1)}° detected during ` +
-        `shoulder movement (current angle: ${elbowAngle.toFixed(1)}°). ` +
+        `shoulder movement (current angle: ${clinicalElbowAngle.toFixed(1)}°). ` +
         `Elbow should remain extended (~180°). May indicate shoulder weakness.`,
     };
   }
@@ -518,11 +531,11 @@ export class CompensationDetectionService {
    * 2. Calculate pelvic tilt in coronal plane
    * 3. Measure deviation from horizontal
    *
-   * Thresholds:
-   * - minimal: <3° (normal variation)
-   * - mild: 3-5°
-   * - moderate: 5-8°
-   * - severe: >8°
+   * Thresholds (vertical displacement in cm):
+   * - minimal: <3cm (normal variation)
+   * - mild: 3-5cm
+   * - moderate: 5-8cm
+   * - severe: >8cm
    *
    * @param landmarks Pose landmarks
    * @param pelvisFrame Cached pelvis frame
@@ -551,30 +564,30 @@ export class CompensationDetectionService {
       return null;
     }
 
-    // Calculate hip line (left hip to right hip)
+    // Calculate vertical displacement (Y-axis difference)
+    // Normalized coordinates: assume full body height (Y=0 to Y=1.0) represents ~170cm
+    const yDisplacement = Math.abs(rightHip.y - leftHip.y);
+    const displacementCm = yDisplacement * 170; // Convert to cm
+
+    // Calculate tilt angle for clinical note
     const hipLine: Vector3D = {
       x: rightHip.x - leftHip.x,
       y: rightHip.y - leftHip.y,
       z: (rightHip.z || 0) - (leftHip.z || 0),
     };
-
-    // In coronal plane, horizontal reference is X-axis
     const horizontal: Vector3D = { x: 1, y: 0, z: 0 };
-
-    // Project hip line onto coronal plane (XY plane)
     const coronalNormal: Vector3D = { x: 0, y: 0, z: 1 };
     const hipLineInCoronalPlane = projectVectorOntoPlane(hipLine, coronalNormal);
-
-    // Calculate angle from horizontal
     const tiltAngle = angleBetweenVectors(hipLineInCoronalPlane, horizontal);
 
-    // Grade severity (stricter thresholds for hip hike)
+    // Grade severity based on vertical displacement in cm
+    // (More clinically meaningful than angle)
     let severity: 'minimal' | 'mild' | 'moderate' | 'severe';
-    if (tiltAngle < 3) {
+    if (displacementCm < 3) {
       severity = 'minimal';
-    } else if (tiltAngle < 5) {
+    } else if (displacementCm < 5) {
       severity = 'mild';
-    } else if (tiltAngle < 8) {
+    } else if (displacementCm < 8) {
       severity = 'moderate';
     } else {
       severity = 'severe';
@@ -590,10 +603,10 @@ export class CompensationDetectionService {
     return {
       type: 'hip_hike',
       severity,
-      magnitude: tiltAngle,
+      magnitude: displacementCm,
       affectsJoint: `${side}_hip`,
-      clinicalNote: `${side === 'left' ? 'Left' : 'Right'} hip hike of ${tiltAngle.toFixed(1)}° ` +
-        `detected. May indicate hip abductor weakness or poor pelvic control.`,
+      clinicalNote: `${side === 'left' ? 'Left' : 'Right'} hip hike of ${displacementCm.toFixed(1)}cm ` +
+        `(${tiltAngle.toFixed(1)}° tilt) detected. May indicate hip abductor weakness or poor pelvic control.`,
     };
   }
 
