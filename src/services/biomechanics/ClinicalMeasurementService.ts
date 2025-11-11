@@ -475,6 +475,11 @@ export class ClinicalMeasurementService {
     // Use refactored goniometer (already plane-projected)
     const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
 
+    // Convert geometric angle to clinical flexion angle
+    // Geometric: 180° = straight, 30° = bent
+    // Clinical flexion: 0° = straight, 150° = bent
+    const flexionAngle = 180 - elbowMeasurement.angle;
+
     // Check shoulder stabilization
     const shoulderMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_shoulder`);
 
@@ -490,14 +495,14 @@ export class ClinicalMeasurementService {
     // Clinical target
     const targetAngle = this.clinicalThresholds.elbow.flexion.target;
     const minAcceptable = this.clinicalThresholds.elbow.flexion.minAcceptable;
-    const percentOfTarget = (elbowMeasurement.angle / targetAngle) * 100;
+    const percentOfTarget = (flexionAngle / targetAngle) * 100;
 
     let clinicalGrade: 'excellent' | 'good' | 'fair' | 'limited';
-    if (elbowMeasurement.angle >= targetAngle) {
+    if (flexionAngle >= targetAngle) {
       clinicalGrade = 'excellent';
-    } else if (elbowMeasurement.angle >= minAcceptable) {
+    } else if (flexionAngle >= minAcceptable) {
       clinicalGrade = 'good';
-    } else if (elbowMeasurement.angle >= minAcceptable * 0.75) {
+    } else if (flexionAngle >= minAcceptable * 0.75) {
       clinicalGrade = 'fair';
     } else {
       clinicalGrade = 'limited';
@@ -507,7 +512,7 @@ export class ClinicalMeasurementService {
       primaryJoint: {
         name: `${side}_elbow`,
         type: 'elbow',
-        angle: elbowMeasurement.angle,
+        angle: flexionAngle,
         angleType: 'flexion',
         targetAngle,
         percentOfTarget,
@@ -559,6 +564,11 @@ export class ClinicalMeasurementService {
     // Use refactored goniometer
     const kneeMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_knee`);
 
+    // Convert geometric angle to clinical flexion angle
+    // Geometric: 180° = straight, 45° = bent
+    // Clinical flexion: 0° = straight, 135° = bent
+    const flexionAngle = 180 - kneeMeasurement.angle;
+
     if (!poseData.cachedAnatomicalFrames) {
       throw new Error('cachedAnatomicalFrames not available.');
     }
@@ -566,14 +576,14 @@ export class ClinicalMeasurementService {
     // Clinical target
     const targetAngle = this.clinicalThresholds.knee.flexion.target;
     const minAcceptable = this.clinicalThresholds.knee.flexion.minAcceptable;
-    const percentOfTarget = (kneeMeasurement.angle / targetAngle) * 100;
+    const percentOfTarget = (flexionAngle / targetAngle) * 100;
 
     let clinicalGrade: 'excellent' | 'good' | 'fair' | 'limited';
-    if (kneeMeasurement.angle >= targetAngle) {
+    if (flexionAngle >= targetAngle) {
       clinicalGrade = 'excellent';
-    } else if (kneeMeasurement.angle >= minAcceptable) {
+    } else if (flexionAngle >= minAcceptable) {
       clinicalGrade = 'good';
-    } else if (kneeMeasurement.angle >= minAcceptable * 0.75) {
+    } else if (flexionAngle >= minAcceptable * 0.75) {
       clinicalGrade = 'fair';
     } else {
       clinicalGrade = 'limited';
@@ -583,7 +593,7 @@ export class ClinicalMeasurementService {
       primaryJoint: {
         name: `${side}_knee`,
         type: 'knee',
-        angle: kneeMeasurement.angle,
+        angle: flexionAngle,
         angleType: 'flexion',
         targetAngle,
         percentOfTarget,
