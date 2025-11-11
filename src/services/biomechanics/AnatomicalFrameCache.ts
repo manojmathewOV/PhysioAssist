@@ -25,8 +25,8 @@
  * );
  */
 
-import { PoseLandmark } from '@types/pose';
-import { AnatomicalReferenceFrame } from '@types/biomechanics';
+import { PoseLandmark } from '../../types/pose';
+import { AnatomicalReferenceFrame } from '../../types/biomechanics';
 
 /**
  * Cached frame entry with timestamp for TTL

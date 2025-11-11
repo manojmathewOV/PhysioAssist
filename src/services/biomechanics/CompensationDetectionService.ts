@@ -19,10 +19,10 @@
  * - Frontiers 2024 study on trunk rotational strength
  */
 
-import { ProcessedPoseData, PoseLandmark } from '@types/pose';
-import { CompensationPattern, AnatomicalReferenceFrame } from '@types/biomechanics';
-import { Vector3D } from '@types/common';
-import { angleBetweenVectors, projectVectorOntoPlane, normalizeVector, dotProduct } from '@utils/vectorMath';
+import { ProcessedPoseData, PoseLandmark } from '../../types/pose';
+import { CompensationPattern, AnatomicalReferenceFrame } from '../../types/biomechanics';
+import { Vector3D } from '../../types/common';
+import { angleBetweenVectors, projectVectorOntoPlane, normalize, dotProduct } from '../../utils/vectorMath';
 import { PoseSchemaRegistry } from '../pose/PoseSchemaRegistry';
 
 /**

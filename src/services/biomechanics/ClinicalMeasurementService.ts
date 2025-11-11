@@ -15,8 +15,8 @@
  * - AAOS (American Academy of Orthopaedic Surgeons) clinical guidelines
  */
 
-import { ProcessedPoseData } from '@types/pose';
-import { AnatomicalReferenceFrame, AnatomicalPlane } from '@types/biomechanics';
+import { ProcessedPoseData } from '../../types/pose';
+import { AnatomicalReferenceFrame, AnatomicalPlane } from '../../types/biomechanics';
 import {
   ClinicalJointMeasurement,
   ClinicalThresholds,
@@ -25,12 +25,12 @@ import {
   DEFAULT_CLINICAL_THRESHOLDS,
   DEFAULT_COMPENSATION_CONFIG,
   CompensationDetectionConfig,
-} from '@types/clinicalMeasurement';
+} from '../../types/clinicalMeasurement';
 import { GoniometerServiceV2 } from '../goniometerService.v2';
 import { AnatomicalReferenceService } from './AnatomicalReferenceService';
 import { CompensationDetectionService } from './CompensationDetectionService';
-import { Vector3D } from '@types/common';
-import { angleBetweenVectors, projectVectorOntoPlane, crossProduct, dotProduct } from '@utils/vectorMath';
+import { Vector3D } from '../../types/common';
+import { angleBetweenVectors, projectVectorOntoPlane, crossProduct, dotProduct } from '../../utils/vectorMath';
 
 /**
  * Clinical-grade joint measurement service

@@ -16,9 +16,9 @@
  */
 
 import { CompensationDetectionService } from '../CompensationDetectionService';
-import { ProcessedPoseData, PoseLandmark } from '@types/pose';
-import { AnatomicalReferenceFrame } from '@types/biomechanics';
-import { Vector3D } from '@types/common';
+import { ProcessedPoseData, PoseLandmark } from '../../../types/pose';
+import { AnatomicalReferenceFrame } from '../../../types/biomechanics';
+import { Vector3D } from '../../../types/common';
 
 describe('CompensationDetectionService - Gate 10B', () => {
   let compensationService: CompensationDetectionService;
@@ -79,8 +79,8 @@ describe('CompensationDetectionService - Gate 10B', () => {
   function createMockPoseData(config: {
     thoraxFrame?: AnatomicalReferenceFrame;
     landmarks?: Partial<Record<string, { x: number; y: number; z?: number; visibility?: number }>>;
-    viewOrientation?: 'frontal' | 'sagittal' | 'lateral' | 'posterior';
-    schemaId?: string;
+    viewOrientation?: 'frontal' | 'sagittal' | 'posterior';
+    schemaId?: 'movenet-17' | 'mediapipe-33';
   } = {}): ProcessedPoseData {
     const {
       thoraxFrame = createMockThoraxFrame(),

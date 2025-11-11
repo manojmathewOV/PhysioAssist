@@ -12,9 +12,9 @@
  * - Generate test data for edge cases
  */
 
-import { ProcessedPoseData, PoseLandmark } from '@types/pose';
-import { Vector3D } from '@types/common';
-import { GroundTruth, GroundTruthCompensation } from '@types/validation';
+import { ProcessedPoseData, PoseLandmark } from '../types/pose';
+import { Vector3D } from '../types/common';
+import { GroundTruth, GroundTruthCompensation } from '../types/validation';
 
 export class SyntheticPoseDataGenerator {
   /**
@@ -29,13 +29,13 @@ export class SyntheticPoseDataGenerator {
    */
   public generateShoulderFlexion(
     angle: number,
-    schemaId: string = 'movenet-17',
+    schemaId: 'movenet-17' | 'mediapipe-33' = 'movenet-17',
     options: {
       elbowAngle?: number; // Default: 180° (extended)
       trunkLean?: number; // Lateral trunk lean in degrees (default: 0)
       shoulderHiking?: number; // Shoulder elevation in cm (default: 0)
       side?: 'left' | 'right'; // Default: 'right'
-      viewOrientation?: 'frontal' | 'sagittal' | 'lateral'; // Default: 'sagittal'
+      viewOrientation?: 'frontal' | 'sagittal' | 'posterior'; // Default: 'sagittal'
     } = {}
   ): { poseData: ProcessedPoseData; groundTruth: GroundTruth } {
     const {
@@ -128,7 +128,7 @@ export class SyntheticPoseDataGenerator {
    */
   public generateShoulderAbduction(
     angle: number,
-    schemaId: string = 'movenet-17',
+    schemaId: 'movenet-17' | 'mediapipe-33' = 'movenet-17',
     options: {
       scapularRotation?: number; // Scapular upward rotation (default: auto-calculated)
       trunkLean?: number;
@@ -226,7 +226,7 @@ export class SyntheticPoseDataGenerator {
    */
   public generateElbowFlexion(
     angle: number,
-    schemaId: string = 'movenet-17',
+    schemaId: 'movenet-17' | 'mediapipe-33' = 'movenet-17',
     options: {
       side?: 'left' | 'right';
       viewOrientation?: 'sagittal' | 'frontal';
@@ -307,7 +307,7 @@ export class SyntheticPoseDataGenerator {
    */
   public generateKneeFlexion(
     angle: number,
-    schemaId: string = 'movenet-17',
+    schemaId: 'movenet-17' | 'mediapipe-33' = 'movenet-17',
     options: {
       side?: 'left' | 'right';
       hipHike?: number; // Hip hike in degrees

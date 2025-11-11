@@ -15,9 +15,9 @@
  */
 
 import { ClinicalMeasurementService } from '../ClinicalMeasurementService';
-import { ProcessedPoseData, PoseLandmark } from '@types/pose';
-import { AnatomicalReferenceFrame } from '@types/biomechanics';
-import { DEFAULT_CLINICAL_THRESHOLDS } from '@types/clinicalMeasurement';
+import { ProcessedPoseData, PoseLandmark } from '../../../types/pose';
+import { AnatomicalReferenceFrame } from '../../../types/biomechanics';
+import { DEFAULT_CLINICAL_THRESHOLDS } from '../../../types/clinicalMeasurement';
 
 describe('ClinicalMeasurementService - Gate 10A', () => {
   let clinicalService: ClinicalMeasurementService;

@@ -14,8 +14,8 @@
  */
 
 import { AnatomicalFrameCache, CacheStats } from '../AnatomicalFrameCache';
-import { AnatomicalReferenceFrame } from '@types/biomechanics';
-import { PoseLandmark } from '@types/pose';
+import { AnatomicalReferenceFrame } from '../../../types/biomechanics';
+import { PoseLandmark } from '../../../types/pose';
 
 describe('AnatomicalFrameCache', () => {
   /**

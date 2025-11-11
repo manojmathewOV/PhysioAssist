@@ -1,6 +1,6 @@
 import { AnatomicalReferenceService } from '../AnatomicalReferenceService';
-import { PoseLandmark } from '@types/pose';
-import { dotProduct, magnitude } from '@utils/vectorMath';
+import { PoseLandmark } from '../../../types/pose';
+import { dotProduct, magnitude } from '../../../utils/vectorMath';
 
 /**
  * Create synthetic pose data for testing

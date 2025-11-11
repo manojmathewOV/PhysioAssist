@@ -1,6 +1,6 @@
-import { PoseLandmark } from '@types/pose';
-import { AnatomicalReferenceFrame, AnatomicalPlane } from '@types/biomechanics';
-import { midpoint3D, subtract3D, normalize, crossProduct } from '@utils/vectorMath';
+import { PoseLandmark } from '../../types/pose';
+import { AnatomicalReferenceFrame, AnatomicalPlane } from '../../types/biomechanics';
+import { midpoint3D, subtract3D, normalize, crossProduct } from '../../utils/vectorMath';
 
 /**
  * Anatomical Reference Frame Service
