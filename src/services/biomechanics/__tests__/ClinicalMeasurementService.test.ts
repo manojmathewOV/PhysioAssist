@@ -147,6 +147,10 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
     const trunkLeanRad = (trunkLean * Math.PI) / 180;
     const trunkRotationRad = (trunkRotation * Math.PI) / 180;
 
+    // For sagittal view, trunkLean should create anterior/posterior tilt (Z-axis deviation)
+    // For frontal view, trunkLean should create lateral tilt (X-axis deviation)
+    const isSagittal = viewOrientation === 'sagittal';
+
     const thoraxFrame: AnatomicalReferenceFrame = {
       origin: { x: 0.5, y: 0.3, z: 0 },
       xAxis: {
@@ -155,9 +159,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
         z: Math.sin(trunkRotationRad),
       },
       yAxis: {
-        x: -Math.sin(trunkLeanRad),
+        x: isSagittal ? 0 : -Math.sin(trunkLeanRad), // Lateral tilt only in frontal view
         y: Math.cos(trunkLeanRad),
-        z: 0,
+        z: isSagittal ? Math.sin(trunkLeanRad) : 0, // Anterior/posterior tilt only in sagittal view
       },
       zAxis: {
         x: 0,
