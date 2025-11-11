@@ -89,7 +89,7 @@ export interface QualityDegradation {
   meanQuality: number; // Average quality across sequence
   minQuality: number; // Minimum quality encountered
   degradationRate: number; // Change in quality per second
-  framesBelow Threshold: number; // Count of frames with quality < 0.7
+  framesBelowThreshold: number; // Count of frames with quality < 0.7
   qualityDropouts: number; // Count of sudden quality drops (>0.2 drop)
   passed: boolean; // True if quality remains acceptable throughout
 }

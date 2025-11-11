@@ -58,7 +58,7 @@ export class TemporalConsistencyAnalyzer {
       issues.push(`Trajectory mismatch: expected ${expectedPattern}, observed ${trajectory.observedPattern}`);
     }
     if (!quality.passed) {
-      issues.push(`Quality degradation: ${quality.qualityDropouts} dropouts, ${quality.framesBelow Threshold} low-quality frames`);
+      issues.push(`Quality degradation: ${quality.qualityDropouts} dropouts, ${quality.framesBelowThreshold} low-quality frames`);
     }
 
     const persistentCompensations = compensations.filter((c) => c.isPersistent);
@@ -391,7 +391,7 @@ export class TemporalConsistencyAnalyzer {
         meanQuality: 1.0,
         minQuality: 1.0,
         degradationRate: 0,
-        framesBelow Threshold: 0,
+        framesBelowThreshold: 0,
         qualityDropouts: 0,
         passed: true,
       };
@@ -410,7 +410,7 @@ export class TemporalConsistencyAnalyzer {
     const degradationRate = totalDegradation / duration;
 
     // Count frames below threshold
-    const framesBelow Threshold = qualities.filter((q) => q < this.config.minQualityScore).length;
+    const framesBelowThreshold = qualities.filter((q) => q < this.config.minQualityScore).length;
 
     // Count quality dropouts (sudden drops >0.2)
     let qualityDropouts = 0;
@@ -421,7 +421,7 @@ export class TemporalConsistencyAnalyzer {
     }
 
     const passed =
-      framesBelow Threshold === 0 && qualityDropouts <= this.config.maxQualityDropouts && meanQuality >= this.config.minQualityScore;
+      framesBelowThreshold === 0 && qualityDropouts <= this.config.maxQualityDropouts && meanQuality >= this.config.minQualityScore;
 
     return {
       initialQuality,
@@ -429,7 +429,7 @@ export class TemporalConsistencyAnalyzer {
       meanQuality,
       minQuality,
       degradationRate,
-      framesBelow Threshold,
+      framesBelowThreshold,
       qualityDropouts,
       passed,
     };

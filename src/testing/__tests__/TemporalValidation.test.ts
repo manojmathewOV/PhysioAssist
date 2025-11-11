@@ -299,7 +299,7 @@ describe('TemporalValidationPipeline - Gate 10D', () => {
       const measurementSequence = generator.convertToMeasurementSequence(degradedSequence, 'knee_flexion');
       const result = analyzer.analyzeSequence(measurementSequence, degradedSequence.frames, 'increasing');
 
-      expect(result.quality.framesBelow Threshold).toBeGreaterThan(0);
+      expect(result.quality.framesBelowThreshold).toBeGreaterThan(0);
       expect(result.quality.meanQuality).toBeLessThan(result.quality.initialQuality);
     });
   });
