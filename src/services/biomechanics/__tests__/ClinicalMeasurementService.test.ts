@@ -117,8 +117,19 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       { x: 0.40, y: 0.8, z: 0, visibility: 0.9, index: 13, name: 'left_knee' },
       { x: 0.60, y: 0.8, z: 0, visibility: 0.9, index: 14, name: 'right_knee' },
 
-      // Ankles
-      { x: 0.38, y: 1.0, z: 0, visibility: 0.9, index: 15, name: 'left_ankle' },
+      // Ankles - position based on knee angle
+      // Simplified: for straight leg (180°), ankle continues downward
+      // For bent knee, ankle moves backward (decreased X)
+      // Upper leg: hip(0.42,0.6) -> knee(0.40,0.8), length ≈ 0.2
+      // Lower leg: knee -> ankle, length ≈ 0.2
+      {
+        x: 0.38 - (180 - kneeAngle) * 0.001, // Bend backward as knee flexes
+        y: 1.0,
+        z: 0,
+        visibility: 0.9,
+        index: 15,
+        name: 'left_ankle',
+      },
       { x: 0.62, y: 1.0, z: 0, visibility: 0.9, index: 16, name: 'right_ankle' },
     ];
 
