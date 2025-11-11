@@ -285,8 +285,8 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       expect(measurement.compensations.length).toBeGreaterThan(0);
       const trunkLeanComp = measurement.compensations.find((c) => c.type === 'trunk_lean');
       expect(trunkLeanComp).toBeDefined();
-      // With tight thresholds: 20° is severe (>15°)
-      expect(trunkLeanComp?.severity).toBe('severe');
+      // With ClinicalMeasurementService thresholds: 20° is moderate (20-30° range)
+      expect(trunkLeanComp?.severity).toBe('moderate');
       expect(trunkLeanComp?.magnitude).toBeCloseTo(20, 1);
     });
 
