@@ -424,14 +424,14 @@ function addAnatomicalFrames(
 ): ProcessedPoseData {
   const landmarks = poseData.landmarks;
 
-  const global = cache.get('global', landmarks, (lms) => anatomicalService.calculateGlobalFrame(lms, poseData.schemaId));
-  const thorax = cache.get('thorax', landmarks, (lms) => anatomicalService.calculateThoraxFrame(lms, poseData.schemaId));
+  const global = cache.get('global', landmarks, (lms) => anatomicalService.calculateGlobalFrame(lms));
+  const thorax = cache.get('thorax', landmarks, (lms) => anatomicalService.calculateThoraxFrame(lms, global));
   const pelvis = cache.get('pelvis', landmarks, (lms) => anatomicalService.calculatePelvisFrame(lms, poseData.schemaId));
   const left_humerus = cache.get('left_humerus', landmarks, (lms) =>
-    anatomicalService.calculateHumerusFrame(lms, 'left', poseData.schemaId)
+    anatomicalService.calculateHumerusFrame(lms, 'left', thorax)
   );
   const right_humerus = cache.get('right_humerus', landmarks, (lms) =>
-    anatomicalService.calculateHumerusFrame(lms, 'right', poseData.schemaId)
+    anatomicalService.calculateHumerusFrame(lms, 'right', thorax)
   );
   const left_forearm = cache.get('left_forearm', landmarks, (lms) =>
     anatomicalService.calculateForearmFrame(lms, 'left', poseData.schemaId)

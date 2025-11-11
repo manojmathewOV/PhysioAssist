@@ -610,11 +610,11 @@ export class ValidationPipeline {
 
     // Calculate anatomical frames using cache
     const global = this.frameCache.get('global', landmarks, (lms) =>
-      this.anatomicalService.calculateGlobalFrame(lms, poseData.schemaId)
+      this.anatomicalService.calculateGlobalFrame(lms)
     );
 
     const thorax = this.frameCache.get('thorax', landmarks, (lms) =>
-      this.anatomicalService.calculateThoraxFrame(lms, poseData.schemaId)
+      this.anatomicalService.calculateThoraxFrame(lms, global)
     );
 
     const pelvis = this.frameCache.get('pelvis', landmarks, (lms) =>
