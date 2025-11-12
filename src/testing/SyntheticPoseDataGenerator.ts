@@ -262,10 +262,15 @@ export class SyntheticPoseDataGenerator {
     const upperArmLength = 0.25;
     const forearmLength = 0.25;
 
+    // Apply view-orientation-based geometry (same as shoulder flexion)
     const shoulder: Vector3D = {
-      x: side === 'right' ? hipMidpoint.x + 0.15 : hipMidpoint.x - 0.15,
+      x: viewOrientation === 'sagittal'
+        ? hipMidpoint.x
+        : (side === 'right' ? hipMidpoint.x + 0.15 : hipMidpoint.x - 0.15),
       y: hipMidpoint.y - shoulderHeight,
-      z: hipMidpoint.z,
+      z: viewOrientation === 'sagittal'
+        ? (side === 'right' ? 0.65 : 0.35)
+        : hipMidpoint.z,
     };
 
     // Elbow hanging down (shoulder at ~0° flexion)
@@ -341,11 +346,12 @@ export class SyntheticPoseDataGenerator {
     const shinLength = 0.35;
 
     // Hip position (with optional hike)
+    // Knee flexion is always sagittal view, so hips separated in Z (lateral)
     const hipY = hipMidpoint.y + hipHike * 0.01;
     const hip: Vector3D = {
-      x: side === 'right' ? hipMidpoint.x + 0.08 : hipMidpoint.x - 0.08,
+      x: hipMidpoint.x, // Centered for sagittal view
       y: hipY,
-      z: hipMidpoint.z,
+      z: side === 'right' ? 0.65 : 0.35, // Lateral separation
     };
 
     // Knee hanging down (hip at 0° flexion, standing position)
@@ -720,13 +726,14 @@ export class SyntheticPoseDataGenerator {
     const landmarks: PoseLandmark[] = [];
 
     // Calculate opposite hip position (with hip hike)
+    // For sagittal view, opposite hip is at opposite Z (lateral) position
     const oppositeHipY =
       side === 'right' ? hip.y - hipHike * 0.01 : hip.y + hipHike * 0.01;
 
     const oppositeHip: Vector3D = {
-      x: side === 'right' ? hipMidpoint.x - 0.08 : hipMidpoint.x + 0.08,
+      x: hipMidpoint.x, // Centered for sagittal view
       y: oppositeHipY,
-      z: hip.z,
+      z: side === 'right' ? 0.35 : 0.65, // Opposite lateral position
     };
 
     // MoveNet-17 keypoints (simplified for knee testing)
@@ -773,33 +780,33 @@ export class SyntheticPoseDataGenerator {
           name: 'right_ear',
         },
         {
-          x: hipMidpoint.x - 0.15,
+          x: hipMidpoint.x, // Sagittal view: centered
           y: hipMidpoint.y - 0.4,
-          z: 0.5,
+          z: 0.35, // Sagittal view: lateral separation
           visibility: 0.95,
           index: 5,
           name: 'left_shoulder',
         },
         {
-          x: hipMidpoint.x + 0.15,
+          x: hipMidpoint.x, // Sagittal view: centered
           y: hipMidpoint.y - 0.4,
-          z: 0.5,
+          z: 0.65, // Sagittal view: lateral separation
           visibility: 0.95,
           index: 6,
           name: 'right_shoulder',
         },
         {
-          x: hipMidpoint.x - 0.15,
+          x: hipMidpoint.x, // Sagittal view: centered
           y: hipMidpoint.y - 0.25,
-          z: 0.5,
+          z: 0.35, // Sagittal view: lateral separation
           visibility: 0.94,
           index: 7,
           name: 'left_elbow',
         },
         {
-          x: hipMidpoint.x + 0.15,
+          x: hipMidpoint.x, // Sagittal view: centered
           y: hipMidpoint.y - 0.25,
-          z: 0.5,
+          z: 0.65, // Sagittal view: lateral separation
           visibility: 0.94,
           index: 8,
           name: 'right_elbow',
