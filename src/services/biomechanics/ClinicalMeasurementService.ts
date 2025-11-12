@@ -123,7 +123,13 @@ export class ClinicalMeasurementService {
     const humerusProjected = projectVectorOntoPlane(humerusVector, sagittalPlane.normal);
 
     // 5. Calculate angle from vertical (thorax Y-axis)
-    const flexionAngle = angleBetweenVectors(humerusProjected, thorax.yAxis);
+    const angleFromUp = angleBetweenVectors(humerusProjected, thorax.yAxis);
+
+    // Convert to clinical flexion angle (measured from arm-down position)
+    // Clinical: 0° = arm down, 90° = horizontal, 180° = overhead
+    // angleFromUp: 0° = overhead, 90° = horizontal, 180° = down
+    const flexionAngle = 180 - angleFromUp;
+    console.log(`[Test] angleFromUp: ${angleFromUp.toFixed(2)}°, flexion: ${flexionAngle.toFixed(2)}°`);
 
     // 6. Measure secondary joints (elbow should be extended)
     const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);

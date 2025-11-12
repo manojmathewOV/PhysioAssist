@@ -61,19 +61,22 @@ export class SyntheticPoseDataGenerator {
     };
 
     // Calculate elbow position based on shoulder flexion angle
-    // Flexion is rotation in sagittal plane (around Z-axis)
-    const flexionRad = (angle * Math.PI) / 180;
+    // Clinical convention: 0° = arm down, 90° = horizontal forward, 180° = overhead
+    // Convert to angle from horizontal: angleFromHoriz = clinical - 90°
+    const angleFromHorizontalRad = ((angle - 90) * Math.PI) / 180;
     const elbow: Vector3D = {
-      x: shoulder.x + upperArmLength * Math.sin(flexionRad),
-      y: shoulder.y - upperArmLength * Math.cos(flexionRad),
+      x: shoulder.x + upperArmLength * Math.cos(angleFromHorizontalRad), // Forward component
+      y: shoulder.y - upperArmLength * Math.sin(angleFromHorizontalRad), // Vertical component (Y+ is down, so - for up)
       z: shoulder.z,
     };
 
     // Calculate wrist position based on elbow angle
+    // Forearm continues in same direction as upper arm, adjusted by elbow bend
     const elbowFlexionRad = ((180 - elbowAngle) * Math.PI) / 180;
+    const forearmAngleFromHorizontalRad = angleFromHorizontalRad + elbowFlexionRad;
     const wrist: Vector3D = {
-      x: elbow.x + forearmLength * Math.sin(flexionRad + elbowFlexionRad),
-      y: elbow.y - forearmLength * Math.cos(flexionRad + elbowFlexionRad),
+      x: elbow.x + forearmLength * Math.cos(forearmAngleFromHorizontalRad),
+      y: elbow.y - forearmLength * Math.sin(forearmAngleFromHorizontalRad),
       z: elbow.z,
     };
 
@@ -100,7 +103,7 @@ export class SyntheticPoseDataGenerator {
     const groundTruth: GroundTruth = {
       primaryMeasurement: {
         joint: `${side}_shoulder`,
-        angle,
+        angle, // This is the flexion angle as input (e.g., 120°)
         plane: 'sagittal',
         movement: 'flexion',
       },
