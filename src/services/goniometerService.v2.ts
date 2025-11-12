@@ -31,8 +31,6 @@ import {
   angleBetweenVectors,
   projectVectorOntoPlane,
   dotProduct,
-  normalize,
-  crossProduct,
 } from '@utils/vectorMath';
 import { PoseSchemaRegistry } from './pose/PoseSchemaRegistry';
 import { AnatomicalReferenceService } from './biomechanics/AnatomicalReferenceService';
@@ -105,12 +103,20 @@ export class GoniometerServiceV2 {
     jointName: string
   ): JointAngleMeasurement {
     // 1. Get schema-aware landmark indices
-    const indices = this.getJointLandmarkIndices(jointName, poseData.schemaId || 'movenet-17');
+    const indices = this.getJointLandmarkIndices(
+      jointName,
+      poseData.schemaId || 'movenet-17'
+    );
 
-    // 2. Get landmarks
-    const pointA = poseData.landmarks[indices.point1];
-    const pointB = poseData.landmarks[indices.joint];
-    const pointC = poseData.landmarks[indices.point2];
+    // 2. Get landmarks by index property (not array position)
+    const pointA = poseData.landmarks.find((lm) => lm.index === indices.point1);
+    const pointB = poseData.landmarks.find((lm) => lm.index === indices.joint);
+    const pointC = poseData.landmarks.find((lm) => lm.index === indices.point2);
+
+    // 2a. Check if all landmarks exist
+    if (!pointA || !pointB || !pointC) {
+      throw new Error(`Missing required landmarks for ${jointName}`);
+    }
 
     // 3. Check confidence
     if (!this.meetsConfidenceThreshold([pointA, pointB, pointC])) {
@@ -139,9 +145,7 @@ export class GoniometerServiceV2 {
 
     // 8. Temporal smoothing (if enabled)
     const smoothedAngle =
-      this.config.smoothingWindow > 1
-        ? this.smoothAngle(jointName, angle)
-        : angle;
+      this.config.smoothingWindow > 1 ? this.smoothAngle(jointName, angle) : angle;
 
     return {
       jointName,
@@ -191,7 +195,9 @@ export class GoniometerServiceV2 {
     const humerusFrame = frames[`${side}_humerus`];
 
     if (!humerusFrame) {
-      throw new Error(`Humerus frame not available for ${side} side. Check landmark visibility.`);
+      throw new Error(
+        `Humerus frame not available for ${side} side. Check landmark visibility.`
+      );
     }
 
     // Construct rotation matrix: R_humerus_wrt_thorax

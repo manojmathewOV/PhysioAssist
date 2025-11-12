@@ -62,8 +62,8 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       { x: 0.5, y: 0.2, z: 0, visibility: 0.9, index: 0, name: 'nose' },
       { x: 0.45, y: 0.18, z: 0, visibility: 0.9, index: 1, name: 'left_eye' },
       { x: 0.55, y: 0.18, z: 0, visibility: 0.9, index: 2, name: 'right_eye' },
-      { x: 0.42, y: 0.20, z: 0, visibility: 0.9, index: 3, name: 'left_ear' },
-      { x: 0.58, y: 0.20, z: 0, visibility: 0.9, index: 4, name: 'right_ear' },
+      { x: 0.42, y: 0.2, z: 0, visibility: 0.9, index: 3, name: 'left_ear' },
+      { x: 0.58, y: 0.2, z: 0, visibility: 0.9, index: 4, name: 'right_ear' },
 
       // Left shoulder (index 5)
       { x: 0.4, y: 0.3, z: 0, visibility: 0.9, index: 5, name: 'left_shoulder' },
@@ -79,12 +79,14 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       // Left elbow (index 7) - position based on shoulder angle
       {
-        x: shoulderAbduction !== 0
-          ? 0.4 - Math.sin((shoulderAbduction * Math.PI) / 180) * 0.2 // Lateral for abduction
-          : 0.4 + Math.sin((shoulderFlexion * Math.PI) / 180) * 0.2, // Forward for flexion
-        y: shoulderAbduction !== 0
-          ? 0.3 - Math.cos((shoulderAbduction * Math.PI) / 180) * 0.2 // Upward for abduction
-          : 0.3 + Math.cos((shoulderFlexion * Math.PI) / 180) * 0.2, // Downward for flexion
+        x:
+          shoulderAbduction !== 0
+            ? 0.4 - Math.sin((shoulderAbduction * Math.PI) / 180) * 0.2 // Lateral for abduction
+            : 0.4 + Math.sin((shoulderFlexion * Math.PI) / 180) * 0.2, // Forward for flexion
+        y:
+          shoulderAbduction !== 0
+            ? 0.3 - Math.cos((shoulderAbduction * Math.PI) / 180) * 0.2 // Upward for abduction
+            : 0.3 + Math.cos((shoulderFlexion * Math.PI) / 180) * 0.2, // Downward for flexion
         z: 0,
         visibility: 0.9,
         index: 7,
@@ -95,12 +97,22 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       // Left wrist (index 9) - position based on elbow and shoulder angles
       {
-        x: shoulderAbduction !== 0
-          ? 0.4 - Math.sin((shoulderAbduction * Math.PI) / 180) * 0.2 - Math.sin((shoulderAbduction * Math.PI) / 180) * 0.15
-          : 0.4 + Math.sin((shoulderFlexion * Math.PI) / 180) * 0.2 + Math.sin((elbowAngle * Math.PI) / 180) * 0.15,
-        y: shoulderAbduction !== 0
-          ? 0.3 - Math.cos((shoulderAbduction * Math.PI) / 180) * 0.2 - Math.cos((shoulderAbduction * Math.PI) / 180) * 0.15
-          : 0.3 + Math.cos((shoulderFlexion * Math.PI) / 180) * 0.2 + Math.cos((elbowAngle * Math.PI) / 180) * 0.15,
+        x:
+          shoulderAbduction !== 0
+            ? 0.4 -
+              Math.sin((shoulderAbduction * Math.PI) / 180) * 0.2 -
+              Math.sin((shoulderAbduction * Math.PI) / 180) * 0.15
+            : 0.4 +
+              Math.sin((shoulderFlexion * Math.PI) / 180) * 0.2 +
+              Math.sin((elbowAngle * Math.PI) / 180) * 0.15,
+        y:
+          shoulderAbduction !== 0
+            ? 0.3 -
+              Math.cos((shoulderAbduction * Math.PI) / 180) * 0.2 -
+              Math.cos((shoulderAbduction * Math.PI) / 180) * 0.15
+            : 0.3 +
+              Math.cos((shoulderFlexion * Math.PI) / 180) * 0.2 +
+              Math.cos((elbowAngle * Math.PI) / 180) * 0.15,
         z: 0,
         visibility: 0.9,
         index: 9,
@@ -114,8 +126,8 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       { x: 0.58, y: 0.6, z: 0, visibility: 0.9, index: 12, name: 'right_hip' },
 
       // Knees
-      { x: 0.40, y: 0.8, z: 0, visibility: 0.9, index: 13, name: 'left_knee' },
-      { x: 0.60, y: 0.8, z: 0, visibility: 0.9, index: 14, name: 'right_knee' },
+      { x: 0.4, y: 0.8, z: 0, visibility: 0.9, index: 13, name: 'left_knee' },
+      { x: 0.6, y: 0.8, z: 0, visibility: 0.9, index: 14, name: 'right_knee' },
 
       // Ankles - position based on knee angle
       // Simplified: for straight leg (180°), ankle continues downward
@@ -192,7 +204,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
           }
         : {
             x: Math.sin(primaryAngleRad),
-            y: Math.cos(primaryAngleRad),
+            y: -Math.cos(primaryAngleRad), // Negative for proper clinical angle (0° = down, 180° = up)
             z: 0,
           },
       zAxis: { x: 0, y: 0, z: 1 },
@@ -283,7 +295,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
 
       expect(measurement.compensations.length).toBeGreaterThan(0);
-      const trunkLeanComp = measurement.compensations.find((c) => c.type === 'trunk_lean');
+      const trunkLeanComp = measurement.compensations.find(
+        (c) => c.type === 'trunk_lean'
+      );
       expect(trunkLeanComp).toBeDefined();
       // With ClinicalMeasurementService thresholds: 20° is moderate (20-30° range)
       expect(trunkLeanComp?.severity).toBe('moderate');
@@ -299,7 +313,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
 
-      const elbowJoint = measurement.secondaryJoints['left_elbow'];
+      const elbowJoint = measurement.secondaryJoints.left_elbow;
       expect(elbowJoint).toBeDefined();
       expect(elbowJoint.withinTolerance).toBe(false);
       expect(elbowJoint.warning).toBeDefined();
@@ -444,7 +458,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       expect(measurement.primaryJoint.components?.rhythmNormal).toBe(false);
       expect(measurement.compensations.length).toBeGreaterThan(0);
 
-      const hikingComp = measurement.compensations.find((c) => c.type === 'shoulder_hiking');
+      const hikingComp = measurement.compensations.find(
+        (c) => c.type === 'shoulder_hiking'
+      );
       expect(hikingComp).toBeDefined();
     });
 
@@ -491,7 +507,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const measurement = clinicalService.measureShoulderAbduction(poseData, 'left');
 
-      const trunkLeanComp = measurement.compensations.find((c) => c.type === 'trunk_lean');
+      const trunkLeanComp = measurement.compensations.find(
+        (c) => c.type === 'trunk_lean'
+      );
       expect(trunkLeanComp).toBeDefined();
     });
 
@@ -502,7 +520,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       });
 
       // Remove right shoulder landmark
-      poseData.landmarks = poseData.landmarks.filter((lm) => lm.name !== 'right_shoulder');
+      poseData.landmarks = poseData.landmarks.filter(
+        (lm) => lm.name !== 'right_shoulder'
+      );
 
       const measurement = clinicalService.measureShoulderAbduction(poseData, 'left');
 
@@ -532,7 +552,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const measurement = clinicalService.measureShoulderAbduction(poseData, 'left');
 
-      const hikingComp = measurement.compensations.find((c) => c.type === 'shoulder_hiking');
+      const hikingComp = measurement.compensations.find(
+        (c) => c.type === 'shoulder_hiking'
+      );
       expect(hikingComp?.clinicalNote).toContain('scapulohumeral rhythm');
     });
 
@@ -562,7 +584,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       const measurement = clinicalService.measureShoulderRotation(poseData, 'left');
 
       expect(measurement.primaryJoint.type).toBe('shoulder');
-      expect(measurement.primaryJoint.angleType).toMatch(/external_rotation|internal_rotation/);
+      expect(measurement.primaryJoint.angleType).toMatch(
+        /external_rotation|internal_rotation/
+      );
       expect(measurement.primaryJoint.angle).toBeDefined();
     });
 
@@ -574,7 +598,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const measurement = clinicalService.measureShoulderRotation(poseData, 'left', 90);
 
-      const elbowJoint = measurement.secondaryJoints['left_elbow'];
+      const elbowJoint = measurement.secondaryJoints.left_elbow;
       expect(elbowJoint).toBeDefined();
       expect(elbowJoint.purpose).toBe('gating');
       expect(elbowJoint.withinTolerance).toBe(true);
@@ -588,7 +612,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const measurement = clinicalService.measureShoulderRotation(poseData, 'left', 90);
 
-      const elbowJoint = measurement.secondaryJoints['left_elbow'];
+      const elbowJoint = measurement.secondaryJoints.left_elbow;
       expect(elbowJoint.withinTolerance).toBe(false);
       expect(elbowJoint.warning).toContain('should be at 90°');
     });
@@ -625,7 +649,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const measurement = clinicalService.measureShoulderRotation(poseData, 'left');
 
-      expect(measurement.primaryJoint.angleType).toMatch(/external_rotation|internal_rotation/);
+      expect(measurement.primaryJoint.angleType).toMatch(
+        /external_rotation|internal_rotation/
+      );
       expect(measurement.primaryJoint.signedAngle).toBeDefined();
     });
 
@@ -661,8 +687,10 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const measurement = clinicalService.measureShoulderRotation(poseData, 'left', 90);
 
-      const elbowJoint = measurement.secondaryJoints['left_elbow'];
-      expect(elbowJoint.tolerance).toBe(DEFAULT_CLINICAL_THRESHOLDS.shoulder.externalRotation.elbowAngleTolerance);
+      const elbowJoint = measurement.secondaryJoints.left_elbow;
+      expect(elbowJoint.tolerance).toBe(
+        DEFAULT_CLINICAL_THRESHOLDS.shoulder.externalRotation.elbowAngleTolerance
+      );
     });
 
     it('should measure right shoulder rotation', () => {
@@ -705,7 +733,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const measurement = clinicalService.measureElbowFlexion(poseData, 'left');
 
-      expect(measurement.primaryJoint.targetAngle).toBe(DEFAULT_CLINICAL_THRESHOLDS.elbow.flexion.target);
+      expect(measurement.primaryJoint.targetAngle).toBe(
+        DEFAULT_CLINICAL_THRESHOLDS.elbow.flexion.target
+      );
       expect(measurement.primaryJoint.percentOfTarget).toBeCloseTo(90, 0);
     });
 
@@ -728,8 +758,8 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const measurement = clinicalService.measureElbowFlexion(poseData, 'left');
 
-      expect(measurement.secondaryJoints['left_shoulder']).toBeDefined();
-      expect(measurement.secondaryJoints['left_shoulder'].purpose).toBe('reference');
+      expect(measurement.secondaryJoints.left_shoulder).toBeDefined();
+      expect(measurement.secondaryJoints.left_shoulder.purpose).toBe('reference');
     });
 
     it('should use sagittal plane measurement', () => {
@@ -805,7 +835,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const measurement = clinicalService.measureKneeFlexion(poseData, 'left');
 
-      expect(measurement.primaryJoint.targetAngle).toBe(DEFAULT_CLINICAL_THRESHOLDS.knee.flexion.target);
+      expect(measurement.primaryJoint.targetAngle).toBe(
+        DEFAULT_CLINICAL_THRESHOLDS.knee.flexion.target
+      );
       expect(measurement.primaryJoint.percentOfTarget).toBeCloseTo(88.9, 0);
     });
 
@@ -964,8 +996,14 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       });
       poseDataWithDepth.hasDepth = true;
 
-      const measurementNoDepth = clinicalService.measureShoulderFlexion(poseDataNoDepth, 'left');
-      const measurementWithDepth = clinicalService.measureShoulderFlexion(poseDataWithDepth, 'left');
+      const measurementNoDepth = clinicalService.measureShoulderFlexion(
+        poseDataNoDepth,
+        'left'
+      );
+      const measurementWithDepth = clinicalService.measureShoulderFlexion(
+        poseDataWithDepth,
+        'left'
+      );
 
       expect(measurementWithDepth.quality.depthReliability).toBeGreaterThan(
         measurementNoDepth.quality.depthReliability
@@ -1054,7 +1092,9 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
 
-      const rotationComp = measurement.compensations.find((c) => c.type === 'trunk_rotation');
+      const rotationComp = measurement.compensations.find(
+        (c) => c.type === 'trunk_rotation'
+      );
       expect(rotationComp).toBeDefined();
       expect(rotationComp?.magnitude).toBeCloseTo(20, 2);
     });
@@ -1098,8 +1138,12 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
 
       expect(measurement.compensations.length).toBeGreaterThanOrEqual(2);
-      expect(measurement.compensations.find((c) => c.type === 'trunk_lean')).toBeDefined();
-      expect(measurement.compensations.find((c) => c.type === 'trunk_rotation')).toBeDefined();
+      expect(
+        measurement.compensations.find((c) => c.type === 'trunk_lean')
+      ).toBeDefined();
+      expect(
+        measurement.compensations.find((c) => c.type === 'trunk_rotation')
+      ).toBeDefined();
     });
   });
 
