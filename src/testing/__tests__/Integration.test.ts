@@ -15,9 +15,7 @@ import { SyntheticPoseDataGenerator } from '../SyntheticPoseDataGenerator';
 import { MultiFrameSequenceGenerator } from '../MultiFrameSequenceGenerator';
 import { AnatomicalFrameCache } from '../../services/biomechanics/AnatomicalFrameCache';
 import { AnatomicalReferenceService } from '../../services/biomechanics/AnatomicalReferenceService';
-import { GoniometerServiceV2 } from '../../services/goniometerService.v2';
 import { ClinicalMeasurementService } from '../../services/biomechanics/ClinicalMeasurementService';
-import { CompensationDetectionService } from '../../services/biomechanics/CompensationDetectionService';
 import { TemporalConsistencyAnalyzer } from '../../services/biomechanics/TemporalConsistencyAnalyzer';
 import { ProcessedPoseData } from '../../types/pose';
 
@@ -26,9 +24,9 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
   let sequenceGenerator: MultiFrameSequenceGenerator;
   let frameCache: AnatomicalFrameCache;
   let anatomicalService: AnatomicalReferenceService;
-  let goniometerService: GoniometerServiceV2;
+  // Removed: goniometerService (unused - measurement service creates its own)
   let measurementService: ClinicalMeasurementService;
-  let compensationService: CompensationDetectionService;
+  // Removed: compensationService (unused in current tests)
   let temporalAnalyzer: TemporalConsistencyAnalyzer;
 
   beforeEach(() => {
@@ -36,9 +34,10 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
     sequenceGenerator = new MultiFrameSequenceGenerator();
     frameCache = new AnatomicalFrameCache();
     anatomicalService = new AnatomicalReferenceService();
-    goniometerService = new GoniometerServiceV2();
-    measurementService = new ClinicalMeasurementService();
-    compensationService = new CompensationDetectionService();
+    // Disable temporal smoothing for single-frame accuracy tests
+    measurementService = new ClinicalMeasurementService(undefined, undefined, {
+      smoothingWindow: 1,
+    });
     temporalAnalyzer = new TemporalConsistencyAnalyzer();
   });
 
@@ -436,6 +435,7 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
           'movenet-17',
           { side: 'right' }
         );
+
         const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
         const measurement = measurementService.measureElbowFlexion(enrichedPose, 'right');
 
@@ -547,6 +547,7 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
 
+      // eslint-disable-next-line no-console
       console.log(`Single frame measurement: ${duration}ms`);
       expect(duration).toBeLessThan(50);
     });
@@ -568,6 +569,7 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
 
+      // eslint-disable-next-line no-console
       console.log(`30-frame sequence processing: ${duration}ms`);
       expect(duration).toBeLessThan(2000); // <2 seconds for 30 frames
     });
@@ -588,6 +590,7 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const duration = endTime - startTime;
 
       const msPerFrame = duration / poseSequence.frames.length;
+      // eslint-disable-next-line no-console
       console.log(`Average processing time per frame: ${msPerFrame.toFixed(1)}ms`);
       expect(msPerFrame).toBeLessThan(120); // Real-time threshold for 30 FPS
     });

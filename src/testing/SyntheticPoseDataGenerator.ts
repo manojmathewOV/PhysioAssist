@@ -264,13 +264,15 @@ export class SyntheticPoseDataGenerator {
 
     // Apply view-orientation-based geometry (same as shoulder flexion)
     const shoulder: Vector3D = {
-      x: viewOrientation === 'sagittal'
-        ? hipMidpoint.x
-        : (side === 'right' ? hipMidpoint.x + 0.15 : hipMidpoint.x - 0.15),
+      x:
+        viewOrientation === 'sagittal'
+          ? hipMidpoint.x
+          : side === 'right'
+            ? hipMidpoint.x + 0.15
+            : hipMidpoint.x - 0.15,
       y: hipMidpoint.y - shoulderHeight,
-      z: viewOrientation === 'sagittal'
-        ? (side === 'right' ? 0.65 : 0.35)
-        : hipMidpoint.z,
+      z:
+        viewOrientation === 'sagittal' ? (side === 'right' ? 0.65 : 0.35) : hipMidpoint.z,
     };
 
     // Elbow hanging down (shoulder at ~0° flexion)
@@ -281,10 +283,12 @@ export class SyntheticPoseDataGenerator {
     };
 
     // Wrist position based on elbow flexion
+    // Clinical flexion equals interior angle: 0° = straight, 150° = fully bent
+    // Use angle directly to position wrist relative to elbow
     const flexionRad = (angle * Math.PI) / 180;
     const wrist: Vector3D = {
       x: elbow.x + forearmLength * Math.sin(flexionRad),
-      y: elbow.y - forearmLength * Math.cos(flexionRad),
+      y: elbow.y + forearmLength * Math.cos(flexionRad),
       z: elbow.z,
     };
 

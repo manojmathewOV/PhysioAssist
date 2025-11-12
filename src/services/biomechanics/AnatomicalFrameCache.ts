@@ -195,28 +195,44 @@ export class AnatomicalFrameCache {
     const rsZ = bucket(rightShoulder.z ?? 0).toFixed(this.spatialBucketingPrecision);
 
     // For humerus/forearm frames, include elbow/wrist positions to capture arm pose
-    // This prevents cache collisions when shoulders are static but arms move (e.g., shoulder flexion)
+    // This prevents cache collisions when proximal joints are static but distal joints move
     const leftElbow = landmarks.find((lm) => lm.name === 'left_elbow');
     const rightElbow = landmarks.find((lm) => lm.name === 'right_elbow');
+    const leftWrist = landmarks.find((lm) => lm.name === 'left_wrist');
+    const rightWrist = landmarks.find((lm) => lm.name === 'right_wrist');
 
-    let elbowKey = '';
-    if (frameType.includes('humerus') || frameType.includes('forearm')) {
+    let distalKey = '';
+    if (frameType.includes('humerus')) {
+      // Humerus: shoulder→elbow, so include elbow position
       if (frameType.includes('left') && leftElbow) {
         const leX = bucket(leftElbow.x).toFixed(this.spatialBucketingPrecision);
         const leY = bucket(leftElbow.y).toFixed(this.spatialBucketingPrecision);
         const leZ = bucket(leftElbow.z ?? 0).toFixed(this.spatialBucketingPrecision);
-        elbowKey = `_${leX}_${leY}_${leZ}`;
+        distalKey = `_${leX}_${leY}_${leZ}`;
       } else if (frameType.includes('right') && rightElbow) {
         const reX = bucket(rightElbow.x).toFixed(this.spatialBucketingPrecision);
         const reY = bucket(rightElbow.y).toFixed(this.spatialBucketingPrecision);
         const reZ = bucket(rightElbow.z ?? 0).toFixed(this.spatialBucketingPrecision);
-        elbowKey = `_${reX}_${reY}_${reZ}`;
+        distalKey = `_${reX}_${reY}_${reZ}`;
+      }
+    } else if (frameType.includes('forearm')) {
+      // Forearm: elbow→wrist, so include wrist position
+      if (frameType.includes('left') && leftWrist) {
+        const lwX = bucket(leftWrist.x).toFixed(this.spatialBucketingPrecision);
+        const lwY = bucket(leftWrist.y).toFixed(this.spatialBucketingPrecision);
+        const lwZ = bucket(leftWrist.z ?? 0).toFixed(this.spatialBucketingPrecision);
+        distalKey = `_${lwX}_${lwY}_${lwZ}`;
+      } else if (frameType.includes('right') && rightWrist) {
+        const rwX = bucket(rightWrist.x).toFixed(this.spatialBucketingPrecision);
+        const rwY = bucket(rightWrist.y).toFixed(this.spatialBucketingPrecision);
+        const rwZ = bucket(rightWrist.z ?? 0).toFixed(this.spatialBucketingPrecision);
+        distalKey = `_${rwX}_${rwY}_${rwZ}`;
       }
     }
 
     // Include Z coordinates to handle sagittal/frontal view orientations
     // where shoulders differ in depth rather than lateral position
-    return `${frameType}_${lsX}_${lsY}_${lsZ}_${rsX}_${rsY}_${rsZ}${elbowKey}`;
+    return `${frameType}_${lsX}_${lsY}_${lsZ}_${rsX}_${rsY}_${rsZ}${distalKey}`;
   }
 
   /**

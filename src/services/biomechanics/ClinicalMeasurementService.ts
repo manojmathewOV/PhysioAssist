@@ -55,9 +55,14 @@ export class ClinicalMeasurementService {
 
   constructor(
     thresholds?: Partial<ClinicalThresholds>,
-    compensationConfig?: Partial<CompensationDetectionConfig>
+    compensationConfig?: Partial<CompensationDetectionConfig>,
+    goniometerConfig?: {
+      smoothingWindow?: number;
+      minConfidence?: number;
+      use3D?: boolean;
+    }
   ) {
-    this.goniometer = new GoniometerServiceV2();
+    this.goniometer = new GoniometerServiceV2(goniometerConfig);
     this.anatomicalService = new AnatomicalReferenceService();
     this.compensationDetector = new CompensationDetectionService();
     this.clinicalThresholds = {
@@ -518,9 +523,10 @@ export class ClinicalMeasurementService {
       `${side}_elbow`
     );
 
-    // Convert geometric angle to clinical flexion angle
-    // Geometric: 180° = straight, 30° = bent
-    // Clinical flexion: 0° = straight, 150° = bent
+    // Elbow flexion: Convert interior angle to clinical flexion
+    // Interior angle: 180° = straight (antiparallel vectors), 30° = fully flexed
+    // Clinical flexion: 0° = straight, 150° = fully flexed
+    // Conversion: clinical = 180 - interior
     const flexionAngle = 180 - elbowMeasurement.angle;
 
     // Check shoulder stabilization
