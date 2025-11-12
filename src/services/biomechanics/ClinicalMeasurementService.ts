@@ -129,7 +129,6 @@ export class ClinicalMeasurementService {
     // Clinical: 0° = arm down, 90° = horizontal, 180° = overhead
     // angleFromUp: 0° = overhead, 90° = horizontal, 180° = down
     const flexionAngle = 180 - angleFromUp;
-    console.log(`[Test] angleFromUp: ${angleFromUp.toFixed(2)}°, flexion: ${flexionAngle.toFixed(2)}°`);
 
     // 6. Measure secondary joints (elbow should be extended)
     const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
