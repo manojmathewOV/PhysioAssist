@@ -189,10 +189,34 @@ export class AnatomicalFrameCache {
 
     const lsX = bucket(leftShoulder.x).toFixed(this.spatialBucketingPrecision);
     const lsY = bucket(leftShoulder.y).toFixed(this.spatialBucketingPrecision);
+    const lsZ = bucket(leftShoulder.z ?? 0).toFixed(this.spatialBucketingPrecision);
     const rsX = bucket(rightShoulder.x).toFixed(this.spatialBucketingPrecision);
     const rsY = bucket(rightShoulder.y).toFixed(this.spatialBucketingPrecision);
+    const rsZ = bucket(rightShoulder.z ?? 0).toFixed(this.spatialBucketingPrecision);
 
-    return `${frameType}_${lsX}_${lsY}_${rsX}_${rsY}`;
+    // For humerus/forearm frames, include elbow/wrist positions to capture arm pose
+    // This prevents cache collisions when shoulders are static but arms move (e.g., shoulder flexion)
+    const leftElbow = landmarks.find((lm) => lm.name === 'left_elbow');
+    const rightElbow = landmarks.find((lm) => lm.name === 'right_elbow');
+
+    let elbowKey = '';
+    if (frameType.includes('humerus') || frameType.includes('forearm')) {
+      if (frameType.includes('left') && leftElbow) {
+        const leX = bucket(leftElbow.x).toFixed(this.spatialBucketingPrecision);
+        const leY = bucket(leftElbow.y).toFixed(this.spatialBucketingPrecision);
+        const leZ = bucket(leftElbow.z ?? 0).toFixed(this.spatialBucketingPrecision);
+        elbowKey = `_${leX}_${leY}_${leZ}`;
+      } else if (frameType.includes('right') && rightElbow) {
+        const reX = bucket(rightElbow.x).toFixed(this.spatialBucketingPrecision);
+        const reY = bucket(rightElbow.y).toFixed(this.spatialBucketingPrecision);
+        const reZ = bucket(rightElbow.z ?? 0).toFixed(this.spatialBucketingPrecision);
+        elbowKey = `_${reX}_${reY}_${reZ}`;
+      }
+    }
+
+    // Include Z coordinates to handle sagittal/frontal view orientations
+    // where shoulders differ in depth rather than lateral position
+    return `${frameType}_${lsX}_${lsY}_${lsZ}_${rsX}_${rsY}_${rsZ}${elbowKey}`;
   }
 
   /**

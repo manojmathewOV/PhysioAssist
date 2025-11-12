@@ -45,7 +45,11 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
   describe('End-to-End Single Frame Pipeline', () => {
     it('should process complete shoulder flexion measurement with all gates', () => {
       // Gate 10C: Generate synthetic pose with ground truth
-      const { poseData, groundTruth } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', { side: 'right' });
+      const { poseData, groundTruth } = poseGenerator.generateShoulderFlexion(
+        120,
+        'movenet-17',
+        { side: 'right' }
+      );
 
       // Gate 9B.5: Add cached anatomical frames
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
@@ -57,12 +61,17 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       expect(enrichedPose.cachedAnatomicalFrames!.right_humerus).toBeDefined();
 
       // Gate 10A: Perform clinical measurement
-      const measurement = measurementService.measureShoulderFlexion(enrichedPose, 'right');
+      const measurement = measurementService.measureShoulderFlexion(
+        enrichedPose,
+        'right'
+      );
 
       // Verify measurement accuracy
       expect(measurement.primaryJoint.name).toBe('right_shoulder');
       expect(measurement.primaryJoint.angleType).toBe('flexion');
-      expect(Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle)).toBeLessThan(5);
+      expect(
+        Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle)
+      ).toBeLessThan(5);
 
       // Gate 10B: Verify compensation detection
       expect(measurement.compensations).toBeDefined();
@@ -85,19 +94,29 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       });
 
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
-      const measurement = measurementService.measureShoulderAbduction(enrichedPose, 'right');
+      const measurement = measurementService.measureShoulderAbduction(
+        enrichedPose,
+        'right'
+      );
 
       // Should detect shoulder hiking
       expect(measurement.compensations.length).toBeGreaterThan(0);
-      const shoulderHiking = measurement.compensations.find((c) => c.type === 'shoulder_hiking');
+      const shoulderHiking = measurement.compensations.find(
+        (c) => c.type === 'shoulder_hiking'
+      );
       expect(shoulderHiking).toBeDefined();
       expect(shoulderHiking!.magnitude).toBeGreaterThan(20);
     });
 
     it('should validate scapulohumeral rhythm in shoulder abduction', () => {
-      const { poseData } = poseGenerator.generateShoulderAbduction(120, 'movenet-17', { side: 'right' });
+      const { poseData } = poseGenerator.generateShoulderAbduction(120, 'movenet-17', {
+        side: 'right',
+      });
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
-      const measurement = measurementService.measureShoulderAbduction(enrichedPose, 'right');
+      const measurement = measurementService.measureShoulderAbduction(
+        enrichedPose,
+        'right'
+      );
 
       // Verify scapulohumeral rhythm components
       expect(measurement.primaryJoint.components).toBeDefined();
@@ -113,45 +132,83 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
 
     it('should validate elbow gating for shoulder rotation', () => {
       // Valid: elbow at 90°
-      const { poseData: validPose } = poseGenerator.generateShoulderRotation(45, 'movenet-17', {
-        side: 'right',
-        elbowAngle: 90,
-      });
-      const enrichedValidPose = addAnatomicalFrames(validPose, frameCache, anatomicalService);
-      const validMeasurement = measurementService.measureShoulderRotation(enrichedValidPose, 'right');
+      const { poseData: validPose } = poseGenerator.generateShoulderRotation(
+        45,
+        'movenet-17',
+        {
+          side: 'right',
+          elbowAngle: 90,
+        }
+      );
+      const enrichedValidPose = addAnatomicalFrames(
+        validPose,
+        frameCache,
+        anatomicalService
+      );
+      const validMeasurement = measurementService.measureShoulderRotation(
+        enrichedValidPose,
+        'right'
+      );
 
       expect(validMeasurement.quality.warnings?.length ?? 0).toBe(0);
 
       // Invalid: elbow at 120° (not at 90°)
-      const { poseData: invalidPose } = poseGenerator.generateShoulderRotation(45, 'movenet-17', {
-        side: 'right',
-        elbowAngle: 120,
-      });
-      const enrichedInvalidPose = addAnatomicalFrames(invalidPose, frameCache, anatomicalService);
-      const invalidMeasurement = measurementService.measureShoulderRotation(enrichedInvalidPose, 'right');
+      const { poseData: invalidPose } = poseGenerator.generateShoulderRotation(
+        45,
+        'movenet-17',
+        {
+          side: 'right',
+          elbowAngle: 120,
+        }
+      );
+      const enrichedInvalidPose = addAnatomicalFrames(
+        invalidPose,
+        frameCache,
+        anatomicalService
+      );
+      const invalidMeasurement = measurementService.measureShoulderRotation(
+        enrichedInvalidPose,
+        'right'
+      );
 
       expect(invalidMeasurement.quality.warnings?.length ?? 0).toBeGreaterThan(0);
-      expect(invalidMeasurement.quality.warnings?.some((w) => w.includes('elbow'))).toBe(true);
+      expect(invalidMeasurement.quality.warnings?.some((w) => w.includes('elbow'))).toBe(
+        true
+      );
     });
   });
 
   describe('End-to-End Temporal Pipeline', () => {
     it('should process complete temporal sequence with all gates', () => {
       // Gate 10D: Generate temporal sequence
-      const poseSequence = sequenceGenerator.generateSmoothIncreasing('shoulder_flexion', 0, 150, 5, 30, {
-        side: 'right',
-      });
+      const poseSequence = sequenceGenerator.generateSmoothIncreasing(
+        'shoulder_flexion',
+        0,
+        150,
+        5,
+        30,
+        {
+          side: 'right',
+        }
+      );
 
       expect(poseSequence.frames.length).toBe(150); // 5s × 30fps
 
       // Convert to measurements
-      const measurementSequence = sequenceGenerator.convertToMeasurementSequence(poseSequence, 'shoulder_flexion');
+      const measurementSequence = sequenceGenerator.convertToMeasurementSequence(
+        poseSequence,
+        'shoulder_flexion'
+      );
 
       // Verify all frames were measured
       expect(measurementSequence.measurements.length).toBe(poseSequence.frames.length);
 
       // Gate 10D: Analyze temporal consistency
-      const temporalResult = temporalAnalyzer.analyzeSequence(measurementSequence, poseSequence.frames, 'increasing');
+      const temporalResult = temporalAnalyzer.analyzeSequence(
+        measurementSequence,
+        poseSequence.frames,
+        'increasing'
+      );
 
       // Verify temporal consistency
       expect(temporalResult.passed).toBe(true);
@@ -174,11 +231,20 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
         { side: 'right' }
       );
 
-      const measurementSequence = sequenceGenerator.convertToMeasurementSequence(poseSequence, 'shoulder_flexion');
-      const temporalResult = temporalAnalyzer.analyzeSequence(measurementSequence, poseSequence.frames, 'increasing');
+      const measurementSequence = sequenceGenerator.convertToMeasurementSequence(
+        poseSequence,
+        'shoulder_flexion'
+      );
+      const temporalResult = temporalAnalyzer.analyzeSequence(
+        measurementSequence,
+        poseSequence.frames,
+        'increasing'
+      );
 
       // Should detect trunk lean compensation
-      const trunkLean = temporalResult.compensations.find((c) => c.compensationType === 'trunk_lean');
+      const trunkLean = temporalResult.compensations.find(
+        (c) => c.compensationType === 'trunk_lean'
+      );
       expect(trunkLean).toBeDefined();
       expect(trunkLean!.isPersistent).toBe(true); // Present in >50% of frames
       expect(trunkLean!.isProgressive).toBe(true); // Severity increases
@@ -186,21 +252,42 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
     });
 
     it('should detect quality degradation over sequence', () => {
-      const baseSequence = sequenceGenerator.generateSmoothIncreasing('elbow_flexion', 0, 140, 4, 30, { side: 'right' });
-      const degradedSequence = sequenceGenerator.generateWithQualityDegradation(baseSequence, 'linear');
+      const baseSequence = sequenceGenerator.generateSmoothIncreasing(
+        'elbow_flexion',
+        0,
+        140,
+        4,
+        30,
+        { side: 'right' }
+      );
+      const degradedSequence = sequenceGenerator.generateWithQualityDegradation(
+        baseSequence,
+        'linear'
+      );
 
-      const measurementSequence = sequenceGenerator.convertToMeasurementSequence(degradedSequence, 'elbow_flexion');
-      const temporalResult = temporalAnalyzer.analyzeSequence(measurementSequence, degradedSequence.frames, 'increasing');
+      const measurementSequence = sequenceGenerator.convertToMeasurementSequence(
+        degradedSequence,
+        'elbow_flexion'
+      );
+      const temporalResult = temporalAnalyzer.analyzeSequence(
+        measurementSequence,
+        degradedSequence.frames,
+        'increasing'
+      );
 
       // Should detect quality degradation
       expect(temporalResult.quality.degradationRate).toBeLessThan(0); // Negative = decreasing
-      expect(temporalResult.quality.finalQuality).toBeLessThan(temporalResult.quality.initialQuality);
+      expect(temporalResult.quality.finalQuality).toBeLessThan(
+        temporalResult.quality.initialQuality
+      );
     });
   });
 
   describe('Frame Cache Performance', () => {
     it('should achieve high cache hit rate for repeated measurements', () => {
-      const { poseData } = poseGenerator.generateShoulderFlexion(90, 'movenet-17', { side: 'right' });
+      const { poseData } = poseGenerator.generateShoulderFlexion(90, 'movenet-17', {
+        side: 'right',
+      });
 
       // Clear cache
       const cache = new AnatomicalFrameCache();
@@ -221,9 +308,16 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
     });
 
     it('should maintain cache performance across temporal sequence', () => {
-      const poseSequence = sequenceGenerator.generateSmoothIncreasing('shoulder_flexion', 0, 150, 5, 30, {
-        side: 'right',
-      });
+      const poseSequence = sequenceGenerator.generateSmoothIncreasing(
+        'shoulder_flexion',
+        0,
+        150,
+        5,
+        30,
+        {
+          side: 'right',
+        }
+      );
 
       const cache = new AnatomicalFrameCache(100, 1000); // Small cache for testing (maxSize, ttl)
 
@@ -243,33 +337,62 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
 
   describe('Schema Compatibility', () => {
     it('should work with MoveNet-17 schema', () => {
-      const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', { side: 'right' });
+      const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', {
+        side: 'right',
+      });
       expect(poseData.schemaId).toBe('movenet-17');
       expect(poseData.landmarks.length).toBe(17);
 
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
-      const measurement = measurementService.measureShoulderFlexion(enrichedPose, 'right');
+      const measurement = measurementService.measureShoulderFlexion(
+        enrichedPose,
+        'right'
+      );
 
       expect(measurement.primaryJoint.angle).toBeGreaterThan(0);
     });
 
     it('should handle bilateral measurements', () => {
       // Left shoulder
-      const { poseData: leftPose } = poseGenerator.generateShoulderFlexion(90, 'movenet-17', { side: 'left' });
-      const enrichedLeftPose = addAnatomicalFrames(leftPose, frameCache, anatomicalService);
-      const leftMeasurement = measurementService.measureShoulderFlexion(enrichedLeftPose, 'left');
+      const { poseData: leftPose } = poseGenerator.generateShoulderFlexion(
+        90,
+        'movenet-17',
+        { side: 'left' }
+      );
+      const enrichedLeftPose = addAnatomicalFrames(
+        leftPose,
+        frameCache,
+        anatomicalService
+      );
+      const leftMeasurement = measurementService.measureShoulderFlexion(
+        enrichedLeftPose,
+        'left'
+      );
 
       // Right shoulder
-      const { poseData: rightPose } = poseGenerator.generateShoulderFlexion(90, 'movenet-17', { side: 'right' });
-      const enrichedRightPose = addAnatomicalFrames(rightPose, frameCache, anatomicalService);
-      const rightMeasurement = measurementService.measureShoulderFlexion(enrichedRightPose, 'right');
+      const { poseData: rightPose } = poseGenerator.generateShoulderFlexion(
+        90,
+        'movenet-17',
+        { side: 'right' }
+      );
+      const enrichedRightPose = addAnatomicalFrames(
+        rightPose,
+        frameCache,
+        anatomicalService
+      );
+      const rightMeasurement = measurementService.measureShoulderFlexion(
+        enrichedRightPose,
+        'right'
+      );
 
       // Both should be valid
       expect(leftMeasurement.primaryJoint.name).toBe('left_shoulder');
       expect(rightMeasurement.primaryJoint.name).toBe('right_shoulder');
 
       // Should measure similar angles for same input
-      expect(Math.abs(leftMeasurement.primaryJoint.angle - rightMeasurement.primaryJoint.angle)).toBeLessThan(2);
+      expect(
+        Math.abs(leftMeasurement.primaryJoint.angle - rightMeasurement.primaryJoint.angle)
+      ).toBeLessThan(2);
     });
   });
 
@@ -279,13 +402,22 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const errors: number[] = [];
 
       testAngles.forEach((targetAngle) => {
-        const { poseData, groundTruth } = poseGenerator.generateShoulderFlexion(targetAngle, 'movenet-17', {
-          side: 'right',
-        });
+        const { poseData, groundTruth } = poseGenerator.generateShoulderFlexion(
+          targetAngle,
+          'movenet-17',
+          {
+            side: 'right',
+          }
+        );
         const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
-        const measurement = measurementService.measureShoulderFlexion(enrichedPose, 'right');
+        const measurement = measurementService.measureShoulderFlexion(
+          enrichedPose,
+          'right'
+        );
 
-        const error = Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle);
+        const error = Math.abs(
+          measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+        );
         errors.push(error);
       });
 
@@ -299,11 +431,17 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const errors: number[] = [];
 
       testAngles.forEach((targetAngle) => {
-        const { poseData, groundTruth } = poseGenerator.generateElbowFlexion(targetAngle, 'movenet-17', { side: 'right' });
+        const { poseData, groundTruth } = poseGenerator.generateElbowFlexion(
+          targetAngle,
+          'movenet-17',
+          { side: 'right' }
+        );
         const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
         const measurement = measurementService.measureElbowFlexion(enrichedPose, 'right');
 
-        const error = Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle);
+        const error = Math.abs(
+          measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+        );
         errors.push(error);
       });
 
@@ -316,11 +454,17 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const errors: number[] = [];
 
       testAngles.forEach((targetAngle) => {
-        const { poseData, groundTruth } = poseGenerator.generateKneeFlexion(targetAngle, 'movenet-17', { side: 'right' });
+        const { poseData, groundTruth } = poseGenerator.generateKneeFlexion(
+          targetAngle,
+          'movenet-17',
+          { side: 'right' }
+        );
         const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
         const measurement = measurementService.measureKneeFlexion(enrichedPose, 'right');
 
-        const error = Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle);
+        const error = Math.abs(
+          measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+        );
         errors.push(error);
       });
 
@@ -331,9 +475,15 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
 
   describe('Compensation Detection Accuracy', () => {
     it('should detect trunk lean in shoulder flexion', () => {
-      const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', { side: 'right', trunkLean: 20 });
+      const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', {
+        side: 'right',
+        trunkLean: 20,
+      });
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
-      const measurement = measurementService.measureShoulderFlexion(enrichedPose, 'right');
+      const measurement = measurementService.measureShoulderFlexion(
+        enrichedPose,
+        'right'
+      );
 
       const trunkLean = measurement.compensations.find((c) => c.type === 'trunk_lean');
       expect(trunkLean).toBeDefined();
@@ -346,15 +496,23 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
         shoulderHiking: 25,
       });
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
-      const measurement = measurementService.measureShoulderAbduction(enrichedPose, 'right');
+      const measurement = measurementService.measureShoulderAbduction(
+        enrichedPose,
+        'right'
+      );
 
-      const shoulderHiking = measurement.compensations.find((c) => c.type === 'shoulder_hiking');
+      const shoulderHiking = measurement.compensations.find(
+        (c) => c.type === 'shoulder_hiking'
+      );
       expect(shoulderHiking).toBeDefined();
       expect(shoulderHiking!.magnitude).toBeGreaterThan(20);
     });
 
     it('should detect hip hike in knee flexion', () => {
-      const { poseData } = poseGenerator.generateKneeFlexion(90, 'movenet-17', { side: 'right', hipHike: 30 });
+      const { poseData } = poseGenerator.generateKneeFlexion(90, 'movenet-17', {
+        side: 'right',
+        hipHike: 30,
+      });
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
       const measurement = measurementService.measureKneeFlexion(enrichedPose, 'right');
 
@@ -364,9 +522,14 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
     });
 
     it('should not detect compensations when none present', () => {
-      const { poseData } = poseGenerator.generateShoulderFlexion(90, 'movenet-17', { side: 'right' });
+      const { poseData } = poseGenerator.generateShoulderFlexion(90, 'movenet-17', {
+        side: 'right',
+      });
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
-      const measurement = measurementService.measureShoulderFlexion(enrichedPose, 'right');
+      const measurement = measurementService.measureShoulderFlexion(
+        enrichedPose,
+        'right'
+      );
 
       expect(measurement.compensations.length).toBe(0);
     });
@@ -374,7 +537,9 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
 
   describe('Performance Benchmarks', () => {
     it('should measure single frame in <50ms', () => {
-      const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', { side: 'right' });
+      const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', {
+        side: 'right',
+      });
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
 
       const startTime = Date.now();
@@ -387,9 +552,16 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
     });
 
     it('should process 30-frame sequence in <2s', () => {
-      const poseSequence = sequenceGenerator.generateSmoothIncreasing('shoulder_flexion', 0, 150, 1, 30, {
-        side: 'right',
-      }); // 1 second = 30 frames
+      const poseSequence = sequenceGenerator.generateSmoothIncreasing(
+        'shoulder_flexion',
+        0,
+        150,
+        1,
+        30,
+        {
+          side: 'right',
+        }
+      ); // 1 second = 30 frames
 
       const startTime = Date.now();
       sequenceGenerator.convertToMeasurementSequence(poseSequence, 'shoulder_flexion');
@@ -401,7 +573,14 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
     });
 
     it('should maintain <120ms/frame for real-time processing (30 FPS)', () => {
-      const poseSequence = sequenceGenerator.generateSmoothIncreasing('elbow_flexion', 0, 140, 2, 30, { side: 'right' }); // 60 frames
+      const poseSequence = sequenceGenerator.generateSmoothIncreasing(
+        'elbow_flexion',
+        0,
+        140,
+        2,
+        30,
+        { side: 'right' }
+      ); // 60 frames
 
       const startTime = Date.now();
       sequenceGenerator.convertToMeasurementSequence(poseSequence, 'elbow_flexion');
@@ -424,9 +603,15 @@ function addAnatomicalFrames(
 ): ProcessedPoseData {
   const landmarks = poseData.landmarks;
 
-  const global = cache.get('global', landmarks, (lms) => anatomicalService.calculateGlobalFrame(lms));
-  const thorax = cache.get('thorax', landmarks, (lms) => anatomicalService.calculateThoraxFrame(lms, global));
-  const pelvis = cache.get('pelvis', landmarks, (lms) => anatomicalService.calculatePelvisFrame(lms, poseData.schemaId));
+  const global = cache.get('global', landmarks, (lms) =>
+    anatomicalService.calculateGlobalFrame(lms)
+  );
+  const thorax = cache.get('thorax', landmarks, (lms) =>
+    anatomicalService.calculateThoraxFrame(lms, global)
+  );
+  const pelvis = cache.get('pelvis', landmarks, (lms) =>
+    anatomicalService.calculatePelvisFrame(lms, poseData.schemaId)
+  );
   const left_humerus = cache.get('left_humerus', landmarks, (lms) =>
     anatomicalService.calculateHumerusFrame(lms, 'left', thorax)
   );
