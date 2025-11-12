@@ -1,6 +1,7 @@
-import { PoseLandmark } from '@types/pose';
-import { AnatomicalReferenceFrame, AnatomicalPlane } from '@types/biomechanics';
-import { midpoint3D, subtract3D, normalize, crossProduct } from '@utils/vectorMath';
+import { PoseLandmark } from '../../types/pose';
+import { AnatomicalReferenceFrame, AnatomicalPlane } from '../../types/biomechanics';
+import { Vector3D } from '../../types/common';
+import { midpoint3D, subtract3D, normalize, crossProduct } from '../../utils/vectorMath';
 
 /**
  * Anatomical Reference Frame Service
@@ -219,7 +220,7 @@ export class AnatomicalReferenceService {
     const elbow = landmarks[elbowIdx];
 
     // Origin: shoulder joint center
-    const origin = shoulder;
+    const origin: Vector3D = { x: shoulder.x, y: shoulder.y, z: shoulder.z ?? 0 };
 
     // Y-axis: shoulder to elbow (longitudinal humerus axis)
     const yAxis = normalize(subtract3D(elbow, shoulder));
@@ -260,6 +261,63 @@ export class AnatomicalReferenceService {
       yAxis,
       zAxis: zAxisCorrected,
       frameType: 'humerus',
+      confidence,
+    };
+  }
+
+  /**
+   * Calculate pelvis anatomical reference frame
+   * TODO: Implement ISB-compliant pelvis frame calculation
+   *
+   * @param landmarks - Pose landmarks
+   * @param schemaId - Pose schema identifier
+   * @returns Pelvis anatomical reference frame
+   */
+  calculatePelvisFrame(
+    landmarks: PoseLandmark[],
+    schemaId?: string
+  ): AnatomicalReferenceFrame {
+    // Stub implementation - uses global frame as placeholder
+    return this.calculateGlobalFrame(landmarks);
+  }
+
+  /**
+   * Calculate forearm anatomical reference frame
+   * TODO: Implement ISB-compliant forearm frame calculation
+   *
+   * @param landmarks - Pose landmarks
+   * @param side - Which forearm ('left' or 'right')
+   * @param schemaId - Pose schema identifier
+   * @returns Forearm anatomical reference frame
+   */
+  calculateForearmFrame(
+    landmarks: PoseLandmark[],
+    side: 'left' | 'right',
+    schemaId?: string
+  ): AnatomicalReferenceFrame {
+    // Stub implementation - uses elbow to wrist vector as longitudinal axis
+    const elbowIdx = side === 'left' ? 7 : 8;
+    const wristIdx = side === 'left' ? 9 : 10;
+
+    const elbow = landmarks[elbowIdx];
+    const wrist = landmarks[wristIdx];
+
+    const origin: Vector3D = { x: elbow.x, y: elbow.y, z: elbow.z ?? 0 };
+    const yAxis = normalize(subtract3D(wrist, elbow));
+
+    // Simple orthogonal axes (not anatomically accurate - placeholder)
+    const zAxis: Vector3D = { x: 0, y: 0, z: 1 };
+    const xAxis = normalize(crossProduct(yAxis, zAxis));
+    const zAxisCorrected = normalize(crossProduct(xAxis, yAxis));
+
+    const confidence = this.calculateFrameConfidence([elbow, wrist]);
+
+    return {
+      origin,
+      xAxis,
+      yAxis,
+      zAxis: zAxisCorrected,
+      frameType: 'forearm',
       confidence,
     };
   }

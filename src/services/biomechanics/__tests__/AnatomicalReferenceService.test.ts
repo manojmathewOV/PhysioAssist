@@ -1,6 +1,6 @@
 import { AnatomicalReferenceService } from '../AnatomicalReferenceService';
-import { PoseLandmark } from '@types/pose';
-import { dotProduct, magnitude } from '@utils/vectorMath';
+import { PoseLandmark } from '../../../types/pose';
+import { dotProduct, magnitude } from '../../../utils/vectorMath';
 
 /**
  * Create synthetic pose data for testing
@@ -263,7 +263,9 @@ describe('AnatomicalReferenceService', () => {
       const humerusFrame = service.calculateHumerusFrame(landmarks, 'left', thoraxFrame);
 
       const leftShoulder = landmarks[5];
-      expect(humerusFrame.origin).toEqual(leftShoulder);
+      expect(humerusFrame.origin.x).toBeCloseTo(leftShoulder.x, 5);
+      expect(humerusFrame.origin.y).toBeCloseTo(leftShoulder.y, 5);
+      expect(humerusFrame.origin.z).toBeCloseTo(leftShoulder.z ?? 0, 5);
     });
 
     it('should have Y-axis pointing from shoulder to elbow', () => {
