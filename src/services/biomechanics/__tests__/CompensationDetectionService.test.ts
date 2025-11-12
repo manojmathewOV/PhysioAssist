@@ -18,7 +18,6 @@
 import { CompensationDetectionService } from '../CompensationDetectionService';
 import { ProcessedPoseData, PoseLandmark } from '../../../types/pose';
 import { AnatomicalReferenceFrame } from '../../../types/biomechanics';
-import { Vector3D } from '../../../types/common';
 
 describe('CompensationDetectionService - Gate 10B', () => {
   let compensationService: CompensationDetectionService;
@@ -34,18 +33,15 @@ describe('CompensationDetectionService - Gate 10B', () => {
   /**
    * Create mock anatomical frame with specified rotation/tilt
    */
-  function createMockThoraxFrame(config: {
-    lateralTilt?: number; // Degrees
-    anteriorTilt?: number; // Degrees
-    rotation?: number; // Degrees
-    confidence?: number;
-  } = {}): AnatomicalReferenceFrame {
-    const {
-      lateralTilt = 0,
-      anteriorTilt = 0,
-      rotation = 0,
-      confidence = 0.9,
-    } = config;
+  function createMockThoraxFrame(
+    config: {
+      lateralTilt?: number; // Degrees
+      anteriorTilt?: number; // Degrees
+      rotation?: number; // Degrees
+      confidence?: number;
+    } = {}
+  ): AnatomicalReferenceFrame {
+    const { lateralTilt = 0, anteriorTilt = 0, rotation = 0, confidence = 0.9 } = config;
 
     const lateralRad = (lateralTilt * Math.PI) / 180;
     const anteriorRad = (anteriorTilt * Math.PI) / 180;
@@ -76,12 +72,16 @@ describe('CompensationDetectionService - Gate 10B', () => {
   /**
    * Create mock pose data with anatomical frames
    */
-  function createMockPoseData(config: {
-    thoraxFrame?: AnatomicalReferenceFrame;
-    landmarks?: Partial<Record<string, { x: number; y: number; z?: number; visibility?: number }>>;
-    viewOrientation?: 'frontal' | 'sagittal' | 'posterior';
-    schemaId?: 'movenet-17' | 'mediapipe-33';
-  } = {}): ProcessedPoseData {
+  function createMockPoseData(
+    config: {
+      thoraxFrame?: AnatomicalReferenceFrame;
+      landmarks?: Partial<
+        Record<string, { x: number; y: number; z?: number; visibility?: number }>
+      >;
+      viewOrientation?: 'frontal' | 'sagittal' | 'posterior';
+      schemaId?: 'movenet-17' | 'mediapipe-33';
+    } = {}
+  ): ProcessedPoseData {
     const {
       thoraxFrame = createMockThoraxFrame(),
       landmarks = {},
@@ -89,23 +89,23 @@ describe('CompensationDetectionService - Gate 10B', () => {
       schemaId = 'movenet-17',
     } = config;
 
-    // Default landmarks
+    // Default landmarks (arms in neutral/extended position)
     const defaultLandmarks: PoseLandmark[] = [
       { x: 0.5, y: 0.2, z: 0, visibility: 0.9, index: 0, name: 'nose' },
       { x: 0.45, y: 0.18, z: 0, visibility: 0.9, index: 1, name: 'left_eye' },
       { x: 0.55, y: 0.18, z: 0, visibility: 0.9, index: 2, name: 'right_eye' },
-      { x: 0.42, y: 0.20, z: 0, visibility: 0.9, index: 3, name: 'left_ear' },
-      { x: 0.58, y: 0.20, z: 0, visibility: 0.9, index: 4, name: 'right_ear' },
+      { x: 0.42, y: 0.2, z: 0, visibility: 0.9, index: 3, name: 'left_ear' },
+      { x: 0.58, y: 0.2, z: 0, visibility: 0.9, index: 4, name: 'right_ear' },
       { x: 0.4, y: 0.3, z: 0, visibility: 0.9, index: 5, name: 'left_shoulder' },
       { x: 0.6, y: 0.3, z: 0, visibility: 0.9, index: 6, name: 'right_shoulder' },
-      { x: 0.35, y: 0.45, z: 0, visibility: 0.9, index: 7, name: 'left_elbow' },
-      { x: 0.65, y: 0.45, z: 0, visibility: 0.9, index: 8, name: 'right_elbow' },
-      { x: 0.32, y: 0.6, z: 0, visibility: 0.9, index: 9, name: 'left_wrist' },
-      { x: 0.68, y: 0.6, z: 0, visibility: 0.9, index: 10, name: 'right_wrist' },
+      { x: 0.4, y: 0.45, z: 0, visibility: 0.9, index: 7, name: 'left_elbow' }, // Straight down from shoulder
+      { x: 0.6, y: 0.45, z: 0, visibility: 0.9, index: 8, name: 'right_elbow' },
+      { x: 0.4, y: 0.6, z: 0, visibility: 0.9, index: 9, name: 'left_wrist' }, // Straight down from elbow
+      { x: 0.6, y: 0.6, z: 0, visibility: 0.9, index: 10, name: 'right_wrist' },
       { x: 0.42, y: 0.6, z: 0, visibility: 0.9, index: 11, name: 'left_hip' },
       { x: 0.58, y: 0.6, z: 0, visibility: 0.9, index: 12, name: 'right_hip' },
-      { x: 0.40, y: 0.8, z: 0, visibility: 0.9, index: 13, name: 'left_knee' },
-      { x: 0.60, y: 0.8, z: 0, visibility: 0.9, index: 14, name: 'right_knee' },
+      { x: 0.4, y: 0.8, z: 0, visibility: 0.9, index: 13, name: 'left_knee' },
+      { x: 0.6, y: 0.8, z: 0, visibility: 0.9, index: 14, name: 'right_knee' },
       { x: 0.38, y: 1.0, z: 0, visibility: 0.9, index: 15, name: 'left_ankle' },
       { x: 0.62, y: 1.0, z: 0, visibility: 0.9, index: 16, name: 'right_ankle' },
     ];
@@ -169,7 +169,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const trunkLean = compensations.find((c) => c.type === 'trunk_lean');
       expect(trunkLean).toBeDefined();
@@ -185,7 +189,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const trunkLean = compensations.find((c) => c.type === 'trunk_lean');
       expect(trunkLean?.severity).toBe('mild');
@@ -197,7 +205,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const trunkLean = compensations.find((c) => c.type === 'trunk_lean');
       expect(trunkLean?.severity).toBe('severe');
@@ -209,7 +221,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const trunkLean = compensations.find((c) => c.type === 'trunk_lean');
       expect(trunkLean).toBeUndefined();
@@ -221,7 +237,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'sagittal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const trunkLean = compensations.find((c) => c.type === 'trunk_lean');
       expect(trunkLean).toBeUndefined(); // Lateral lean not visible in sagittal view
@@ -239,7 +259,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const trunkRotation = compensations.find((c) => c.type === 'trunk_rotation');
       expect(trunkRotation).toBeDefined();
@@ -254,7 +278,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const trunkRotation = compensations.find((c) => c.type === 'trunk_rotation');
       expect(trunkRotation?.severity).toBe('severe');
@@ -266,7 +294,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const trunkRotation = compensations.find((c) => c.type === 'trunk_rotation');
       expect(trunkRotation).toBeUndefined();
@@ -278,7 +310,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const trunkRotation = compensations.find((c) => c.type === 'trunk_rotation');
       expect(trunkRotation).toBeDefined();
@@ -296,12 +332,16 @@ describe('CompensationDetectionService - Gate 10B', () => {
         landmarks: {
           left_shoulder: { x: 0.4, y: 0.28, z: 0, visibility: 0.9 }, // Elevated (lower Y)
           right_shoulder: { x: 0.6, y: 0.32, z: 0, visibility: 0.9 }, // Normal
-          left_ear: { x: 0.42, y: 0.20, z: 0, visibility: 0.9 },
+          left_ear: { x: 0.42, y: 0.2, z: 0, visibility: 0.9 },
         },
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_abduction');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_abduction'
+      );
 
       const shoulderHiking = compensations.find((c) => c.type === 'shoulder_hiking');
       expect(shoulderHiking).toBeDefined();
@@ -315,12 +355,16 @@ describe('CompensationDetectionService - Gate 10B', () => {
         landmarks: {
           left_shoulder: { x: 0.4, y: 0.32, z: 0, visibility: 0.9 }, // Normal
           right_shoulder: { x: 0.6, y: 0.28, z: 0, visibility: 0.9 }, // Elevated
-          right_ear: { x: 0.58, y: 0.20, z: 0, visibility: 0.9 },
+          right_ear: { x: 0.58, y: 0.2, z: 0, visibility: 0.9 },
         },
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'right_shoulder_abduction');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'right_shoulder_abduction'
+      );
 
       const shoulderHiking = compensations.find((c) => c.type === 'shoulder_hiking');
       expect(shoulderHiking).toBeDefined();
@@ -330,13 +374,17 @@ describe('CompensationDetectionService - Gate 10B', () => {
     it('should NOT detect hiking when shoulders level', () => {
       const poseData = createMockPoseData({
         landmarks: {
-          left_shoulder: { x: 0.4, y: 0.30, z: 0, visibility: 0.9 },
-          right_shoulder: { x: 0.6, y: 0.30, z: 0, visibility: 0.9 }, // Same height
+          left_shoulder: { x: 0.4, y: 0.3, z: 0, visibility: 0.9 },
+          right_shoulder: { x: 0.6, y: 0.3, z: 0, visibility: 0.9 }, // Same height
         },
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_abduction');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_abduction'
+      );
 
       const shoulderHiking = compensations.find((c) => c.type === 'shoulder_hiking');
       expect(shoulderHiking).toBeUndefined();
@@ -350,7 +398,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_abduction');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_abduction'
+      );
 
       const shoulderHiking = compensations.find((c) => c.type === 'shoulder_hiking');
       expect(shoulderHiking).toBeUndefined();
@@ -361,12 +413,16 @@ describe('CompensationDetectionService - Gate 10B', () => {
         landmarks: {
           left_shoulder: { x: 0.4, y: 0.27, z: 0, visibility: 0.9 }, // Significantly elevated
           right_shoulder: { x: 0.6, y: 0.33, z: 0, visibility: 0.9 },
-          left_ear: { x: 0.42, y: 0.20, z: 0, visibility: 0.9 },
+          left_ear: { x: 0.42, y: 0.2, z: 0, visibility: 0.9 },
         },
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_abduction');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_abduction'
+      );
 
       const shoulderHiking = compensations.find((c) => c.type === 'shoulder_hiking');
       expect(shoulderHiking?.clinicalNote).toContain('cm');
@@ -389,7 +445,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const elbowFlexion = compensations.find((c) => c.type === 'elbow_flexion');
       expect(elbowFlexion).toBeDefined();
@@ -408,7 +468,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const elbowFlexion = compensations.find((c) => c.type === 'elbow_flexion');
       expect(elbowFlexion?.severity).toMatch(/moderate|severe/);
@@ -419,12 +483,16 @@ describe('CompensationDetectionService - Gate 10B', () => {
         landmarks: {
           left_shoulder: { x: 0.4, y: 0.3, z: 0, visibility: 0.9 },
           left_elbow: { x: 0.45, y: 0.45, z: 0, visibility: 0.9 },
-          left_wrist: { x: 0.50, y: 0.60, z: 0, visibility: 0.9 }, // Nearly straight (~178°)
+          left_wrist: { x: 0.5, y: 0.6, z: 0, visibility: 0.9 }, // Nearly straight (~178°)
         },
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const elbowFlexion = compensations.find((c) => c.type === 'elbow_flexion');
       expect(elbowFlexion).toBeUndefined();
@@ -440,7 +508,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       const elbowFlexion = compensations.find((c) => c.type === 'elbow_flexion');
       expect(elbowFlexion).toBeUndefined();
@@ -461,7 +533,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_knee_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_knee_flexion'
+      );
 
       const hipHike = compensations.find((c) => c.type === 'hip_hike');
       expect(hipHike).toBeDefined();
@@ -479,7 +555,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_knee_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_knee_flexion'
+      );
 
       const hipHike = compensations.find((c) => c.type === 'hip_hike');
       expect(hipHike?.severity).toMatch(/moderate|severe/);
@@ -494,7 +574,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'right_knee_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'right_knee_flexion'
+      );
 
       const hipHike = compensations.find((c) => c.type === 'hip_hike');
       expect(hipHike?.affectsJoint).toBe('right_hip');
@@ -503,13 +587,17 @@ describe('CompensationDetectionService - Gate 10B', () => {
     it('should NOT detect minimal hip hike (<3°)', () => {
       const poseData = createMockPoseData({
         landmarks: {
-          left_hip: { x: 0.42, y: 0.60, z: 0, visibility: 0.9 },
-          right_hip: { x: 0.58, y: 0.60, z: 0, visibility: 0.9 }, // Nearly level
+          left_hip: { x: 0.42, y: 0.6, z: 0, visibility: 0.9 },
+          right_hip: { x: 0.58, y: 0.6, z: 0, visibility: 0.9 }, // Nearly level
         },
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_knee_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_knee_flexion'
+      );
 
       const hipHike = compensations.find((c) => c.type === 'hip_hike');
       expect(hipHike).toBeUndefined();
@@ -527,7 +615,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       // Contralateral lean is detected as part of trunk lean in current implementation
       // This test validates that the movement context is passed correctly
@@ -540,9 +632,15 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'sagittal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
-      const contralateralLean = compensations.find((c) => c.type === 'contralateral_lean');
+      const contralateralLean = compensations.find(
+        (c) => c.type === 'contralateral_lean'
+      );
       expect(contralateralLean).toBeUndefined();
     });
 
@@ -552,10 +650,16 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'right_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'right_shoulder_flexion'
+      );
 
       // Leaning toward the movement side is not contralateral
-      const contralateralLean = compensations.find((c) => c.type === 'contralateral_lean');
+      const contralateralLean = compensations.find(
+        (c) => c.type === 'contralateral_lean'
+      );
       // Expected behavior: either undefined or ipsilateral lean (which is different type)
       expect(contralateralLean?.affectsJoint || 'right_shoulder').toContain('shoulder');
     });
@@ -578,7 +682,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       expect(compensations.length).toBeGreaterThanOrEqual(2);
       expect(compensations.some((c) => c.type === 'trunk_lean')).toBe(true);
@@ -618,7 +726,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
       expect(poseData.cachedAnatomicalFrames).toBeDefined();
       expect(poseData.cachedAnatomicalFrames?.thorax).toBeDefined();
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       // Should detect compensations using cached frames
       expect(compensations.length).toBeGreaterThan(0);
@@ -632,7 +744,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
       // Remove cached frames
       poseData.cachedAnatomicalFrames = undefined;
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       expect(compensations).toEqual([]);
     });
@@ -643,7 +759,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       compensations.forEach((comp) => {
         expect(comp.clinicalNote).toBeDefined();
@@ -658,7 +778,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       compensations.forEach((comp) => {
         expect(comp.severity).toMatch(/minimal|mild|moderate|severe/);
@@ -711,7 +835,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
       const start = performance.now();
 
       for (let i = 0; i < iterations; i++) {
-        compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+        compensationService.detectCompensations(
+          poseData,
+          undefined,
+          'left_shoulder_flexion'
+        );
       }
 
       const end = performance.now();
@@ -733,7 +861,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
       });
 
       const start = performance.now();
-      compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
       const end = performance.now();
 
       expect(end - start).toBeLessThan(5); // <5ms for all compensations
@@ -750,7 +882,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
       const start = performance.now();
 
       for (let i = 0; i < iterations; i++) {
-        compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+        compensationService.detectCompensations(
+          poseData,
+          undefined,
+          'left_shoulder_flexion'
+        );
       }
 
       const end = performance.now();
@@ -772,7 +908,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: undefined,
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       // Should still detect some compensations (those that don't require view orientation)
       expect(compensations).toBeDefined();
@@ -788,7 +928,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
       // Remove some landmarks to simulate occlusion
       poseData.landmarks = poseData.landmarks.filter((lm) => !lm.name.includes('ear'));
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       // Should still detect trunk compensations
       expect(compensations).toBeDefined();
@@ -800,7 +944,11 @@ describe('CompensationDetectionService - Gate 10B', () => {
         viewOrientation: 'frontal',
       });
 
-      const compensations = compensationService.detectCompensations(poseData, undefined, 'left_shoulder_flexion');
+      const compensations = compensationService.detectCompensations(
+        poseData,
+        undefined,
+        'left_shoulder_flexion'
+      );
 
       // Should not detect any compensations
       expect(compensations.length).toBe(0);
