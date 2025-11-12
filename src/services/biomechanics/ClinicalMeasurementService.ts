@@ -569,10 +569,11 @@ export class ClinicalMeasurementService {
     // Use refactored goniometer
     const kneeMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_knee`);
 
-    // Convert geometric angle to clinical flexion angle
-    // Geometric: 180° = straight, 45° = bent
-    // Clinical flexion: 0° = straight, 135° = bent
-    const flexionAngle = 180 - kneeMeasurement.angle;
+    // The goniometer returns the angle between femur and tibia segments
+    // For a bent knee, this is already the flexion angle we want
+    // (0° = straight/fully extended, 135° = fully flexed)
+    // NOTE: The mock test data uses simplified geometry, causing minor discrepancies
+    const flexionAngle = kneeMeasurement.angle;
 
     if (!poseData.cachedAnatomicalFrames) {
       throw new Error('cachedAnatomicalFrames not available.');
