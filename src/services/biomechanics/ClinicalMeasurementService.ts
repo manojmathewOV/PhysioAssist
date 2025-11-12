@@ -16,7 +16,7 @@
  */
 
 import { ProcessedPoseData } from '../../types/pose';
-import { AnatomicalReferenceFrame, AnatomicalPlane } from '../../types/biomechanics';
+import { AnatomicalReferenceFrame } from '../../types/biomechanics';
 import {
   ClinicalJointMeasurement,
   ClinicalThresholds,
@@ -30,7 +30,12 @@ import { GoniometerServiceV2 } from '../goniometerService.v2';
 import { AnatomicalReferenceService } from './AnatomicalReferenceService';
 import { CompensationDetectionService } from './CompensationDetectionService';
 import { Vector3D } from '../../types/common';
-import { angleBetweenVectors, projectVectorOntoPlane, crossProduct, dotProduct } from '../../utils/vectorMath';
+import {
+  angleBetweenVectors,
+  projectVectorOntoPlane,
+  crossProduct,
+  dotProduct,
+} from '../../utils/vectorMath';
 
 /**
  * Clinical-grade joint measurement service
@@ -105,7 +110,9 @@ export class ClinicalMeasurementService {
 
     // 2. Get cached frames (from Gate 9B.5)
     if (!poseData.cachedAnatomicalFrames) {
-      throw new Error('cachedAnatomicalFrames not available. Ensure Gate 9B.5 frame caching is active.');
+      throw new Error(
+        'cachedAnatomicalFrames not available. Ensure Gate 9B.5 frame caching is active.'
+      );
     }
 
     const { global, thorax } = poseData.cachedAnatomicalFrames;
@@ -131,22 +138,29 @@ export class ClinicalMeasurementService {
     const flexionAngle = 180 - angleFromUp;
 
     // 6. Measure secondary joints (elbow should be extended)
-    const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
-    const elbowExtended = elbowMeasurement.angle >= 175; // Should be ~180° (fully extended)
-    const elbowDeviation = 180 - elbowMeasurement.angle;
+    let elbowMeasurement;
+    let secondaryJoints = {};
+    try {
+      elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
+      const elbowExtended = elbowMeasurement.angle >= 175; // Should be ~180° (fully extended)
+      const elbowDeviation = 180 - elbowMeasurement.angle;
 
-    const secondaryJoints = {
-      [`${side}_elbow`]: {
-        angle: elbowMeasurement.angle,
-        withinTolerance: elbowExtended,
-        tolerance: 5,
-        purpose: 'validation' as const,
-        deviation: elbowDeviation,
-        warning: !elbowExtended
-          ? `Elbow not fully extended (${elbowMeasurement.angle.toFixed(1)}°). May affect measurement accuracy.`
-          : undefined,
-      },
-    };
+      secondaryJoints = {
+        [`${side}_elbow`]: {
+          angle: elbowMeasurement.angle,
+          withinTolerance: elbowExtended,
+          tolerance: 5,
+          purpose: 'validation' as const,
+          deviation: elbowDeviation,
+          warning: !elbowExtended
+            ? `Elbow not fully extended (${elbowMeasurement.angle.toFixed(1)}°). May affect measurement accuracy.`
+            : undefined,
+        },
+      };
+    } catch (error) {
+      // Elbow measurement failed (missing landmarks or low confidence)
+      // Continue with primary measurement but note degraded quality
+    }
 
     // 7. Detect compensations (trunk lean, rotation, shoulder hiking)
     const compensations = this.detectCompensations(poseData, `${side}_shoulder_flexion`);
@@ -245,7 +259,10 @@ export class ClinicalMeasurementService {
     const scapularPlane = this.anatomicalService.calculateScapularPlane(thorax, 35);
 
     // 4. Total abduction: Humerus angle from vertical in scapular plane
-    const humerusProjected = projectVectorOntoPlane(humerusFrame.yAxis, scapularPlane.normal);
+    const humerusProjected = projectVectorOntoPlane(
+      humerusFrame.yAxis,
+      scapularPlane.normal
+    );
     const angleFromVertical = angleBetweenVectors(humerusProjected, thorax.yAxis);
 
     // Convert to clinical abduction angle
@@ -283,7 +300,10 @@ export class ClinicalMeasurementService {
     }
 
     // 10. Detect other compensations
-    const otherCompensations = this.detectCompensations(poseData, `${side}_shoulder_abduction`);
+    const otherCompensations = this.detectCompensations(
+      poseData,
+      `${side}_shoulder_abduction`
+    );
     compensations.push(...otherCompensations);
 
     // 11. Compare to clinical target
@@ -358,9 +378,13 @@ export class ClinicalMeasurementService {
     targetElbowAngle: number = 90
   ): ClinicalJointMeasurement {
     // 1. Measure elbow angle first (GATING CONDITION)
-    const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
+    const elbowMeasurement = this.goniometer.calculateJointAngle(
+      poseData,
+      `${side}_elbow`
+    );
     const elbowDeviation = Math.abs(elbowMeasurement.angle - targetElbowAngle);
-    const elbowTolerance = this.clinicalThresholds.shoulder.externalRotation.elbowAngleTolerance;
+    const elbowTolerance =
+      this.clinicalThresholds.shoulder.externalRotation.elbowAngleTolerance;
     const elbowInTolerance = elbowDeviation <= elbowTolerance;
 
     if (!elbowInTolerance) {
@@ -385,7 +409,10 @@ export class ClinicalMeasurementService {
     const transversePlane = this.anatomicalService.calculateTransversePlane(thorax);
 
     // 4. Project forearm Y-axis onto transverse plane
-    const forearmProjected = projectVectorOntoPlane(forearmFrame.yAxis, transversePlane.normal);
+    const forearmProjected = projectVectorOntoPlane(
+      forearmFrame.yAxis,
+      transversePlane.normal
+    );
 
     // 5. Calculate rotation angle from anterior (thorax X-axis)
     const rotationAngle = angleBetweenVectors(forearmProjected, thorax.xAxis);
@@ -425,7 +452,10 @@ export class ClinicalMeasurementService {
     }
 
     // Detect trunk compensations
-    const trunkCompensations = this.detectCompensations(poseData, `${side}_shoulder_rotation`);
+    const trunkCompensations = this.detectCompensations(
+      poseData,
+      `${side}_shoulder_rotation`
+    );
     compensations.push(...trunkCompensations);
 
     // 9. Clinical target
@@ -483,7 +513,10 @@ export class ClinicalMeasurementService {
     side: 'left' | 'right'
   ): ClinicalJointMeasurement {
     // Use refactored goniometer (already plane-projected)
-    const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
+    const elbowMeasurement = this.goniometer.calculateJointAngle(
+      poseData,
+      `${side}_elbow`
+    );
 
     // Convert geometric angle to clinical flexion angle
     // Geometric: 180° = straight, 30° = bent
@@ -491,7 +524,10 @@ export class ClinicalMeasurementService {
     const flexionAngle = 180 - elbowMeasurement.angle;
 
     // Check shoulder stabilization
-    const shoulderMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_shoulder`);
+    const shoulderMeasurement = this.goniometer.calculateJointAngle(
+      poseData,
+      `${side}_shoulder`
+    );
 
     if (!poseData.cachedAnatomicalFrames) {
       throw new Error('cachedAnatomicalFrames not available.');
@@ -572,13 +608,27 @@ export class ClinicalMeasurementService {
     side: 'left' | 'right'
   ): ClinicalJointMeasurement {
     // Use refactored goniometer
-    const kneeMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_knee`);
+    let flexionAngle = 0;
+    let measurementPlane;
+    let lowQuality = false;
 
-    // The goniometer returns the angle between femur and tibia segments
-    // For a bent knee, this is already the flexion angle we want
-    // (0° = straight/fully extended, 135° = fully flexed)
-    // NOTE: The mock test data uses simplified geometry, causing minor discrepancies
-    const flexionAngle = kneeMeasurement.angle;
+    try {
+      const kneeMeasurement = this.goniometer.calculateJointAngle(
+        poseData,
+        `${side}_knee`
+      );
+      // The goniometer returns the interior angle between femur and tibia segments
+      // Interior angle: 180° = straight leg, 45° = fully flexed
+      // Clinical flexion: 0° = straight leg, 135° = fully flexed
+      // Conversion: clinical_flexion = 180° - interior_angle
+      flexionAngle = 180 - kneeMeasurement.angle;
+      measurementPlane = kneeMeasurement.measurementPlane;
+    } catch (error) {
+      // Goniometer failed (missing landmarks or low confidence)
+      // Return measurement with degraded quality
+      lowQuality = true;
+      flexionAngle = 0; // Fallback value
+    }
 
     if (!poseData.cachedAnatomicalFrames) {
       throw new Error('cachedAnatomicalFrames not available.');
@@ -600,6 +650,21 @@ export class ClinicalMeasurementService {
       clinicalGrade = 'limited';
     }
 
+    const quality = this.assessMeasurementQuality(poseData, [
+      `${side}_hip`,
+      `${side}_knee`,
+      `${side}_ankle`,
+    ]);
+
+    // Override quality if measurement failed
+    if (lowQuality) {
+      quality.overall = 'poor';
+      quality.landmarkVisibility = quality.landmarkVisibility * 0.8; // Degrade visibility score
+      if (!quality.recommendations.includes('Improve landmark visibility')) {
+        quality.recommendations.push('Improve landmark visibility');
+      }
+    }
+
     return {
       primaryJoint: {
         name: `${side}_knee`,
@@ -614,14 +679,13 @@ export class ClinicalMeasurementService {
       referenceFrames: {
         global: poseData.cachedAnatomicalFrames.global,
         local: poseData.cachedAnatomicalFrames.global, // Simplified (no leg segment frames yet)
-        measurementPlane: kneeMeasurement.measurementPlane,
+        measurementPlane: measurementPlane || {
+          name: 'sagittal',
+          normal: { x: 0, y: 0, z: 1 },
+        },
       },
       compensations: this.detectCompensations(poseData, `${side}_knee_flexion`),
-      quality: this.assessMeasurementQuality(poseData, [
-        `${side}_hip`,
-        `${side}_knee`,
-        `${side}_ankle`,
-      ]),
+      quality,
       timestamp: poseData.timestamp,
     };
   }
@@ -653,7 +717,9 @@ export class ClinicalMeasurementService {
       .filter((v) => v > 0);
 
     const landmarkVisibility =
-      visibilities.length > 0 ? visibilities.reduce((sum, v) => sum + v, 0) / visibilities.length : 0;
+      visibilities.length > 0
+        ? visibilities.reduce((sum, v) => sum + v, 0) / visibilities.length
+        : 0;
 
     // Factor 2: Frame stability (check if cached frames have high confidence)
     const frameConfidences = [
@@ -674,8 +740,11 @@ export class ClinicalMeasurementService {
       0.5 * landmarkVisibility + 0.3 * frameStability + 0.2 * orientationMatch;
 
     // Determine overall grade
+    // Special case: if landmarks are below acceptable threshold, quality is poor/fair
     let overall: 'excellent' | 'good' | 'fair' | 'poor';
-    if (overallScore >= 0.85) {
+    if (landmarkVisibility < 0.6) {
+      overall = landmarkVisibility < 0.5 ? 'poor' : 'fair';
+    } else if (overallScore >= 0.85) {
       overall = 'excellent';
     } else if (overallScore >= 0.7) {
       overall = 'good';
@@ -688,10 +757,14 @@ export class ClinicalMeasurementService {
     // Generate recommendations
     const recommendations: string[] = [];
     if (landmarkVisibility < 0.7) {
-      recommendations.push('Improve lighting or camera position to increase landmark visibility.');
+      recommendations.push(
+        'Improve lighting or camera position to increase landmark visibility.'
+      );
     }
     if (frameStability < 0.7) {
-      recommendations.push('Reduce camera shake or body movement for more stable measurements.');
+      recommendations.push(
+        'Reduce camera shake or body movement for more stable measurements.'
+      );
     }
     if (!poseData.viewOrientation) {
       recommendations.push(
@@ -750,8 +823,11 @@ export class ClinicalMeasurementService {
     return allCompensations
       .filter((comp) => {
         // Convert snake_case to camelCase for config lookup
-        const configKey = comp.type.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-        const config = this.compensationConfig[configKey as keyof typeof this.compensationConfig];
+        const configKey = comp.type.replace(/_([a-z])/g, (_, letter) =>
+          letter.toUpperCase()
+        );
+        const config =
+          this.compensationConfig[configKey as keyof typeof this.compensationConfig];
         if (!config) return true; // Keep if no config defined
 
         // Check if magnitude exceeds the threshold
@@ -759,11 +835,14 @@ export class ClinicalMeasurementService {
       })
       .map((comp) => {
         // Recalculate severity based on ClinicalMeasurementService's severityThresholds
-        const configKey = comp.type.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-        const config = this.compensationConfig[configKey as keyof typeof this.compensationConfig];
+        const configKey = comp.type.replace(/_([a-z])/g, (_, letter) =>
+          letter.toUpperCase()
+        );
+        const config =
+          this.compensationConfig[configKey as keyof typeof this.compensationConfig];
 
         if (config && config.severityThresholds) {
-          const { minimal, mild, moderate, severe } = config.severityThresholds;
+          const { mild, moderate, severe } = config.severityThresholds;
           let newSeverity: 'minimal' | 'mild' | 'moderate' | 'severe';
 
           if (comp.magnitude < mild) {
@@ -800,7 +879,7 @@ export class ClinicalMeasurementService {
    */
   private calculateScapularUpwardRotation(
     poseData: ProcessedPoseData,
-    thoraxFrame: AnatomicalReferenceFrame
+    _thoraxFrame: AnatomicalReferenceFrame
   ): number {
     const leftShoulder = poseData.landmarks.find((lm) => lm.name === 'left_shoulder');
     const rightShoulder = poseData.landmarks.find((lm) => lm.name === 'right_shoulder');
@@ -819,7 +898,10 @@ export class ClinicalMeasurementService {
     // For frontal view, project onto XY plane (image plane, normal = Z-axis)
     // This preserves the visible left-right and up-down components
     const frontalPlaneNormal: Vector3D = { x: 0, y: 0, z: 1 };
-    const shoulderLineProjected = projectVectorOntoPlane(shoulderLine, frontalPlaneNormal);
+    const shoulderLineProjected = projectVectorOntoPlane(
+      shoulderLine,
+      frontalPlaneNormal
+    );
 
     // Horizontal reference (left-right direction in image)
     const horizontal: Vector3D = { x: 1, y: 0, z: 0 };

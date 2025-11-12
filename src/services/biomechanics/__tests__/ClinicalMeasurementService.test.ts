@@ -130,18 +130,30 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       { x: 0.6, y: 0.8, z: 0, visibility: 0.9, index: 14, name: 'right_knee' },
 
       // Ankles - position based on knee angle
-      // Simplified: for straight leg (180°), ankle continues downward
-      // For bent knee, ankle moves backward (decreased X)
-      // Upper leg: hip(0.42,0.6) -> knee(0.40,0.8), length ≈ 0.2
-      // Lower leg: knee -> ankle, length ≈ 0.2
-      {
-        x: 0.38 - (180 - kneeAngle) * 0.001, // Bend backward as knee flexes
-        y: 1.0,
-        z: 0,
-        visibility: 0.9,
-        index: 15,
-        name: 'left_ankle',
-      },
+      // Clinical knee flexion: 0° = straight, 135° = fully bent
+      // Interior angle = 180° - clinical_flexion
+      // For kneeAngle parameter representing clinical flexion:
+      // - kneeAngle=180 → interior=0° (impossible, but leg bent backward)
+      // - kneeAngle=90 → interior=90° (right angle)
+      // - kneeAngle=0 → interior=180° (straight leg)
+      //
+      // Upper leg: hip(0.42,0.6) → knee(0.40,0.8), vector ≈ (-0.02, 0.2), length ≈ 0.2
+      // Lower leg: knee → ankle, length ≈ 0.2
+      // Lower leg direction: interior_angle from upper leg direction
+      (() => {
+        const interiorAngleRad = ((180 - kneeAngle) * Math.PI) / 180;
+        const upperLegAngle = Math.atan2(0.8 - 0.6, 0.4 - 0.42); // Angle of hip→knee vector
+        const lowerLegAngle = upperLegAngle + interiorAngleRad - Math.PI; // Add bend angle
+        const lowerLegLength = 0.2;
+        return {
+          x: 0.4 + lowerLegLength * Math.cos(lowerLegAngle),
+          y: 0.8 + lowerLegLength * Math.sin(lowerLegAngle),
+          z: 0,
+          visibility: 0.9,
+          index: 15,
+          name: 'left_ankle',
+        };
+      })(),
       { x: 0.62, y: 1.0, z: 0, visibility: 0.9, index: 16, name: 'right_ankle' },
     ];
 
