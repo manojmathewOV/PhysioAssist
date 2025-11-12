@@ -127,14 +127,14 @@ export class ClinicalMeasurementService {
 
     // 6. Measure secondary joints (elbow should be extended)
     const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
-    const elbowExtended = elbowMeasurement.angle > 165; // Should be ~180° (extended)
+    const elbowExtended = elbowMeasurement.angle >= 175; // Should be ~180° (fully extended)
     const elbowDeviation = 180 - elbowMeasurement.angle;
 
     const secondaryJoints = {
       [`${side}_elbow`]: {
         angle: elbowMeasurement.angle,
         withinTolerance: elbowExtended,
-        tolerance: 15,
+        tolerance: 5,
         purpose: 'validation' as const,
         deviation: elbowDeviation,
         warning: !elbowExtended
@@ -803,23 +803,27 @@ export class ClinicalMeasurementService {
       return 0; // Cannot calculate without both shoulders
     }
 
-    // Shoulder line vector
+    // Shoulder line vector (left to right shoulder)
     const shoulderLine: Vector3D = {
       x: rightShoulder.x - leftShoulder.x,
       y: rightShoulder.y - leftShoulder.y,
       z: (rightShoulder.z || 0) - (leftShoulder.z || 0),
     };
 
-    // Project onto coronal plane (YZ plane of thorax)
-    const coronalPlane = this.anatomicalService.calculateCoronalPlane(thoraxFrame);
-    const shoulderLineProjected = projectVectorOntoPlane(shoulderLine, coronalPlane.normal);
+    // For frontal view, project onto XY plane (image plane, normal = Z-axis)
+    // This preserves the visible left-right and up-down components
+    const frontalPlaneNormal: Vector3D = { x: 0, y: 0, z: 1 };
+    const shoulderLineProjected = projectVectorOntoPlane(shoulderLine, frontalPlaneNormal);
 
-    // Angle from horizontal (Z-axis)
-    const tiltAngle = angleBetweenVectors(shoulderLineProjected, thoraxFrame.zAxis);
+    // Horizontal reference (left-right direction in image)
+    const horizontal: Vector3D = { x: 1, y: 0, z: 0 };
+
+    // Angle from horizontal = scapular upward rotation
+    const tiltAngle = angleBetweenVectors(shoulderLineProjected, horizontal);
 
     // Scapular upward rotation ≈ shoulder line tilt angle
-    // 90° = horizontal (neutral), deviation = upward rotation
-    return Math.abs(tiltAngle - 90);
+    // 0° = horizontal (neutral), positive angle = upward rotation
+    return tiltAngle;
   }
 
   /**
