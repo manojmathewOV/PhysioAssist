@@ -48,9 +48,10 @@ export class SyntheticPoseDataGenerator {
 
     // Define anatomical reference points in normalized coordinates [0-1]
     const hipMidpoint: Vector3D = { x: 0.5, y: 0.6, z: 0.5 }; // Center of frame
-    const shoulderHeight = 0.4; // 40cm above hip in normalized space
+    const shoulderHeight = 0.1; // Adjusted to accommodate full ROM (0°-180°)
     const upperArmLength = 0.25; // 25cm
     const forearmLength = 0.25; // 25cm
+    // Note: shoulder at Y=0.5 allows 180° overhead reach with wrist at Y=0 (top of frame)
 
     // Calculate shoulder position (with optional hiking)
     // View orientation determines coordinate system:
@@ -162,12 +163,13 @@ export class SyntheticPoseDataGenerator {
     } = options;
 
     const hipMidpoint: Vector3D = { x: 0.5, y: 0.6, z: 0.5 };
-    const shoulderHeight = 0.4;
+    const shoulderHeight = 0.1; // Adjusted to accommodate full ROM (0°-180°)
     const upperArmLength = 0.25;
     const forearmLength = 0.25;
 
     // Shoulder position (adjusted for hiking based on scapular rotation)
     const shoulderY = hipMidpoint.y - shoulderHeight - scapularRotation * 0.01; // Approximate elevation
+    // Note: shoulder at Y=0.5 allows 0° (arm down) and 180° (overhead) to stay in frame
     const shoulderX = side === 'right' ? hipMidpoint.x + 0.15 : hipMidpoint.x - 0.15;
 
     const shoulder: Vector3D = {
@@ -183,14 +185,14 @@ export class SyntheticPoseDataGenerator {
 
     const elbow: Vector3D = {
       x: shoulder.x + lateralMultiplier * upperArmLength * Math.sin(abductionRad),
-      y: shoulder.y - upperArmLength * Math.cos(abductionRad),
+      y: shoulder.y + upperArmLength * Math.cos(abductionRad), // Corrected: + for screen Y (0° down, 180° up)
       z: shoulder.z,
     };
 
     // Forearm extended
     const wrist: Vector3D = {
       x: elbow.x + lateralMultiplier * forearmLength * Math.sin(abductionRad),
-      y: elbow.y - forearmLength * Math.cos(abductionRad),
+      y: elbow.y + forearmLength * Math.cos(abductionRad), // Corrected: + for screen Y
       z: elbow.z,
     };
 
@@ -258,7 +260,7 @@ export class SyntheticPoseDataGenerator {
     const { side = 'right', viewOrientation = 'sagittal' } = options;
 
     const hipMidpoint: Vector3D = { x: 0.5, y: 0.6, z: 0.5 };
-    const shoulderHeight = 0.4;
+    const shoulderHeight = 0.1; // Adjusted to accommodate full ROM
     const upperArmLength = 0.25;
     const forearmLength = 0.25;
 
@@ -435,7 +437,7 @@ export class SyntheticPoseDataGenerator {
     const isExternal = angle >= 0; // Positive = external, negative = internal
 
     const hipMidpoint: Vector3D = { x: 0.5, y: 0.6, z: 0.5 };
-    const shoulderHeight = 0.4;
+    const shoulderHeight = 0.1; // Adjusted to accommodate full ROM
     const upperArmLength = 0.25;
     const forearmLength = 0.25;
 
