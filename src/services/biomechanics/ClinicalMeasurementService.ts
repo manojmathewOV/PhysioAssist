@@ -862,15 +862,17 @@ export class ClinicalMeasurementService {
           this.compensationConfig[configKey as keyof typeof this.compensationConfig];
 
         if (config && config.severityThresholds) {
-          const { mild, moderate, severe } = config.severityThresholds;
+          const { minimal, mild, moderate, severe } = config.severityThresholds;
           let newSeverity: 'minimal' | 'mild' | 'moderate' | 'severe';
 
-          if (comp.magnitude < mild) {
+          if (comp.magnitude < minimal) {
             newSeverity = 'minimal';
-          } else if (comp.magnitude < moderate) {
+          } else if (comp.magnitude < mild) {
             newSeverity = 'mild';
-          } else if (comp.magnitude < severe) {
+          } else if (comp.magnitude < moderate) {
             newSeverity = 'moderate';
+          } else if (comp.magnitude < severe) {
+            newSeverity = 'severe';
           } else {
             newSeverity = 'severe';
           }

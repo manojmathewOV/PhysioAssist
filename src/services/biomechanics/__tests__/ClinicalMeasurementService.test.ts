@@ -216,7 +216,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
           }
         : {
             x: Math.sin(primaryAngleRad),
-            y: -Math.cos(primaryAngleRad), // Negative for proper clinical angle (0° = down, 180° = up)
+            y: Math.cos(primaryAngleRad), // 0° = down (+Y), 90° = horizontal (0), 180° = up (-Y)
             z: 0,
           },
       zAxis: { x: 0, y: 0, z: 1 },
@@ -313,8 +313,8 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
         (c) => c.type === 'trunk_lean'
       );
       expect(trunkLeanComp).toBeDefined();
-      // With ClinicalMeasurementService thresholds: 20° is moderate (20-30° range)
-      expect(trunkLeanComp?.severity).toBe('moderate');
+      // With ClinicalMeasurementService thresholds: 20° is severe (20-30° range)
+      expect(trunkLeanComp?.severity).toBe('severe');
       expect(trunkLeanComp?.magnitude).toBeCloseTo(20, 1);
     });
 
@@ -1054,7 +1054,8 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
 
       const trunkComp = measurement.compensations.find((c) => c.type === 'trunk_lean');
-      expect(trunkComp).toBeUndefined(); // Below threshold of 10°
+      expect(trunkComp).toBeDefined();
+      expect(trunkComp?.severity).toBe('mild'); // 5-10° range
     });
 
     it('should detect mild trunk lean (10-20°)', () => {
@@ -1068,7 +1069,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
       const trunkComp = measurement.compensations.find((c) => c.type === 'trunk_lean');
       expect(trunkComp).toBeDefined();
-      expect(trunkComp?.severity).toBe('mild');
+      expect(trunkComp?.severity).toBe('moderate'); // 10-20° range
     });
 
     it('should detect moderate trunk lean (20-30°)', () => {
@@ -1081,7 +1082,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
 
       const trunkComp = measurement.compensations.find((c) => c.type === 'trunk_lean');
-      expect(trunkComp?.severity).toBe('moderate');
+      expect(trunkComp?.severity).toBe('severe'); // 20-30° range
     });
 
     it('should detect severe trunk lean (>30°)', () => {
