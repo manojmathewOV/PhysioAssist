@@ -84,6 +84,8 @@ export class MultiFrameSequenceGenerator {
 
       // Add quality score (high quality for smooth sequence)
       poseData.qualityScore = 0.95;
+      // Store ground truth angle for debugging
+      (poseData as any).groundTruthAngle = angle;
 
       frames.push(poseData);
     }

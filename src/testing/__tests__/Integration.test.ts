@@ -234,24 +234,6 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
         'increasing'
       );
 
-      // Debug temporal result
-      if (!temporalResult.passed) {
-        // eslint-disable-next-line no-console
-        console.log('[TEST] Temporal validation failed:', {
-          passed: temporalResult.passed,
-          suddenJumps: temporalResult.consistency.suddenJumps,
-          smoothnessScore: temporalResult.consistency.smoothnessScore,
-          observedPattern: temporalResult.trajectory.observedPattern,
-          patternMatch: temporalResult.trajectory.patternMatch,
-        });
-        // Sample first 10 angles
-        const sampleAngles = measurementSequence.measurements
-          .slice(0, 10)
-          .map((m) => m.primaryJoint.angle);
-        // eslint-disable-next-line no-console
-        console.log('[TEST] First 10 angles:', sampleAngles);
-      }
-
       // Verify temporal consistency
       expect(temporalResult.passed).toBe(true);
       expect(temporalResult.consistency.suddenJumps).toBe(0);

@@ -62,7 +62,7 @@ export class AnatomicalFrameCache {
   private lookupTimes: number[] = [];
 
   // Configuration
-  private spatialBucketingPrecision: number = 2; // Decimal places for bucketing
+  private spatialBucketingPrecision: number = 3; // Decimal places for bucketing (0.001 units ~= 0.2°)
 
   // Counter for ensuring unique keys when landmarks are missing
   private keyCounter: number = 0;
@@ -72,12 +72,12 @@ export class AnatomicalFrameCache {
    *
    * @param maxSize - Maximum number of frames to cache (default: 60)
    * @param ttl - Time to live in milliseconds (default: 16ms for 60fps)
-   * @param spatialBucketingPrecision - Decimal places for position bucketing (default: 2)
+   * @param spatialBucketingPrecision - Decimal places for position bucketing (default: 3 for ~0.2° precision)
    */
   constructor(
     maxSize: number = 60,
     ttl: number = 16,
-    spatialBucketingPrecision: number = 2
+    spatialBucketingPrecision: number = 3
   ) {
     this.cache = new Map();
     this.maxSize = maxSize;
