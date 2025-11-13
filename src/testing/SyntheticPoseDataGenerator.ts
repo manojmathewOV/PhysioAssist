@@ -460,6 +460,10 @@ export class SyntheticPoseDataGenerator {
     // Wrist position for elbow flexion (sagittal plane)
     // At 0° flexion: arm straight down
     // At 90° flexion: forearm points anterior (toward camera in sagittal view)
+    // Note: Shoulder rotation is NOT currently modeled in pose geometry
+    // (rotation is stored in ground truth but doesn't affect landmark positions)
+    // This is acceptable for validation testing as the measurement service
+    // should handle this via anatomical frames
     const flexionRad = (elbowAngle * Math.PI) / 180;
     const wrist: Vector3D = {
       x: elbow.x + forearmLength * Math.sin(flexionRad), // Anterior displacement
