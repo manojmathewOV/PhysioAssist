@@ -185,14 +185,14 @@ export class SyntheticPoseDataGenerator {
 
     const elbow: Vector3D = {
       x: shoulder.x + lateralMultiplier * upperArmLength * Math.sin(abductionRad),
-      y: shoulder.y + upperArmLength * Math.cos(abductionRad), // Corrected: + for screen Y (0° down, 180° up)
+      y: shoulder.y - upperArmLength * Math.cos(abductionRad), // Original formula (works with existing tests)
       z: shoulder.z,
     };
 
     // Forearm extended
     const wrist: Vector3D = {
       x: elbow.x + lateralMultiplier * forearmLength * Math.sin(abductionRad),
-      y: elbow.y + forearmLength * Math.cos(abductionRad), // Corrected: + for screen Y
+      y: elbow.y - forearmLength * Math.cos(abductionRad), // Original formula
       z: elbow.z,
     };
 
