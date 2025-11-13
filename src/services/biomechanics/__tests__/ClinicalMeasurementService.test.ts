@@ -85,7 +85,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
             : 0.4 + Math.sin((shoulderFlexion * Math.PI) / 180) * 0.2, // Forward for flexion
         y:
           shoulderAbduction !== 0
-            ? 0.3 - Math.cos((shoulderAbduction * Math.PI) / 180) * 0.2 // Upward for abduction
+            ? 0.3 + Math.cos((shoulderAbduction * Math.PI) / 180) * 0.2 // Upward for abduction (cos is negative at high angles, so adds negative = moves up)
             : 0.3 + Math.cos((shoulderFlexion * Math.PI) / 180) * 0.2, // Downward for flexion
         z: 0,
         visibility: 0.9,
@@ -107,8 +107,8 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
               Math.sin((elbowAngle * Math.PI) / 180) * 0.15,
         y:
           shoulderAbduction !== 0
-            ? 0.3 -
-              Math.cos((shoulderAbduction * Math.PI) / 180) * 0.2 -
+            ? 0.3 +
+              Math.cos((shoulderAbduction * Math.PI) / 180) * 0.2 +
               Math.cos((shoulderAbduction * Math.PI) / 180) * 0.15
             : 0.3 +
               Math.cos((shoulderFlexion * Math.PI) / 180) * 0.2 +
@@ -184,7 +184,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       },
       yAxis: {
         x: isSagittal ? 0 : -Math.sin(trunkLeanRad), // Lateral tilt only in frontal view
-        y: Math.cos(trunkLeanRad),
+        y: -Math.cos(trunkLeanRad), // Negative Y for upward in screen coordinates
         z: isSagittal ? Math.sin(trunkLeanRad) : 0, // Anterior/posterior tilt only in sagittal view
       },
       zAxis: {
@@ -227,8 +227,10 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
     // Forearm frame (left elbow)
     const forearmFrame: AnatomicalReferenceFrame = {
       origin: {
-        x: 0.4 + Math.sin(primaryAngleRad) * 0.2,
-        y: 0.3 + Math.cos(primaryAngleRad) * 0.2,
+        x: isAbduction
+          ? 0.4 - Math.sin(primaryAngleRad) * 0.2 // Abduction: lateral movement
+          : 0.4 + Math.sin(primaryAngleRad) * 0.2, // Flexion: forward movement
+        y: 0.3 + Math.cos(primaryAngleRad) * 0.2, // Cos is negative at high angles, so adds negative = moves up
         z: 0,
       },
       xAxis: { x: 1, y: 0, z: 0 },

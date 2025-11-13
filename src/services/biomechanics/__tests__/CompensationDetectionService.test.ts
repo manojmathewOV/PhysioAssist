@@ -56,7 +56,7 @@ describe('CompensationDetectionService - Gate 10B', () => {
       },
       yAxis: {
         x: Math.sin(lateralRad),
-        y: Math.cos(lateralRad) * Math.cos(anteriorRad),
+        y: -Math.cos(lateralRad) * Math.cos(anteriorRad), // Negative Y for upward in screen coordinates
         z: Math.cos(lateralRad) * Math.sin(anteriorRad),
       },
       zAxis: {
