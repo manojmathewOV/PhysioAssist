@@ -178,8 +178,9 @@ export class CompensationDetectionService {
     // Thorax frame Y-axis should point superior
     const yAxis = thoraxFrame.yAxis;
 
-    // Reference vertical vector (true vertical = [0, 1, 0])
-    const vertical: Vector3D = { x: 0, y: 1, z: 0 };
+    // Reference vertical vector (true vertical = [0, -1, 0] in screen coordinates where Y increases downward)
+    // In screen space: Y=0 is top, Y=1 is bottom, so upward is negative Y
+    const vertical: Vector3D = { x: 0, y: -1, z: 0 };
 
     let deviation: number;
     let leanType: string;

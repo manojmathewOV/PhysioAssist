@@ -41,7 +41,11 @@ export class TemporalConsistencyAnalyzer {
     const consistency = this.analyzeFrameToFrameConsistency(angles, sequence.frameRate);
 
     // 2. Trajectory validation
-    const trajectory = this.analyzeTrajectory(angles, sequence.frameRate, expectedPattern);
+    const trajectory = this.analyzeTrajectory(
+      angles,
+      sequence.frameRate,
+      expectedPattern
+    );
 
     // 3. Compensation tracking
     const compensations = this.trackCompensations(sequence.measurements);
@@ -52,13 +56,19 @@ export class TemporalConsistencyAnalyzer {
     // 5. Overall assessment
     const issues: string[] = [];
     if (!consistency.passed) {
-      issues.push(`Frame-to-frame inconsistency: ${consistency.suddenJumps} sudden jumps detected`);
+      issues.push(
+        `Frame-to-frame inconsistency: ${consistency.suddenJumps} sudden jumps detected`
+      );
     }
     if (!trajectory.patternMatch && expectedPattern) {
-      issues.push(`Trajectory mismatch: expected ${expectedPattern}, observed ${trajectory.observedPattern}`);
+      issues.push(
+        `Trajectory mismatch: expected ${expectedPattern}, observed ${trajectory.observedPattern}`
+      );
     }
     if (!quality.passed) {
-      issues.push(`Quality degradation: ${quality.qualityDropouts} dropouts, ${quality.framesBelowThreshold} low-quality frames`);
+      issues.push(
+        `Quality degradation: ${quality.qualityDropouts} dropouts, ${quality.framesBelowThreshold} low-quality frames`
+      );
     }
 
     const persistentCompensations = compensations.filter((c) => c.isPersistent);
@@ -88,7 +98,10 @@ export class TemporalConsistencyAnalyzer {
   /**
    * Analyze frame-to-frame consistency
    */
-  private analyzeFrameToFrameConsistency(angles: number[], frameRate: number): FrameToFrameConsistency {
+  private analyzeFrameToFrameConsistency(
+    angles: number[],
+    _frameRate: number
+  ): FrameToFrameConsistency {
     if (angles.length < 2) {
       return {
         meanDelta: 0,
@@ -111,7 +124,8 @@ export class TemporalConsistencyAnalyzer {
     const maxDelta = Math.max(...deltas);
 
     // Standard deviation
-    const variance = deltas.reduce((sum, d) => sum + (d - meanDelta) ** 2, 0) / deltas.length;
+    const variance =
+      deltas.reduce((sum, d) => sum + (d - meanDelta) ** 2, 0) / deltas.length;
     const stdDevDelta = Math.sqrt(variance);
 
     // Count sudden jumps (exceeding threshold)
@@ -122,7 +136,8 @@ export class TemporalConsistencyAnalyzer {
     const normalizedStdDev = Math.min(stdDevDelta / 10, 1);
     const smoothnessScore = 1 - normalizedStdDev;
 
-    const passed = suddenJumps === 0 && smoothnessScore >= this.config.smoothnessThreshold;
+    const passed =
+      suddenJumps === 0 && smoothnessScore >= this.config.smoothnessThreshold;
 
     return {
       meanDelta,
@@ -170,7 +185,10 @@ export class TemporalConsistencyAnalyzer {
     // Count reversals (direction changes)
     let reversals = 0;
     for (let i = 1; i < velocities.length; i++) {
-      if ((velocities[i] > 0 && velocities[i - 1] < 0) || (velocities[i] < 0 && velocities[i - 1] > 0)) {
+      if (
+        (velocities[i] > 0 && velocities[i - 1] < 0) ||
+        (velocities[i] < 0 && velocities[i - 1] > 0)
+      ) {
         reversals++;
       }
     }
@@ -181,7 +199,9 @@ export class TemporalConsistencyAnalyzer {
     const totalRangeOfMotion = maxAngle - minAngle;
 
     // Calculate velocities
-    const averageVelocity = Math.abs(velocities.reduce((sum, v) => sum + v, 0) / velocities.length);
+    const averageVelocity = Math.abs(
+      velocities.reduce((sum, v) => sum + v, 0) / velocities.length
+    );
     const peakVelocity = Math.max(...velocities.map(Math.abs));
 
     // Trend consistency (how well observed matches expected)
@@ -203,18 +223,24 @@ export class TemporalConsistencyAnalyzer {
         if (expectedPattern === 'increasing' && overallTrend < 0) {
           trendConsistency *= 0.5;
           patternMatch = false;
-          notes.push('Expected increasing trajectory but observed decreasing overall trend');
+          notes.push(
+            'Expected increasing trajectory but observed decreasing overall trend'
+          );
         } else if (expectedPattern === 'decreasing' && overallTrend > 0) {
           trendConsistency *= 0.5;
           patternMatch = false;
-          notes.push('Expected decreasing trajectory but observed increasing overall trend');
+          notes.push(
+            'Expected decreasing trajectory but observed increasing overall trend'
+          );
         }
       } else if (expectedPattern === 'static') {
         // Should have minimal ROM
         if (totalRangeOfMotion > 10) {
           trendConsistency = Math.max(0, 1 - totalRangeOfMotion / 50);
           patternMatch = false;
-          notes.push(`Excessive motion (${totalRangeOfMotion.toFixed(1)}°) for static hold`);
+          notes.push(
+            `Excessive motion (${totalRangeOfMotion.toFixed(1)}°) for static hold`
+          );
         }
       } else if (expectedPattern === 'oscillating') {
         // Should have multiple reversals
@@ -269,7 +295,9 @@ export class TemporalConsistencyAnalyzer {
 
     // Calculate velocity standard deviation
     const meanVel = velocities.reduce((sum, v) => sum + v, 0) / velocities.length;
-    const velStdDev = Math.sqrt(velocities.reduce((sum, v) => sum + (v - meanVel) ** 2, 0) / velocities.length);
+    const velStdDev = Math.sqrt(
+      velocities.reduce((sum, v) => sum + (v - meanVel) ** 2, 0) / velocities.length
+    );
 
     // Erratic: very high velocity variance
     if (velStdDev > 100) {
@@ -294,7 +322,9 @@ export class TemporalConsistencyAnalyzer {
   /**
    * Track compensations across frames
    */
-  private trackCompensations(measurements: ClinicalJointMeasurement[]): TemporalCompensationTracking[] {
+  private trackCompensations(
+    measurements: ClinicalJointMeasurement[]
+  ): TemporalCompensationTracking[] {
     // Group compensations by type
     const compensationMap = new Map<string, number[]>();
 
@@ -368,16 +398,18 @@ export class TemporalConsistencyAnalyzer {
 
     const levels = progression.map((p) => severityLevels[p.severity]);
 
-    // Check if levels are generally increasing
-    let increases = 0;
-    for (let i = 1; i < levels.length; i++) {
-      if (levels[i] > levels[i - 1]) {
-        increases++;
-      }
-    }
+    // Check for overall progression: first third vs last third
+    const firstThirdEnd = Math.floor(levels.length / 3);
+    const lastThirdStart = Math.floor((2 * levels.length) / 3);
 
-    // Progressive if >60% of transitions are increases
-    return increases / (levels.length - 1) > 0.6;
+    const avgFirst =
+      levels.slice(0, firstThirdEnd).reduce((a, b) => a + b, 0) / firstThirdEnd;
+    const avgLast =
+      levels.slice(lastThirdStart).reduce((a, b) => a + b, 0) /
+      (levels.length - lastThirdStart);
+
+    // Progressive if last third is significantly higher than first third
+    return avgLast > avgFirst + 0.5; // At least half a severity level increase
   }
 
   /**
@@ -410,7 +442,9 @@ export class TemporalConsistencyAnalyzer {
     const degradationRate = totalDegradation / duration;
 
     // Count frames below threshold
-    const framesBelowThreshold = qualities.filter((q) => q < this.config.minQualityScore).length;
+    const framesBelowThreshold = qualities.filter(
+      (q) => q < this.config.minQualityScore
+    ).length;
 
     // Count quality dropouts (sudden drops >0.2)
     let qualityDropouts = 0;
@@ -421,7 +455,9 @@ export class TemporalConsistencyAnalyzer {
     }
 
     const passed =
-      framesBelowThreshold === 0 && qualityDropouts <= this.config.maxQualityDropouts && meanQuality >= this.config.minQualityScore;
+      framesBelowThreshold === 0 &&
+      qualityDropouts <= this.config.maxQualityDropouts &&
+      meanQuality >= this.config.minQualityScore;
 
     return {
       initialQuality,
@@ -447,7 +483,7 @@ export class TemporalConsistencyAnalyzer {
     // Calculate second derivative (acceleration)
     const accelerations: number[] = [];
     for (let i = 2; i < angles.length; i++) {
-      const accel = (angles[i] - angles[i - 1]) - (angles[i - 1] - angles[i - 2]);
+      const accel = angles[i] - angles[i - 1] - (angles[i - 1] - angles[i - 2]);
       accelerations.push(Math.abs(accel));
     }
 
@@ -468,7 +504,11 @@ export class TemporalConsistencyAnalyzer {
     angles: number[],
     qualities: number[]
   ): Array<{ frame: number; reason: string; severity: 'low' | 'medium' | 'high' }> {
-    const anomalies: Array<{ frame: number; reason: string; severity: 'low' | 'medium' | 'high' }> = [];
+    const anomalies: Array<{
+      frame: number;
+      reason: string;
+      severity: 'low' | 'medium' | 'high';
+    }> = [];
 
     // Check frame-to-frame jumps
     for (let i = 1; i < angles.length; i++) {
@@ -486,7 +526,8 @@ export class TemporalConsistencyAnalyzer {
     // Check quality drops
     for (let i = 0; i < qualities.length; i++) {
       if (qualities[i] < this.config.minQualityScore) {
-        const severity = qualities[i] < 0.5 ? 'high' : qualities[i] < 0.6 ? 'medium' : 'low';
+        const severity =
+          qualities[i] < 0.5 ? 'high' : qualities[i] < 0.6 ? 'medium' : 'low';
         anomalies.push({
           frame: i,
           reason: `Low quality: ${(qualities[i] * 100).toFixed(0)}%`,

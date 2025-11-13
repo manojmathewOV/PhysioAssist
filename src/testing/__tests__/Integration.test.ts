@@ -289,8 +289,20 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
           `[TEST] Sample compensation:`,
           framesWithCompensations[0].compensations[0]
         );
-        // Debug: Check thorax frame from measurement
+        // Debug: Check thorax frame from measurement and landmarks
         const measurement0 = measurementSequence.measurements[0];
+        const frame0 = poseSequence.frames[0];
+        const leftShoulder = frame0.landmarks.find((l) => l.name === 'left_shoulder');
+        const rightShoulder = frame0.landmarks.find((l) => l.name === 'right_shoulder');
+        const leftHip = frame0.landmarks.find((l) => l.name === 'left_hip');
+        const rightHip = frame0.landmarks.find((l) => l.name === 'right_hip');
+        // eslint-disable-next-line no-console
+        console.log(`[TEST] Frame 0 shoulders Y:`, {
+          left: leftShoulder?.y,
+          right: rightShoulder?.y,
+        });
+        // eslint-disable-next-line no-console
+        console.log(`[TEST] Frame 0 hips Y:`, { left: leftHip?.y, right: rightHip?.y });
         // eslint-disable-next-line no-console
         console.log(
           `[TEST] Frame 0 thorax from measurement:`,
@@ -319,6 +331,13 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
         totalFramesDetected: trunkLean?.totalFramesDetected,
         severityProgression: trunkLean?.severityProgression?.slice(0, 10), // First 10 frames
       });
+      // Check severity level distribution
+      const severityCounts: Record<string, number> = {};
+      trunkLean?.severityProgression?.forEach((p) => {
+        severityCounts[p.severity] = (severityCounts[p.severity] || 0) + 1;
+      });
+      // eslint-disable-next-line no-console
+      console.log(`[TEST] Severity distribution:`, severityCounts);
       expect(trunkLean!.isPersistent).toBe(true); // Present in >50% of frames
       expect(trunkLean!.isProgressive).toBe(true); // Severity increases
       expect(trunkLean!.firstDetectedFrame).toBeGreaterThanOrEqual(60);
