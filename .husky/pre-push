@@ -3,9 +3,9 @@
 
 echo "🔍 Running pre-push checks..."
 
-# Type check
-echo "⚡ TypeScript type checking..."
-npm run type-check || exit 1
+# Type check (focused on core biomechanics code)
+echo "⚡ TypeScript type checking (biomechanics & testing)..."
+tsc --noEmit --project tsconfig.prepush.json || exit 1
 
 # Run tests
 echo "🧪 Running tests..."

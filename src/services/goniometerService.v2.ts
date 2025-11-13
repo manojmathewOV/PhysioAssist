@@ -24,9 +24,9 @@ import {
   JointAngle,
   AngleCalculationConfig,
   ProcessedPoseData,
-} from '@types/pose';
-import { Vector3D } from '@types/common';
-import { AnatomicalPlane, AnatomicalReferenceFrame } from '@types/biomechanics';
+} from '../types/pose';
+import { Vector3D } from '../types/common';
+import { AnatomicalPlane, AnatomicalReferenceFrame } from '../types/biomechanics';
 import {
   angleBetweenVectors,
   projectVectorOntoPlane,

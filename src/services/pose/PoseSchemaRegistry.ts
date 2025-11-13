@@ -1,4 +1,4 @@
-import { PoseSchema, LandmarkDefinition, AnatomicalGroup } from '@types/pose';
+import { PoseSchema, LandmarkDefinition, AnatomicalGroup } from '../../types/pose';
 
 /**
  * Pose Schema Registry

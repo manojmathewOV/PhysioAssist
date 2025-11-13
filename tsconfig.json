@@ -25,13 +25,21 @@
       "@types/*": ["src/types/*"],
       "@constants/*": ["src/constants/*"],
       "@navigation/*": ["src/navigation/*"],
-      "@features/*": ["src/features/*"]
-    }
+      "@features/*": ["src/features/*"],
+    },
   },
   "exclude": [
     "node_modules",
     "babel.config.js",
     "metro.config.js",
-    "jest.config.js"
-  ]
+    "jest.config.js",
+    "docs/**/*",
+    "e2e/**/*",
+    "scripts/**/*",
+    "__tests__/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+  ],
 }

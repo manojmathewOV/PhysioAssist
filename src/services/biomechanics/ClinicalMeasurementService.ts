@@ -701,6 +701,7 @@ export class ClinicalMeasurementService {
         measurementPlane: measurementPlane || {
           name: 'sagittal',
           normal: { x: 0, y: 0, z: 1 },
+          point: { x: 0, y: 0, z: 0 },
         },
       },
       compensations: this.detectCompensations(poseData, `${side}_knee_flexion`),
