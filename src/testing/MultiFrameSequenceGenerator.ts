@@ -370,15 +370,16 @@ export class MultiFrameSequenceGenerator {
     baseSequence: TemporalPoseSequence,
     degradationPattern: 'linear' | 'sudden' | 'intermittent'
   ): TemporalPoseSequence {
+    const totalFrames = baseSequence.frames.length;
     const frames = baseSequence.frames.map((frame, index) => {
       let quality = 0.95; // Start with high quality
 
       if (degradationPattern === 'linear') {
         // Gradual quality decrease
-        quality = 0.95 - (index / frames.length) * 0.3; // 0.95 → 0.65
+        quality = 0.95 - (index / totalFrames) * 0.3; // 0.95 → 0.65
       } else if (degradationPattern === 'sudden') {
         // Sudden drop at midpoint
-        quality = index < frames.length / 2 ? 0.95 : 0.55;
+        quality = index < totalFrames / 2 ? 0.95 : 0.55;
       } else if (degradationPattern === 'intermittent') {
         // Random drops
         quality = Math.random() < 0.2 ? 0.6 : 0.95; // 20% chance of low quality
