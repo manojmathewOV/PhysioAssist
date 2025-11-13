@@ -289,6 +289,13 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
           `[TEST] Sample compensation:`,
           framesWithCompensations[0].compensations[0]
         );
+        // Debug: Check thorax frame from measurement
+        const measurement0 = measurementSequence.measurements[0];
+        // eslint-disable-next-line no-console
+        console.log(
+          `[TEST] Frame 0 thorax from measurement:`,
+          measurement0.referenceFrames?.global?.yAxis
+        );
       }
 
       const temporalResult = temporalAnalyzer.analyzeSequence(
@@ -304,6 +311,14 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
         (c) => c.compensationType === 'trunk_lean'
       );
       expect(trunkLean).toBeDefined();
+      // eslint-disable-next-line no-console
+      console.log(`[TEST] Trunk lean details:`, {
+        isPersistent: trunkLean?.isPersistent,
+        isProgressive: trunkLean?.isProgressive,
+        firstDetectedFrame: trunkLean?.firstDetectedFrame,
+        totalFramesDetected: trunkLean?.totalFramesDetected,
+        severityProgression: trunkLean?.severityProgression?.slice(0, 10), // First 10 frames
+      });
       expect(trunkLean!.isPersistent).toBe(true); // Present in >50% of frames
       expect(trunkLean!.isProgressive).toBe(true); // Severity increases
       expect(trunkLean!.firstDetectedFrame).toBeGreaterThanOrEqual(60);
