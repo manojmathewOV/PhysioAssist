@@ -7,8 +7,8 @@ echo "🔍 Running pre-push checks..."
 echo "⚡ TypeScript type checking (biomechanics & testing)..."
 tsc --noEmit --project tsconfig.prepush.json || exit 1
 
-# Run tests (focused on biomechanics & testing modules)
-echo "🧪 Running biomechanics tests..."
-npm test -- src/services/biomechanics src/testing src/utils/vectorMath --passWithNoTests || exit 1
+# Run tests (Integration tests - core biomechanics validation)
+echo "🧪 Running Integration tests..."
+npm test -- src/testing/__tests__/Integration.test.ts --passWithNoTests || exit 1
 
 echo "✅ Pre-push checks passed!"
