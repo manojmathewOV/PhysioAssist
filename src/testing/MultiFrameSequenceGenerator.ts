@@ -446,9 +446,12 @@ export class MultiFrameSequenceGenerator {
           side: 'left' | 'right';
           trunkLean?: number;
           shoulderHiking?: number;
+          viewOrientation?: 'frontal' | 'sagittal' | 'posterior';
         } = { side };
-        if (compensationType === 'trunk_lean')
+        if (compensationType === 'trunk_lean') {
           genOptions.trunkLean = compensationMagnitude;
+          genOptions.viewOrientation = 'frontal'; // Frontal view needed for lateral trunk lean
+        }
         if (compensationType === 'shoulder_hiking')
           genOptions.shoulderHiking = compensationMagnitude;
         ({ poseData } = this.poseGenerator.generateShoulderFlexion(

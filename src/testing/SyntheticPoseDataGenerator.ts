@@ -43,7 +43,7 @@ export class SyntheticPoseDataGenerator {
       trunkLean = 0,
       shoulderHiking = 0,
       side = 'right',
-      viewOrientation = 'frontal', // Frontal view allows detection of lateral trunk lean
+      viewOrientation = 'sagittal', // Sagittal view is standard for flexion measurement
     } = options;
 
     // Define anatomical reference points in normalized coordinates [0-1]
