@@ -270,10 +270,10 @@ export class ClinicalMeasurementService {
     );
     const angleFromVertical = angleBetweenVectors(humerusProjected, thorax.yAxis);
 
-    // Convert to clinical abduction angle
-    // Geometric: 0° = arm overhead, 180° = arm down
-    // Clinical: 0° = arm down, 180° = arm overhead
-    const totalAbduction = 180 - angleFromVertical;
+    // angleFromVertical already represents clinical abduction:
+    // 0° = arm down (humerus || thorax yAxis)
+    // 180° = arm overhead (humerus antiparallel to thorax yAxis)
+    const totalAbduction = angleFromVertical;
 
     // 5. Scapular upward rotation (scapulothoracic contribution)
     const scapularRotation = this.calculateScapularUpwardRotation(poseData, thorax);
@@ -383,18 +383,20 @@ export class ClinicalMeasurementService {
     targetElbowAngle: number = 90
   ): ClinicalJointMeasurement {
     // 1. Measure elbow angle first (GATING CONDITION)
-    const elbowMeasurement = this.goniometer.calculateJointAngle(
+    const elbowGoniometerResult = this.goniometer.calculateJointAngle(
       poseData,
       `${side}_elbow`
     );
-    const elbowDeviation = Math.abs(elbowMeasurement.angle - targetElbowAngle);
+    // Convert interior angle to clinical flexion (same as measureElbowFlexion)
+    const elbowFlexionAngle = 180 - elbowGoniometerResult.angle;
+    const elbowDeviation = Math.abs(elbowFlexionAngle - targetElbowAngle);
     const elbowTolerance =
       this.clinicalThresholds.shoulder.externalRotation.elbowAngleTolerance;
     const elbowInTolerance = elbowDeviation <= elbowTolerance;
 
     if (!elbowInTolerance) {
       console.warn(
-        `[ClinicalMeasurementService] Elbow angle (${elbowMeasurement.angle.toFixed(1)}°) deviates from target (${targetElbowAngle}°) by ${elbowDeviation.toFixed(1)}°. Rotation measurement may be invalid.`
+        `[ClinicalMeasurementService] Elbow angle (${elbowFlexionAngle.toFixed(1)}°) deviates from target (${targetElbowAngle}°) by ${elbowDeviation.toFixed(1)}°. Rotation measurement may be invalid.`
       );
     }
 
@@ -432,13 +434,13 @@ export class ClinicalMeasurementService {
     // 7. Secondary joints (elbow gating)
     const secondaryJoints = {
       [`${side}_elbow`]: {
-        angle: elbowMeasurement.angle,
+        angle: elbowFlexionAngle,
         withinTolerance: elbowInTolerance,
         tolerance: elbowTolerance,
         purpose: 'gating' as const,
         deviation: elbowDeviation,
         warning: !elbowInTolerance
-          ? `Elbow should be at ${targetElbowAngle}° for valid rotation measurement. Current: ${elbowMeasurement.angle.toFixed(1)}°`
+          ? `Elbow should be at ${targetElbowAngle}° for valid rotation measurement. Current: ${elbowFlexionAngle.toFixed(1)}°`
           : undefined,
       },
     };
@@ -470,6 +472,21 @@ export class ClinicalMeasurementService {
 
     const percentOfTarget = (Math.abs(signedRotation) / targetAngle) * 100;
 
+    // 10. Assess quality and add elbow gating warnings if needed
+    const quality = this.assessMeasurementQuality(poseData, [
+      `${side}_shoulder`,
+      `${side}_elbow`,
+      `${side}_wrist`,
+    ]);
+
+    // Add elbow gating warning to quality object
+    if (!elbowInTolerance) {
+      quality.warnings = quality.warnings || [];
+      quality.warnings.push(
+        `Elbow angle (${elbowFlexionAngle.toFixed(1)}°) deviates from required ${targetElbowAngle}° by ${elbowDeviation.toFixed(1)}°. Rotation measurement may be invalid.`
+      );
+    }
+
     return {
       primaryJoint: {
         name: `${side}_shoulder`,
@@ -487,11 +504,7 @@ export class ClinicalMeasurementService {
         measurementPlane: transversePlane,
       },
       compensations,
-      quality: this.assessMeasurementQuality(poseData, [
-        `${side}_shoulder`,
-        `${side}_elbow`,
-        `${side}_wrist`,
-      ]),
+      quality,
       timestamp: poseData.timestamp,
     };
   }

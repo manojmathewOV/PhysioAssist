@@ -43,7 +43,7 @@ export class SyntheticPoseDataGenerator {
       trunkLean = 0,
       shoulderHiking = 0,
       side = 'right',
-      viewOrientation = 'sagittal',
+      viewOrientation = 'frontal', // Frontal view allows detection of lateral trunk lean
     } = options;
 
     // Define anatomical reference points in normalized coordinates [0-1]
@@ -423,14 +423,87 @@ export class SyntheticPoseDataGenerator {
     options: {
       elbowAngle?: number;
       side?: 'left' | 'right';
+      viewOrientation?: 'frontal' | 'sagittal' | 'posterior';
     } = {}
   ): { poseData: ProcessedPoseData; groundTruth: GroundTruth } {
-    // Stub implementation - uses shoulder abduction as placeholder
-    // TODO: Implement proper shoulder rotation with elbow gating
-    return this.generateShoulderAbduction(angle, schemaId, {
-      side: options.side,
-      viewOrientation: 'frontal',
+    const {
+      elbowAngle = 90, // Standard test position
+      side = 'right',
+      viewOrientation = 'sagittal', // Sagittal view for arm-at-side rotation test
+    } = options;
+
+    const isExternal = angle >= 0; // Positive = external, negative = internal
+
+    const hipMidpoint: Vector3D = { x: 0.5, y: 0.6, z: 0.5 };
+    const shoulderHeight = 0.4;
+    const upperArmLength = 0.25;
+    const forearmLength = 0.25;
+
+    // Shoulder position (lateral offset from midline)
+    const shoulderX = side === 'right' ? hipMidpoint.x + 0.15 : hipMidpoint.x - 0.15;
+    const shoulder: Vector3D = {
+      x: shoulderX,
+      y: hipMidpoint.y - shoulderHeight,
+      z: hipMidpoint.z,
+    };
+
+    // Arm hanging at side (0° abduction) for clinical shoulder rotation test
+    // Elbow below shoulder at specified flexion angle
+    const elbow: Vector3D = {
+      x: shoulder.x,
+      y: shoulder.y + upperArmLength, // Hanging down
+      z: shoulder.z,
+    };
+
+    // Wrist position for elbow flexion (sagittal plane)
+    // At 0° flexion: arm straight down
+    // At 90° flexion: forearm points anterior (toward camera in sagittal view)
+    const flexionRad = (elbowAngle * Math.PI) / 180;
+    const wrist: Vector3D = {
+      x: elbow.x + forearmLength * Math.sin(flexionRad), // Anterior displacement
+      y: elbow.y + forearmLength * Math.cos(flexionRad), // Downward component
+      z: elbow.z,
+    };
+
+    const landmarks = this.generateFullSkeleton(schemaId, {
+      shoulder,
+      elbow,
+      wrist,
+      hipMidpoint,
+      trunkLean: 0,
+      side,
+      viewOrientation,
     });
+
+    const poseData: ProcessedPoseData = {
+      landmarks,
+      timestamp: Date.now(),
+      schemaId,
+      viewOrientation,
+      qualityScore: 0.95,
+      hasDepth: false,
+      confidence: 0.95,
+    };
+
+    const groundTruth: GroundTruth = {
+      primaryMeasurement: {
+        joint: `${side}_shoulder`,
+        angle: Math.abs(angle),
+        plane: 'transverse',
+        movement: isExternal ? 'external_rotation' : 'internal_rotation',
+      },
+      secondaryMeasurements: [
+        {
+          joint: `${side}_elbow`,
+          angle: elbowAngle,
+          expectedDeviation: 0, // Should be at target
+        },
+      ],
+      compensations: [],
+      testCase: `shoulder_rotation_${angle}deg_elbow${elbowAngle}deg_${side}`,
+    };
+
+    return { poseData, groundTruth };
   }
 
   /**
