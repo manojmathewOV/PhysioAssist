@@ -475,9 +475,11 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
 
   describe('Compensation Detection Accuracy', () => {
     it('should detect trunk lean in shoulder flexion', () => {
+      // Use frontal view to detect lateral trunk lean (sagittal only detects forward/backward)
       const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', {
         side: 'right',
         trunkLean: 20,
+        viewOrientation: 'frontal',
       });
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
       const measurement = measurementService.measureShoulderFlexion(

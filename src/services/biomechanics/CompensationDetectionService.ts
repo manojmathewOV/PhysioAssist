@@ -22,7 +22,7 @@
 import { ProcessedPoseData, PoseLandmark } from '../../types/pose';
 import { CompensationPattern, AnatomicalReferenceFrame } from '../../types/biomechanics';
 import { Vector3D } from '../../types/common';
-import { angleBetweenVectors, projectVectorOntoPlane, normalize, dotProduct } from '../../utils/vectorMath';
+import { angleBetweenVectors, projectVectorOntoPlane } from '../../utils/vectorMath';
 import { PoseSchemaRegistry } from '../pose/PoseSchemaRegistry';
 
 /**
@@ -72,7 +72,9 @@ export class CompensationDetectionService {
 
     // Validate cached frames exist
     if (!poseData.cachedAnatomicalFrames) {
-      console.warn('[CompensationDetectionService] No cached anatomical frames - cannot detect compensations');
+      console.warn(
+        '[CompensationDetectionService] No cached anatomical frames - cannot detect compensations'
+      );
       return compensations;
     }
 
@@ -80,10 +82,17 @@ export class CompensationDetectionService {
     const schemaId = poseData.schemaId ?? 'movenet-17'; // Default to movenet-17 if not specified
 
     // Detect trunk compensations (always check)
-    const trunkLean = this.detectTrunkLean(frames.thorax, poseData.viewOrientation, movement);
+    const trunkLean = this.detectTrunkLean(
+      frames.thorax,
+      poseData.viewOrientation,
+      movement
+    );
     if (trunkLean) compensations.push(trunkLean);
 
-    const trunkRotation = this.detectTrunkRotation(frames.thorax, poseData.viewOrientation);
+    const trunkRotation = this.detectTrunkRotation(
+      frames.thorax,
+      poseData.viewOrientation
+    );
     if (trunkRotation) compensations.push(trunkRotation);
 
     // Detect shoulder compensations (if shoulder movement)
@@ -109,11 +118,7 @@ export class CompensationDetectionService {
 
     // Detect hip hike (if lower extremity movement)
     if (movement?.includes('knee') || movement?.includes('hip')) {
-      const hipHike = this.detectHipHike(
-        poseData.landmarks,
-        frames.pelvis,
-        schemaId
-      );
+      const hipHike = this.detectHipHike(poseData.landmarks, frames.pelvis, schemaId);
       if (hipHike) compensations.push(hipHike);
     }
 
@@ -160,10 +165,13 @@ export class CompensationDetectionService {
   private detectTrunkLean(
     thoraxFrame: AnatomicalReferenceFrame,
     viewOrientation?: string,
-    movement?: string
+    _movement?: string
   ): CompensationPattern | null {
     // Detect in frontal, lateral, or sagittal views
-    if (!viewOrientation || !['frontal', 'lateral', 'sagittal'].includes(viewOrientation)) {
+    if (
+      !viewOrientation ||
+      !['frontal', 'lateral', 'sagittal'].includes(viewOrientation)
+    ) {
       return null;
     }
 
@@ -205,7 +213,8 @@ export class CompensationDetectionService {
       severity,
       magnitude: deviation,
       affectsJoint: 'thorax', // Trunk lean always affects thorax, regardless of movement
-      clinicalNote: `${leanType === 'lateral' ? 'Lateral' : 'Forward/backward'} trunk lean of ${deviation.toFixed(1)}° from vertical detected. ` +
+      clinicalNote:
+        `${leanType === 'lateral' ? 'Lateral' : 'Forward/backward'} trunk lean of ${deviation.toFixed(1)}° from vertical detected. ` +
         `This compensation may reduce true shoulder ROM and indicate weakness or mobility restriction.`,
     };
   }
@@ -255,10 +264,16 @@ export class CompensationDetectionService {
         // In frontal view, anterior should point toward camera
         expectedOrientation = { x: 0, y: 0, z: -1 }; // Toward camera (negative Z)
         break;
-      case 'sagittal':
-        // In sagittal (lateral) view, anterior should point lateral
-        expectedOrientation = { x: 1, y: 0, z: 0 }; // Right (positive X)
+      case 'sagittal': {
+        // In sagittal (lateral) view, anterior should point lateral (left or right)
+        // Accept whichever direction is closer to minimize false positives
+        const leftOrientation = { x: -1, y: 0, z: 0 };
+        const rightOrientation = { x: 1, y: 0, z: 0 };
+        const leftAngle = angleBetweenVectors(xAxisInTransversePlane, leftOrientation);
+        const rightAngle = angleBetweenVectors(xAxisInTransversePlane, rightOrientation);
+        expectedOrientation = leftAngle < rightAngle ? leftOrientation : rightOrientation;
         break;
+      }
       case 'lateral':
         expectedOrientation = { x: -1, y: 0, z: 0 }; // Left (negative X)
         break;
@@ -288,7 +303,8 @@ export class CompensationDetectionService {
       severity,
       magnitude: rotationDeviation,
       affectsJoint: 'thorax',
-      clinicalNote: `Trunk rotation of ${rotationDeviation.toFixed(1)}° detected. ` +
+      clinicalNote:
+        `Trunk rotation of ${rotationDeviation.toFixed(1)}° detected. ` +
         `Patient may have core instability or poor motor control.`,
     };
   }
@@ -326,7 +342,7 @@ export class CompensationDetectionService {
     landmarks: PoseLandmark[],
     thoraxFrame: AnatomicalReferenceFrame | undefined,
     side: 'left' | 'right',
-    schemaId: string
+    _schemaId: string
   ): CompensationPattern | null {
     if (!thoraxFrame) {
       return null;
@@ -335,14 +351,20 @@ export class CompensationDetectionService {
     // Get landmarks (schema-agnostic)
     const shoulder = landmarks.find((lm) => lm.name === `${side}_shoulder`);
     const ear = landmarks.find((lm) => lm.name === `${side}_ear`);
-    const oppositeShoulder = landmarks.find((lm) => lm.name === `${side === 'left' ? 'right' : 'left'}_shoulder`);
+    const oppositeShoulder = landmarks.find(
+      (lm) => lm.name === `${side === 'left' ? 'right' : 'left'}_shoulder`
+    );
 
     if (!shoulder || !ear || !oppositeShoulder) {
       return null;
     }
 
     // Check visibility
-    if (shoulder.visibility < 0.5 || ear.visibility < 0.5 || oppositeShoulder.visibility < 0.5) {
+    if (
+      shoulder.visibility < 0.5 ||
+      ear.visibility < 0.5 ||
+      oppositeShoulder.visibility < 0.5
+    ) {
       return null;
     }
 
@@ -371,26 +393,7 @@ export class CompensationDetectionService {
     }
 
     // Calculate torso height for normalization
-    const hipLeft = landmarks.find((lm) => lm.name === 'left_hip');
-    const hipRight = landmarks.find((lm) => lm.name === 'right_hip');
-
-    if (!hipLeft || !hipRight) {
-      return null;
-    }
-
-    const hipMidpoint = {
-      x: (hipLeft.x + hipRight.x) / 2,
-      y: (hipLeft.y + hipRight.y) / 2,
-    };
-
-    const shoulderMidpoint = {
-      x: (shoulder.x + oppositeShoulder.x) / 2,
-      y: (shoulder.y + oppositeShoulder.y) / 2,
-    };
-
-    const torsoHeight = Math.abs(shoulderMidpoint.y - hipMidpoint.y);
-
-    // Calculate elevation as percentage of torso height
+    // Calculate elevation as percentage of maximum tilt (90°)
     const elevationPercent = (tiltAngle / 90) * 100; // Normalize to 0-100%
 
     // Grade severity based on percentage
@@ -408,7 +411,8 @@ export class CompensationDetectionService {
       severity,
       magnitude: elevationCm,
       affectsJoint: `${side}_shoulder`,
-      clinicalNote: `${side === 'left' ? 'Left' : 'Right'} shoulder hiking detected ` +
+      clinicalNote:
+        `${side === 'left' ? 'Left' : 'Right'} shoulder hiking detected ` +
         `(~${elevationCm.toFixed(1)}cm elevation, ${tiltAngle.toFixed(1)}° tilt). ` +
         `May indicate rotator cuff weakness or subacromial impingement.`,
     };
@@ -444,7 +448,7 @@ export class CompensationDetectionService {
     landmarks: PoseLandmark[],
     forearmFrame: AnatomicalReferenceFrame | undefined,
     side: 'left' | 'right',
-    schemaId: string
+    _schemaId: string
   ): CompensationPattern | null {
     if (!forearmFrame) {
       return null;
@@ -509,7 +513,8 @@ export class CompensationDetectionService {
       severity,
       magnitude: flexionAmount,
       affectsJoint: `${side}_shoulder`,
-      clinicalNote: `Elbow flexion of ${flexionAmount.toFixed(1)}° detected during ` +
+      clinicalNote:
+        `Elbow flexion of ${flexionAmount.toFixed(1)}° detected during ` +
         `shoulder movement (current angle: ${clinicalElbowAngle.toFixed(1)}°). ` +
         `Elbow should remain extended (~180°). May indicate shoulder weakness.`,
     };
@@ -545,7 +550,7 @@ export class CompensationDetectionService {
   private detectHipHike(
     landmarks: PoseLandmark[],
     pelvisFrame: AnatomicalReferenceFrame | undefined,
-    schemaId: string
+    _schemaId: string
   ): CompensationPattern | null {
     if (!pelvisFrame) {
       return null;
@@ -605,7 +610,8 @@ export class CompensationDetectionService {
       severity,
       magnitude: displacementCm,
       affectsJoint: `${side}_hip`,
-      clinicalNote: `${side === 'left' ? 'Left' : 'Right'} hip hike of ${displacementCm.toFixed(1)}cm ` +
+      clinicalNote:
+        `${side === 'left' ? 'Left' : 'Right'} hip hike of ${displacementCm.toFixed(1)}cm ` +
         `(${tiltAngle.toFixed(1)}° tilt) detected. May indicate hip abductor weakness or poor pelvic control.`,
     };
   }
@@ -675,7 +681,8 @@ export class CompensationDetectionService {
       severity,
       magnitude: leanAngle,
       affectsJoint: `${movementSide}_shoulder`,
-      clinicalNote: `Contralateral lean of ${leanAngle.toFixed(1)}° detected ` +
+      clinicalNote:
+        `Contralateral lean of ${leanAngle.toFixed(1)}° detected ` +
         `(leaning away from ${movementSide} side). May indicate weakness or compensation strategy.`,
     };
   }
@@ -701,9 +708,10 @@ export class CompensationDetectionService {
     magnitude: number,
     unit: 'degrees' | 'cm'
   ): 'minimal' | 'mild' | 'moderate' | 'severe' {
-    const thresholds = unit === 'degrees'
-      ? { mild: 5, moderate: 10, severe: 15 }
-      : { mild: 1, moderate: 2, severe: 3 };
+    const thresholds =
+      unit === 'degrees'
+        ? { mild: 5, moderate: 10, severe: 15 }
+        : { mild: 1, moderate: 2, severe: 3 };
 
     if (magnitude < thresholds.mild) return 'minimal';
     if (magnitude < thresholds.moderate) return 'mild';
