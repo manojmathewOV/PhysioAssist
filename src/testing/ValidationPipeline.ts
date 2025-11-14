@@ -16,17 +16,21 @@ import { CompensationPattern } from '../types/clinicalMeasurement';
 
 export class ValidationPipeline {
   private generator: SyntheticPoseDataGenerator;
-  private measurementService: ClinicalMeasurementService;
   private anatomicalService: AnatomicalReferenceService;
-  private frameCache: AnatomicalFrameCache;
   private config: ValidationConfig;
 
   constructor(config: ValidationConfig = DEFAULT_VALIDATION_CONFIG) {
     this.generator = new SyntheticPoseDataGenerator();
-    this.measurementService = new ClinicalMeasurementService();
     this.anatomicalService = new AnatomicalReferenceService();
-    this.frameCache = new AnatomicalFrameCache();
     this.config = config;
+  }
+
+  /**
+   * Create fresh measurement service to avoid temporal smoothing contamination
+   * Each test should be independent, without history from previous measurements
+   */
+  private createMeasurementService(): ClinicalMeasurementService {
+    return new ClinicalMeasurementService();
   }
 
   /**
@@ -106,7 +110,7 @@ export class ValidationPipeline {
         // Test 1: Normal flexion (no compensations)
         const { poseData, groundTruth } = this.generator.generateShoulderFlexion(angle, 'movenet-17', { side });
         const enrichedPose = this.addAnatomicalFrames(poseData);
-        const measurement = this.measurementService.measureShoulderFlexion(enrichedPose, side);
+        const measurement = this.createMeasurementService().measureShoulderFlexion(enrichedPose, side);
 
         measurements.push({
           testCase: `shoulder_flexion_${side}_${angle}deg`,
@@ -131,7 +135,7 @@ export class ValidationPipeline {
             { side, trunkLean: 15 }
           );
           const enrichedCompensatedPose = this.addAnatomicalFrames(compensatedPose);
-          const compensatedMeasurement = this.measurementService.measureShoulderFlexion(enrichedCompensatedPose, side);
+          const compensatedMeasurement = this.createMeasurementService().measureShoulderFlexion(enrichedCompensatedPose, side);
 
           measurements.push({
             testCase: `shoulder_flexion_${side}_${angle}deg_trunk_lean`,
@@ -172,7 +176,7 @@ export class ValidationPipeline {
         // Test 1: Normal abduction (no compensations)
         const { poseData, groundTruth } = this.generator.generateShoulderAbduction(angle, 'movenet-17', { side });
         const enrichedPose = this.addAnatomicalFrames(poseData);
-        const measurement = this.measurementService.measureShoulderAbduction(enrichedPose, side);
+        const measurement = this.createMeasurementService().measureShoulderAbduction(enrichedPose, side);
 
         measurements.push({
           testCase: `shoulder_abduction_${side}_${angle}deg`,
@@ -197,7 +201,7 @@ export class ValidationPipeline {
             { side, shoulderHiking: 25 }
           );
           const enrichedCompensatedPose = this.addAnatomicalFrames(compensatedPose);
-          const compensatedMeasurement = this.measurementService.measureShoulderAbduction(enrichedCompensatedPose, side);
+          const compensatedMeasurement = this.createMeasurementService().measureShoulderAbduction(enrichedCompensatedPose, side);
 
           measurements.push({
             testCase: `shoulder_abduction_${side}_${angle}deg_shoulder_hiking`,
@@ -238,7 +242,7 @@ export class ValidationPipeline {
         // Test: Rotation with elbow at 90° (valid measurement)
         const { poseData, groundTruth } = this.generator.generateShoulderRotation(angle, 'movenet-17', { side, elbowAngle: 90 });
         const enrichedPose = this.addAnatomicalFrames(poseData);
-        const measurement = this.measurementService.measureShoulderRotation(enrichedPose, side);
+        const measurement = this.createMeasurementService().measureShoulderRotation(enrichedPose, side);
 
         measurements.push({
           testCase: `shoulder_rotation_${side}_${angle}deg`,
@@ -278,7 +282,7 @@ export class ValidationPipeline {
         // Test 1: Normal elbow flexion
         const { poseData, groundTruth } = this.generator.generateElbowFlexion(angle, 'movenet-17', { side });
         const enrichedPose = this.addAnatomicalFrames(poseData);
-        const measurement = this.measurementService.measureElbowFlexion(enrichedPose, side);
+        const measurement = this.createMeasurementService().measureElbowFlexion(enrichedPose, side);
 
         measurements.push({
           testCase: `elbow_flexion_${side}_${angle}deg`,
@@ -302,7 +306,7 @@ export class ValidationPipeline {
     for (const angle of compensatedAngles) {
       const { poseData, groundTruth } = this.generator.generateElbowFlexion(angle, 'movenet-17', { side: 'right', trunkLean: 10 });
       const enrichedPose = this.addAnatomicalFrames(poseData);
-      const measurement = this.measurementService.measureElbowFlexion(enrichedPose, 'right');
+      const measurement = this.createMeasurementService().measureElbowFlexion(enrichedPose, 'right');
 
       measurements.push({
         testCase: `elbow_flexion_right_${angle}deg_trunk_lean`,
@@ -341,7 +345,7 @@ export class ValidationPipeline {
         // Test 1: Normal knee flexion
         const { poseData, groundTruth } = this.generator.generateKneeFlexion(angle, 'movenet-17', { side });
         const enrichedPose = this.addAnatomicalFrames(poseData);
-        const measurement = this.measurementService.measureKneeFlexion(enrichedPose, side);
+        const measurement = this.createMeasurementService().measureKneeFlexion(enrichedPose, side);
 
         measurements.push({
           testCase: `knee_flexion_${side}_${angle}deg`,
@@ -365,7 +369,7 @@ export class ValidationPipeline {
     for (const angle of compensatedAngles) {
       const { poseData, groundTruth } = this.generator.generateKneeFlexion(angle, 'movenet-17', { side: 'right', hipHike: 30 });
       const enrichedPose = this.addAnatomicalFrames(poseData);
-      const measurement = this.measurementService.measureKneeFlexion(enrichedPose, 'right');
+      const measurement = this.createMeasurementService().measureKneeFlexion(enrichedPose, 'right');
 
       measurements.push({
         testCase: `knee_flexion_right_${angle}deg_hip_hike`,
@@ -423,13 +427,13 @@ export class ValidationPipeline {
       const enrichedPose = this.addAnatomicalFrames(poseData);
       let measurement;
       if (test.movement === 'shoulder_flexion') {
-        measurement = this.measurementService.measureShoulderFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureShoulderFlexion(enrichedPose, test.side);
       } else if (test.movement === 'shoulder_abduction') {
-        measurement = this.measurementService.measureShoulderAbduction(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureShoulderAbduction(enrichedPose, test.side);
       } else if (test.movement === 'elbow_flexion') {
-        measurement = this.measurementService.measureElbowFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureElbowFlexion(enrichedPose, test.side);
       } else {
-        measurement = this.measurementService.measureKneeFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureKneeFlexion(enrichedPose, test.side);
       }
 
       measurements.push({
@@ -471,13 +475,13 @@ export class ValidationPipeline {
       const enrichedPose = this.addAnatomicalFrames(poseData);
       let measurement;
       if (test.movement === 'shoulder_flexion') {
-        measurement = this.measurementService.measureShoulderFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureShoulderFlexion(enrichedPose, test.side);
       } else if (test.movement === 'shoulder_abduction') {
-        measurement = this.measurementService.measureShoulderAbduction(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureShoulderAbduction(enrichedPose, test.side);
       } else if (test.movement === 'elbow_flexion') {
-        measurement = this.measurementService.measureElbowFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureElbowFlexion(enrichedPose, test.side);
       } else {
-        measurement = this.measurementService.measureKneeFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureKneeFlexion(enrichedPose, test.side);
       }
 
       measurements.push({
@@ -535,13 +539,13 @@ export class ValidationPipeline {
       const enrichedPose = this.addAnatomicalFrames(poseData);
       let measurement;
       if (test.movement === 'shoulder_flexion') {
-        measurement = this.measurementService.measureShoulderFlexion(enrichedPose, 'right');
+        measurement = this.createMeasurementService().measureShoulderFlexion(enrichedPose, 'right');
       } else if (test.movement === 'shoulder_abduction') {
-        measurement = this.measurementService.measureShoulderAbduction(enrichedPose, 'right');
+        measurement = this.createMeasurementService().measureShoulderAbduction(enrichedPose, 'right');
       } else if (test.movement === 'elbow_flexion') {
-        measurement = this.measurementService.measureElbowFlexion(enrichedPose, 'right');
+        measurement = this.createMeasurementService().measureElbowFlexion(enrichedPose, 'right');
       } else {
-        measurement = this.measurementService.measureKneeFlexion(enrichedPose, 'right');
+        measurement = this.createMeasurementService().measureKneeFlexion(enrichedPose, 'right');
       }
 
       measurements.push({
@@ -566,12 +570,12 @@ export class ValidationPipeline {
       // Generate left shoulder flexion
       const { poseData: leftPose, groundTruth: leftGT } = this.generator.generateShoulderFlexion(angle, 'movenet-17', { side: 'left' });
       const enrichedLeftPose = this.addAnatomicalFrames(leftPose);
-      const leftMeasurement = this.measurementService.measureShoulderFlexion(enrichedLeftPose, 'left');
+      const leftMeasurement = this.createMeasurementService().measureShoulderFlexion(enrichedLeftPose, 'left');
 
       // Generate right shoulder flexion
       const { poseData: rightPose, groundTruth: rightGT } = this.generator.generateShoulderFlexion(angle, 'movenet-17', { side: 'right' });
       const enrichedRightPose = this.addAnatomicalFrames(rightPose);
-      const rightMeasurement = this.measurementService.measureShoulderFlexion(enrichedRightPose, 'right');
+      const rightMeasurement = this.createMeasurementService().measureShoulderFlexion(enrichedRightPose, 'right');
 
       // Left side measurement
       measurements.push({
@@ -604,36 +608,39 @@ export class ValidationPipeline {
 
   /**
    * Add anatomical frames to pose data using cache
+   * Uses fresh cache per pose to avoid cross-contamination between test cases
    */
   private addAnatomicalFrames(poseData: ProcessedPoseData): ProcessedPoseData {
+    // Create fresh cache for each pose to avoid cross-contamination
+    const freshCache = new AnatomicalFrameCache();
     const landmarks = poseData.landmarks;
 
-    // Calculate anatomical frames using cache
-    const global = this.frameCache.get('global', landmarks, (lms) =>
+    // Calculate anatomical frames using fresh cache
+    const global = freshCache.get('global', landmarks, (lms) =>
       this.anatomicalService.calculateGlobalFrame(lms)
     );
 
-    const thorax = this.frameCache.get('thorax', landmarks, (lms) =>
+    const thorax = freshCache.get('thorax', landmarks, (lms) =>
       this.anatomicalService.calculateThoraxFrame(lms, global)
     );
 
-    const pelvis = this.frameCache.get('pelvis', landmarks, (lms) =>
+    const pelvis = freshCache.get('pelvis', landmarks, (lms) =>
       this.anatomicalService.calculatePelvisFrame(lms, poseData.schemaId)
     );
 
-    const left_humerus = this.frameCache.get('left_humerus', landmarks, (lms) =>
+    const left_humerus = freshCache.get('left_humerus', landmarks, (lms) =>
       this.anatomicalService.calculateHumerusFrame(lms, 'left', thorax)
     );
 
-    const right_humerus = this.frameCache.get('right_humerus', landmarks, (lms) =>
+    const right_humerus = freshCache.get('right_humerus', landmarks, (lms) =>
       this.anatomicalService.calculateHumerusFrame(lms, 'right', thorax)
     );
 
-    const left_forearm = this.frameCache.get('left_forearm', landmarks, (lms) =>
+    const left_forearm = freshCache.get('left_forearm', landmarks, (lms) =>
       this.anatomicalService.calculateForearmFrame(lms, 'left', poseData.schemaId)
     );
 
-    const right_forearm = this.frameCache.get('right_forearm', landmarks, (lms) =>
+    const right_forearm = freshCache.get('right_forearm', landmarks, (lms) =>
       this.anatomicalService.calculateForearmFrame(lms, 'right', poseData.schemaId)
     );
 

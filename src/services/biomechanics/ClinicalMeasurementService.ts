@@ -248,9 +248,12 @@ export class ClinicalMeasurementService {
     const humerusProjected = projectVectorOntoPlane(humerusFrame.yAxis, scapularPlane.normal);
     const angleFromVertical = angleBetweenVectors(humerusProjected, thorax.yAxis);
 
-    // Convert to clinical abduction angle
-    // Geometric: 0° = arm overhead, 180° = arm down
-    // Clinical: 0° = arm down, 180° = arm overhead
+    // Clinical abduction angle conversion
+    // Humerus Y-axis points from shoulder to elbow (downward at 0° abduction)
+    // Thorax Y-axis points upward (from hips to shoulders)
+    // At 0° abduction: humerus points down, angle from thorax Y = 180°, clinical = 0°
+    // At 90° abduction: humerus is perpendicular, angle = 90°, clinical = 90°
+    // At 180° abduction: humerus points up, angle = 0°, clinical = 180°
     const totalAbduction = 180 - angleFromVertical;
 
     // 5. Scapular upward rotation (scapulothoracic contribution)
@@ -574,11 +577,11 @@ export class ClinicalMeasurementService {
     // Use refactored goniometer
     const kneeMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_knee`);
 
-    // The goniometer returns the angle between femur and tibia segments
-    // For a bent knee, this is already the flexion angle we want
-    // (0° = straight/fully extended, 135° = fully flexed)
-    // NOTE: The mock test data uses simplified geometry, causing minor discrepancies
-    const flexionAngle = kneeMeasurement.angle;
+    // Convert geometric angle to clinical flexion angle
+    // Goniometer measures angle between bone segments (180° = straight, 90° = bent)
+    // Clinical flexion: 0° = straight, 135° = fully flexed
+    // Conversion: clinical = 180° - geometric
+    const flexionAngle = 180 - kneeMeasurement.angle;
 
     if (!poseData.cachedAnatomicalFrames) {
       throw new Error('cachedAnatomicalFrames not available.');
