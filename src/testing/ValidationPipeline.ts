@@ -31,7 +31,11 @@ export class ValidationPipeline {
 
   constructor(config: ValidationConfig = DEFAULT_VALIDATION_CONFIG) {
     this.generator = new SyntheticPoseDataGenerator();
-    this.measurementService = new ClinicalMeasurementService();
+    // Disable temporal smoothing for validation (single-frame accuracy testing)
+    // Integration tests use smoothingWindow: 1, ValidationPipeline must match
+    this.measurementService = new ClinicalMeasurementService(undefined, undefined, {
+      smoothingWindow: 1,
+    });
     this.anatomicalService = new AnatomicalReferenceService();
     this.frameCache = new AnatomicalFrameCache();
     this.config = config;
