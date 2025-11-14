@@ -1,4 +1,4 @@
-import { PoseLandmark } from '@types/pose';
+import { PoseLandmark } from '../../types/pose';
 
 export interface OrientationResult {
   orientation: 'frontal' | 'sagittal' | 'posterior';

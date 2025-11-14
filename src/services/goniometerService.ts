@@ -1,6 +1,6 @@
-import { PoseLandmark, JointAngle, AngleCalculationConfig } from '@types/pose';
-import { Vector3D } from '@types/common';
-import { AnatomicalPlane } from '@types/biomechanics';
+import { PoseLandmark, JointAngle, AngleCalculationConfig } from '../types/pose';
+import { Vector3D } from '../types/common';
+import { AnatomicalPlane } from '../types/biomechanics';
 import { angleBetweenVectors, projectVectorOntoPlane } from '@utils/vectorMath';
 
 export class GoniometerService {

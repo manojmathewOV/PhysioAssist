@@ -17,7 +17,13 @@ export interface ClinicalJointMeasurement {
     name: string;
     type: 'shoulder' | 'elbow' | 'knee' | 'hip' | 'ankle';
     angle: number; // Degrees
-    angleType: 'flexion' | 'extension' | 'abduction' | 'adduction' | 'external_rotation' | 'internal_rotation';
+    angleType:
+      | 'flexion'
+      | 'extension'
+      | 'abduction'
+      | 'adduction'
+      | 'external_rotation'
+      | 'internal_rotation';
     targetAngle?: number; // Clinical target (e.g., 160° for shoulder flexion)
     percentOfTarget?: number; // Percentage of target achieved
     clinicalGrade?: 'excellent' | 'good' | 'fair' | 'limited';
@@ -292,7 +298,7 @@ export interface CompensationDetectionConfig {
  */
 export const DEFAULT_COMPENSATION_CONFIG: CompensationDetectionConfig = {
   trunkLean: {
-    threshold: 10, // >10° from vertical
+    threshold: 5, // >5° from vertical (aligned with "mild" severity)
     severityThresholds: {
       minimal: 5,
       mild: 10,

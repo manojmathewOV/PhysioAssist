@@ -62,7 +62,7 @@ export class AnatomicalFrameCache {
   private lookupTimes: number[] = [];
 
   // Configuration
-  private spatialBucketingPrecision: number = 2; // Decimal places for bucketing
+  private spatialBucketingPrecision: number = 3; // Decimal places for bucketing (0.001 units ~= 0.2°)
 
   // Counter for ensuring unique keys when landmarks are missing
   private keyCounter: number = 0;
@@ -72,12 +72,12 @@ export class AnatomicalFrameCache {
    *
    * @param maxSize - Maximum number of frames to cache (default: 60)
    * @param ttl - Time to live in milliseconds (default: 16ms for 60fps)
-   * @param spatialBucketingPrecision - Decimal places for position bucketing (default: 2)
+   * @param spatialBucketingPrecision - Decimal places for position bucketing (default: 3 for ~0.2° precision)
    */
   constructor(
     maxSize: number = 60,
     ttl: number = 16,
-    spatialBucketingPrecision: number = 2
+    spatialBucketingPrecision: number = 3
   ) {
     this.cache = new Map();
     this.maxSize = maxSize;
@@ -189,10 +189,50 @@ export class AnatomicalFrameCache {
 
     const lsX = bucket(leftShoulder.x).toFixed(this.spatialBucketingPrecision);
     const lsY = bucket(leftShoulder.y).toFixed(this.spatialBucketingPrecision);
+    const lsZ = bucket(leftShoulder.z ?? 0).toFixed(this.spatialBucketingPrecision);
     const rsX = bucket(rightShoulder.x).toFixed(this.spatialBucketingPrecision);
     const rsY = bucket(rightShoulder.y).toFixed(this.spatialBucketingPrecision);
+    const rsZ = bucket(rightShoulder.z ?? 0).toFixed(this.spatialBucketingPrecision);
 
-    return `${frameType}_${lsX}_${lsY}_${rsX}_${rsY}`;
+    // For humerus/forearm frames, include elbow/wrist positions to capture arm pose
+    // This prevents cache collisions when proximal joints are static but distal joints move
+    const leftElbow = landmarks.find((lm) => lm.name === 'left_elbow');
+    const rightElbow = landmarks.find((lm) => lm.name === 'right_elbow');
+    const leftWrist = landmarks.find((lm) => lm.name === 'left_wrist');
+    const rightWrist = landmarks.find((lm) => lm.name === 'right_wrist');
+
+    let distalKey = '';
+    if (frameType.includes('humerus')) {
+      // Humerus: shoulder→elbow, so include elbow position
+      if (frameType.includes('left') && leftElbow) {
+        const leX = bucket(leftElbow.x).toFixed(this.spatialBucketingPrecision);
+        const leY = bucket(leftElbow.y).toFixed(this.spatialBucketingPrecision);
+        const leZ = bucket(leftElbow.z ?? 0).toFixed(this.spatialBucketingPrecision);
+        distalKey = `_${leX}_${leY}_${leZ}`;
+      } else if (frameType.includes('right') && rightElbow) {
+        const reX = bucket(rightElbow.x).toFixed(this.spatialBucketingPrecision);
+        const reY = bucket(rightElbow.y).toFixed(this.spatialBucketingPrecision);
+        const reZ = bucket(rightElbow.z ?? 0).toFixed(this.spatialBucketingPrecision);
+        distalKey = `_${reX}_${reY}_${reZ}`;
+      }
+    } else if (frameType.includes('forearm')) {
+      // Forearm: elbow→wrist, so include wrist position
+      if (frameType.includes('left') && leftWrist) {
+        const lwX = bucket(leftWrist.x).toFixed(this.spatialBucketingPrecision);
+        const lwY = bucket(leftWrist.y).toFixed(this.spatialBucketingPrecision);
+        const lwZ = bucket(leftWrist.z ?? 0).toFixed(this.spatialBucketingPrecision);
+        distalKey = `_${lwX}_${lwY}_${lwZ}`;
+      } else if (frameType.includes('right') && rightWrist) {
+        const rwX = bucket(rightWrist.x).toFixed(this.spatialBucketingPrecision);
+        const rwY = bucket(rightWrist.y).toFixed(this.spatialBucketingPrecision);
+        const rwZ = bucket(rightWrist.z ?? 0).toFixed(this.spatialBucketingPrecision);
+        distalKey = `_${rwX}_${rwY}_${rwZ}`;
+      }
+    }
+
+    // Include Z coordinates to handle sagittal/frontal view orientations
+    // where shoulders differ in depth rather than lateral position
+    return `${frameType}_${lsX}_${lsY}_${lsZ}_${rsX}_${rsY}_${rsZ}${distalKey}`;
   }
 
   /**
