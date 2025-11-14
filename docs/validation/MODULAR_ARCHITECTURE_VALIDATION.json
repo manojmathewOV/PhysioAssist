@@ -1,0 +1,162 @@
+{
+  "timestamp": "2025-11-14T23:49:58.851Z",
+  "summary": {
+    "total": 25,
+    "passed": 25,
+    "failed": 0,
+    "warnings": 0,
+    "passRate": "100.00%"
+  },
+  "results": [
+    {
+      "category": "File Existence",
+      "test": "src/config/movements.config.ts",
+      "status": "PASS",
+      "message": "File exists"
+    },
+    {
+      "category": "File Existence",
+      "test": "src/config/protocols.config.ts",
+      "status": "PASS",
+      "message": "File exists"
+    },
+    {
+      "category": "File Existence",
+      "test": "src/services/DemoManager.ts",
+      "status": "PASS",
+      "message": "File exists"
+    },
+    {
+      "category": "File Existence",
+      "test": "src/components/clinical/JointSelectionPanelV2.tsx",
+      "status": "PASS",
+      "message": "File exists"
+    },
+    {
+      "category": "File Existence",
+      "test": "src/components/clinical/MovementSelectionPanelV2.tsx",
+      "status": "PASS",
+      "message": "File exists"
+    },
+    {
+      "category": "File Existence",
+      "test": "src/components/clinical/MovementDemoScreen.tsx",
+      "status": "PASS",
+      "message": "File exists"
+    },
+    {
+      "category": "Config Parsing",
+      "test": "MOVEMENT_REGISTRY export",
+      "status": "PASS",
+      "message": "Export found"
+    },
+    {
+      "category": "Config Parsing",
+      "test": "JOINT_METADATA export",
+      "status": "PASS",
+      "message": "Export found"
+    },
+    {
+      "category": "Config Parsing",
+      "test": "AVAILABLE_JOINTS export",
+      "status": "PASS",
+      "message": "Export found"
+    },
+    {
+      "category": "Config Parsing",
+      "test": "MovementRegistry class",
+      "status": "PASS",
+      "message": "Class found"
+    },
+    {
+      "category": "Config Parsing",
+      "test": "Movement count",
+      "status": "PASS",
+      "message": "10 movements defined"
+    },
+    {
+      "category": "Protocol Parsing",
+      "test": "PROTOCOL_REGISTRY export",
+      "status": "PASS",
+      "message": "Export found"
+    },
+    {
+      "category": "Protocol Parsing",
+      "test": "ProtocolManager class",
+      "status": "PASS",
+      "message": "Class found"
+    },
+    {
+      "category": "Protocol Parsing",
+      "test": "Protocol count",
+      "status": "PASS",
+      "message": "6 protocols defined"
+    },
+    {
+      "category": "Component Integration",
+      "test": "JointSelectionPanelV2.tsx imports",
+      "status": "PASS",
+      "message": "Uses @config imports"
+    },
+    {
+      "category": "Component Integration",
+      "test": "JointSelectionPanelV2.tsx registry usage",
+      "status": "PASS",
+      "message": "Uses registry"
+    },
+    {
+      "category": "Component Integration",
+      "test": "MovementSelectionPanelV2.tsx imports",
+      "status": "PASS",
+      "message": "Uses @config imports"
+    },
+    {
+      "category": "Component Integration",
+      "test": "MovementSelectionPanelV2.tsx registry usage",
+      "status": "PASS",
+      "message": "Uses registry"
+    },
+    {
+      "category": "Component Integration",
+      "test": "MovementDemoScreen.tsx imports",
+      "status": "PASS",
+      "message": "Uses @config imports"
+    },
+    {
+      "category": "Component Integration",
+      "test": "MovementDemoScreen.tsx registry usage",
+      "status": "PASS",
+      "message": "Uses registry"
+    },
+    {
+      "category": "TypeScript Config",
+      "test": "Path alias @config/*",
+      "status": "PASS",
+      "message": "Configured"
+    },
+    {
+      "category": "Babel Config",
+      "test": "Path alias @config",
+      "status": "PASS",
+      "message": "Configured"
+    },
+    {
+      "category": "Documentation",
+      "test": "MODULAR_ARCHITECTURE.md",
+      "status": "PASS",
+      "message": "683 lines"
+    },
+    {
+      "category": "Documentation",
+      "test": "WORKFLOW_ANALYSIS_COMPLETE.md",
+      "status": "PASS",
+      "message": "727 lines"
+    },
+    {
+      "category": "Documentation",
+      "test": "SESSION_SUMMARY_MODULAR_ARCHITECTURE.md",
+      "status": "PASS",
+      "message": "583 lines"
+    }
+  ]
+}

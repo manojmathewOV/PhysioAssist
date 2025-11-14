@@ -577,6 +577,64 @@ export const MOVEMENT_REGISTRY: MovementDefinition[] = [
 ];
 
 /**
+ * Joint Metadata
+ * Display information for each joint type
+ */
+export interface JointMetadata {
+  displayName: string;
+  description: string;
+  icon: string;
+}
+
+export const JOINT_METADATA: Record<JointType, JointMetadata> = {
+  shoulder: {
+    displayName: 'Shoulder',
+    description: 'Arm and shoulder movement',
+    icon: '💪',
+  },
+  elbow: {
+    displayName: 'Elbow',
+    description: 'Bending and straightening arm',
+    icon: '🦾',
+  },
+  knee: {
+    displayName: 'Knee',
+    description: 'Leg bending and straightening',
+    icon: '🦵',
+  },
+  hip: {
+    displayName: 'Hip',
+    description: 'Hip and leg movement',
+    icon: '🦿',
+  },
+  wrist: {
+    displayName: 'Wrist',
+    description: 'Hand and wrist movement',
+    icon: '🤚',
+  },
+  ankle: {
+    displayName: 'Ankle',
+    description: 'Foot and ankle movement',
+    icon: '🦶',
+  },
+  spine: {
+    displayName: 'Spine',
+    description: 'Back and trunk movement',
+    icon: '🧍',
+  },
+  neck: {
+    displayName: 'Neck',
+    description: 'Head and neck movement',
+    icon: '👤',
+  },
+};
+
+/**
+ * Available joints (ones with defined movements)
+ */
+export const AVAILABLE_JOINTS: JointType[] = ['shoulder', 'elbow', 'knee', 'hip'];
+
+/**
  * Movement Registry Class
  * Provides helper methods for accessing movement definitions
  */
