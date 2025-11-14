@@ -25,9 +25,14 @@ import Svg, { Circle, Line, Path, G } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+// Import from centralized registry
+import {
+  MovementRegistry,
+  JointType,
+  MovementType,
+} from '@config/movements.config';
 
-export type MovementType = 'flexion' | 'abduction' | 'external_rotation' | 'elbow_flexion' | 'knee_flexion';
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface MovementDemoScreenProps {
   movementType: MovementType;
@@ -35,59 +40,6 @@ interface MovementDemoScreenProps {
   onReady: () => void;
   onBack?: () => void;
 }
-
-const MOVEMENT_CONFIGS = {
-  flexion: {
-    title: 'Lift Your Arm Forward',
-    description: 'Raise your arm straight in front of you',
-    tips: [
-      'Keep your elbow straight',
-      'Move slowly and smoothly',
-      'Go as high as comfortable',
-      'Stop if you feel pain',
-    ],
-  },
-  abduction: {
-    title: 'Lift Your Arm to the Side',
-    description: 'Raise your arm out to your side',
-    tips: [
-      'Keep your palm facing down',
-      'Keep your elbow straight',
-      'Lift straight to the side',
-      'Stop if you feel pain',
-    ],
-  },
-  external_rotation: {
-    title: 'Turn Your Arm Out',
-    description: 'Rotate your arm outward (elbow bent at 90°)',
-    tips: [
-      'Keep elbow at your side',
-      'Keep elbow bent 90°',
-      'Only rotate your forearm',
-      'Stop if you feel pain',
-    ],
-  },
-  elbow_flexion: {
-    title: 'Bend Your Elbow',
-    description: 'Bring your hand toward your shoulder',
-    tips: [
-      'Keep your upper arm still',
-      'Keep your palm facing up',
-      'Bend slowly',
-      'Stop if you feel pain',
-    ],
-  },
-  knee_flexion: {
-    title: 'Bend Your Knee',
-    description: 'Bring your heel toward your bottom',
-    tips: [
-      'Stand on one leg (hold wall if needed)',
-      'Keep your thighs aligned',
-      'Bend slowly',
-      'Stop if you feel pain',
-    ],
-  },
-};
 
 const MovementDemoScreen: React.FC<MovementDemoScreenProps> = ({
   movementType,
@@ -97,7 +49,15 @@ const MovementDemoScreen: React.FC<MovementDemoScreenProps> = ({
 }) => {
   const [demoCount, setDemoCount] = useState(1);
   const [showReadyButton, setShowReadyButton] = useState(false);
-  const config = MOVEMENT_CONFIGS[movementType];
+
+  // Get movement definition from registry
+  const movementDef = MovementRegistry.getMovementsByJoint(jointName as JointType)
+    .find(m => m.type === movementType);
+
+  if (!movementDef) {
+    console.error(`Movement definition not found for ${jointName} - ${movementType}`);
+    return null;
+  }
 
   // Animation value for arm rotation
   const armRotation = useRef(new Animated.Value(0)).current;
@@ -200,7 +160,7 @@ const MovementDemoScreen: React.FC<MovementDemoScreenProps> = ({
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Watch the Demo</Text>
-        <Text style={styles.subtitle}>{config.description}</Text>
+        <Text style={styles.subtitle}>{movementDef.description.simple}</Text>
       </View>
 
       {/* Demo counter */}
@@ -219,7 +179,7 @@ const MovementDemoScreen: React.FC<MovementDemoScreenProps> = ({
       {/* Tips */}
       <View style={styles.tipsBox}>
         <Text style={styles.tipsTitle}>💡 Tips for Best Results</Text>
-        {config.tips.map((tip, index) => (
+        {movementDef.tips.simple.map((tip, index) => (
           <View key={index} style={styles.tipItem}>
             <Text style={styles.tipCheck}>✓</Text>
             <Text style={styles.tipText}>{tip}</Text>

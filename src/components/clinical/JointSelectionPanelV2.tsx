@@ -27,25 +27,18 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
-export type JointType = 'shoulder' | 'elbow' | 'knee' | 'hip';
-export type MovementType =
-  | 'flexion'
-  | 'extension'
-  | 'abduction'
-  | 'external_rotation'
-  | 'internal_rotation';
+// Import from centralized registry
+import {
+  JointType,
+  MovementType,
+  JOINT_METADATA,
+  AVAILABLE_JOINTS,
+} from '@config/movements.config';
 
 interface JointSelectionPanelV2Props {
   onSelect: (joint: JointType, side: 'left' | 'right') => void;
   onHelp?: () => void;
 }
-
-const JOINTS = [
-  { type: 'shoulder' as JointType, icon: '💪', label: 'Shoulder', desc: 'Arm and shoulder movement' },
-  { type: 'elbow' as JointType, icon: '🦾', label: 'Elbow', desc: 'Bending and straightening arm' },
-  { type: 'knee' as JointType, icon: '🦵', label: 'Knee', desc: 'Leg bending and straightening' },
-  { type: 'hip' as JointType, icon: '🦿', label: 'Hip', desc: 'Hip and leg movement' },
-];
 
 const JointSelectionPanelV2: React.FC<JointSelectionPanelV2Props> = ({
   onSelect,
@@ -147,31 +140,39 @@ const JointSelectionPanelV2: React.FC<JointSelectionPanelV2Props> = ({
 
       {/* Joint cards - Large, simple */}
       <View style={styles.cardsContainer}>
-        {JOINTS.map((joint) => (
-          <TouchableOpacity
-            key={joint.type}
-            style={styles.card}
-            onPress={() => handleJointSelect(joint.type)}
-            activeOpacity={0.8}
-            accessibilityLabel={`Measure ${joint.label}: ${joint.desc}`}
-            accessibilityRole="button"
-          >
-            <View style={styles.cardIcon}>
-              <Text style={styles.iconText}>{joint.icon}</Text>
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{joint.label}</Text>
-              <Text style={styles.cardDesc}>{joint.desc}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+        {AVAILABLE_JOINTS.map((jointType) => {
+          const jointInfo = JOINT_METADATA[jointType];
+          return (
+            <TouchableOpacity
+              key={jointType}
+              style={styles.card}
+              onPress={() => handleJointSelect(jointType)}
+              activeOpacity={0.8}
+              accessibilityLabel={`Measure ${jointInfo.displayName}: ${jointInfo.description}`}
+              accessibilityRole="button"
+            >
+              <View style={styles.cardIcon}>
+                <Text style={styles.iconText}>{jointInfo.icon}</Text>
+              </View>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>{jointInfo.displayName}</Text>
+                <Text style={styles.cardDesc}>{jointInfo.description}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Voice prompt */}
       <View style={styles.voicePrompt}>
         <Text style={styles.micIcon}>🎤</Text>
         <Text style={styles.voiceText}>
-          Say "Shoulder", "Elbow", "Knee", or "Hip"
+          Say {AVAILABLE_JOINTS.map((j, i) => {
+            const name = JOINT_METADATA[j].displayName;
+            if (i === AVAILABLE_JOINTS.length - 1) return `or "${name}"`;
+            if (i === AVAILABLE_JOINTS.length - 2) return `"${name}", `;
+            return `"${name}", `;
+          }).join('')}
         </Text>
       </View>
     </LinearGradient>

@@ -20,109 +20,13 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
-export type JointType = 'shoulder' | 'elbow' | 'knee' | 'hip';
-export type MovementType =
-  | 'flexion'
-  | 'extension'
-  | 'abduction'
-  | 'external_rotation'
-  | 'internal_rotation';
-
-interface MovementConfig {
-  type: MovementType;
-  label: string;
-  description: string;
-  targetAngle: number;
-  icon: string;
-}
-
-const MOVEMENT_CONFIGS: Record<JointType, MovementConfig[]> = {
-  shoulder: [
-    {
-      type: 'flexion',
-      label: 'Lift Forward',
-      description: 'Raise your arm straight in front of you',
-      targetAngle: 160,
-      icon: '⬆️',
-    },
-    {
-      type: 'abduction',
-      label: 'Lift to Side',
-      description: 'Raise your arm out to the side',
-      targetAngle: 160,
-      icon: '↗️',
-    },
-    {
-      type: 'external_rotation',
-      label: 'Turn Out',
-      description: 'Rotate your arm outward (elbow bent)',
-      targetAngle: 90,
-      icon: '🔄',
-    },
-    {
-      type: 'internal_rotation',
-      label: 'Turn In',
-      description: 'Rotate your arm inward (elbow bent)',
-      targetAngle: 70,
-      icon: '↩️',
-    },
-  ],
-  elbow: [
-    {
-      type: 'flexion',
-      label: 'Bend',
-      description: 'Bring your hand toward your shoulder',
-      targetAngle: 150,
-      icon: '💪',
-    },
-    {
-      type: 'extension',
-      label: 'Straighten',
-      description: 'Straighten your elbow completely',
-      targetAngle: 0,
-      icon: '✋',
-    },
-  ],
-  knee: [
-    {
-      type: 'flexion',
-      label: 'Bend',
-      description: 'Bring your heel toward your bottom',
-      targetAngle: 135,
-      icon: '🦵',
-    },
-    {
-      type: 'extension',
-      label: 'Straighten',
-      description: 'Straighten your knee completely',
-      targetAngle: 0,
-      icon: '🦿',
-    },
-  ],
-  hip: [
-    {
-      type: 'flexion',
-      label: 'Lift Forward',
-      description: 'Lift your leg forward',
-      targetAngle: 120,
-      icon: '⬆️',
-    },
-    {
-      type: 'abduction',
-      label: 'Lift to Side',
-      description: 'Lift your leg to the side',
-      targetAngle: 45,
-      icon: '↗️',
-    },
-  ],
-};
-
-const JOINT_INFO = {
-  shoulder: { icon: '💪', label: 'Shoulder' },
-  elbow: { icon: '🦾', label: 'Elbow' },
-  knee: { icon: '🦵', label: 'Knee' },
-  hip: { icon: '🦿', label: 'Hip' },
-};
+// Import from centralized registry
+import {
+  MovementRegistry,
+  JointType,
+  MovementType,
+  JOINT_METADATA,
+} from '@config/movements.config';
 
 interface MovementSelectionPanelV2Props {
   joint: JointType;
@@ -137,8 +41,9 @@ const MovementSelectionPanelV2: React.FC<MovementSelectionPanelV2Props> = ({
   onSelect,
   onBack,
 }) => {
-  const movements = MOVEMENT_CONFIGS[joint];
-  const jointInfo = JOINT_INFO[joint];
+  // Get movements from centralized registry
+  const movementDefs = MovementRegistry.getMovementsByJoint(joint);
+  const jointInfo = JOINT_METADATA[joint];
 
   const handleSelect = (movement: MovementType) => {
     ReactNativeHapticFeedback.trigger('impactMedium');
@@ -150,8 +55,8 @@ const MovementSelectionPanelV2: React.FC<MovementSelectionPanelV2Props> = ({
     onBack();
   };
 
-  // Generate voice prompt
-  const voiceOptions = movements.map((m) => `"${m.label}"`).join(', ');
+  // Generate voice prompt using simple display names
+  const voiceOptions = movementDefs.map((m) => `"${m.displayName.simple}"`).join(', ');
 
   return (
     <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
@@ -191,22 +96,22 @@ const MovementSelectionPanelV2: React.FC<MovementSelectionPanelV2Props> = ({
         contentContainerStyle={styles.cardsContainer}
         showsVerticalScrollIndicator={false}
       >
-        {movements.map((movement) => (
+        {movementDefs.map((movementDef) => (
           <TouchableOpacity
-            key={movement.type}
+            key={movementDef.id}
             style={styles.card}
-            onPress={() => handleSelect(movement.type)}
+            onPress={() => handleSelect(movementDef.type)}
             activeOpacity={0.8}
-            accessibilityLabel={`${movement.label}: ${movement.description}. Target: ${movement.targetAngle} degrees`}
+            accessibilityLabel={`${movementDef.displayName.simple}: ${movementDef.description.simple}. Target: ${movementDef.targetAngle} degrees`}
             accessibilityRole="button"
           >
             <View style={styles.cardHeader}>
-              <Text style={styles.cardIcon}>{movement.icon}</Text>
-              <Text style={styles.cardTitle}>{movement.label}</Text>
+              <Text style={styles.cardIcon}>{movementDef.icon}</Text>
+              <Text style={styles.cardTitle}>{movementDef.displayName.simple}</Text>
             </View>
-            <Text style={styles.cardDesc}>{movement.description}</Text>
+            <Text style={styles.cardDesc}>{movementDef.description.simple}</Text>
             <View style={styles.targetBadge}>
-              <Text style={styles.targetText}>Target: {movement.targetAngle}°</Text>
+              <Text style={styles.targetText}>Target: {movementDef.targetAngle}°</Text>
             </View>
           </TouchableOpacity>
         ))}
