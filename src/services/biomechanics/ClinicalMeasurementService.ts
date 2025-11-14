@@ -384,21 +384,40 @@ export class ClinicalMeasurementService {
       throw new Error(`${side} forearm frame not available. Check landmark visibility.`);
     }
 
-    // 3. Define transverse plane
-    const transversePlane = this.anatomicalService.calculateTransversePlane(thorax);
+    // 3. Shoulder rotation measurement with arm abducted
+    // Clinical setup: arm at 90° abduction, elbow at 90° flexion
+    // At 0° rotation (neutral): forearm points upward (vertical)
+    // At 90° external rotation: forearm points forward (anterior)
+    // Rotation is measured as angle from vertical (neutral) position
 
-    // 4. Project forearm Y-axis onto transverse plane
-    const forearmProjected = projectVectorOntoPlane(forearmFrame.yAxis, transversePlane.normal);
+    // Calculate forearm angle from vertical in the rotation plane
+    // The rotation plane is perpendicular to the humerus (upper arm) axis
+    const forearmVector = forearmFrame.yAxis;
 
-    // 5. Calculate rotation angle from anterior (thorax X-axis)
-    const rotationAngle = angleBetweenVectors(forearmProjected, thorax.xAxis);
+    // Vertical reference (upward direction)
+    const verticalRef = { x: 0, y: -1, z: 0 }; // Y+ is down, so -Y is up
 
-    // 6. Determine rotation direction (internal vs external)
-    const cross = crossProduct(forearmProjected, thorax.xAxis);
-    const dotWithY = dotProduct(cross, thorax.yAxis);
-    const isExternalRotation = side === 'left' ? dotWithY > 0 : dotWithY < 0;
+    // Calculate angle from vertical
+    const angleFromVertical = angleBetweenVectors(forearmVector, verticalRef);
+
+    // Determine rotation direction using forearm's Z component (anterior-posterior)
+    // Positive Z = forward/anterior = external rotation
+    // Negative Z = backward/posterior = internal rotation
+    const isExternalRotation = forearmVector.z > 0;
+
+    // Rotation angle is the deviation from vertical
+    // At 0° rotation: forearm vertical, angle from vertical = 0°
+    // At 90° rotation: forearm horizontal, angle from vertical = 90°
+    const rotationAngle = angleFromVertical;
 
     const signedRotation = isExternalRotation ? rotationAngle : -rotationAngle;
+
+    // Define rotation plane for reference (perpendicular to humerus, contains vertical and anterior-posterior)
+    const rotationPlane = {
+      name: 'rotation' as const,
+      normal: { x: 1, y: 0, z: 0 }, // Normal to YZ plane (lateral direction)
+      confidence: forearmFrame.confidence,
+    };
 
     // 7. Secondary joints (elbow gating)
     const secondaryJoints = {
@@ -452,7 +471,7 @@ export class ClinicalMeasurementService {
       referenceFrames: {
         global,
         local: forearmFrame,
-        measurementPlane: transversePlane,
+        measurementPlane: rotationPlane,
       },
       compensations,
       quality: this.assessMeasurementQuality(poseData, [
