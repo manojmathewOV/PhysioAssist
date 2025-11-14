@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Assessment - Live Measurement</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-area {
+            flex: 1;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 300px;
+        }
+
+        .video-placeholder {
+            text-align: center;
+            color: #666;
+        }
+
+        .instruction-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .instruction-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .selection-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(33, 150, 243, 0.9);
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .angle-display {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 24px;
+            margin: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .angle-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .angle-type {
+            font-size: 18px;
+            font-weight: 600;
+            color: #aaa;
+            margin-bottom: 8px;
+            text-transform: capitalize;
+        }
+
+        .angle-value-container {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .angle-value {
+            font-size: 96px;
+            font-weight: 700;
+            line-height: 1;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            transition: color 0.3s;
+        }
+
+        .angle-unit {
+            font-size: 48px;
+            font-weight: 700;
+            color: #aaa;
+            margin-left: 4px;
+        }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .target-section {
+            margin-top: 20px;
+        }
+
+        .target-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .target-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #aaa;
+        }
+
+        .percent-text {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .progress-bar-container {
+            height: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #2196F3, #4CAF50);
+            border-radius: 8px;
+            transition: width 0.5s ease-out, background 0.3s;
+            width: 0%;
+        }
+
+        .achieved-badge {
+            margin-top: 12px;
+            padding: 10px 16px;
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .achieved-badge.show {
+            display: block;
+        }
+
+        .achieved-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #4CAF50;
+        }
+
+        .quality-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .quality-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .quality-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #aaa;
+        }
+
+        .quality-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 12px;
+        }
+
+        .quality-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .quality-text {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .controls {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 18px;
+            border-radius: 30px;
+            border: none;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #F44336, #d32f2f);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        /* Animation */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulse {
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="video-area">
+        <div class="video-placeholder">
+            <p style="font-size: 48px; margin-bottom: 12px;">📹</p>
+            <p>Camera Feed / Pose Skeleton Here</p>
+        </div>
+
+        <div class="instruction-bar">
+            <p class="instruction-text" id="instruction">Begin the movement slowly</p>
+        </div>
+
+        <div class="selection-badge">
+            Left Shoulder - Forward Flexion
+        </div>
+    </div>
+
+    <div class="angle-display">
+        <div class="angle-header">
+            <div class="angle-type">Forward Flexion</div>
+            <div class="angle-value-container">
+                <div class="angle-value" id="angle-value" style="color: #2196F3;">45</div>
+                <div class="angle-unit">°</div>
+            </div>
+            <div class="grade-badge" id="grade-badge" style="background: rgba(33, 150, 243, 0.3); color: #2196F3;">
+                Starting...
+            </div>
+        </div>
+
+        <div class="target-section">
+            <div class="target-header">
+                <div class="target-label">Target: 160°</div>
+                <div class="percent-text" id="percent-text" style="color: #2196F3;">28%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="achieved-badge" id="achieved-badge">
+                <div class="achieved-text">🎯 Target Achieved!</div>
+            </div>
+        </div>
+
+        <div class="quality-section">
+            <div class="quality-row">
+                <div class="quality-label">Tracking Quality:</div>
+                <div class="quality-badge" style="background: rgba(76, 175, 80, 0.3);">
+                    <div class="quality-dot" style="background: #4CAF50;"></div>
+                    <div class="quality-text" style="color: #4CAF50;">Excellent</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-secondary" onclick="changeSelection()">Change Selection</button>
+        <button class="btn btn-primary" onclick="stopAssessment()">Stop</button>
+    </div>
+
+    <script>
+        let currentAngle = 45;
+        let targetAngle = 160;
+        let isAnimating = true;
+
+        const instructions = [
+            { max: 30, text: "Begin the movement slowly", color: "#2196F3" },
+            { max: 70, text: "Keep going, you're doing great!", color: "#FFC107" },
+            { max: 95, text: "Almost there!", color: "#8BC34A" },
+            { max: 100, text: "Perfect! Hold this position", color: "#4CAF50" }
+        ];
+
+        function updateDisplay() {
+            const percent = Math.min((currentAngle / targetAngle) * 100, 100);
+
+            // Update angle
+            document.getElementById('angle-value').textContent = Math.round(currentAngle);
+
+            // Update percent
+            document.getElementById('percent-text').textContent = Math.round(percent) + '%';
+
+            // Update progress bar
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = percent + '%';
+
+            // Update color based on progress
+            let color = '#2196F3';
+            let grade = 'Starting...';
+
+            if (percent >= 95) {
+                color = '#4CAF50';
+                grade = '✓ Excellent';
+                document.getElementById('achieved-badge').classList.add('show');
+                document.getElementById('grade-badge').classList.add('pulse');
+            } else if (percent >= 75) {
+                color = '#8BC34A';
+                grade = '✓ Good';
+            } else if (percent >= 50) {
+                color = '#FFC107';
+                grade = '○ Fair';
+            } else if (percent >= 25) {
+                color = '#FF9800';
+                grade = 'Keep going';
+            }
+
+            document.getElementById('angle-value').style.color = color;
+            document.getElementById('percent-text').style.color = color;
+            document.getElementById('grade-badge').style.background = color + '30';
+            document.getElementById('grade-badge').style.color = color;
+            document.getElementById('grade-badge').textContent = grade;
+
+            // Update instruction
+            for (let i = instructions.length - 1; i >= 0; i--) {
+                if (percent >= instructions[i].max || i === 0) {
+                    document.getElementById('instruction').textContent = instructions[i].text;
+                    break;
+                }
+            }
+        }
+
+        // Simulate increasing angle
+        function animate() {
+            if (!isAnimating) return;
+
+            if (currentAngle < targetAngle + 5) {
+                currentAngle += Math.random() * 3;
+                updateDisplay();
+            }
+
+            setTimeout(animate, 500);
+        }
+
+        function stopAssessment() {
+            isAnimating = false;
+            alert('Assessment stopped!\nMax angle: ' + Math.round(currentAngle) + '°\n\nNow showing completion screen...');
+            window.location.href = '03-complete.html';
+        }
+
+        function changeSelection() {
+            if (confirm('Are you sure you want to change selection? Current progress will be lost.')) {
+                window.location.href = '01-joint-selection.html';
+            }
+        }
+
+        // Start animation
+        updateDisplay();
+        animate();
+    </script>
+</body>
+</html>
