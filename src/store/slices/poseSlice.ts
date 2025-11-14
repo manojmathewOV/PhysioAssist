@@ -42,10 +42,11 @@ const poseSlice = createSlice({
       // Track timestamp when data was stored
       state.timestamp = Date.now();
 
-      // Update metadata
+      // Update metadata (preserve frameNumber before overwriting)
+      const prevFrameNumber = state.metadata?.frameNumber || 0;
       state.metadata = {
         capturedAt: Date.now(), // Frame capture time
-        frameNumber: (state.metadata.frameNumber || 0) + 1,
+        frameNumber: prevFrameNumber + 1,
         fps: state.frameRate,
       };
     },

@@ -6,7 +6,10 @@
  */
 
 import { ProcessedPoseData } from '../types/pose';
-import { TemporalPoseSequence, TemporalMeasurementSequence } from '../types/temporalValidation';
+import {
+  TemporalPoseSequence,
+  TemporalMeasurementSequence,
+} from '../types/temporalValidation';
 import { SyntheticPoseDataGenerator } from './SyntheticPoseDataGenerator';
 import { ClinicalMeasurementService } from '../services/biomechanics/ClinicalMeasurementService';
 import { AnatomicalReferenceService } from '../services/biomechanics/AnatomicalReferenceService';
@@ -29,7 +32,11 @@ export class MultiFrameSequenceGenerator {
    * Generate smooth increasing sequence (e.g., shoulder flexion 0° → 150°)
    */
   public generateSmoothIncreasing(
-    movement: 'shoulder_flexion' | 'shoulder_abduction' | 'elbow_flexion' | 'knee_flexion',
+    movement:
+      | 'shoulder_flexion'
+      | 'shoulder_abduction'
+      | 'elbow_flexion'
+      | 'knee_flexion',
     startAngle: number,
     endAngle: number,
     duration: number, // seconds
@@ -56,17 +63,29 @@ export class MultiFrameSequenceGenerator {
       // Generate pose at this angle
       let poseData: ProcessedPoseData;
       if (movement === 'shoulder_flexion') {
-        ({ poseData } = this.poseGenerator.generateShoulderFlexion(angle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateShoulderFlexion(angle, 'movenet-17', {
+          side,
+        }));
       } else if (movement === 'shoulder_abduction') {
-        ({ poseData } = this.poseGenerator.generateShoulderAbduction(angle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateShoulderAbduction(
+          angle,
+          'movenet-17',
+          { side }
+        ));
       } else if (movement === 'elbow_flexion') {
-        ({ poseData } = this.poseGenerator.generateElbowFlexion(angle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateElbowFlexion(angle, 'movenet-17', {
+          side,
+        }));
       } else {
-        ({ poseData } = this.poseGenerator.generateKneeFlexion(angle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateKneeFlexion(angle, 'movenet-17', {
+          side,
+        }));
       }
 
       // Add quality score (high quality for smooth sequence)
       poseData.qualityScore = 0.95;
+      // Store ground truth angle for debugging
+      (poseData as any).groundTruthAngle = angle;
 
       frames.push(poseData);
     }
@@ -89,7 +108,11 @@ export class MultiFrameSequenceGenerator {
    * Generate smooth decreasing sequence (e.g., elbow extension 150° → 0°)
    */
   public generateSmoothDecreasing(
-    movement: 'shoulder_flexion' | 'shoulder_abduction' | 'elbow_flexion' | 'knee_flexion',
+    movement:
+      | 'shoulder_flexion'
+      | 'shoulder_abduction'
+      | 'elbow_flexion'
+      | 'knee_flexion',
     startAngle: number,
     endAngle: number,
     duration: number,
@@ -97,7 +120,14 @@ export class MultiFrameSequenceGenerator {
     options: { side?: 'left' | 'right'; addNoise?: boolean } = {}
   ): TemporalPoseSequence {
     // Use increasing generator but reverse the angles
-    const increasingSeq = this.generateSmoothIncreasing(movement, endAngle, startAngle, duration, frameRate, options);
+    const increasingSeq = this.generateSmoothIncreasing(
+      movement,
+      endAngle,
+      startAngle,
+      duration,
+      frameRate,
+      options
+    );
 
     // Reverse the frames
     const reversedFrames = [...increasingSeq.frames].reverse();
@@ -120,7 +150,11 @@ export class MultiFrameSequenceGenerator {
    * Generate static hold sequence (e.g., shoulder flexion at 90° for 3 seconds)
    */
   public generateStaticHold(
-    movement: 'shoulder_flexion' | 'shoulder_abduction' | 'elbow_flexion' | 'knee_flexion',
+    movement:
+      | 'shoulder_flexion'
+      | 'shoulder_abduction'
+      | 'elbow_flexion'
+      | 'knee_flexion',
     angle: number,
     duration: number,
     frameRate: number = 30,
@@ -144,13 +178,29 @@ export class MultiFrameSequenceGenerator {
 
       let poseData: ProcessedPoseData;
       if (movement === 'shoulder_flexion') {
-        ({ poseData } = this.poseGenerator.generateShoulderFlexion(currentAngle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateShoulderFlexion(
+          currentAngle,
+          'movenet-17',
+          { side }
+        ));
       } else if (movement === 'shoulder_abduction') {
-        ({ poseData } = this.poseGenerator.generateShoulderAbduction(currentAngle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateShoulderAbduction(
+          currentAngle,
+          'movenet-17',
+          { side }
+        ));
       } else if (movement === 'elbow_flexion') {
-        ({ poseData } = this.poseGenerator.generateElbowFlexion(currentAngle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateElbowFlexion(
+          currentAngle,
+          'movenet-17',
+          { side }
+        ));
       } else {
-        ({ poseData } = this.poseGenerator.generateKneeFlexion(currentAngle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateKneeFlexion(
+          currentAngle,
+          'movenet-17',
+          { side }
+        ));
       }
 
       poseData.qualityScore = 0.95;
@@ -175,7 +225,11 @@ export class MultiFrameSequenceGenerator {
    * Generate oscillating sequence (e.g., elbow reps 0° ↔ 120° × 3 reps)
    */
   public generateOscillating(
-    movement: 'shoulder_flexion' | 'shoulder_abduction' | 'elbow_flexion' | 'knee_flexion',
+    movement:
+      | 'shoulder_flexion'
+      | 'shoulder_abduction'
+      | 'elbow_flexion'
+      | 'knee_flexion',
     minAngle: number,
     maxAngle: number,
     repetitions: number,
@@ -207,13 +261,23 @@ export class MultiFrameSequenceGenerator {
 
       let poseData: ProcessedPoseData;
       if (movement === 'shoulder_flexion') {
-        ({ poseData } = this.poseGenerator.generateShoulderFlexion(angle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateShoulderFlexion(angle, 'movenet-17', {
+          side,
+        }));
       } else if (movement === 'shoulder_abduction') {
-        ({ poseData } = this.poseGenerator.generateShoulderAbduction(angle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateShoulderAbduction(
+          angle,
+          'movenet-17',
+          { side }
+        ));
       } else if (movement === 'elbow_flexion') {
-        ({ poseData } = this.poseGenerator.generateElbowFlexion(angle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateElbowFlexion(angle, 'movenet-17', {
+          side,
+        }));
       } else {
-        ({ poseData } = this.poseGenerator.generateKneeFlexion(angle, 'movenet-17', { side }));
+        ({ poseData } = this.poseGenerator.generateKneeFlexion(angle, 'movenet-17', {
+          side,
+        }));
       }
 
       poseData.qualityScore = 0.95;
@@ -238,7 +302,11 @@ export class MultiFrameSequenceGenerator {
    * Generate sequence with sudden jumps (measurement artifacts)
    */
   public generateWithSuddenJumps(
-    movement: 'shoulder_flexion' | 'shoulder_abduction' | 'elbow_flexion' | 'knee_flexion',
+    movement:
+      | 'shoulder_flexion'
+      | 'shoulder_abduction'
+      | 'elbow_flexion'
+      | 'knee_flexion',
     baseSequence: TemporalPoseSequence,
     jumpMagnitude: number, // Degrees
     jumpFrames: number[] // Frame indices where jumps occur
@@ -248,7 +316,6 @@ export class MultiFrameSequenceGenerator {
     // Insert jumps at specified frames
     jumpFrames.forEach((frameIndex) => {
       if (frameIndex < frames.length) {
-        const originalFrame = frames[frameIndex];
         const side = baseSequence.metadata?.side || 'right';
 
         // Extract current angle (approximate from position)
@@ -258,13 +325,29 @@ export class MultiFrameSequenceGenerator {
         let modifiedPoseData: ProcessedPoseData;
         // This is a simplified approach - in real scenario would extract angle first
         if (movement === 'shoulder_flexion') {
-          ({ poseData: modifiedPoseData } = this.poseGenerator.generateShoulderFlexion(90 + jumpMagnitude, 'movenet-17', { side }));
+          ({ poseData: modifiedPoseData } = this.poseGenerator.generateShoulderFlexion(
+            90 + jumpMagnitude,
+            'movenet-17',
+            { side }
+          ));
         } else if (movement === 'shoulder_abduction') {
-          ({ poseData: modifiedPoseData } = this.poseGenerator.generateShoulderAbduction(90 + jumpMagnitude, 'movenet-17', { side }));
+          ({ poseData: modifiedPoseData } = this.poseGenerator.generateShoulderAbduction(
+            90 + jumpMagnitude,
+            'movenet-17',
+            { side }
+          ));
         } else if (movement === 'elbow_flexion') {
-          ({ poseData: modifiedPoseData } = this.poseGenerator.generateElbowFlexion(90 + jumpMagnitude, 'movenet-17', { side }));
+          ({ poseData: modifiedPoseData } = this.poseGenerator.generateElbowFlexion(
+            90 + jumpMagnitude,
+            'movenet-17',
+            { side }
+          ));
         } else {
-          ({ poseData: modifiedPoseData } = this.poseGenerator.generateKneeFlexion(90 + jumpMagnitude, 'movenet-17', { side }));
+          ({ poseData: modifiedPoseData } = this.poseGenerator.generateKneeFlexion(
+            90 + jumpMagnitude,
+            'movenet-17',
+            { side }
+          ));
         }
 
         frames[frameIndex] = modifiedPoseData;
@@ -289,15 +372,16 @@ export class MultiFrameSequenceGenerator {
     baseSequence: TemporalPoseSequence,
     degradationPattern: 'linear' | 'sudden' | 'intermittent'
   ): TemporalPoseSequence {
+    const totalFrames = baseSequence.frames.length;
     const frames = baseSequence.frames.map((frame, index) => {
       let quality = 0.95; // Start with high quality
 
       if (degradationPattern === 'linear') {
         // Gradual quality decrease
-        quality = 0.95 - (index / frames.length) * 0.3; // 0.95 → 0.65
+        quality = 0.95 - (index / totalFrames) * 0.3; // 0.95 → 0.65
       } else if (degradationPattern === 'sudden') {
         // Sudden drop at midpoint
-        quality = index < frames.length / 2 ? 0.95 : 0.55;
+        quality = index < totalFrames / 2 ? 0.95 : 0.55;
       } else if (degradationPattern === 'intermittent') {
         // Random drops
         quality = Math.random() < 0.2 ? 0.6 : 0.95; // 20% chance of low quality
@@ -324,7 +408,11 @@ export class MultiFrameSequenceGenerator {
    * Generate sequence with developing compensation
    */
   public generateWithDevelopingCompensation(
-    movement: 'shoulder_flexion' | 'shoulder_abduction' | 'elbow_flexion' | 'knee_flexion',
+    movement:
+      | 'shoulder_flexion'
+      | 'shoulder_abduction'
+      | 'elbow_flexion'
+      | 'knee_flexion',
     startAngle: number,
     endAngle: number,
     duration: number,
@@ -346,30 +434,65 @@ export class MultiFrameSequenceGenerator {
       let compensationMagnitude = 0;
       if (i >= compensationStartFrame) {
         const framesIntoCompensation = i - compensationStartFrame;
-        const maxCompensation = 20; // Maximum 20° compensation
-        compensationMagnitude = Math.min(maxCompensation, (framesIntoCompensation / 30) * maxCompensation); // Ramps up over 1 second
+        const maxCompensation = 30; // Maximum 30° compensation (reaches "moderate" severity)
+        compensationMagnitude = Math.min(
+          maxCompensation,
+          (framesIntoCompensation / 30) * maxCompensation
+        ); // Ramps up over 1 second
       }
 
       // Generate pose with compensation
       let poseData: ProcessedPoseData;
       if (movement === 'shoulder_flexion') {
-        const options: any = { side };
-        if (compensationType === 'trunk_lean') options.trunkLean = compensationMagnitude;
-        if (compensationType === 'shoulder_hiking') options.shoulderHiking = compensationMagnitude;
-        ({ poseData } = this.poseGenerator.generateShoulderFlexion(angle, 'movenet-17', options));
+        const genOptions: {
+          side: 'left' | 'right';
+          trunkLean?: number;
+          shoulderHiking?: number;
+          viewOrientation?: 'frontal' | 'sagittal' | 'posterior';
+        } = { side };
+        if (compensationType === 'trunk_lean') {
+          genOptions.trunkLean = compensationMagnitude;
+          genOptions.viewOrientation = 'frontal'; // Frontal view needed for lateral trunk lean
+        }
+        if (compensationType === 'shoulder_hiking')
+          genOptions.shoulderHiking = compensationMagnitude;
+        ({ poseData } = this.poseGenerator.generateShoulderFlexion(
+          angle,
+          'movenet-17',
+          genOptions
+        ));
       } else if (movement === 'shoulder_abduction') {
-        const options: any = { side };
-        if (compensationType === 'trunk_lean') options.trunkLean = compensationMagnitude;
-        if (compensationType === 'shoulder_hiking') options.shoulderHiking = compensationMagnitude;
-        ({ poseData } = this.poseGenerator.generateShoulderAbduction(angle, 'movenet-17', options));
+        const genOptions: {
+          side: 'left' | 'right';
+          trunkLean?: number;
+          shoulderHiking?: number;
+        } = { side };
+        if (compensationType === 'trunk_lean')
+          genOptions.trunkLean = compensationMagnitude;
+        if (compensationType === 'shoulder_hiking')
+          genOptions.shoulderHiking = compensationMagnitude;
+        ({ poseData } = this.poseGenerator.generateShoulderAbduction(
+          angle,
+          'movenet-17',
+          genOptions
+        ));
       } else if (movement === 'elbow_flexion') {
-        const options: any = { side };
-        if (compensationType === 'trunk_lean') options.trunkLean = compensationMagnitude;
-        ({ poseData } = this.poseGenerator.generateElbowFlexion(angle, 'movenet-17', options));
+        const genOptions: { side: 'left' | 'right'; trunkLean?: number } = { side };
+        if (compensationType === 'trunk_lean')
+          genOptions.trunkLean = compensationMagnitude;
+        ({ poseData } = this.poseGenerator.generateElbowFlexion(
+          angle,
+          'movenet-17',
+          genOptions
+        ));
       } else {
-        const options: any = { side };
-        if (compensationType === 'hip_hike') options.hipHike = compensationMagnitude;
-        ({ poseData } = this.poseGenerator.generateKneeFlexion(angle, 'movenet-17', options));
+        const genOptions: { side: 'left' | 'right'; hipHike?: number } = { side };
+        if (compensationType === 'hip_hike') genOptions.hipHike = compensationMagnitude;
+        ({ poseData } = this.poseGenerator.generateKneeFlexion(
+          angle,
+          'movenet-17',
+          genOptions
+        ));
       }
 
       poseData.qualityScore = 0.95;
@@ -395,7 +518,11 @@ export class MultiFrameSequenceGenerator {
    */
   public convertToMeasurementSequence(
     poseSequence: TemporalPoseSequence,
-    movementType: 'shoulder_flexion' | 'shoulder_abduction' | 'elbow_flexion' | 'knee_flexion'
+    movementType:
+      | 'shoulder_flexion'
+      | 'shoulder_abduction'
+      | 'elbow_flexion'
+      | 'knee_flexion'
   ): TemporalMeasurementSequence {
     const side = poseSequence.metadata?.side || 'right';
     const measurements = [];
@@ -412,7 +539,10 @@ export class MultiFrameSequenceGenerator {
       if (movementType === 'shoulder_flexion') {
         measurement = this.measurementService.measureShoulderFlexion(enrichedFrame, side);
       } else if (movementType === 'shoulder_abduction') {
-        measurement = this.measurementService.measureShoulderAbduction(enrichedFrame, side);
+        measurement = this.measurementService.measureShoulderAbduction(
+          enrichedFrame,
+          side
+        );
       } else if (movementType === 'elbow_flexion') {
         measurement = this.measurementService.measureElbowFlexion(enrichedFrame, side);
       } else {
