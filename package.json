@@ -64,6 +64,11 @@
     "clinical:tune": "ts-node scripts/threshold-tuning-tool.ts",
     "validate:architecture": "node scripts/validate-modular-architecture.js",
     "test:walkthrough": "node scripts/run-user-walkthrough.js",
+    "test:edge-cases": "node scripts/run-edge-case-tests.js",
+    "test:clinical-accuracy": "node scripts/run-clinical-accuracy-tests.js",
+    "test:validation:all": "npm run validate:architecture && npm run test:walkthrough && npm run test:clinical-accuracy",
+    "demo:serve": "node web-demo/server.js",
+    "demo:open": "npm run demo:serve & sleep 2 && open http://localhost:3000 || xdg-open http://localhost:3000 || start http://localhost:3000",
     "security:scan": "npm audit --audit-level=moderate",
     "complexity-report": "echo '📊 Complexity analysis (to be implemented with plato in Gate 1)'",
     "benchmark": "node scripts/benchmark-pipeline.js"
