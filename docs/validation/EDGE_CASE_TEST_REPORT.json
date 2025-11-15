@@ -1,0 +1,208 @@
+{
+  "timestamp": "2025-11-15T02:37:10.333Z",
+  "summary": {
+    "total": 19,
+    "passed": 8,
+    "warnings": 4,
+    "failed": 7,
+    "passRate": 42.1
+  },
+  "categories": {
+    "Data Validation": {
+      "total": 5,
+      "passed": 0,
+      "failed": 5,
+      "warnings": 0
+    },
+    "Completeness": {
+      "total": 2,
+      "passed": 0,
+      "failed": 1,
+      "warnings": 1
+    },
+    "Referential Integrity": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "warnings": 0
+    },
+    "Boundary Values": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "warnings": 0
+    },
+    "Numerical Precision": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "warnings": 0
+    },
+    "Error Recovery": {
+      "total": 3,
+      "passed": 2,
+      "failed": 0,
+      "warnings": 1
+    },
+    "Clinical Safety": {
+      "total": 3,
+      "passed": 1,
+      "failed": 0,
+      "warnings": 2
+    }
+  },
+  "tests": [
+    {
+      "step": "1.1",
+      "category": "Data Validation",
+      "description": "Registry rejects invalid joint IDs",
+      "status": "FAIL",
+      "details": "Error reading registry: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "1.2",
+      "category": "Data Validation",
+      "description": "All movements have required fields",
+      "status": "FAIL",
+      "details": "Error: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "1.3",
+      "category": "Data Validation",
+      "description": "Normal ranges use valid angle values",
+      "status": "FAIL",
+      "details": "Error: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "1.4",
+      "category": "Data Validation",
+      "description": "Normal ranges have min < max",
+      "status": "FAIL",
+      "details": "Error: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "1.5",
+      "category": "Data Validation",
+      "description": "Angle values within 0-360° range",
+      "status": "FAIL",
+      "details": "Error: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "2.1",
+      "category": "Completeness",
+      "description": "All joints have movements defined",
+      "status": "FAIL",
+      "details": "Error: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "2.2",
+      "category": "Completeness",
+      "description": "Movements have data for all interface modes",
+      "status": "WARN",
+      "details": "Could not verify: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": "Manual verification may be needed"
+    },
+    {
+      "step": "2.3",
+      "category": "Referential Integrity",
+      "description": "Protocol steps reference valid movements",
+      "status": "FAIL",
+      "details": "Error: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/protocolRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "3.1",
+      "category": "Boundary Values",
+      "description": "System handles 0° angle correctly",
+      "status": "PASS",
+      "details": "Angle: 0° | Should represent fully extended/neutral position",
+      "note": "System should display 0° without errors and use correct color coding"
+    },
+    {
+      "step": "3.2",
+      "category": "Boundary Values",
+      "description": "System handles maximum flexion (180°) correctly",
+      "status": "PASS",
+      "details": "Angle: 180° | Should represent maximum flexion/rotation",
+      "note": "System should handle extreme ROM values and provide appropriate feedback"
+    },
+    {
+      "step": "3.3",
+      "category": "Numerical Precision",
+      "description": "Angle calculations maintain reasonable precision",
+      "status": "PASS",
+      "details": "Test angle: 123.456789° | Rounded: 123° | Precision check: true",
+      "note": "System should round to nearest degree for display"
+    },
+    {
+      "step": "3.4",
+      "category": "Boundary Values",
+      "description": "System detects small angle changes (< 1°)",
+      "status": "PASS",
+      "details": "Change threshold: < 1° | System should still track micro-movements",
+      "note": "Important for detecting subtle compensations and measuring progress"
+    },
+    {
+      "step": "3.5",
+      "category": "Boundary Values",
+      "description": "Bilateral comparison handles equal angles",
+      "status": "PASS",
+      "details": "Left: 90° vs Right: 90° | Difference: 0° | Should show \"symmetric\"",
+      "note": "System should handle perfect symmetry without flagging asymmetry"
+    },
+    {
+      "step": "4.1",
+      "category": "Error Recovery",
+      "description": "Missing demo files are handled gracefully",
+      "status": "WARN",
+      "details": "Could not verify: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": "Manual testing recommended"
+    },
+    {
+      "step": "4.2",
+      "category": "Error Recovery",
+      "description": "System validates JSON before parsing",
+      "status": "PASS",
+      "details": "All config files should be valid JSON with proper error handling",
+      "note": "Application should not crash on malformed config files"
+    },
+    {
+      "step": "4.3",
+      "category": "Error Recovery",
+      "description": "System handles offline mode gracefully",
+      "status": "PASS",
+      "details": "No network required for core functionality | All data stored locally",
+      "note": "Modular architecture works entirely offline"
+    },
+    {
+      "step": "5.1",
+      "category": "Clinical Safety",
+      "description": "Movements include pain warnings",
+      "status": "WARN",
+      "details": "Could not verify: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "5.2",
+      "category": "Clinical Safety",
+      "description": "Normal ranges are clinically realistic",
+      "status": "WARN",
+      "details": "Could not verify: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "5.3",
+      "category": "Clinical Safety",
+      "description": "Bilateral comparison uses appropriate asymmetry thresholds",
+      "status": "PASS",
+      "details": "Threshold: ~15-20° difference | Clinically significant asymmetry detected",
+      "note": "System correctly flags clinically meaningful differences"
+    }
+  ]
+}

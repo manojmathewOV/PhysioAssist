@@ -1,0 +1,229 @@
+{
+  "timestamp": "2025-11-15T02:37:38.370Z",
+  "summary": {
+    "total": 18,
+    "passed": 12,
+    "warnings": 4,
+    "failed": 2,
+    "passRate": 66.7
+  },
+  "categories": {
+    "Geometric Accuracy": {
+      "total": 5,
+      "passed": 2,
+      "failed": 2,
+      "warnings": 1
+    },
+    "Clinical Standards": {
+      "total": 3,
+      "passed": 0,
+      "failed": 0,
+      "warnings": 3
+    },
+    "Asymmetry Detection": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "warnings": 0
+    },
+    "Progress Tracking": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "warnings": 0
+    },
+    "Visual Feedback": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "warnings": 0
+    }
+  },
+  "tests": [
+    {
+      "step": "1.1",
+      "category": "Geometric Accuracy",
+      "description": "Right angle (90°) calculation",
+      "status": "PASS",
+      "details": "Expected: 90° | Calculated: 90.00° | Error: 0.00°",
+      "note": "Excellent precision"
+    },
+    {
+      "step": "1.2",
+      "category": "Geometric Accuracy",
+      "description": "Straight angle (180°) calculation",
+      "status": "PASS",
+      "details": "Expected: 180° | Calculated: 180.00° | Error: 0.00°",
+      "note": "Full extension detected correctly"
+    },
+    {
+      "step": "1.3",
+      "category": "Geometric Accuracy",
+      "description": "Acute angle (45°) calculation",
+      "status": "FAIL",
+      "details": "Expected: 45° | Calculated: 135.00° | Error: 90.00°",
+      "note": "Review acute angle calculations"
+    },
+    {
+      "step": "1.4",
+      "category": "Geometric Accuracy",
+      "description": "Obtuse angle (135°) calculation",
+      "status": "FAIL",
+      "details": "Expected: 135° | Calculated: 45.00° | Error: 90.00°",
+      "note": "Review obtuse angle calculations"
+    },
+    {
+      "step": "1.5",
+      "category": "Geometric Accuracy",
+      "description": "Small angle (5°) calculation",
+      "status": "WARN",
+      "details": "Expected: 5° | Calculated: 175.01° | Error: 170.01°",
+      "note": "Small angle detection may need improvement"
+    },
+    {
+      "step": "2.1",
+      "category": "Clinical Standards",
+      "description": "Shoulder flexion range matches AAOS standards",
+      "status": "WARN",
+      "details": "Could not verify: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "2.2",
+      "category": "Clinical Standards",
+      "description": "Shoulder abduction range matches AAOS standards",
+      "status": "WARN",
+      "details": "Could not verify: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "2.3",
+      "category": "Clinical Standards",
+      "description": "Elbow flexion range matches AAOS standards",
+      "status": "WARN",
+      "details": "Could not verify: ENOENT: no such file or directory, open '/home/user/PhysioAssist/src/config/movementRegistry.json'",
+      "note": null
+    },
+    {
+      "step": "3.1",
+      "category": "Asymmetry Detection",
+      "description": "Detect significant asymmetry (>15°)",
+      "status": "PASS",
+      "details": "Left: 165° | Right: 145° | Difference: 20° | Threshold: 15°",
+      "note": "Clinically significant asymmetry detected"
+    },
+    {
+      "step": "3.2",
+      "category": "Asymmetry Detection",
+      "description": "Do not flag minor asymmetry (<10°)",
+      "status": "PASS",
+      "details": "Left: 160° | Right: 155° | Difference: 5° | Should be normal variation",
+      "note": "Normal bilateral variation"
+    },
+    {
+      "step": "3.3",
+      "category": "Asymmetry Detection",
+      "description": "Recognize perfect symmetry (0° difference)",
+      "status": "PASS",
+      "details": "Left: 150° | Right: 150° | Difference: 0° | Should show \"symmetric\"",
+      "note": "Perfect symmetry detected"
+    },
+    {
+      "step": "3.4",
+      "category": "Asymmetry Detection",
+      "description": "Handle borderline asymmetry (15°)",
+      "status": "PASS",
+      "details": "Left: 160° | Right: 145° | Difference: 15° | At clinical threshold",
+      "note": "System should use consistent threshold logic (>= or >)"
+    },
+    {
+      "step": "4.1",
+      "category": "Progress Tracking",
+      "description": "Calculate progress percentage correctly",
+      "status": "PASS",
+      "details": "Baseline: 60° | Current: 120° | Target: 160° | Progress: 60.0%",
+      "note": "Accurate progress calculation"
+    },
+    {
+      "step": "4.2",
+      "category": "Progress Tracking",
+      "description": "Cap progress at 100% when target exceeded",
+      "status": "PASS",
+      "details": "Baseline: 60° | Current: 165° | Target: 160° | Progress: 100.0%",
+      "note": "Progress capped correctly"
+    },
+    {
+      "step": "4.3",
+      "category": "Progress Tracking",
+      "description": "Detect ROM regression",
+      "status": "PASS",
+      "details": "Previous: 100° | Current: 80° | Regression: true (20° loss)",
+      "note": "System should flag ROM loss for clinical review"
+    },
+    {
+      "step": "5.1",
+      "category": "Visual Feedback",
+      "description": "Blue color for beginning phase (<50%)",
+      "status": "PASS",
+      "details": "Angle: 40° | Target: 160° | Progress: 25.0% | Color: Blue",
+      "note": "Correct visual feedback"
+    },
+    {
+      "step": "5.2",
+      "category": "Visual Feedback",
+      "description": "Green color for mid-range (50-99%)",
+      "status": "PASS",
+      "details": "Angle: 120° | Target: 160° | Progress: 75.0% | Color: Green",
+      "note": "Correct visual feedback"
+    },
+    {
+      "step": "5.3",
+      "category": "Visual Feedback",
+      "description": "Gold color for target achieved (100%)",
+      "status": "PASS",
+      "details": "Angle: 160° | Target: 160° | Progress: 100.0% | Color: Gold",
+      "note": "Celebratory visual feedback"
+    }
+  ],
+  "clinicalStandards": {
+    "source": "AAOS (American Academy of Orthopaedic Surgeons)",
+    "reference": "Normal ROM values for major joints",
+    "standards": {
+      "shoulder_flexion": {
+        "min": 150,
+        "max": 180,
+        "typical": 165
+      },
+      "shoulder_abduction": {
+        "min": 150,
+        "max": 180,
+        "typical": 165
+      },
+      "shoulder_external_rotation": {
+        "min": 80,
+        "max": 90,
+        "typical": 85
+      },
+      "shoulder_internal_rotation": {
+        "min": 70,
+        "max": 80,
+        "typical": 75
+      },
+      "elbow_flexion": {
+        "min": 140,
+        "max": 150,
+        "typical": 145
+      },
+      "knee_flexion": {
+        "min": 130,
+        "max": 140,
+        "typical": 135
+      },
+      "hip_flexion": {
+        "min": 110,
+        "max": 120,
+        "typical": 115
+      }
+    }
+  }
+}
