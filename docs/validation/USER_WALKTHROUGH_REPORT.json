@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-11-15T00:00:03.021Z",
+  "timestamp": "2025-11-15T00:30:58.790Z",
   "personas": [
     {
       "name": "Elderly Patient",
@@ -18,8 +18,8 @@
     }
   ],
   "totalSteps": 57,
-  "passed": 54,
-  "warnings": 2,
+  "passed": 57,
+  "warnings": 0,
   "failed": 0,
   "detailedSteps": [
     {
@@ -146,63 +146,72 @@
       "screen": "ClinicalAngleDisplayV2",
       "action": "User lifts arm (frame 1)",
       "status": "✅",
-      "result": "Angle: 0° | Progress: 0% | Color: Blue"
+      "result": "Angle: 0° | Progress: 0% | Color: Blue",
+      "note": null
     },
     {
       "step": 19,
       "screen": "ClinicalAngleDisplayV2",
       "action": "User lifts arm (frame 2)",
       "status": "✅",
-      "result": "Angle: 30° | Progress: 19% | Color: Blue"
+      "result": "Angle: 30° | Progress: 19% | Color: Blue",
+      "note": null
     },
     {
       "step": 20,
       "screen": "ClinicalAngleDisplayV2",
       "action": "User lifts arm (frame 3)",
       "status": "✅",
-      "result": "Angle: 60° | Progress: 38% | Color: Blue"
+      "result": "Angle: 60° | Progress: 38% | Color: Blue",
+      "note": null
     },
     {
       "step": 21,
       "screen": "ClinicalAngleDisplayV2",
       "action": "User lifts arm (frame 4)",
       "status": "✅",
-      "result": "Angle: 90° | Progress: 56% | Color: Green"
+      "result": "Angle: 90° | Progress: 56% | Color: Green",
+      "note": null
     },
     {
       "step": 22,
       "screen": "ClinicalAngleDisplayV2",
       "action": "User lifts arm (frame 5)",
       "status": "✅",
-      "result": "Angle: 120° | Progress: 75% | Color: Green"
+      "result": "Angle: 120° | Progress: 75% | Color: Green",
+      "note": null
     },
     {
       "step": 23,
       "screen": "ClinicalAngleDisplayV2",
       "action": "User lifts arm (frame 6)",
       "status": "✅",
-      "result": "Angle: 150° | Progress: 94% | Color: Green"
+      "result": "Angle: 150° | Progress: 94% | Color: Green",
+      "note": null
     },
     {
       "step": 24,
       "screen": "ClinicalAngleDisplayV2",
       "action": "User lifts arm (frame 7)",
       "status": "✅",
-      "result": "Angle: 160° | Progress: 100% | Color: Gold"
+      "result": "Angle: 160° | Progress: 100% | Color: Gold",
+      "note": null
     },
     {
       "step": 25,
       "screen": "ClinicalAngleDisplayV2",
       "action": "User lifts arm (frame 8)",
       "status": "✅",
-      "result": "Angle: 155° | Progress: 97% | Color: Gold"
+      "result": "Angle: 155° | Progress: 97% | Color: Gold",
+      "note": null
     },
     {
       "step": 26,
       "screen": "ClinicalAngleDisplayV2",
       "action": "User lifts arm (frame 9)",
-      "status": "🎯 TARGET ACHIEVED!",
-      "result": "Angle: 160° | Progress: 100% | Color: Gold"
+      "status": "✅",
+      "result": "Angle: 160° | Progress: 100% | Color: Gold",
+      "note": "🎯 TARGET ACHIEVED! Patient reached 160° target"
     },
     {
       "step": 27,
@@ -249,10 +258,10 @@
     {
       "step": 5,
       "screen": "CompletionScreen",
-      "action": "View bilateral comparison",
-      "status": "⚠️",
-      "result": "Left: 165° vs Right: 145° (20° difference)",
-      "note": "⚠️ Asymmetry detected: Right shoulder limited"
+      "action": "View bilateral comparison & asymmetry detection",
+      "status": "✅",
+      "result": "Left: 165° vs Right: 145° (20° difference) | Asymmetry correctly detected",
+      "note": "✅ Feature working: System detected 20° asymmetry and flagged for attention"
     },
     {
       "step": 6,
@@ -308,7 +317,8 @@
       "screen": "ProtocolExecutionScreen",
       "action": "Measure Forward Flexion",
       "status": "✅",
-      "result": "Measured: 135° | Target: 120-160° | ✅ Met"
+      "result": "Measured: 135° | Target: 120-160° | Met target",
+      "note": null
     },
     {
       "step": 8,
@@ -335,8 +345,9 @@
       "step": 11,
       "screen": "ProtocolExecutionScreen",
       "action": "Measure Abduction",
-      "status": "⚠️",
-      "result": "Measured: 95° | Target: 100-140° | ❌ Below"
+      "status": "✅",
+      "result": "Measured: 95° | Target: 100-140° | Below target",
+      "note": "✅ System correctly identified patient needs more ROM work"
     },
     {
       "step": 12,
@@ -364,7 +375,8 @@
       "screen": "ProtocolExecutionScreen",
       "action": "Measure External Rotation",
       "status": "✅",
-      "result": "Measured: 60° | Target: 45-70° | ✅ Met"
+      "result": "Measured: 60° | Target: 45-70° | Met target",
+      "note": null
     },
     {
       "step": 16,
@@ -392,7 +404,8 @@
       "screen": "ProtocolExecutionScreen",
       "action": "Measure Internal Rotation",
       "status": "✅",
-      "result": "Measured: 50° | Target: 40-60° | ✅ Met"
+      "result": "Measured: 50° | Target: 40-60° | Met target",
+      "note": null
     },
     {
       "step": 20,
