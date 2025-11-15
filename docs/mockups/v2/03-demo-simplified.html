@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch the Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .progress-dots {
+            text-align: center;
+            padding: 20px 0;
+            font-size: 24px;
+            letter-spacing: 12px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .dot {
+            opacity: 0.3;
+        }
+
+        .dot.active {
+            opacity: 1;
+            color: #4CAF50;
+        }
+
+        .instruction-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 32px 20px;
+            text-align: center;
+        }
+
+        .instruction-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .instruction-subtitle {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .demo-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: linear-gradient(180deg, #000 0%, #1a1a1a 100%);
+        }
+
+        .stick-figure {
+            width: 300px;
+            height: 400px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .figure-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Stick figure animation */
+        #arm {
+            transform-origin: 150px 120px;
+            animation: armLift 3s ease-in-out infinite;
+        }
+
+        @keyframes armLift {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-160deg); }
+        }
+
+        .demo-counter {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 32px;
+            padding: 12px 32px;
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            border-radius: 50px;
+            color: #4CAF50;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 400px;
+            padding: 0 20px 40px;
+        }
+
+        .btn {
+            padding: 20px 32px;
+            border-radius: 30px;
+            border: none;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(76, 175, 80, 0.6);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .tips-box {
+            background: rgba(255, 193, 7, 0.1);
+            border: 2px solid rgba(255, 193, 7, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px;
+            max-width: 400px;
+        }
+
+        .tips-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #FFC107;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tip-item {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .tip-item:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-dots">
+        <span class="dot active">●</span>
+        <span class="dot active">●</span>
+        <span class="dot active">●</span>
+        <span class="dot">○</span>
+    </div>
+
+    <div class="instruction-bar">
+        <div class="instruction-title">Watch the Demo</div>
+        <div class="instruction-subtitle">This is how to lift your arm forward</div>
+    </div>
+
+    <div class="demo-area">
+        <div class="demo-counter" id="counter">
+            Demo 1 of 3
+        </div>
+
+        <!-- Stick figure SVG -->
+        <div class="stick-figure">
+            <svg class="figure-svg" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+                <!-- Body -->
+                <circle cx="150" cy="60" r="30" fill="#4CAF50" stroke="#fff" stroke-width="3"/>
+                <line x1="150" y1="90" x2="150" y2="200" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+
+                <!-- Legs -->
+                <line x1="150" y1="200" x2="120" y2="300" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+                <line x1="150" y1="200" x2="180" y2="300" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+
+                <!-- Feet -->
+                <circle cx="120" cy="300" r="8" fill="#4CAF50"/>
+                <circle cx="180" cy="300" r="8" fill="#4CAF50"/>
+
+                <!-- Arms -->
+                <g id="arm">
+                    <!-- Left arm (the one that moves) -->
+                    <line x1="150" y1="120" x2="150" y2="220" stroke="#FFC107" stroke-width="8" stroke-linecap="round"/>
+                    <circle cx="150" cy="220" r="10" fill="#FFC107"/>
+                </g>
+
+                <!-- Right arm (stationary) -->
+                <line x1="150" y1="120" x2="200" y2="180" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+                <circle cx="200" cy="180" r="8" fill="#fff"/>
+
+                <!-- Arrow showing movement -->
+                <path d="M 140 240 Q 120 180 110 120" stroke="#4CAF50" stroke-width="3" fill="none" stroke-dasharray="5,5">
+                    <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1s" repeatCount="indefinite"/>
+                </path>
+                <polygon points="105,115 110,120 115,115" fill="#4CAF50"/>
+            </svg>
+        </div>
+
+        <div class="tips-box">
+            <div class="tips-title">💡 Tips for Best Results</div>
+            <div class="tip-item">Stand 6 feet from camera</div>
+            <div class="tip-item">Keep your whole body in view</div>
+            <div class="tip-item">Move slowly and smoothly</div>
+            <div class="tip-item">Stop if you feel pain</div>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <button class="btn btn-primary" id="ready-btn" onclick="startAssessment()">
+            I'm Ready to Try
+        </button>
+        <button class="btn btn-secondary" onclick="replayDemo()">
+            ↻ Watch Again
+        </button>
+    </div>
+
+    <script>
+        let demoCount = 1;
+        const maxDemos = 3;
+
+        function updateCounter() {
+            document.getElementById('counter').textContent = `Demo ${demoCount} of ${maxDemos}`;
+
+            if (demoCount >= maxDemos) {
+                document.getElementById('ready-btn').style.animation = 'pulse 2s ease-in-out infinite';
+            }
+        }
+
+        function replayDemo() {
+            if (demoCount < maxDemos) {
+                demoCount++;
+                updateCounter();
+            }
+        }
+
+        function startAssessment() {
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                window.location.href = '04-measure-simplified.html';
+            }, 300);
+        }
+
+        // Auto-increment demo counter
+        let autoDemo = setInterval(() => {
+            if (demoCount < maxDemos) {
+                demoCount++;
+                updateCounter();
+            } else {
+                clearInterval(autoDemo);
+            }
+        }, 4000);
+
+        // Fade in
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+            document.body.style.transition = 'opacity 0.5s';
+            document.body.style.opacity = '1';
+        }, 100);
+    </style>
+</body>
+</html>

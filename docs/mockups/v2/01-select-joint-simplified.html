@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Assessment - Simplified Selection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .progress-dots {
+            text-align: center;
+            padding: 20px 0;
+            font-size: 24px;
+            letter-spacing: 12px;
+        }
+
+        .dot {
+            opacity: 0.3;
+        }
+
+        .dot.active {
+            opacity: 1;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0 40px;
+        }
+
+        .question {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 12px;
+        }
+
+        .subtext {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .cards-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .choice-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 32px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            min-height: 120px;
+        }
+
+        .choice-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+        }
+
+        .choice-card:active {
+            transform: translateY(-2px);
+        }
+
+        .card-icon {
+            font-size: 64px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .card-desc {
+            font-size: 16px;
+            color: #718096;
+        }
+
+        .voice-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 16px 24px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .mic-icon {
+            font-size: 24px;
+        }
+
+        .voice-text {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .help-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .help-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress indicator -->
+    <div class="progress-dots">
+        <span class="dot active">●</span>
+        <span class="dot">○</span>
+        <span class="dot">○</span>
+        <span class="dot">○</span>
+    </div>
+
+    <!-- Help button -->
+    <button class="help-button" onclick="showHelp()">?</button>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="question">What would you like to measure?</div>
+        <div class="subtext">Tap a body part or say it out loud</div>
+    </div>
+
+    <!-- Choice cards - ONE AT A TIME approach -->
+    <div class="cards-container">
+        <div class="choice-card" onclick="selectJoint('shoulder')">
+            <div class="card-icon">💪</div>
+            <div class="card-content">
+                <div class="card-title">Shoulder</div>
+                <div class="card-desc">Arm and shoulder movement</div>
+            </div>
+        </div>
+
+        <div class="choice-card" onclick="selectJoint('elbow')">
+            <div class="card-icon">🦾</div>
+            <div class="card-content">
+                <div class="card-title">Elbow</div>
+                <div class="card-desc">Bending and straightening your arm</div>
+            </div>
+        </div>
+
+        <div class="choice-card" onclick="selectJoint('knee')">
+            <div class="card-icon">🦵</div>
+            <div class="card-content">
+                <div class="card-title">Knee</div>
+                <div class="card-desc">Leg bending and straightening</div>
+            </div>
+        </div>
+
+        <div class="choice-card" onclick="selectJoint('hip')">
+            <div class="card-icon">🦿</div>
+            <div class="card-content">
+                <div class="card-title">Hip</div>
+                <div class="card-desc">Hip and leg movement</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice prompt -->
+    <div class="voice-prompt">
+        <div class="mic-icon">🎤</div>
+        <div class="voice-text">Say "Shoulder", "Elbow", "Knee", or "Hip"</div>
+    </div>
+
+    <script>
+        let selectedJoint = null;
+
+        function selectJoint(joint) {
+            selectedJoint = joint;
+            // Smooth transition to next screen
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                window.location.href = `02-movement-simplified.html?joint=${joint}`;
+            }, 300);
+        }
+
+        function showHelp() {
+            alert('How to use:\n\n1. Tap the body part you want to measure\n2. Watch the demonstration\n3. Do the movement yourself\n4. See your results\n\nNeed more help? Call your therapist.');
+        }
+
+        // Simulate voice recognition
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 's') selectJoint('shoulder');
+            if (e.key === 'e') selectJoint('elbow');
+            if (e.key === 'k') selectJoint('knee');
+            if (e.key === 'h') selectJoint('hip');
+        });
+
+        // Smooth fade in
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+            document.body.style.transition = 'opacity 0.5s';
+            document.body.style.opacity = '1';
+        }, 100);
+    </script>
+</body>
+</html>

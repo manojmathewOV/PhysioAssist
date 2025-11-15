@@ -18,6 +18,7 @@ module.exports = {
           '@constants': './src/constants',
           '@navigation': './src/navigation',
           '@features': './src/features',
+          '@config': './src/config',
         },
       },
     ],

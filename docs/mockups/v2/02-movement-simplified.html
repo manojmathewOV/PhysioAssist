@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movement Selection - Simplified</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .progress-dots {
+            text-align: center;
+            padding: 20px 0;
+            font-size: 24px;
+            letter-spacing: 12px;
+        }
+
+        .dot {
+            opacity: 0.3;
+        }
+
+        .dot.active {
+            opacity: 1;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0 40px;
+        }
+
+        .joint-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .question {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 12px;
+        }
+
+        .subtext {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .movement-cards {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .movement-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 32px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        .movement-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+        }
+
+        .movement-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .movement-icon {
+            font-size: 48px;
+        }
+
+        .movement-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .movement-desc {
+            font-size: 18px;
+            color: #4a5568;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .movement-target {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .voice-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 16px 24px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-dots">
+        <span class="dot active">●</span>
+        <span class="dot active">●</span>
+        <span class="dot">○</span>
+        <span class="dot">○</span>
+    </div>
+
+    <button class="back-button" onclick="history.back()">←</button>
+
+    <div class="header">
+        <div class="joint-badge">
+            <span>💪</span>
+            <span>Shoulder</span>
+        </div>
+        <div class="question">How do you want to move it?</div>
+        <div class="subtext">Choose the movement to measure</div>
+    </div>
+
+    <div class="movement-cards">
+        <div class="movement-card" onclick="selectMovement('flexion')">
+            <div class="movement-header">
+                <div class="movement-icon">⬆️</div>
+                <div class="movement-title">Lift Forward</div>
+            </div>
+            <div class="movement-desc">
+                Raise your arm straight in front of you
+            </div>
+            <div class="movement-target">Target: 160°</div>
+        </div>
+
+        <div class="movement-card" onclick="selectMovement('abduction')">
+            <div class="movement-header">
+                <div class="movement-icon">↗️</div>
+                <div class="movement-title">Lift to Side</div>
+            </div>
+            <div class="movement-desc">
+                Raise your arm out to the side
+            </div>
+            <div class="movement-target">Target: 160°</div>
+        </div>
+
+        <div class="movement-card" onclick="selectMovement('external')">
+            <div class="movement-header">
+                <div class="movement-icon">🔄</div>
+                <div class="movement-title">Turn Out</div>
+            </div>
+            <div class="movement-desc">
+                Rotate your arm outward (elbow bent)
+            </div>
+            <div class="movement-target">Target: 90°</div>
+        </div>
+    </div>
+
+    <div class="voice-prompt">
+        🎤 Say "Lift forward", "Lift to side", or "Turn out"
+    </div>
+
+    <script>
+        function selectMovement(movement) {
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                window.location.href = `03-demo-simplified.html?movement=${movement}`;
+            }, 300);
+        }
+
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+            document.body.style.transition = 'opacity 0.5s';
+            document.body.style.opacity = '1';
+        }, 100);
+    </script>
+</body>
+</html>

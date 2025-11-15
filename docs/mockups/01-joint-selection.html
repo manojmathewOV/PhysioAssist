@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Assessment - Joint Selection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 40px 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #aaa;
+        }
+
+        .side-selector {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            gap: 16px;
+        }
+
+        .side-selector label {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .side-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .side-btn {
+            padding: 8px 24px;
+            border-radius: 20px;
+            border: 1px solid #888;
+            background: transparent;
+            color: #888;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .side-btn.active {
+            background: #2196F3;
+            border-color: #2196F3;
+            color: #fff;
+        }
+
+        .joints-list {
+            flex: 1;
+            padding: 16px 20px;
+            overflow-y: auto;
+        }
+
+        .joint-card {
+            margin-bottom: 16px;
+        }
+
+        .joint-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .joint-button:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .joint-button.selected {
+            border-color: #2196F3;
+            background: rgba(33, 150, 243, 0.15);
+        }
+
+        .joint-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .joint-icon {
+            font-size: 32px;
+        }
+
+        .joint-name {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .expand-icon {
+            font-size: 18px;
+            color: #aaa;
+        }
+
+        .movements {
+            margin-top: 12px;
+            margin-left: 16px;
+            display: none;
+        }
+
+        .movements.show {
+            display: block;
+        }
+
+        .movement-card {
+            margin-bottom: 8px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .movement-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .movement-card.selected {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.15);
+        }
+
+        .movement-info {
+            flex: 1;
+        }
+
+        .movement-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .movement-desc {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .movement-target {
+            padding: 6px 12px;
+            background: rgba(33, 150, 243, 0.2);
+            border-radius: 12px;
+            margin-left: 12px;
+        }
+
+        .movement-target span {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2196F3;
+        }
+
+        .check-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 14px;
+            background: #4CAF50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 12px;
+            font-size: 16px;
+        }
+
+        .footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 18px;
+            border-radius: 30px;
+            border: none;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .start-btn:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Select Assessment</h1>
+        <p>Choose the joint and movement to measure</p>
+    </div>
+
+    <div class="side-selector">
+        <label>Side:</label>
+        <div class="side-buttons">
+            <button class="side-btn active" onclick="selectSide('left')">Left</button>
+            <button class="side-btn" onclick="selectSide('right')">Right</button>
+        </div>
+    </div>
+
+    <div class="joints-list">
+        <!-- Shoulder -->
+        <div class="joint-card">
+            <div class="joint-button" onclick="toggleJoint('shoulder')">
+                <div class="joint-left">
+                    <div class="joint-icon">💪</div>
+                    <div class="joint-name">Shoulder</div>
+                </div>
+                <div class="expand-icon" id="shoulder-icon">▶</div>
+            </div>
+            <div class="movements" id="shoulder-movements">
+                <div class="movement-card" onclick="selectMovement(this, 'shoulder', 'flexion')">
+                    <div class="movement-info">
+                        <div class="movement-name">Forward Flexion</div>
+                        <div class="movement-desc">Lifting arm to the front</div>
+                    </div>
+                    <div class="movement-target">
+                        <span>Target: 160°</span>
+                    </div>
+                </div>
+                <div class="movement-card" onclick="selectMovement(this, 'shoulder', 'abduction')">
+                    <div class="movement-info">
+                        <div class="movement-name">Abduction</div>
+                        <div class="movement-desc">Lifting arm to the side</div>
+                    </div>
+                    <div class="movement-target">
+                        <span>Target: 160°</span>
+                    </div>
+                </div>
+                <div class="movement-card" onclick="selectMovement(this, 'shoulder', 'external')">
+                    <div class="movement-info">
+                        <div class="movement-name">External Rotation</div>
+                        <div class="movement-desc">Turning outwards</div>
+                    </div>
+                    <div class="movement-target">
+                        <span>Target: 90°</span>
+                    </div>
+                </div>
+                <div class="movement-card" onclick="selectMovement(this, 'shoulder', 'internal')">
+                    <div class="movement-info">
+                        <div class="movement-name">Internal Rotation</div>
+                        <div class="movement-desc">Turning inwards</div>
+                    </div>
+                    <div class="movement-target">
+                        <span>Target: 70°</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Elbow -->
+        <div class="joint-card">
+            <div class="joint-button" onclick="toggleJoint('elbow')">
+                <div class="joint-left">
+                    <div class="joint-icon">🦾</div>
+                    <div class="joint-name">Elbow</div>
+                </div>
+                <div class="expand-icon" id="elbow-icon">▶</div>
+            </div>
+            <div class="movements" id="elbow-movements">
+                <div class="movement-card" onclick="selectMovement(this, 'elbow', 'flexion')">
+                    <div class="movement-info">
+                        <div class="movement-name">Flexion</div>
+                        <div class="movement-desc">Bending the elbow</div>
+                    </div>
+                    <div class="movement-target">
+                        <span>Target: 150°</span>
+                    </div>
+                </div>
+                <div class="movement-card" onclick="selectMovement(this, 'elbow', 'extension')">
+                    <div class="movement-info">
+                        <div class="movement-name">Extension</div>
+                        <div class="movement-desc">Straightening the elbow</div>
+                    </div>
+                    <div class="movement-target">
+                        <span>Target: 0°</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Knee -->
+        <div class="joint-card">
+            <div class="joint-button" onclick="toggleJoint('knee')">
+                <div class="joint-left">
+                    <div class="joint-icon">🦵</div>
+                    <div class="joint-name">Knee</div>
+                </div>
+                <div class="expand-icon" id="knee-icon">▶</div>
+            </div>
+            <div class="movements" id="knee-movements">
+                <div class="movement-card" onclick="selectMovement(this, 'knee', 'flexion')">
+                    <div class="movement-info">
+                        <div class="movement-name">Flexion</div>
+                        <div class="movement-desc">Bending the knee</div>
+                    </div>
+                    <div class="movement-target">
+                        <span>Target: 135°</span>
+                    </div>
+                </div>
+                <div class="movement-card" onclick="selectMovement(this, 'knee', 'extension')">
+                    <div class="movement-info">
+                        <div class="movement-name">Extension</div>
+                        <div class="movement-desc">Straightening the knee</div>
+                    </div>
+                    <div class="movement-target">
+                        <span>Target: 0°</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <button class="start-btn" id="start-btn" disabled>Start Assessment</button>
+    </div>
+
+    <script>
+        let selectedJoint = null;
+        let selectedMovement = null;
+        let selectedSide = 'left';
+
+        function toggleJoint(joint) {
+            const movements = document.getElementById(`${joint}-movements`);
+            const icon = document.getElementById(`${joint}-icon`);
+            const button = icon.parentElement;
+
+            // Close all other joints
+            document.querySelectorAll('.movements').forEach(m => {
+                if (m.id !== `${joint}-movements`) {
+                    m.classList.remove('show');
+                }
+            });
+            document.querySelectorAll('.expand-icon').forEach(i => {
+                if (i.id !== `${joint}-icon`) {
+                    i.textContent = '▶';
+                }
+            });
+            document.querySelectorAll('.joint-button').forEach(b => {
+                if (b !== button) {
+                    b.classList.remove('selected');
+                }
+            });
+
+            // Toggle this joint
+            movements.classList.toggle('show');
+            icon.textContent = movements.classList.contains('show') ? '▼' : '▶';
+            button.classList.toggle('selected');
+
+            selectedJoint = joint;
+        }
+
+        function selectMovement(element, joint, movement) {
+            // Remove previous selection
+            document.querySelectorAll('.movement-card').forEach(card => {
+                card.classList.remove('selected');
+                const badge = card.querySelector('.check-badge');
+                if (badge) badge.remove();
+            });
+
+            // Add new selection
+            element.classList.add('selected');
+            const badge = document.createElement('div');
+            badge.className = 'check-badge';
+            badge.textContent = '✓';
+            element.appendChild(badge);
+
+            selectedMovement = movement;
+
+            // Enable start button
+            document.getElementById('start-btn').disabled = false;
+        }
+
+        function selectSide(side) {
+            document.querySelectorAll('.side-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            selectedSide = side;
+        }
+
+        // Simulate start
+        document.getElementById('start-btn').addEventListener('click', function() {
+            if (selectedJoint && selectedMovement) {
+                alert(`Starting assessment:\nSide: ${selectedSide}\nJoint: ${selectedJoint}\nMovement: ${selectedMovement}\n\nNow showing angle display...`);
+                window.location.href = '02-angle-display.html';
+            }
+        });
+    </script>
+</body>
+</html>
