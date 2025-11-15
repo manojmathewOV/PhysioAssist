@@ -63,6 +63,7 @@
     "clinical:validate": "ts-node scripts/clinical-validation-harness.ts",
     "clinical:tune": "ts-node scripts/threshold-tuning-tool.ts",
     "validate:architecture": "node scripts/validate-modular-architecture.js",
+    "test:walkthrough": "node scripts/run-user-walkthrough.js",
     "security:scan": "npm audit --audit-level=moderate",
     "complexity-report": "echo '📊 Complexity analysis (to be implemented with plato in Gate 1)'",
     "benchmark": "node scripts/benchmark-pipeline.js"
