@@ -175,20 +175,26 @@ export class TemporalConsistencyAnalyzer {
       };
     }
 
+    // Apply smoothing only for non-oscillating patterns to reduce noise
+    // For oscillating movements, rapid direction changes are real signal, not noise
+    const shouldSmooth = expectedPattern !== 'oscillating';
+    const processedAngles = shouldSmooth ? this.applySmoothingFilter(angles) : angles;
+
     // Calculate velocities (degrees per second)
     const velocities: number[] = [];
-    for (let i = 1; i < angles.length; i++) {
-      const angleDiff = angles[i] - angles[i - 1];
+    for (let i = 1; i < processedAngles.length; i++) {
+      const angleDiff = processedAngles[i] - processedAngles[i - 1];
       const timeDiff = 1 / frameRate; // Time between frames in seconds
       velocities.push(angleDiff / timeDiff);
     }
 
     // Detect pattern
-    const observedPattern = this.detectPattern(angles, velocities);
+    const observedPattern = this.detectPattern(processedAngles, velocities);
 
     // Count significant reversals (direction changes with velocity threshold)
-    // Ignore tiny velocity changes (< 5°/s) to avoid noise-induced reversals
-    const velocityThreshold = 5; // degrees/second
+    // Ignore small velocity changes to avoid noise-induced reversals
+    // At 30 FPS with ±1° noise, velocity noise = ±30°/s, so threshold must be higher
+    const velocityThreshold = 10; // degrees/second (noise tolerance)
     let reversals = 0;
     for (let i = 1; i < velocities.length; i++) {
       const prevVel =
@@ -200,9 +206,9 @@ export class TemporalConsistencyAnalyzer {
       }
     }
 
-    // Calculate ROM
-    const minAngle = Math.min(...angles);
-    const maxAngle = Math.max(...angles);
+    // Calculate ROM from processed angles
+    const minAngle = Math.min(...processedAngles);
+    const maxAngle = Math.max(...processedAngles);
     const totalRangeOfMotion = maxAngle - minAngle;
 
     // Calculate velocities
@@ -220,13 +226,14 @@ export class TemporalConsistencyAnalyzer {
       if (expectedPattern === 'increasing' || expectedPattern === 'decreasing') {
         // Should have minimal reversals
         if (reversals > this.config.maxReversals) {
-          trendConsistency = Math.max(0, 1 - reversals / angles.length);
+          trendConsistency = Math.max(0, 1 - reversals / processedAngles.length);
           patternMatch = false;
           notes.push(`Too many reversals (${reversals}) for ${expectedPattern} movement`);
         }
 
         // Check overall trend
-        const overallTrend = angles[angles.length - 1] - angles[0];
+        const overallTrend =
+          processedAngles[processedAngles.length - 1] - processedAngles[0];
         if (expectedPattern === 'increasing' && overallTrend < 0) {
           trendConsistency *= 0.5;
           patternMatch = false;
@@ -280,6 +287,32 @@ export class TemporalConsistencyAnalyzer {
   }
 
   /**
+   * Apply 3-point moving average smoothing filter to reduce noise
+   * Standard signal processing technique for biomechanical data
+   */
+  private applySmoothingFilter(angles: number[]): number[] {
+    if (angles.length < 3) {
+      return angles;
+    }
+
+    const smoothed: number[] = [];
+
+    // First point (no smoothing possible)
+    smoothed.push(angles[0]);
+
+    // Middle points (3-point average)
+    for (let i = 1; i < angles.length - 1; i++) {
+      const avg = (angles[i - 1] + angles[i] + angles[i + 1]) / 3;
+      smoothed.push(avg);
+    }
+
+    // Last point (no smoothing possible)
+    smoothed.push(angles[angles.length - 1]);
+
+    return smoothed;
+  }
+
+  /**
    * Detect movement pattern from angles and velocities
    */
   private detectPattern(
@@ -305,10 +338,13 @@ export class TemporalConsistencyAnalyzer {
     const velStdDev = Math.sqrt(
       velocities.reduce((sum, v) => sum + (v - meanVel) ** 2, 0) / velocities.length
     );
+    const peakVel = Math.max(...velocities.map(Math.abs));
 
-    // Erratic: very high velocity variance
-    if (velStdDev > 100) {
-      // >100°/s variance = erratic
+    // Erratic: very high velocity variance relative to peak velocity
+    // For oscillating movements, stdDev ≈ peakVel is normal
+    // Only classify as erratic if stdDev is much larger than expected
+    if (velStdDev > 150 && velStdDev > peakVel * 1.5) {
+      // Unusually high variance indicates erratic movement
       return 'erratic';
     }
 

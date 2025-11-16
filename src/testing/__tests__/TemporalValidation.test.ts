@@ -261,6 +261,25 @@ describe('TemporalValidationPipeline - Gate 10D', () => {
         'oscillating'
       );
 
+      // Debug
+      if (!result.passed) {
+        // eslint-disable-next-line no-console
+        console.log(
+          '[DEBUG] Oscillating test failed:',
+          JSON.stringify(
+            {
+              passed: result.passed,
+              issues: result.issues,
+              consistency: result.consistency,
+              trajectory: result.trajectory,
+              quality: result.quality,
+            },
+            null,
+            2
+          )
+        );
+      }
+
       expect(result.passed).toBe(true);
       expect(result.trajectory.observedPattern).toBe('oscillating');
       expect(result.trajectory.reversals).toBeGreaterThan(2); // Multiple direction changes
@@ -553,7 +572,48 @@ describe('TemporalValidationPipeline - Gate 10D', () => {
         'increasing'
       );
 
-      const compensation = result.compensations[0];
+      // Debug - check all compensations
+      // eslint-disable-next-line no-console
+      console.log(
+        '[DEBUG] All compensations:',
+        JSON.stringify(
+          result.compensations.map((c) => ({
+            type: c.compensationType,
+            frames: c.totalFramesDetected,
+            firstFrame: c.firstDetectedFrame,
+            lastFrame: c.lastDetectedFrame,
+            persistenceRate: c.persistenceRate,
+          })),
+          null,
+          2
+        )
+      );
+
+      // Find the trunk_lean compensation (the one we intentionally added)
+      const trunkLean = result.compensations.find(
+        (c) => c.compensationType === 'trunk_lean'
+      );
+      const compensation = trunkLean || result.compensations[0];
+
+      // Debug
+      // eslint-disable-next-line no-console
+      console.log(
+        '[DEBUG] Testing compensation:',
+        JSON.stringify(
+          {
+            frameCount: result.frameCount,
+            compensationType: compensation.compensationType,
+            totalFramesDetected: compensation.totalFramesDetected,
+            firstDetectedFrame: compensation.firstDetectedFrame,
+            lastDetectedFrame: compensation.lastDetectedFrame,
+            persistenceRate: compensation.persistenceRate,
+            isPersistent: compensation.isPersistent,
+          },
+          null,
+          2
+        )
+      );
+
       expect(compensation.persistenceRate).toBeGreaterThan(0);
       expect(compensation.persistenceRate).toBeLessThanOrEqual(100);
       expect(compensation.totalFramesDetected).toBeLessThan(result.frameCount);
