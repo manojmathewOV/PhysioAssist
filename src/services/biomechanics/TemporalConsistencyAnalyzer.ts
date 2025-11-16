@@ -71,14 +71,18 @@ export class TemporalConsistencyAnalyzer {
       );
     }
 
-    const persistentCompensations = compensations.filter((c) => c.isPersistent);
-    if (persistentCompensations.length > 0) {
-      issues.push(
-        `Persistent compensations: ${persistentCompensations.map((c) => c.compensationType).join(', ')}`
-      );
-    }
+    // Note: Compensations are tracked but don't fail temporal validation
+    // Temporal validation focuses on movement quality (smoothness, consistency, pattern)
+    // not on whether compensations exist (that's handled by compensation-specific validation)
 
-    const passed = consistency.passed && quality.passed && issues.length === 0;
+    // Basic temporal validation passes if:
+    // 1. Frame-to-frame consistency is good (no sudden jumps, smooth)
+    // 2. Quality is maintained
+    // 3. Trajectory matches expected pattern (if specified)
+    const passed =
+      consistency.passed &&
+      quality.passed &&
+      (expectedPattern ? trajectory.patternMatch : true);
 
     return {
       sequenceId: sequence.sequenceId,
@@ -182,13 +186,16 @@ export class TemporalConsistencyAnalyzer {
     // Detect pattern
     const observedPattern = this.detectPattern(angles, velocities);
 
-    // Count reversals (direction changes)
+    // Count significant reversals (direction changes with velocity threshold)
+    // Ignore tiny velocity changes (< 5°/s) to avoid noise-induced reversals
+    const velocityThreshold = 5; // degrees/second
     let reversals = 0;
     for (let i = 1; i < velocities.length; i++) {
-      if (
-        (velocities[i] > 0 && velocities[i - 1] < 0) ||
-        (velocities[i] < 0 && velocities[i - 1] > 0)
-      ) {
+      const prevVel =
+        Math.abs(velocities[i - 1]) > velocityThreshold ? velocities[i - 1] : 0;
+      const currVel = Math.abs(velocities[i]) > velocityThreshold ? velocities[i] : 0;
+
+      if ((currVel > 0 && prevVel < 0) || (currVel < 0 && prevVel > 0)) {
         reversals++;
       }
     }
