@@ -235,8 +235,8 @@ export class CompensationDetectionService {
    * Thresholds:
    * - minimal: <5° (normal variation)
    * - mild: 5-10°
-   * - moderate: 10-15° (clinically significant)
-   * - severe: >15°
+   * - moderate: 10-20° (clinically significant)
+   * - severe: >20°
    *
    * @param thoraxFrame Cached thorax anatomical frame
    * @param viewOrientation Current view orientation
@@ -698,8 +698,8 @@ export class CompensationDetectionService {
    * Clinical thresholds:
    * - minimal: <5° or <1cm (normal variation)
    * - mild: 5-10° or 1-2cm (noteworthy)
-   * - moderate: 10-15° or 2-3cm (clinically significant)
-   * - severe: >15° or >3cm (major dysfunction)
+   * - moderate: 10-20° or 2-5cm (clinically significant)
+   * - severe: >20° or >5cm (major dysfunction)
    *
    * @param magnitude Compensation magnitude
    * @param unit 'degrees' or 'cm'
@@ -711,8 +711,8 @@ export class CompensationDetectionService {
   ): 'minimal' | 'mild' | 'moderate' | 'severe' {
     const thresholds =
       unit === 'degrees'
-        ? { mild: 5, moderate: 10, severe: 15 }
-        : { mild: 1, moderate: 2, severe: 3 };
+        ? { mild: 5, moderate: 10, severe: 20 }
+        : { mild: 1, moderate: 2, severe: 5 };
 
     if (magnitude < thresholds.mild) return 'minimal';
     if (magnitude < thresholds.moderate) return 'mild';
