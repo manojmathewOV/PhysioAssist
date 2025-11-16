@@ -140,8 +140,16 @@ export class GoniometerServiceV2 {
     const vector1 = this.createVector(pointB, pointA);
     const vector2 = this.createVector(pointB, pointC);
 
-    // 7. ✅ ALWAYS project onto plane before calculating angle
-    const angle = this.calculateAngleInPlane(vector1, vector2, measurementPlane);
+    // 7. Calculate angle (use 3D for hinge joints like elbow/knee to handle any arm position)
+    let angle: number;
+    if (jointName.includes('elbow') || jointName.includes('knee')) {
+      // For hinge joints, calculate 3D angle directly to handle any arm/leg position
+      // This is especially important when arm is abducted (shoulder rotation test)
+      angle = angleBetweenVectors(vector1, vector2);
+    } else {
+      // For complex joints (shoulder, hip), project onto anatomical plane
+      angle = this.calculateAngleInPlane(vector1, vector2, measurementPlane);
+    }
 
     // 8. Temporal smoothing (if enabled)
     const smoothedAngle =

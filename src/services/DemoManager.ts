@@ -138,7 +138,7 @@ export class DemoManager {
     }
     if (movementDef.demos.video) {
       // Add multiple quality variants
-      ['hd', 'sd', 'low'].forEach(quality => {
+      ['hd', 'sd', 'low'].forEach((quality) => {
         const asset = this.buildDemoAsset(movementDef, 'video', quality as VideoQuality);
         if (asset) assets.push(asset);
       });
@@ -157,7 +157,7 @@ export class DemoManager {
     movementIds: string[],
     options: DemoLoadOptions = {}
   ): Promise<void> {
-    const loadPromises = movementIds.map(id =>
+    const loadPromises = movementIds.map((id) =>
       this.getDemoAsset(id, { ...options, preload: true })
     );
 
@@ -178,7 +178,7 @@ export class DemoManager {
    */
   getCacheSize(): number {
     let totalSize = 0;
-    this.demoCache.forEach(asset => {
+    this.demoCache.forEach((asset) => {
       totalSize += asset.size || 0;
     });
     return totalSize / (1024 * 1024); // Convert to MB
@@ -194,11 +194,16 @@ export class DemoManager {
     preferredFormat?: DemoFormat
   ): DemoFormat {
     // If user has a preference and it's available, use it
-    if (preferredFormat && movementDef.demos[preferredFormat]) {
+    if (
+      preferredFormat &&
+      preferredFormat in movementDef.demos &&
+      movementDef.demos[preferredFormat as keyof typeof movementDef.demos]
+    ) {
       return preferredFormat;
     }
 
-    const { supports3D, supportsVideo, networkSpeed, isLowEndDevice } = this.deviceCapabilities;
+    const { supports3D, supportsVideo, networkSpeed, isLowEndDevice } =
+      this.deviceCapabilities;
 
     // Low-end devices: Always use SVG (lightweight)
     if (isLowEndDevice) {
@@ -252,7 +257,7 @@ export class DemoManager {
           thumbnail: demos.thumbnail,
         };
 
-      case 'video':
+      case 'video': {
         if (!demos.video) return null;
         // Build video URI with quality suffix
         const videoUri = this.getVideoUriForQuality(demos.video, quality);
@@ -265,6 +270,7 @@ export class DemoManager {
           thumbnail: demos.thumbnail,
           quality,
         };
+      }
 
       default:
         return null;
@@ -315,7 +321,7 @@ export class DemoManager {
     console.log(`Preloading demo asset: ${asset.uri} (${asset.format})`);
 
     // Simulate loading delay
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         console.log(`✓ Preloaded: ${asset.uri}`);
         resolve();

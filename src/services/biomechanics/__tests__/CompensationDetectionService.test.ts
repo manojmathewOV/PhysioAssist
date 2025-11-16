@@ -199,9 +199,9 @@ describe('CompensationDetectionService - Gate 10B', () => {
       expect(trunkLean?.severity).toBe('mild');
     });
 
-    it('should detect severe trunk lean (18°)', () => {
+    it('should detect severe trunk lean (31°)', () => {
       const poseData = createMockPoseData({
-        thoraxFrame: createMockThoraxFrame({ lateralTilt: 18 }),
+        thoraxFrame: createMockThoraxFrame({ lateralTilt: 31 }),
         viewOrientation: 'frontal',
       });
 
@@ -213,6 +213,7 @@ describe('CompensationDetectionService - Gate 10B', () => {
 
       const trunkLean = compensations.find((c) => c.type === 'trunk_lean');
       expect(trunkLean?.severity).toBe('severe');
+      expect(trunkLean?.magnitude).toBeCloseTo(31, 1);
     });
 
     it('should NOT detect minimal trunk lean (<5°)', () => {
@@ -253,9 +254,9 @@ describe('CompensationDetectionService - Gate 10B', () => {
   // =============================================================================
 
   describe('Trunk Rotation Detection', () => {
-    it('should detect moderate trunk rotation (12°)', () => {
+    it('should detect moderate trunk rotation (24°)', () => {
       const poseData = createMockPoseData({
-        thoraxFrame: createMockThoraxFrame({ rotation: 12 }),
+        thoraxFrame: createMockThoraxFrame({ rotation: 24 }),
         viewOrientation: 'frontal',
       });
 
@@ -268,13 +269,13 @@ describe('CompensationDetectionService - Gate 10B', () => {
       const trunkRotation = compensations.find((c) => c.type === 'trunk_rotation');
       expect(trunkRotation).toBeDefined();
       expect(trunkRotation?.severity).toBe('moderate');
-      expect(trunkRotation?.magnitude).toBeCloseTo(12, 1);
+      expect(trunkRotation?.magnitude).toBeCloseTo(24, 1);
       expect(trunkRotation?.clinicalNote).toContain('Trunk rotation');
     });
 
-    it('should detect severe trunk rotation (20°)', () => {
+    it('should detect severe trunk rotation (41°)', () => {
       const poseData = createMockPoseData({
-        thoraxFrame: createMockThoraxFrame({ rotation: 20 }),
+        thoraxFrame: createMockThoraxFrame({ rotation: 41 }),
         viewOrientation: 'frontal',
       });
 
@@ -286,6 +287,7 @@ describe('CompensationDetectionService - Gate 10B', () => {
 
       const trunkRotation = compensations.find((c) => c.type === 'trunk_rotation');
       expect(trunkRotation?.severity).toBe('severe');
+      expect(trunkRotation?.magnitude).toBeCloseTo(41, 1);
     });
 
     it('should NOT detect minimal trunk rotation (<5°)', () => {
@@ -306,7 +308,7 @@ describe('CompensationDetectionService - Gate 10B', () => {
 
     it('should use correct expected orientation for frontal view', () => {
       const poseData = createMockPoseData({
-        thoraxFrame: createMockThoraxFrame({ rotation: 10 }),
+        thoraxFrame: createMockThoraxFrame({ rotation: 13 }),
         viewOrientation: 'frontal',
       });
 
@@ -318,7 +320,8 @@ describe('CompensationDetectionService - Gate 10B', () => {
 
       const trunkRotation = compensations.find((c) => c.type === 'trunk_rotation');
       expect(trunkRotation).toBeDefined();
-      expect(trunkRotation?.magnitude).toBeGreaterThan(5);
+      expect(trunkRotation?.severity).toBe('mild');
+      expect(trunkRotation?.magnitude).toBeCloseTo(13, 1);
     });
   });
 

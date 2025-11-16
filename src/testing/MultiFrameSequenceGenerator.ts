@@ -477,9 +477,15 @@ export class MultiFrameSequenceGenerator {
           genOptions
         ));
       } else if (movement === 'elbow_flexion') {
-        const genOptions: { side: 'left' | 'right'; trunkLean?: number } = { side };
-        if (compensationType === 'trunk_lean')
+        const genOptions: {
+          side: 'left' | 'right';
+          trunkLean?: number;
+          viewOrientation?: 'frontal' | 'sagittal';
+        } = { side };
+        if (compensationType === 'trunk_lean') {
           genOptions.trunkLean = compensationMagnitude;
+          genOptions.viewOrientation = 'frontal'; // Frontal view needed for trunk lean detection
+        }
         ({ poseData } = this.poseGenerator.generateElbowFlexion(
           angle,
           'movenet-17',
