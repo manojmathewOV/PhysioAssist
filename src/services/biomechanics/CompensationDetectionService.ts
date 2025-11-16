@@ -260,6 +260,13 @@ export class CompensationDetectionService {
       return null;
     }
 
+    // Sagittal/lateral views: Cannot reliably detect trunk rotation when viewing from the side
+    // In these views, both shoulders have similar depth (Z) coordinates, causing thorax frame
+    // X-axis calculation to be unreliable. Trunk rotation is best detected in frontal/posterior views.
+    if (viewOrientation === 'sagittal' || viewOrientation === 'lateral') {
+      return null;
+    }
+
     // Thorax frame X-axis should point anterior
     const xAxis = thoraxFrame.xAxis;
 
@@ -273,19 +280,6 @@ export class CompensationDetectionService {
       case 'frontal':
         // In frontal view, anterior should point toward camera
         expectedOrientation = { x: 0, y: 0, z: -1 }; // Toward camera (negative Z)
-        break;
-      case 'sagittal': {
-        // In sagittal (lateral) view, anterior should point lateral (left or right)
-        // Accept whichever direction is closer to minimize false positives
-        const leftOrientation = { x: -1, y: 0, z: 0 };
-        const rightOrientation = { x: 1, y: 0, z: 0 };
-        const leftAngle = angleBetweenVectors(xAxisInTransversePlane, leftOrientation);
-        const rightAngle = angleBetweenVectors(xAxisInTransversePlane, rightOrientation);
-        expectedOrientation = leftAngle < rightAngle ? leftOrientation : rightOrientation;
-        break;
-      }
-      case 'lateral':
-        expectedOrientation = { x: -1, y: 0, z: 0 }; // Left (negative X)
         break;
       case 'posterior':
         expectedOrientation = { x: 0, y: 0, z: 1 }; // Away from camera (positive Z)
