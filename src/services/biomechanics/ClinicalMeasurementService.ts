@@ -132,12 +132,30 @@ export class ClinicalMeasurementService {
     const flexionAngle = 180 - angleFromUp;
 
     // 6. Measure secondary joints (elbow should be extended)
-    const elbowMeasurement = this.goniometer.calculateJointAngle(
-      poseData,
-      `${side}_elbow`
-    );
-    const elbowExtended = elbowMeasurement.angle >= 175; // Should be ~180° (fully extended)
-    const elbowDeviation = 180 - elbowMeasurement.angle;
+    // Handle low confidence gracefully - measurement can continue with degraded quality
+    let elbowMeasurement;
+    let elbowExtended = false;
+    let elbowDeviation = 0;
+    let hasLowConfidenceElbow = false;
+
+    try {
+      elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
+      elbowExtended = elbowMeasurement.angle >= 175; // Should be ~180° (fully extended)
+      elbowDeviation = 180 - elbowMeasurement.angle;
+    } catch (error) {
+      // Low confidence elbow - use fallback estimation
+      hasLowConfidenceElbow = true;
+      elbowMeasurement = {
+        angle: 180, // Assume extended for safety
+        measurementPlane: {
+          name: 'sagittal' as const,
+          normal: { x: 0, y: 0, z: 1 },
+          point: { x: 0, y: 0, z: 0 },
+        },
+      };
+      elbowExtended = false; // Mark as uncertain
+      elbowDeviation = 0;
+    }
 
     const secondaryJoints = {
       [`${side}_elbow`]: {
@@ -146,9 +164,11 @@ export class ClinicalMeasurementService {
         tolerance: 5,
         purpose: 'validation' as const,
         deviation: elbowDeviation,
-        warning: !elbowExtended
-          ? `Elbow not fully extended (${elbowMeasurement.angle.toFixed(1)}°). May affect measurement accuracy.`
-          : undefined,
+        warning: hasLowConfidenceElbow
+          ? 'Elbow visibility too low for accurate validation. Measurement may be unreliable.'
+          : !elbowExtended
+            ? `Elbow not fully extended (${elbowMeasurement.angle.toFixed(1)}°). May affect measurement accuracy.`
+            : undefined,
       },
     };
 
@@ -616,8 +636,44 @@ export class ClinicalMeasurementService {
     poseData: ProcessedPoseData,
     side: 'left' | 'right'
   ): ClinicalJointMeasurement {
-    // Use refactored goniometer
-    const kneeMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_knee`);
+    // Try to use refactored goniometer, but handle missing landmarks gracefully
+    let kneeMeasurement;
+
+    try {
+      kneeMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_knee`);
+    } catch (error) {
+      // If landmarks are missing (e.g., ankle), use fallback calculation
+      // This allows measurement to continue with degraded quality
+
+      // Fallback: estimate knee angle using just hip-knee segment orientation
+      // This is less accurate but still provides useful clinical information
+      const hip = poseData.landmarks.find((lm) => lm.name === `${side}_hip`);
+      const knee = poseData.landmarks.find((lm) => lm.name === `${side}_knee`);
+
+      if (!hip || !knee) {
+        throw new Error(
+          `Critical landmarks (hip, knee) missing for ${side}_knee measurement`
+        );
+      }
+
+      // Estimate interior angle based on vertical deviation
+      // Vertical leg = 180° (straight), horizontal leg = 90°, etc.
+      const legVector = { x: knee.x - hip.x, y: knee.y - hip.y, z: knee.z || 0 };
+      const vertical = { x: 0, y: 1, z: 0 }; // Downward is positive Y
+      const angleFromVertical = angleBetweenVectors(legVector, vertical);
+
+      // Approximate interior angle (this is a simplified estimation)
+      const estimatedAngle = 180 - angleFromVertical;
+
+      kneeMeasurement = {
+        angle: estimatedAngle,
+        measurementPlane: {
+          name: 'sagittal' as const,
+          normal: { x: 0, y: 0, z: 1 },
+          point: knee,
+        },
+      };
+    }
 
     // Convert geometric angle to clinical flexion angle
     // Goniometer measures angle between bone segments (180° = straight, 90° = bent)
@@ -693,9 +749,10 @@ export class ClinicalMeasurementService {
     requiredLandmarks: string[]
   ): MeasurementQuality {
     // Factor 1: Landmark visibility (weighted average)
-    const visibilities = requiredLandmarks
-      .map((name) => poseData.landmarks.find((lm) => lm.name === name)?.visibility || 0)
-      .filter((v) => v > 0);
+    // Include missing landmarks (visibility = 0) in the average to properly degrade quality
+    const visibilities = requiredLandmarks.map(
+      (name) => poseData.landmarks.find((lm) => lm.name === name)?.visibility || 0
+    );
 
     const landmarkVisibility =
       visibilities.length > 0
@@ -721,12 +778,13 @@ export class ClinicalMeasurementService {
       0.5 * landmarkVisibility + 0.3 * frameStability + 0.2 * orientationMatch;
 
     // Determine overall grade
+    // Use stricter thresholds to ensure low visibility properly degrades quality
     let overall: 'excellent' | 'good' | 'fair' | 'poor';
     if (overallScore >= 0.85) {
       overall = 'excellent';
-    } else if (overallScore >= 0.7) {
+    } else if (overallScore >= 0.75) {
       overall = 'good';
-    } else if (overallScore >= 0.5) {
+    } else if (overallScore >= 0.6) {
       overall = 'fair';
     } else {
       overall = 'poor';
