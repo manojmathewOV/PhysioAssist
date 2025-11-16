@@ -494,6 +494,21 @@ export class ClinicalMeasurementService {
 
     const percentOfTarget = (Math.abs(signedRotation) / targetAngle) * 100;
 
+    // Assess quality and add secondary joint warnings
+    const quality = this.assessMeasurementQuality(poseData, [
+      `${side}_shoulder`,
+      `${side}_elbow`,
+      `${side}_wrist`,
+    ]);
+
+    // Add secondary joint warnings to quality
+    const warnings: string[] = quality.warnings || [];
+    Object.values(secondaryJoints).forEach((joint) => {
+      if (joint.warning) {
+        warnings.push(joint.warning);
+      }
+    });
+
     return {
       primaryJoint: {
         name: `${side}_shoulder`,
@@ -511,11 +526,10 @@ export class ClinicalMeasurementService {
         measurementPlane: rotationPlane,
       },
       compensations,
-      quality: this.assessMeasurementQuality(poseData, [
-        `${side}_shoulder`,
-        `${side}_elbow`,
-        `${side}_wrist`,
-      ]),
+      quality: {
+        ...quality,
+        warnings: warnings.length > 0 ? warnings : undefined,
+      },
       timestamp: poseData.timestamp,
     };
   }
