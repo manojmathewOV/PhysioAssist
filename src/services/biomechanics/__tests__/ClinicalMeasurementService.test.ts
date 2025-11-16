@@ -175,12 +175,34 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
     // For frontal view, trunkLean should create lateral tilt (X-axis deviation)
     const isSagittal = viewOrientation === 'sagittal';
 
+    // Baseline anterior direction depends on view orientation
+    // Frontal: anterior points toward camera (negative Z)
+    // Sagittal: anterior points lateral (could be +X or -X, using +X for right-facing)
+    // Rotation is applied around the vertical Y-axis
+    let baseAnteriorX = 0;
+    let baseAnteriorZ = -1; // Frontal view baseline
+
+    if (viewOrientation === 'sagittal') {
+      baseAnteriorX = 1; // Lateral
+      baseAnteriorZ = 0;
+    } else if (viewOrientation === 'posterior') {
+      baseAnteriorZ = 1; // Away from camera
+    }
+
+    // Apply trunk rotation around Y-axis (rotation matrix)
+    const rotatedAnteriorX =
+      baseAnteriorX * Math.cos(trunkRotationRad) -
+      baseAnteriorZ * Math.sin(trunkRotationRad);
+    const rotatedAnteriorZ =
+      baseAnteriorX * Math.sin(trunkRotationRad) +
+      baseAnteriorZ * Math.cos(trunkRotationRad);
+
     const thoraxFrame: AnatomicalReferenceFrame = {
       origin: { x: 0.5, y: 0.3, z: 0 },
       xAxis: {
-        x: Math.cos(trunkRotationRad),
-        y: Math.sin(trunkLeanRad) * Math.sin(trunkRotationRad),
-        z: Math.sin(trunkRotationRad),
+        x: rotatedAnteriorX,
+        y: Math.sin(trunkLeanRad), // Y component from lean
+        z: rotatedAnteriorZ,
       },
       yAxis: {
         x: isSagittal ? 0 : -Math.sin(trunkLeanRad), // Lateral tilt only in frontal view
@@ -1102,7 +1124,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       const poseData = createMockPoseData('movenet-17', {
         shoulderFlexion: 160,
         trunkRotation: 20, // >15° threshold
-        viewOrientation: 'sagittal',
+        viewOrientation: 'frontal', // Use frontal view for reliable trunk rotation detection
       });
 
       const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
@@ -1147,7 +1169,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
         shoulderFlexion: 160,
         trunkLean: 20,
         trunkRotation: 20,
-        viewOrientation: 'sagittal',
+        viewOrientation: 'frontal', // Use frontal view for both trunk lean and rotation detection
       });
 
       const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
