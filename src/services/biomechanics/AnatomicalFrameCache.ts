@@ -59,6 +59,7 @@ export class AnatomicalFrameCache {
   // Performance tracking
   private hits: number = 0;
   private misses: number = 0;
+  private evictions: number = 0;
   private lookupTimes: number[] = [];
 
   // Configuration
@@ -256,6 +257,7 @@ export class AnatomicalFrameCache {
     // Remove LRU entry
     if (lruKey) {
       this.cache.delete(lruKey);
+      this.evictions++;
     }
   }
 
@@ -310,7 +312,7 @@ export class AnatomicalFrameCache {
       maxSize: this.maxSize,
       hits: this.hits,
       misses: this.misses,
-      evictions: 0, // TODO: Track evictions when LRU eviction is implemented
+      evictions: this.evictions,
       hitRate,
       averageLookupTime,
       memoryUsage,

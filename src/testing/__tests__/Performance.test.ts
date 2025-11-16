@@ -39,7 +39,9 @@ describe('Performance Benchmarks', () => {
 
   describe('Single Frame Performance', () => {
     it('should measure shoulder flexion in <50ms', () => {
-      const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', { side: 'right' });
+      const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', {
+        side: 'right',
+      });
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
 
       const iterations = 100;
@@ -57,7 +59,9 @@ describe('Performance Benchmarks', () => {
     });
 
     it('should measure elbow flexion in <50ms', () => {
-      const { poseData } = poseGenerator.generateElbowFlexion(120, 'movenet-17', { side: 'right' });
+      const { poseData } = poseGenerator.generateElbowFlexion(120, 'movenet-17', {
+        side: 'right',
+      });
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
 
       const iterations = 100;
@@ -75,7 +79,9 @@ describe('Performance Benchmarks', () => {
     });
 
     it('should measure knee flexion in <50ms', () => {
-      const { poseData } = poseGenerator.generateKneeFlexion(90, 'movenet-17', { side: 'right' });
+      const { poseData } = poseGenerator.generateKneeFlexion(90, 'movenet-17', {
+        side: 'right',
+      });
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
 
       const iterations = 100;
@@ -95,7 +101,9 @@ describe('Performance Benchmarks', () => {
 
   describe('Frame Cache Performance', () => {
     it('should achieve >80% cache hit rate for repeated measurements', () => {
-      const { poseData } = poseGenerator.generateShoulderFlexion(90, 'movenet-17', { side: 'right' });
+      const { poseData } = poseGenerator.generateShoulderFlexion(90, 'movenet-17', {
+        side: 'right',
+      });
 
       const cache = new AnatomicalFrameCache();
 
@@ -112,21 +120,27 @@ describe('Performance Benchmarks', () => {
     });
 
     it('should maintain <1ms cache lookup time', () => {
-      const { poseData } = poseGenerator.generateShoulderFlexion(90, 'movenet-17', { side: 'right' });
+      const { poseData } = poseGenerator.generateShoulderFlexion(90, 'movenet-17', {
+        side: 'right',
+      });
       const cache = new AnatomicalFrameCache();
 
       // Prime the cache
       addAnatomicalFrames(poseData, cache, anatomicalService);
 
       // Calculate global frame for thorax calculation
-      const global = cache.get('global', poseData.landmarks, (lms) => anatomicalService.calculateGlobalFrame(lms));
+      const global = cache.get('global', poseData.landmarks, (lms) =>
+        anatomicalService.calculateGlobalFrame(lms)
+      );
 
       // Measure cache lookup
       const iterations = 1000;
       const startTime = Date.now();
 
       for (let i = 0; i < iterations; i++) {
-        cache.get('thorax', poseData.landmarks, (lms) => anatomicalService.calculateThoraxFrame(lms, global));
+        cache.get('thorax', poseData.landmarks, (lms) =>
+          anatomicalService.calculateThoraxFrame(lms, global)
+        );
       }
 
       const endTime = Date.now();
@@ -137,9 +151,16 @@ describe('Performance Benchmarks', () => {
     });
 
     it('should handle temporal sequence efficiently with cache', () => {
-      const poseSequence = sequenceGenerator.generateSmoothIncreasing('shoulder_flexion', 0, 150, 3, 30, {
-        side: 'right',
-      }); // 90 frames
+      const poseSequence = sequenceGenerator.generateSmoothIncreasing(
+        'shoulder_flexion',
+        0,
+        150,
+        3,
+        30,
+        {
+          side: 'right',
+        }
+      ); // 90 frames
 
       const cache = new AnatomicalFrameCache();
       const startTime = Date.now();
@@ -155,7 +176,9 @@ describe('Performance Benchmarks', () => {
       const stats = cache.getStats();
       const hitRate = stats.hits / (stats.hits + stats.misses);
 
-      console.log(`Temporal sequence processing: ${msPerFrame.toFixed(2)}ms/frame, cache hit rate: ${(hitRate * 100).toFixed(1)}%`);
+      console.log(
+        `Temporal sequence processing: ${msPerFrame.toFixed(2)}ms/frame, cache hit rate: ${(hitRate * 100).toFixed(1)}%`
+      );
 
       expect(msPerFrame).toBeLessThan(5); // <5ms per frame with cache
       expect(hitRate).toBeGreaterThan(0.5); // >50% hit rate
@@ -164,9 +187,16 @@ describe('Performance Benchmarks', () => {
 
   describe('Real-Time Processing (30 FPS)', () => {
     it('should process shoulder flexion sequence at >30 FPS', () => {
-      const poseSequence = sequenceGenerator.generateSmoothIncreasing('shoulder_flexion', 0, 150, 2, 30, {
-        side: 'right',
-      }); // 60 frames
+      const poseSequence = sequenceGenerator.generateSmoothIncreasing(
+        'shoulder_flexion',
+        0,
+        150,
+        2,
+        30,
+        {
+          side: 'right',
+        }
+      ); // 60 frames
 
       const startTime = Date.now();
       sequenceGenerator.convertToMeasurementSequence(poseSequence, 'shoulder_flexion');
@@ -176,14 +206,23 @@ describe('Performance Benchmarks', () => {
       const msPerFrame = totalDuration / poseSequence.frames.length;
       const achievedFPS = 1000 / msPerFrame;
 
-      console.log(`Real-time processing: ${msPerFrame.toFixed(2)}ms/frame (${achievedFPS.toFixed(1)} FPS)`);
+      console.log(
+        `Real-time processing: ${msPerFrame.toFixed(2)}ms/frame (${achievedFPS.toFixed(1)} FPS)`
+      );
 
       expect(msPerFrame).toBeLessThan(33); // 30 FPS = 33ms/frame
       expect(achievedFPS).toBeGreaterThan(30);
     });
 
     it('should process elbow flexion sequence at >30 FPS', () => {
-      const poseSequence = sequenceGenerator.generateSmoothIncreasing('elbow_flexion', 0, 140, 2, 30, { side: 'right' });
+      const poseSequence = sequenceGenerator.generateSmoothIncreasing(
+        'elbow_flexion',
+        0,
+        140,
+        2,
+        30,
+        { side: 'right' }
+      );
 
       const startTime = Date.now();
       sequenceGenerator.convertToMeasurementSequence(poseSequence, 'elbow_flexion');
@@ -193,7 +232,9 @@ describe('Performance Benchmarks', () => {
       const msPerFrame = totalDuration / poseSequence.frames.length;
       const achievedFPS = 1000 / msPerFrame;
 
-      console.log(`Real-time processing: ${msPerFrame.toFixed(2)}ms/frame (${achievedFPS.toFixed(1)} FPS)`);
+      console.log(
+        `Real-time processing: ${msPerFrame.toFixed(2)}ms/frame (${achievedFPS.toFixed(1)} FPS)`
+      );
 
       expect(msPerFrame).toBeLessThan(33);
       expect(achievedFPS).toBeGreaterThan(30);
@@ -202,13 +243,27 @@ describe('Performance Benchmarks', () => {
 
   describe('Temporal Analysis Performance', () => {
     it('should analyze sequence in <100ms', () => {
-      const poseSequence = sequenceGenerator.generateSmoothIncreasing('shoulder_flexion', 0, 150, 3, 30, {
-        side: 'right',
-      });
-      const measurementSequence = sequenceGenerator.convertToMeasurementSequence(poseSequence, 'shoulder_flexion');
+      const poseSequence = sequenceGenerator.generateSmoothIncreasing(
+        'shoulder_flexion',
+        0,
+        150,
+        3,
+        30,
+        {
+          side: 'right',
+        }
+      );
+      const measurementSequence = sequenceGenerator.convertToMeasurementSequence(
+        poseSequence,
+        'shoulder_flexion'
+      );
 
       const startTime = Date.now();
-      temporalAnalyzer.analyzeSequence(measurementSequence, poseSequence.frames, 'increasing');
+      temporalAnalyzer.analyzeSequence(
+        measurementSequence,
+        poseSequence.frames,
+        'increasing'
+      );
       const endTime = Date.now();
 
       const duration = endTime - startTime;
@@ -248,7 +303,11 @@ describe('Performance Benchmarks', () => {
       const startTime = Date.now();
 
       for (let i = 0; i < iterations; i++) {
-        compensationService.detectCompensations(enrichedPose, undefined, 'shoulder_flexion');
+        compensationService.detectCompensations(
+          enrichedPose,
+          undefined,
+          'shoulder_flexion'
+        );
       }
 
       const endTime = Date.now();
@@ -261,16 +320,26 @@ describe('Performance Benchmarks', () => {
 
   describe('Scalability Tests', () => {
     it('should handle long sequences (5 minutes, 9000 frames) efficiently', () => {
-      const poseSequence = sequenceGenerator.generateSmoothIncreasing('shoulder_flexion', 0, 150, 300, 30, {
-        side: 'right',
-      }); // 5 minutes = 9000 frames
+      const poseSequence = sequenceGenerator.generateSmoothIncreasing(
+        'shoulder_flexion',
+        0,
+        150,
+        300,
+        30,
+        {
+          side: 'right',
+        }
+      ); // 5 minutes = 9000 frames
 
       const startTime = Date.now();
 
       // Process in batches to avoid memory issues
       const batchSize = 100;
       for (let i = 0; i < poseSequence.frames.length; i += batchSize) {
-        const batch = poseSequence.frames.slice(i, Math.min(i + batchSize, poseSequence.frames.length));
+        const batch = poseSequence.frames.slice(
+          i,
+          Math.min(i + batchSize, poseSequence.frames.length)
+        );
         batch.forEach((frame) => {
           const enriched = addAnatomicalFrames(frame, frameCache, anatomicalService);
           measurementService.measureShoulderFlexion(enriched, 'right');
@@ -281,23 +350,45 @@ describe('Performance Benchmarks', () => {
       const totalDuration = endTime - startTime;
       const msPerFrame = totalDuration / poseSequence.frames.length;
 
-      console.log(`Long sequence processing: ${totalDuration}ms total, ${msPerFrame.toFixed(2)}ms/frame`);
+      console.log(
+        `Long sequence processing: ${totalDuration}ms total, ${msPerFrame.toFixed(2)}ms/frame`
+      );
 
       expect(msPerFrame).toBeLessThan(50);
     }, 60000); // 60 second timeout
 
     it('should maintain performance with multiple joint measurements', () => {
-      const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', { side: 'right' });
-      const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
+      // Generate poses for different measurements (each requires specific view orientation)
+      const { poseData: flexionPose } = poseGenerator.generateShoulderFlexion(
+        120,
+        'movenet-17',
+        { side: 'right' }
+      );
+      const { poseData: abductionPose } = poseGenerator.generateShoulderAbduction(
+        120,
+        'movenet-17',
+        { side: 'right' }
+      );
+
+      const enrichedFlexionPose = addAnatomicalFrames(
+        flexionPose,
+        frameCache,
+        anatomicalService
+      );
+      const enrichedAbductionPose = addAnatomicalFrames(
+        abductionPose,
+        frameCache,
+        anatomicalService
+      );
 
       const iterations = 50;
       const startTime = Date.now();
 
       for (let i = 0; i < iterations; i++) {
-        // Measure multiple joints simultaneously
-        measurementService.measureShoulderFlexion(enrichedPose, 'right');
-        measurementService.measureShoulderAbduction(enrichedPose, 'right');
-        measurementService.measureElbowFlexion(enrichedPose, 'right');
+        // Measure multiple joints using appropriate poses
+        measurementService.measureShoulderFlexion(enrichedFlexionPose, 'right');
+        measurementService.measureShoulderAbduction(enrichedAbductionPose, 'right');
+        measurementService.measureElbowFlexion(enrichedFlexionPose, 'right');
       }
 
       const endTime = Date.now();
@@ -310,7 +401,9 @@ describe('Performance Benchmarks', () => {
 
   describe('Performance Regression Detection', () => {
     it('should track performance baseline for shoulder measurements', () => {
-      const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', { side: 'right' });
+      const { poseData } = poseGenerator.generateShoulderFlexion(120, 'movenet-17', {
+        side: 'right',
+      });
       const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
 
       const iterations = 100;
@@ -323,11 +416,13 @@ describe('Performance Benchmarks', () => {
         measurements.push(duration);
       }
 
-      const avgDuration = measurements.reduce((sum, d) => sum + d, 0) / measurements.length;
+      const avgDuration =
+        measurements.reduce((sum, d) => sum + d, 0) / measurements.length;
       const maxDuration = Math.max(...measurements);
       const minDuration = Math.min(...measurements);
       const stdDev = Math.sqrt(
-        measurements.reduce((sum, d) => sum + (d - avgDuration) ** 2, 0) / measurements.length
+        measurements.reduce((sum, d) => sum + (d - avgDuration) ** 2, 0) /
+          measurements.length
       );
 
       console.log('\nPerformance Baseline (Shoulder Flexion):');
@@ -349,7 +444,9 @@ describe('Performance Benchmarks', () => {
       // Generate many different poses
       for (let i = 0; i < 200; i++) {
         const angle = i % 180;
-        const { poseData } = poseGenerator.generateShoulderFlexion(angle, 'movenet-17', { side: 'right' });
+        const { poseData } = poseGenerator.generateShoulderFlexion(angle, 'movenet-17', {
+          side: 'right',
+        });
         addAnatomicalFrames(poseData, cache, anatomicalService);
       }
 
@@ -368,9 +465,15 @@ function addAnatomicalFrames(
 ): ProcessedPoseData {
   const landmarks = poseData.landmarks;
 
-  const global = cache.get('global', landmarks, (lms) => anatomicalService.calculateGlobalFrame(lms));
-  const thorax = cache.get('thorax', landmarks, (lms) => anatomicalService.calculateThoraxFrame(lms, global));
-  const pelvis = cache.get('pelvis', landmarks, (lms) => anatomicalService.calculatePelvisFrame(lms, poseData.schemaId));
+  const global = cache.get('global', landmarks, (lms) =>
+    anatomicalService.calculateGlobalFrame(lms)
+  );
+  const thorax = cache.get('thorax', landmarks, (lms) =>
+    anatomicalService.calculateThoraxFrame(lms, global)
+  );
+  const pelvis = cache.get('pelvis', landmarks, (lms) =>
+    anatomicalService.calculatePelvisFrame(lms, poseData.schemaId)
+  );
   const left_humerus = cache.get('left_humerus', landmarks, (lms) =>
     anatomicalService.calculateHumerusFrame(lms, 'left', thorax)
   );

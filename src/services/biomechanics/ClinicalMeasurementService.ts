@@ -670,7 +670,7 @@ export class ClinicalMeasurementService {
         measurementPlane: {
           name: 'sagittal' as const,
           normal: { x: 0, y: 0, z: 1 },
-          point: knee,
+          point: { x: knee.x, y: knee.y, z: knee.z || 0 },
         },
       };
     }
