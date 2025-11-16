@@ -10,6 +10,7 @@ jest.mock('react-native/Libraries/Settings/Settings', () => ({
 
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const Reanimated = require('react-native-reanimated/mock');
   Reanimated.default.call = () => {};
   return Reanimated;
@@ -104,6 +105,32 @@ global.requestAnimationFrame = (callback: FrameRequestCallback) => {
 global.cancelAnimationFrame = (id: number) => {
   clearTimeout(id);
 };
+
+// Mock ImageData for Node environment (needed for video frame processing tests)
+if (typeof ImageData === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (global as any).ImageData = class ImageData {
+    data: Uint8ClampedArray;
+    width: number;
+    height: number;
+
+    constructor(
+      dataOrWidth: Uint8ClampedArray | number,
+      widthOrHeight: number,
+      height?: number
+    ) {
+      if (dataOrWidth instanceof Uint8ClampedArray) {
+        this.data = dataOrWidth;
+        this.width = widthOrHeight;
+        this.height = height!;
+      } else {
+        this.width = dataOrWidth;
+        this.height = widthOrHeight;
+        this.data = new Uint8ClampedArray(dataOrWidth * widthOrHeight * 4);
+      }
+    }
+  };
+}
 
 // Cleanup handlers to prevent worker process failures
 afterEach(() => {
