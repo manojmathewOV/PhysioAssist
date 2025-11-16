@@ -154,7 +154,30 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const elbow = validPose.landmarks.find((l) => l.name === 'right_elbow');
       const wrist = validPose.landmarks.find((l) => l.name === 'right_wrist');
       // eslint-disable-next-line no-console
-      console.log(`[TEST] Joint positions:`, { shoulder, elbow, wrist });
+      console.log(
+        `[TEST] Joint positions:`,
+        JSON.stringify({ shoulder, elbow, wrist }, null, 2)
+      );
+
+      if (shoulder && elbow && wrist) {
+        const v1 = {
+          x: shoulder.x - elbow.x,
+          y: shoulder.y - elbow.y,
+          z: (shoulder.z || 0) - (elbow.z || 0),
+        };
+        const v2 = {
+          x: wrist.x - elbow.x,
+          y: wrist.y - elbow.y,
+          z: (wrist.z || 0) - (elbow.z || 0),
+        };
+        const dot = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+        const mag1 = Math.sqrt(v1.x ** 2 + v1.y ** 2 + v1.z ** 2);
+        const mag2 = Math.sqrt(v2.x ** 2 + v2.y ** 2 + v2.z ** 2);
+        const manualAngle = (Math.acos(dot / (mag1 * mag2)) * 180) / Math.PI;
+        // eslint-disable-next-line no-console
+        console.log(`[TEST] Manual elbow angle calculation: ${manualAngle.toFixed(1)}°`);
+      }
+
       // eslint-disable-next-line no-console
       console.log(`[TEST] Valid case warnings:`, validMeasurement.quality.warnings);
       // eslint-disable-next-line no-console
