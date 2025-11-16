@@ -190,10 +190,7 @@ export function angleBetweenVectors(v1: Point3D, v2: Point3D): number {
  * const projected = projectVectorOntoPlane(humerusVector, sagittalNormal);
  * // Result: { x: 0.5, y: 0.7, z: 0 } (z-component removed)
  */
-export function projectVectorOntoPlane(
-  vector: Point3D,
-  planeNormal: Point3D
-): Vector3D {
+export function projectVectorOntoPlane(vector: Point3D, planeNormal: Point3D): Vector3D {
   const dot = dotProduct(vector, planeNormal);
   const vz = vector.z ?? 0;
   const pnz = planeNormal.z ?? 0;

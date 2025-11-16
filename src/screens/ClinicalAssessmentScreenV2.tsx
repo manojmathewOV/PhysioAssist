@@ -142,7 +142,8 @@ const ClinicalAssessmentScreenV2: React.FC = () => {
         measurement = clinicalService.measureShoulderAbduction(poseData, selectedSide);
       } else if (
         selectedJoint === 'shoulder' &&
-        (selectedMovement === 'external_rotation' || selectedMovement === 'internal_rotation')
+        (selectedMovement === 'external_rotation' ||
+          selectedMovement === 'internal_rotation')
       ) {
         measurement = clinicalService.measureShoulderRotation(poseData, selectedSide);
       } else if (selectedJoint === 'elbow' && selectedMovement === 'flexion') {
@@ -236,11 +237,16 @@ const ClinicalAssessmentScreenV2: React.FC = () => {
 
   const getCurrentStepNumber = (): number => {
     switch (step) {
-      case 'joint': return 1;
-      case 'movement': return 2;
-      case 'demo': return 3;
-      case 'measure': return 4;
-      case 'complete': return 5;
+      case 'joint':
+        return 1;
+      case 'movement':
+        return 2;
+      case 'demo':
+        return 3;
+      case 'measure':
+        return 4;
+      case 'complete':
+        return 5;
     }
   };
 
@@ -318,10 +324,7 @@ const ClinicalAssessmentScreenV2: React.FC = () => {
 
             {/* Angle display */}
             {currentMeasurement && (
-              <ClinicalAngleDisplayV2
-                measurement={currentMeasurement}
-                mode="simple"
-              />
+              <ClinicalAngleDisplayV2 measurement={currentMeasurement} mode="simple" />
             )}
           </View>
 

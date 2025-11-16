@@ -18,6 +18,10 @@ const networkSlice = createSlice({
       state.isConnected = action.payload.isConnected;
     },
     queueAction: (state, action: PayloadAction<any>) => {
+      // Ensure queuedActions array exists
+      if (!state.queuedActions) {
+        state.queuedActions = [];
+      }
       state.queuedActions.push(action.payload);
     },
     clearQueue: (state) => {

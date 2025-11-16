@@ -155,8 +155,8 @@ const LoginScreen: React.FC = () => {
         </View>
 
         <Text style={styles.note}>
-          Note: This is a mock authentication for demo purposes. In production, this
-          would connect to a HIPAA-compliant authentication service.
+          Note: This is a mock authentication for demo purposes. In production, this would
+          connect to a HIPAA-compliant authentication service.
         </Text>
       </View>
     </KeyboardAvoidingView>

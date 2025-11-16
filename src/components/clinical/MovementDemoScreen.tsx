@@ -26,11 +26,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 // Import from centralized registry
-import {
-  MovementRegistry,
-  JointType,
-  MovementType,
-} from '@config/movements.config';
+import { MovementRegistry, JointType, MovementType } from '@config/movements.config';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -51,8 +47,9 @@ const MovementDemoScreen: React.FC<MovementDemoScreenProps> = ({
   const [showReadyButton, setShowReadyButton] = useState(false);
 
   // Get movement definition from registry
-  const movementDef = MovementRegistry.getMovementsByJoint(jointName as JointType)
-    .find(m => m.type === movementType);
+  const movementDef = MovementRegistry.getMovementsByJoint(jointName as JointType).find(
+    (m) => m.type === movementType
+  );
 
   if (!movementDef) {
     console.error(`Movement definition not found for ${jointName} - ${movementType}`);
@@ -132,16 +129,20 @@ const MovementDemoScreen: React.FC<MovementDemoScreenProps> = ({
   const getArmRotation = () => {
     const rotation = armRotation.interpolate({
       inputRange: [0, 1],
-      outputRange: ['0deg', movementType === 'flexion' ? '-160deg' : movementType === 'abduction' ? '-90deg' : '0deg'],
+      outputRange: [
+        '0deg',
+        movementType === 'flexion'
+          ? '-160deg'
+          : movementType === 'abduction'
+            ? '-90deg'
+            : '0deg',
+      ],
     });
     return rotation;
   };
 
   return (
-    <LinearGradient
-      colors={['#667eea', '#764ba2']}
-      style={styles.container}
-    >
+    <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
       {/* Progress dots */}
       <View style={styles.progressDots}>
         <Text style={[styles.dot, styles.dotActive]}>●</Text>
@@ -170,10 +171,7 @@ const MovementDemoScreen: React.FC<MovementDemoScreenProps> = ({
 
       {/* Stick figure animation */}
       <View style={styles.demoArea}>
-        <StickFigureAnimation
-          movementType={movementType}
-          armRotation={armRotation}
-        />
+        <StickFigureAnimation movementType={movementType} armRotation={armRotation} />
       </View>
 
       {/* Tips */}
@@ -189,7 +187,9 @@ const MovementDemoScreen: React.FC<MovementDemoScreenProps> = ({
 
       {/* Action buttons */}
       <View style={styles.actions}>
-        <Animated.View style={{ transform: [{ scale: showReadyButton ? buttonPulse : 1 }] }}>
+        <Animated.View
+          style={{ transform: [{ scale: showReadyButton ? buttonPulse : 1 }] }}
+        >
           <TouchableOpacity
             style={[styles.button, styles.primaryButton]}
             onPress={handleReady}
@@ -227,11 +227,12 @@ const StickFigureAnimation: React.FC<StickFigureAnimationProps> = ({
 
   const rotation = armRotation.interpolate({
     inputRange: [0, 1],
-    outputRange: movementType === 'flexion'
-      ? ['0deg', '-160deg']
-      : movementType === 'abduction'
-      ? ['0deg', '-90deg']
-      : ['0deg', '-90deg'],
+    outputRange:
+      movementType === 'flexion'
+        ? ['0deg', '-160deg']
+        : movementType === 'abduction'
+          ? ['0deg', '-90deg']
+          : ['0deg', '-90deg'],
   });
 
   return (
@@ -240,27 +241,64 @@ const StickFigureAnimation: React.FC<StickFigureAnimationProps> = ({
       <Circle cx={150} cy={60} r={30} fill="#4CAF50" stroke="#fff" strokeWidth={3} />
 
       {/* Body */}
-      <Line x1={150} y1={90} x2={150} y2={200} stroke="#fff" strokeWidth={6} strokeLinecap="round" />
+      <Line
+        x1={150}
+        y1={90}
+        x2={150}
+        y2={200}
+        stroke="#fff"
+        strokeWidth={6}
+        strokeLinecap="round"
+      />
 
       {/* Legs */}
-      <Line x1={150} y1={200} x2={120} y2={300} stroke="#fff" strokeWidth={6} strokeLinecap="round" />
-      <Line x1={150} y1={200} x2={180} y2={300} stroke="#fff" strokeWidth={6} strokeLinecap="round" />
+      <Line
+        x1={150}
+        y1={200}
+        x2={120}
+        y2={300}
+        stroke="#fff"
+        strokeWidth={6}
+        strokeLinecap="round"
+      />
+      <Line
+        x1={150}
+        y1={200}
+        x2={180}
+        y2={300}
+        stroke="#fff"
+        strokeWidth={6}
+        strokeLinecap="round"
+      />
 
       {/* Feet */}
       <Circle cx={120} cy={300} r={8} fill="#4CAF50" />
       <Circle cx={180} cy={300} r={8} fill="#4CAF50" />
 
       {/* Animated arm (left) */}
-      <AnimatedG
-        origin="150, 120"
-        rotation={rotation}
-      >
-        <Line x1={150} y1={120} x2={150} y2={220} stroke="#FFC107" strokeWidth={8} strokeLinecap="round" />
+      <AnimatedG origin="150, 120" rotation={rotation}>
+        <Line
+          x1={150}
+          y1={120}
+          x2={150}
+          y2={220}
+          stroke="#FFC107"
+          strokeWidth={8}
+          strokeLinecap="round"
+        />
         <Circle cx={150} cy={220} r={10} fill="#FFC107" />
       </AnimatedG>
 
       {/* Stationary arm (right) */}
-      <Line x1={150} y1={120} x2={200} y2={180} stroke="#fff" strokeWidth={6} strokeLinecap="round" />
+      <Line
+        x1={150}
+        y1={120}
+        x2={200}
+        y2={180}
+        stroke="#fff"
+        strokeWidth={6}
+        strokeLinecap="round"
+      />
       <Circle cx={200} cy={180} r={8} fill="#fff" />
 
       {/* Movement arrow */}

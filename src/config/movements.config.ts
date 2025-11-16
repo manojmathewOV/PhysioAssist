@@ -11,7 +11,15 @@
  * - Extensible for therapist customization
  */
 
-export type JointType = 'shoulder' | 'elbow' | 'knee' | 'hip' | 'wrist' | 'ankle' | 'spine' | 'neck';
+export type JointType =
+  | 'shoulder'
+  | 'elbow'
+  | 'knee'
+  | 'hip'
+  | 'wrist'
+  | 'ankle'
+  | 'spine'
+  | 'neck';
 export type MovementType =
   | 'flexion'
   | 'extension'
@@ -34,14 +42,14 @@ export interface MovementDefinition {
 
   // Display Names (multi-mode)
   displayName: {
-    simple: string;      // Layman terms
-    advanced: string;    // Clinical terms
+    simple: string; // Layman terms
+    advanced: string; // Clinical terms
   };
 
   // Descriptions
   description: {
-    simple: string;      // "Raise your arm straight in front"
-    advanced: string;    // "Glenohumeral flexion in sagittal plane"
+    simple: string; // "Raise your arm straight in front"
+    advanced: string; // "Glenohumeral flexion in sagittal plane"
   };
 
   // Clinical Parameters
@@ -50,17 +58,17 @@ export interface MovementDefinition {
     min: number;
     max: number;
   };
-  measurementFunction: string;  // Name of function in ClinicalMeasurementService
+  measurementFunction: string; // Name of function in ClinicalMeasurementService
 
   // Visual Assets
   demos: {
-    svg?: string;          // Component name for SVG animation
-    video?: string;        // Path to video file
-    '3d'?: string;         // Path to 3D model (.glb)
-    thumbnail?: string;    // Preview image
+    svg?: string; // Component name for SVG animation
+    video?: string; // Path to video file
+    '3d'?: string; // Path to 3D model (.glb)
+    thumbnail?: string; // Preview image
   };
 
-  icon: string;            // Emoji or icon identifier
+  icon: string; // Emoji or icon identifier
 
   // Applicability
   sides: ('left' | 'right' | 'bilateral')[];
@@ -75,11 +83,11 @@ export interface MovementDefinition {
 
   // Difficulty & Prerequisites
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
-  prerequisites?: string[];  // Movement IDs that should be done first
+  prerequisites?: string[]; // Movement IDs that should be done first
 
   // Customization
-  customizable: boolean;     // Can therapist modify targets?
-  tags?: string[];           // For filtering: 'post-surgery', 'sports', etc.
+  customizable: boolean; // Can therapist modify targets?
+  tags?: string[]; // For filtering: 'post-surgery', 'sports', etc.
 }
 
 /**
@@ -274,10 +282,7 @@ export const MOVEMENT_REGISTRY: MovementDefinition[] = [
         'Monitor scapular positioning',
       ],
     },
-    contraindications: [
-      'Posterior shoulder instability',
-      'Acute anterior capsule pain',
-    ],
+    contraindications: ['Posterior shoulder instability', 'Acute anterior capsule pain'],
     difficulty: 'intermediate',
     customizable: true,
     tags: ['rotator-cuff', 'rom', 'capsule-test'],
@@ -346,7 +351,7 @@ export const MOVEMENT_REGISTRY: MovementDefinition[] = [
       advanced: 'Full elbow extension to anatomical zero',
     },
     targetAngle: 0,
-    normalRange: { min: -10, max: 5 },  // Some hyperextension is normal
+    normalRange: { min: -10, max: 5 }, // Some hyperextension is normal
     measurementFunction: 'measureElbowFlexion',
     demos: {
       svg: 'ElbowExtensionAnimation',
@@ -360,7 +365,7 @@ export const MOVEMENT_REGISTRY: MovementDefinition[] = [
       simple: [
         'Keep your upper arm still',
         'Straighten completely',
-        'Don\'t force it',
+        "Don't force it",
         'Stop if you feel pain',
       ],
       advanced: [
@@ -458,7 +463,7 @@ export const MOVEMENT_REGISTRY: MovementDefinition[] = [
       simple: [
         'Straighten your leg completely',
         'You can sit or lie down',
-        'Don\'t force it',
+        "Don't force it",
         'Stop if you feel pain',
       ],
       advanced: [
@@ -649,7 +654,10 @@ export class MovementRegistry {
   /**
    * Get all movements for a joint
    */
-  static getMovementsByJoint(joint: JointType, mode: InterfaceMode = 'simple'): MovementDefinition[] {
+  static getMovementsByJoint(
+    joint: JointType,
+    mode: InterfaceMode = 'simple'
+  ): MovementDefinition[] {
     return MOVEMENT_REGISTRY.filter((m) => m.joint === joint);
   }
 
@@ -679,7 +687,9 @@ export class MovementRegistry {
   /**
    * Get movements by difficulty
    */
-  static getMovementsByDifficulty(difficulty: 'beginner' | 'intermediate' | 'advanced'): MovementDefinition[] {
+  static getMovementsByDifficulty(
+    difficulty: 'beginner' | 'intermediate' | 'advanced'
+  ): MovementDefinition[] {
     return MOVEMENT_REGISTRY.filter((m) => m.difficulty === difficulty);
   }
 
@@ -715,7 +725,10 @@ export class MovementRegistry {
       errors.push('No demo available');
     }
 
-    if (movement.targetAngle < movement.normalRange.min || movement.targetAngle > movement.normalRange.max) {
+    if (
+      movement.targetAngle < movement.normalRange.min ||
+      movement.targetAngle > movement.normalRange.max
+    ) {
       errors.push('Target angle outside normal range');
     }
 

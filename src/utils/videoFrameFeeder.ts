@@ -53,7 +53,8 @@ export class VideoFrameFeeder {
       fps: options.fps || 30,
       frameSkip: options.frameSkip || 1,
       loop: options.loop !== undefined ? options.loop : false,
-      flipHorizontal: options.flipHorizontal !== undefined ? options.flipHorizontal : false,
+      flipHorizontal:
+        options.flipHorizontal !== undefined ? options.flipHorizontal : false,
       targetWidth: options.targetWidth || 640,
       targetHeight: options.targetHeight || 480,
       onFrame: options.onFrame || (() => {}),

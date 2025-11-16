@@ -10,7 +10,13 @@
  * 3. Professional Therapist (Advanced Mode) - Protocol-based assessment
  */
 
-import { MovementRegistry, JOINT_METADATA, AVAILABLE_JOINTS, JointType, MovementType } from '../config/movements.config';
+import {
+  MovementRegistry,
+  JOINT_METADATA,
+  AVAILABLE_JOINTS,
+  JointType,
+  MovementType,
+} from '../config/movements.config';
 import { demoManager } from '../services/DemoManager';
 import { ProtocolManager } from '../config/protocols.config';
 
@@ -59,7 +65,7 @@ export class UserWalkthroughSimulator {
     });
 
     // User sees 4 large cards
-    const jointCards = AVAILABLE_JOINTS.map(joint => {
+    const jointCards = AVAILABLE_JOINTS.map((joint) => {
       const meta = JOINT_METADATA[joint];
       return `${meta.icon} ${meta.displayName} - ${meta.description}`;
     });
@@ -101,13 +107,18 @@ export class UserWalkthroughSimulator {
       screen: 'MovementSelectionPanelV2',
       action: 'Display movement cards',
       expectedData: '4 shoulder movements in simple language',
-      actualData: shoulderMovements.map(m =>
-        `${m.icon} ${m.displayName.simple} - ${m.description.simple} (Target: ${m.targetAngle}°)`
-      ).join(' | '),
+      actualData: shoulderMovements
+        .map(
+          (m) =>
+            `${m.icon} ${m.displayName.simple} - ${m.description.simple} (Target: ${m.targetAngle}°)`
+        )
+        .join(' | '),
     });
 
     // User reads voice prompt
-    const voiceOptions = shoulderMovements.map(m => `"${m.displayName.simple}"`).join(', ');
+    const voiceOptions = shoulderMovements
+      .map((m) => `"${m.displayName.simple}"`)
+      .join(', ');
     await this.recordStep({
       screen: 'MovementSelectionPanelV2',
       action: 'View voice prompt',
@@ -159,7 +170,9 @@ export class UserWalkthroughSimulator {
       screen: 'MovementDemoScreen',
       action: 'Display demo',
       expectedData: 'SVG animation or video based on device',
-      actualData: demoAsset ? `Format: ${demoAsset.format}, URI: ${demoAsset.uri}` : 'No demo available',
+      actualData: demoAsset
+        ? `Format: ${demoAsset.format}, URI: ${demoAsset.uri}`
+        : 'No demo available',
     });
 
     // Display tips in simple language
@@ -198,7 +211,8 @@ export class UserWalkthroughSimulator {
       screen: 'ClinicalAngleDisplayV2',
       action: 'Display UI elements (Simple Mode)',
       expectedData: 'Only 3 elements: instruction, giant angle (160px), progress bar',
-      actualData: 'Instruction: "Slowly lift your arm forward" | Angle: 0° | Progress: 0%',
+      actualData:
+        'Instruction: "Slowly lift your arm forward" | Angle: 0° | Progress: 0%',
     });
 
     // Simulate user performing movement
@@ -222,7 +236,8 @@ export class UserWalkthroughSimulator {
       screen: 'CompletionScreen',
       action: 'Display results',
       expectedData: 'Celebration, max angle, grade, achievement %',
-      actualData: 'Max: 160° | Grade: Excellent | Achievement: 100% | 🎉 Celebration animation',
+      actualData:
+        'Max: 160° | Grade: Excellent | Achievement: 100% | 🎉 Celebration animation',
     });
 
     await this.recordStep({
@@ -288,7 +303,8 @@ export class UserWalkthroughSimulator {
       action: 'View bilateral comparison',
       expectedData: 'Left: 165° vs Right: 145° (20° difference)',
       actualData: '⚠️ Asymmetry detected: Right shoulder limited by 20°',
-      notes: 'App suggests: "Right shoulder may need attention. Consider consulting therapist."',
+      notes:
+        'App suggests: "Right shoulder may need attention. Consider consulting therapist."',
     });
 
     this.printWalkthroughSummary('Tech-Savvy Patient - Bilateral Comparison');
@@ -321,7 +337,9 @@ export class UserWalkthroughSimulator {
       screen: 'ProtocolSelectionScreen',
       action: 'Display search results',
       expectedData: '1 protocol found',
-      actualData: protocols.map(p => `${p.name} (${p.steps.length} steps, ${p.estimatedDuration} min)`).join(' | '),
+      actualData: protocols
+        .map((p) => `${p.name} (${p.steps.length} steps, ${p.estimatedDuration} min)`)
+        .join(' | '),
     });
 
     // ========== STEP 2: Protocol Overview ==========
@@ -342,9 +360,12 @@ export class UserWalkthroughSimulator {
       screen: 'ProtocolScreen',
       action: 'Display ordered steps',
       expectedData: '4 steps with movement IDs and targets',
-      actualData: steps.map(s =>
-        `Step ${s.order}: ${s.movementId} (${s.required ? 'Required' : 'Optional'}) - Target: ${s.targets?.minAngle || 0}°-${s.targets?.maxAngle || 180}°`
-      ).join(' | '),
+      actualData: steps
+        .map(
+          (s) =>
+            `Step ${s.order}: ${s.movementId} (${s.required ? 'Required' : 'Optional'}) - Target: ${s.targets?.minAngle || 0}°-${s.targets?.maxAngle || 180}°`
+        )
+        .join(' | '),
     });
 
     // User taps "Start Protocol"
@@ -419,7 +440,8 @@ export class UserWalkthroughSimulator {
       screen: 'ProtocolSummaryScreen',
       action: 'Generate clinical report',
       expectedData: 'Detailed report with comparisons to previous weeks',
-      actualData: 'Report includes: ROM measurements, target achievement %, trends over time, clinical notes field',
+      actualData:
+        'Report includes: ROM measurements, target achievement %, trends over time, clinical notes field',
     });
 
     // ========== STEP 5: Share Results ==========
@@ -427,7 +449,8 @@ export class UserWalkthroughSimulator {
       screen: 'ProtocolSummaryScreen',
       action: 'Tap "Share with Patient" button',
       expectedData: 'Generate patient-friendly summary',
-      actualData: 'PDF generated with simple language explanations and visual progress charts',
+      actualData:
+        'PDF generated with simple language explanations and visual progress charts',
     });
 
     await this.recordStep({
@@ -471,7 +494,7 @@ export class UserWalkthroughSimulator {
     }
 
     // Simulate slight delay (like real user interaction)
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
   }
 
   /**
@@ -482,8 +505,8 @@ export class UserWalkthroughSimulator {
     console.log(`📊 WALKTHROUGH SUMMARY: ${title}`);
     console.log('='.repeat(80));
 
-    const passed = this.steps.filter(s => s.status === 'PASS').length;
-    const failed = this.steps.filter(s => s.status === 'FAIL').length;
+    const passed = this.steps.filter((s) => s.status === 'PASS').length;
+    const failed = this.steps.filter((s) => s.status === 'FAIL').length;
     const total = this.steps.length;
 
     console.log(`Total Steps: ${total}`);
@@ -499,9 +522,7 @@ export class UserWalkthroughSimulator {
   generateReport(): any {
     return {
       timestamp: new Date().toISOString(),
-      walkthroughs: [
-        { persona: 'Elderly Patient', steps: this.steps.length },
-      ],
+      walkthroughs: [{ persona: 'Elderly Patient', steps: this.steps.length }],
       totalSteps: this.steps.length,
       detailedSteps: this.steps,
     };

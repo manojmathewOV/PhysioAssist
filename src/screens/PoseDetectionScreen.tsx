@@ -152,10 +152,8 @@ const PoseDetectionScreen: React.FC = () => {
       //
       // For now, we'll simulate this with a mock implementation
       // since frame-to-ImageData conversion requires native modules or plugins
-
       // Mock pose data for testing (replace with actual frame processing)
       // The actual pose data will come through the callback set in initializePoseDetection
-
       // Note: Actual frame processing would happen here
       // await poseDetectionService.processFrame(imageData);
     } catch (error) {
@@ -225,9 +223,7 @@ const PoseDetectionScreen: React.FC = () => {
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.mockBackground]}>
           <Text style={styles.mockModeText}>MOCK DATA MODE</Text>
-          <Text style={styles.mockModeSubtext}>
-            Simulated pose detection for testing
-          </Text>
+          <Text style={styles.mockModeSubtext}>Simulated pose detection for testing</Text>
         </View>
       )}
 

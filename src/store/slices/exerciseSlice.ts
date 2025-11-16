@@ -1,6 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Exercise, ValidationResult, ExerciseMetrics } from '@types/exercise';
 
+interface ExerciseHistory {
+  id: string;
+  exerciseId: string;
+  exerciseName: string;
+  date: string;
+  reps: number;
+  duration: number;
+  formScore: number;
+  metrics?: ExerciseMetrics;
+}
+
 interface ExerciseState {
   currentExercise: Exercise | null;
   isExercising: boolean;
@@ -10,6 +21,7 @@ interface ExerciseState {
   feedback: string;
   lastValidationResult: ValidationResult | null;
   metrics: ExerciseMetrics | null;
+  history: ExerciseHistory[];
 }
 
 const initialState: ExerciseState = {
@@ -21,6 +33,7 @@ const initialState: ExerciseState = {
   feedback: '',
   lastValidationResult: null,
   metrics: null,
+  history: [],
 };
 
 const exerciseSlice = createSlice({
@@ -61,6 +74,28 @@ const exerciseSlice = createSlice({
     setMetrics: (state, action: PayloadAction<ExerciseMetrics>) => {
       state.metrics = action.payload;
     },
+    updateExerciseProgress: (
+      state,
+      action: PayloadAction<{
+        reps?: number;
+        formScore?: number;
+        phase?: string;
+        metrics?: ExerciseMetrics;
+      }>
+    ) => {
+      if (action.payload.reps !== undefined) {
+        state.repetitionCount = action.payload.reps;
+      }
+      if (action.payload.formScore !== undefined) {
+        state.formScore = action.payload.formScore;
+      }
+      if (action.payload.phase !== undefined) {
+        state.currentPhase = action.payload.phase;
+      }
+      if (action.payload.metrics !== undefined) {
+        state.metrics = action.payload.metrics;
+      }
+    },
     clearExercise: (state) => {
       state.currentExercise = null;
       state.isExercising = false;
@@ -83,6 +118,7 @@ export const {
   updatePhase,
   setFeedback,
   setMetrics,
+  updateExerciseProgress,
   clearExercise,
 } = exerciseSlice.actions;
 

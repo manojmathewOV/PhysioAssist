@@ -25,7 +25,7 @@ export interface ProgressChartProps {
 const ProgressChart: React.FC<ProgressChartProps> = ({
   data = [],
   title = 'Progress Over Time',
-  yAxisLabel = 'Score',
+  // yAxisLabel = 'Score', // Currently not used in rendering
   dateRange = 'all',
   onDateRangeChange,
 }) => {
@@ -73,10 +73,10 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
   const renderBarChart = () => {
     if (!chartData.hasData) {
       return (
-        <View style={styles.placeholderContainer}>
+        <View style={styles.placeholderContainer} testID="empty-progress-message">
           <Text style={styles.placeholder}>📊 No data yet</Text>
           <Text style={styles.placeholderSubtext}>
-            Complete exercises to track your progress
+            No data available - Complete exercises to track your progress
           </Text>
         </View>
       );
@@ -85,7 +85,7 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
     const { points, maxValue } = chartData;
     const chartHeight = 200;
     const barWidth = Math.min(40, 300 / points.length);
-    const barGap = 8;
+    // const barGap = 8; // Reserved for future use
 
     return (
       <ScrollView
@@ -118,7 +118,11 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
                       : '#F44336';
 
                 return (
-                  <View key={index} style={[styles.barColumn, { width: barWidth }]}>
+                  <View
+                    key={index}
+                    style={[styles.barColumn, { width: barWidth }]}
+                    testID={`data-point-${index}`}
+                  >
                     <View style={[styles.barContainer, { height: chartHeight }]}>
                       <View
                         style={[
@@ -232,7 +236,7 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
 
       {/* Legend */}
       {chartData.hasData && (
-        <View style={styles.legend}>
+        <View style={styles.legend} testID="chart-legend">
           <View style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} />
             <Text style={styles.legendText}>Excellent (80+)</Text>

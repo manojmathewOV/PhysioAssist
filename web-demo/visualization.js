@@ -62,7 +62,7 @@ function drawSkeleton(pose) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Scale landmarks to canvas size
-  const scaledPose = pose.map(landmark => ({
+  const scaledPose = pose.map((landmark) => ({
     x: landmark.x * canvas.width,
     y: landmark.y * canvas.height,
     visibility: landmark.visibility,
@@ -90,7 +90,11 @@ function drawSkeleton(pose) {
   scaledPose.forEach((landmark, idx) => {
     if (landmark.visibility > 0.5) {
       // Highlight active joints
-      const isActiveJoint = isActiveJointIndex(idx, exerciseConfig.type, exerciseConfig.side);
+      const isActiveJoint = isActiveJointIndex(
+        idx,
+        exerciseConfig.type,
+        exerciseConfig.side
+      );
 
       ctx.beginPath();
       ctx.arc(landmark.x, landmark.y, isActiveJoint ? 8 : 5, 0, 2 * Math.PI);
@@ -112,14 +116,22 @@ function drawSkeleton(pose) {
 function getSkeletonConnections(exerciseType) {
   // Common connections (MoveNet 17 points)
   const baseConnections = [
-    [0, 1], [0, 2], [1, 3], [2, 4], // Head
+    [0, 1],
+    [0, 2],
+    [1, 3],
+    [2, 4], // Head
     [5, 6], // Shoulders
-    [5, 7], [7, 9], // Left arm
-    [6, 8], [8, 10], // Right arm
-    [5, 11], [6, 12], // Torso
+    [5, 7],
+    [7, 9], // Left arm
+    [6, 8],
+    [8, 10], // Right arm
+    [5, 11],
+    [6, 12], // Torso
     [11, 12], // Hips
-    [11, 13], [13, 15], // Left leg
-    [12, 14], [14, 16], // Right leg
+    [11, 13],
+    [13, 15], // Left leg
+    [12, 14],
+    [14, 16], // Right leg
   ];
 
   return baseConnections;
@@ -130,26 +142,39 @@ function getSkeletonConnections(exerciseType) {
  */
 function isActiveJointIndex(idx, exerciseType, side) {
   const LANDMARKS = {
-    NOSE: 0, LEFT_SHOULDER: 5, RIGHT_SHOULDER: 6,
-    LEFT_ELBOW: 7, RIGHT_ELBOW: 8,
-    LEFT_WRIST: 9, RIGHT_WRIST: 10,
-    LEFT_HIP: 11, RIGHT_HIP: 12,
-    LEFT_KNEE: 13, RIGHT_KNEE: 14,
-    LEFT_ANKLE: 15, RIGHT_ANKLE: 16,
+    NOSE: 0,
+    LEFT_SHOULDER: 5,
+    RIGHT_SHOULDER: 6,
+    LEFT_ELBOW: 7,
+    RIGHT_ELBOW: 8,
+    LEFT_WRIST: 9,
+    RIGHT_WRIST: 10,
+    LEFT_HIP: 11,
+    RIGHT_HIP: 12,
+    LEFT_KNEE: 13,
+    RIGHT_KNEE: 14,
+    LEFT_ANKLE: 15,
+    RIGHT_ANKLE: 16,
   };
 
   if (exerciseType === 'shoulder_flexion') {
-    return idx === (side === 'left' ? LANDMARKS.LEFT_SHOULDER : LANDMARKS.RIGHT_SHOULDER) ||
-           idx === (side === 'left' ? LANDMARKS.LEFT_ELBOW : LANDMARKS.RIGHT_ELBOW) ||
-           idx === (side === 'left' ? LANDMARKS.LEFT_HIP : LANDMARKS.RIGHT_HIP);
+    return (
+      idx === (side === 'left' ? LANDMARKS.LEFT_SHOULDER : LANDMARKS.RIGHT_SHOULDER) ||
+      idx === (side === 'left' ? LANDMARKS.LEFT_ELBOW : LANDMARKS.RIGHT_ELBOW) ||
+      idx === (side === 'left' ? LANDMARKS.LEFT_HIP : LANDMARKS.RIGHT_HIP)
+    );
   } else if (exerciseType === 'knee_flexion') {
-    return idx === (side === 'left' ? LANDMARKS.LEFT_HIP : LANDMARKS.RIGHT_HIP) ||
-           idx === (side === 'left' ? LANDMARKS.LEFT_KNEE : LANDMARKS.RIGHT_KNEE) ||
-           idx === (side === 'left' ? LANDMARKS.LEFT_ANKLE : LANDMARKS.RIGHT_ANKLE);
+    return (
+      idx === (side === 'left' ? LANDMARKS.LEFT_HIP : LANDMARKS.RIGHT_HIP) ||
+      idx === (side === 'left' ? LANDMARKS.LEFT_KNEE : LANDMARKS.RIGHT_KNEE) ||
+      idx === (side === 'left' ? LANDMARKS.LEFT_ANKLE : LANDMARKS.RIGHT_ANKLE)
+    );
   } else if (exerciseType === 'elbow_flexion') {
-    return idx === (side === 'left' ? LANDMARKS.LEFT_SHOULDER : LANDMARKS.RIGHT_SHOULDER) ||
-           idx === (side === 'left' ? LANDMARKS.LEFT_ELBOW : LANDMARKS.RIGHT_ELBOW) ||
-           idx === (side === 'left' ? LANDMARKS.LEFT_WRIST : LANDMARKS.RIGHT_WRIST);
+    return (
+      idx === (side === 'left' ? LANDMARKS.LEFT_SHOULDER : LANDMARKS.RIGHT_SHOULDER) ||
+      idx === (side === 'left' ? LANDMARKS.LEFT_ELBOW : LANDMARKS.RIGHT_ELBOW) ||
+      idx === (side === 'left' ? LANDMARKS.LEFT_WRIST : LANDMARKS.RIGHT_WRIST)
+    );
   }
 
   return false;
@@ -160,18 +185,25 @@ function isActiveJointIndex(idx, exerciseType, side) {
  */
 function drawAngleArc(scaledPose, config) {
   const LANDMARKS = {
-    LEFT_SHOULDER: 5, RIGHT_SHOULDER: 6,
-    LEFT_ELBOW: 7, RIGHT_ELBOW: 8,
-    LEFT_WRIST: 9, RIGHT_WRIST: 10,
-    LEFT_HIP: 11, RIGHT_HIP: 12,
-    LEFT_KNEE: 13, RIGHT_KNEE: 14,
-    LEFT_ANKLE: 15, RIGHT_ANKLE: 16,
+    LEFT_SHOULDER: 5,
+    RIGHT_SHOULDER: 6,
+    LEFT_ELBOW: 7,
+    RIGHT_ELBOW: 8,
+    LEFT_WRIST: 9,
+    RIGHT_WRIST: 10,
+    LEFT_HIP: 11,
+    RIGHT_HIP: 12,
+    LEFT_KNEE: 13,
+    RIGHT_KNEE: 14,
+    LEFT_ANKLE: 15,
+    RIGHT_ANKLE: 16,
   };
 
   let centerIdx, p1Idx, p2Idx;
 
   if (config.type === 'shoulder_flexion') {
-    centerIdx = config.side === 'left' ? LANDMARKS.LEFT_SHOULDER : LANDMARKS.RIGHT_SHOULDER;
+    centerIdx =
+      config.side === 'left' ? LANDMARKS.LEFT_SHOULDER : LANDMARKS.RIGHT_SHOULDER;
     p1Idx = config.side === 'left' ? LANDMARKS.LEFT_HIP : LANDMARKS.RIGHT_HIP;
     p2Idx = config.side === 'left' ? LANDMARKS.LEFT_ELBOW : LANDMARKS.RIGHT_ELBOW;
   } else if (config.type === 'knee_flexion') {
@@ -319,19 +351,23 @@ function updateQualityIndicator(quality) {
   switch (quality) {
     case 'excellent':
       indicator.classList.add('quality-excellent');
-      indicator.innerHTML = '<span class="status-indicator active"></span>Pose Quality: Excellent';
+      indicator.innerHTML =
+        '<span class="status-indicator active"></span>Pose Quality: Excellent';
       break;
     case 'good':
       indicator.classList.add('quality-good');
-      indicator.innerHTML = '<span class="status-indicator active"></span>Pose Quality: Good';
+      indicator.innerHTML =
+        '<span class="status-indicator active"></span>Pose Quality: Good';
       break;
     case 'fair':
       indicator.classList.add('quality-fair');
-      indicator.innerHTML = '<span class="status-indicator active"></span>Pose Quality: Fair';
+      indicator.innerHTML =
+        '<span class="status-indicator active"></span>Pose Quality: Fair';
       break;
     case 'poor':
       indicator.classList.add('quality-poor');
-      indicator.innerHTML = '<span class="status-indicator active"></span>Pose Quality: Poor';
+      indicator.innerHTML =
+        '<span class="status-indicator active"></span>Pose Quality: Poor';
       break;
   }
 }
@@ -343,12 +379,19 @@ function adjustBrightness(hex, percent) {
   const num = parseInt(hex.replace('#', ''), 16);
   const amt = Math.round(2.55 * percent);
   const R = (num >> 16) + amt;
-  const G = (num >> 8 & 0x00FF) + amt;
-  const B = (num & 0x0000FF) + amt;
-  return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
-    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
-    (B < 255 ? B < 1 ? 0 : B : 255))
-    .toString(16).slice(1);
+  const G = ((num >> 8) & 0x00ff) + amt;
+  const B = (num & 0x0000ff) + amt;
+  return (
+    '#' +
+    (
+      0x1000000 +
+      (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+      (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+      (B < 255 ? (B < 1 ? 0 : B) : 255)
+    )
+      .toString(16)
+      .slice(1)
+  );
 }
 
 // ============================================================================
@@ -414,8 +457,10 @@ function resetExercise() {
   document.getElementById('angleDisplay').textContent = '0°';
   document.getElementById('progressBar').style.width = '0%';
   document.getElementById('progressBar').textContent = '0%';
-  document.getElementById('feedbackMessage').textContent = 'Select exercise and press Start';
-  document.getElementById('instructionText').textContent = 'Choose an exercise below to begin';
+  document.getElementById('feedbackMessage').textContent =
+    'Select exercise and press Start';
+  document.getElementById('instructionText').textContent =
+    'Choose an exercise below to begin';
   document.getElementById('currentAngle').textContent = '0°';
   document.getElementById('progressPercent').textContent = '0%';
   document.getElementById('fps').textContent = '0 fps';

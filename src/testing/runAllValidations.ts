@@ -68,7 +68,9 @@ async function main() {
     const singleFrameReport = await singleFramePipeline.runFullValidation();
     const singleFrameDuration = (Date.now() - singleFrameStartTime) / 1000;
 
-    console.log(`\nSingle-frame validation completed in ${singleFrameDuration.toFixed(2)}s`);
+    console.log(
+      `\nSingle-frame validation completed in ${singleFrameDuration.toFixed(2)}s`
+    );
     singleFramePipeline.printReport(singleFrameReport);
 
     // 2. Temporal Validation (Gate 10D)
@@ -87,7 +89,11 @@ async function main() {
 
     // 3. Generate Unified Report
     const overallDuration = (Date.now() - overallStartTime) / 1000;
-    const unifiedReport = generateUnifiedReport(singleFrameReport, temporalReport, overallDuration);
+    const unifiedReport = generateUnifiedReport(
+      singleFrameReport,
+      temporalReport,
+      overallDuration
+    );
 
     // Print unified summary
     printUnifiedSummary(unifiedReport);
@@ -99,8 +105,14 @@ async function main() {
     }
 
     // Save individual reports
-    await singleFramePipeline.saveReport(singleFrameReport, path.join(docsDir, 'GATE_10C_VALIDATION_REPORT.json'));
-    await temporalPipeline.saveReport(temporalReport, path.join(docsDir, 'GATE_10D_VALIDATION_REPORT.json'));
+    await singleFramePipeline.saveReport(
+      singleFrameReport,
+      path.join(docsDir, 'GATE_10C_VALIDATION_REPORT.json')
+    );
+    await temporalPipeline.saveReport(
+      temporalReport,
+      path.join(docsDir, 'GATE_10D_VALIDATION_REPORT.json')
+    );
 
     // Save unified report
     const unifiedReportPath = path.join(docsDir, 'UNIFIED_VALIDATION_REPORT.json');
@@ -109,7 +121,12 @@ async function main() {
 
     // Generate markdown summary
     const markdownPath = path.join(docsDir, 'VALIDATION_SUMMARY.md');
-    await generateMarkdownSummary(unifiedReport, singleFrameReport, temporalReport, markdownPath);
+    await generateMarkdownSummary(
+      unifiedReport,
+      singleFrameReport,
+      temporalReport,
+      markdownPath
+    );
     console.log(`Markdown summary saved to: ${markdownPath}`);
 
     // Exit with appropriate code
@@ -121,9 +138,15 @@ async function main() {
   }
 }
 
-function generateUnifiedReport(singleFrameReport: any, temporalReport: any, duration: number): UnifiedValidationReport {
+function generateUnifiedReport(
+  singleFrameReport: any,
+  temporalReport: any,
+  duration: number
+): UnifiedValidationReport {
   const overallStatus: 'PASS' | 'FAIL' =
-    singleFrameReport.status === 'PASS' && temporalReport.status === 'PASS' ? 'PASS' : 'FAIL';
+    singleFrameReport.status === 'PASS' && temporalReport.status === 'PASS'
+      ? 'PASS'
+      : 'FAIL';
 
   const summary: string[] = [];
   const recommendations: string[] = [];
@@ -132,13 +155,17 @@ function generateUnifiedReport(singleFrameReport: any, temporalReport: any, dura
   if (singleFrameReport.status === 'PASS') {
     summary.push('✅ Single-frame validation: PASS');
     summary.push(`   - MAE: ${singleFrameReport.metrics.mae.toFixed(2)}° (target: ≤5°)`);
-    summary.push(`   - RMSE: ${singleFrameReport.metrics.rmse.toFixed(2)}° (target: ≤7°)`);
+    summary.push(
+      `   - RMSE: ${singleFrameReport.metrics.rmse.toFixed(2)}° (target: ≤7°)`
+    );
     summary.push(`   - R²: ${singleFrameReport.metrics.r2.toFixed(3)} (target: ≥0.95)`);
     summary.push(`   - Pass rate: ${singleFrameReport.passRate.toFixed(1)}%`);
   } else {
     summary.push('❌ Single-frame validation: FAIL');
     summary.push(`   - MAE: ${singleFrameReport.metrics.mae.toFixed(2)}° (target: ≤5°)`);
-    recommendations.push('Review single-frame measurement algorithms for accuracy improvements');
+    recommendations.push(
+      'Review single-frame measurement algorithms for accuracy improvements'
+    );
   }
 
   // Temporal summary
@@ -148,8 +175,12 @@ function generateUnifiedReport(singleFrameReport: any, temporalReport: any, dura
     summary.push(
       `   - Mean smoothness: ${(temporalReport.aggregateMetrics.meanSmoothness * 100).toFixed(1)}% (target: ≥75%)`
     );
-    summary.push(`   - Sudden jumps: ${temporalReport.aggregateMetrics.totalSuddenJumps} (target: 0)`);
-    summary.push(`   - Mean quality: ${(temporalReport.aggregateMetrics.meanQuality * 100).toFixed(1)}%`);
+    summary.push(
+      `   - Sudden jumps: ${temporalReport.aggregateMetrics.totalSuddenJumps} (target: 0)`
+    );
+    summary.push(
+      `   - Mean quality: ${(temporalReport.aggregateMetrics.meanQuality * 100).toFixed(1)}%`
+    );
   } else {
     summary.push('❌ Temporal validation: FAIL');
     summary.push(`   - Pass rate: ${temporalReport.passRate.toFixed(1)}% (target: ≥90%)`);
@@ -265,7 +296,7 @@ async function generateMarkdownSummary(
 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
-| **Pass Rate** | ${((unified.temporalValidation.passed / unified.temporalValidation.totalSequences) * 100).toFixed(1)}% | ≥90% | ${(unified.temporalValidation.passed / unified.temporalValidation.totalSequences) >= 0.9 ? '✅' : '❌'} |
+| **Pass Rate** | ${((unified.temporalValidation.passed / unified.temporalValidation.totalSequences) * 100).toFixed(1)}% | ≥90% | ${unified.temporalValidation.passed / unified.temporalValidation.totalSequences >= 0.9 ? '✅' : '❌'} |
 | **Mean Smoothness** | ${(unified.temporalValidation.meanSmoothness * 100).toFixed(1)}% | ≥75% | ${unified.temporalValidation.meanSmoothness >= 0.75 ? '✅' : '❌'} |
 | **Sudden Jumps** | ${unified.temporalValidation.totalSuddenJumps} | 0 | ${unified.temporalValidation.totalSuddenJumps === 0 ? '✅' : '⚠️'} |
 | **Mean Quality** | ${(unified.temporalValidation.meanQuality * 100).toFixed(1)}% | ≥70% | ${unified.temporalValidation.meanQuality >= 0.7 ? '✅' : '❌'} |
@@ -305,7 +336,8 @@ ${unified.recommendations.length > 0 ? `## Recommendations\n\n${unified.recommen
 
 ## Clinical Interpretation
 
-${unified.overallStatus === 'PASS'
+${
+  unified.overallStatus === 'PASS'
     ? `✅ **System Validated for Clinical Use**
 
 The PhysioAssist ROM measurement system has successfully passed all validation requirements:
@@ -322,7 +354,8 @@ The validation identified areas requiring attention before clinical deployment:
 
 ${unified.recommendations.map((rec) => `- ${rec}`).join('\n')}
 
-**Recommendation**: Address validation failures and re-run complete validation suite.`}
+**Recommendation**: Address validation failures and re-run complete validation suite.`
+}
 
 ---
 

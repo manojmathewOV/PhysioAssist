@@ -16,14 +16,7 @@
  */
 
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
@@ -167,7 +160,8 @@ const JointSelectionPanelV2: React.FC<JointSelectionPanelV2Props> = ({
       <View style={styles.voicePrompt}>
         <Text style={styles.micIcon}>🎤</Text>
         <Text style={styles.voiceText}>
-          Say {AVAILABLE_JOINTS.map((j, i) => {
+          Say{' '}
+          {AVAILABLE_JOINTS.map((j, i) => {
             const name = JOINT_METADATA[j].displayName;
             if (i === AVAILABLE_JOINTS.length - 1) return `or "${name}"`;
             if (i === AVAILABLE_JOINTS.length - 2) return `"${name}", `;

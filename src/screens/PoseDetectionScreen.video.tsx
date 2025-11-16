@@ -35,10 +35,7 @@ import { RootState } from '@store/index';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
 import { poseDetectionService } from '@services/poseDetectionService';
 import { mockPoseDataSimulator } from '@services/mockPoseDataSimulator';
-import {
-  VideoFrameFeeder,
-  createPoseVideoFeeder,
-} from '@utils/videoFrameFeeder';
+import { VideoFrameFeeder, createPoseVideoFeeder } from '@utils/videoFrameFeeder';
 import PoseOverlay from '@components/pose/PoseOverlay';
 import ExerciseControls from '@components/exercises/ExerciseControls';
 
@@ -253,17 +250,14 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
     }
   }, [useVideoFeed]);
 
-  const processFrameData = useCallback(
-    async (width: number, height: number) => {
-      try {
-        // Real frame processing would happen here in production
-        // await poseDetectionService.processFrame(imageData);
-      } catch (error) {
-        console.error('Error processing frame:', error);
-      }
-    },
-    []
-  );
+  const processFrameData = useCallback(async (width: number, height: number) => {
+    try {
+      // Real frame processing would happen here in production
+      // await poseDetectionService.processFrame(imageData);
+    } catch (error) {
+      console.error('Error processing frame:', error);
+    }
+  }, []);
 
   const frameProcessor = useFrameProcessor(
     (frame: Frame) => {
@@ -290,18 +284,14 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
       return (
         <View style={[StyleSheet.absoluteFill, styles.mockBackground]}>
           <Text style={styles.mockModeText}>VIDEO FEED MODE</Text>
-          <Text style={styles.mockModeSubtext}>
-            Processing video frames for testing
-          </Text>
+          <Text style={styles.mockModeSubtext}>Processing video frames for testing</Text>
           {videoStats && (
             <View style={styles.statsContainer}>
               <Text style={styles.statsText}>FPS: {videoStats.fps}</Text>
               <Text style={styles.statsText}>
                 Frames: {videoStats.processedFrames}/{videoStats.totalFrames}
               </Text>
-              <Text style={styles.statsText}>
-                Skipped: {videoStats.skippedFrames}
-              </Text>
+              <Text style={styles.statsText}>Skipped: {videoStats.skippedFrames}</Text>
               <Text style={styles.statsText}>Errors: {videoStats.errors}</Text>
             </View>
           )}

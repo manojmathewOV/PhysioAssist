@@ -38,6 +38,7 @@ jest.mock('../../services/poseDetectionService', () => ({
       confidence: 0.9,
     }),
     cleanup: jest.fn(),
+    updateConfig: jest.fn(),
   },
 }));
 
@@ -46,27 +47,39 @@ jest.mock('../../services/audioFeedbackService', () => ({
     speak: jest.fn().mockResolvedValue(undefined),
     stop: jest.fn(),
     setRate: jest.fn(),
+    updateConfig: jest.fn(),
   },
 }));
 
-jest.mock('react-native-vision-camera', () => ({
-  Camera: Object.assign(
-    ({ children, ...props }: any) => <MockCamera {...props}>{children}</MockCamera>,
-    {
-      requestCameraPermission: jest.fn().mockResolvedValue('authorized'),
-      getCameraDevice: jest.fn().mockReturnValue({ id: 'back', position: 'back' }),
-    }
-  ),
-  useCameraDevices: () => ({ front: { id: 'front' }, back: { id: 'back' } }),
-  useFrameProcessor: (callback: any) => callback,
+jest.mock('../../services/goniometerService');
+jest.mock('../../services/exerciseValidationService', () => ({
+  exerciseValidationService: {
+    startExercise: jest.fn(),
+    validateExercise: jest.fn(),
+    stopExercise: jest.fn(),
+  },
 }));
 
-// Mock camera component
-const MockCamera = ({ children, ...props }: any) => (
-  <view testID="mock-camera" {...props}>
-    {children}
-  </view>
-);
+// Mock react-native-vision-camera
+jest.mock('react-native-vision-camera', () => {
+  const MockCamera = ({ children, ...props }: any) => (
+    <view testID="mock-camera" {...props}>
+      {children}
+    </view>
+  );
+
+  const Camera = Object.assign(MockCamera, {
+    requestCameraPermission: jest.fn().mockResolvedValue('authorized'),
+    getCameraDevice: jest.fn().mockReturnValue({ id: 'back', position: 'back' }),
+    openSettings: jest.fn(),
+  });
+
+  return {
+    Camera,
+    useCameraDevices: () => ({ front: { id: 'front' }, back: { id: 'back' } }),
+    useFrameProcessor: (callback: any) => callback,
+  };
+});
 
 // Helper to create test store
 const createTestStore = (preloadedState = {}) => {
@@ -372,27 +385,31 @@ describe('Component Integration Tests', () => {
         },
       });
 
-      // Render main screen
-      const { getByTestId, rerender } = renderWithProviders(<PoseDetectionScreen />, {
-        store,
-      });
+      // Create wrapper without nested NavigationContainer
+      const Wrapper = ({ children }: { children: React.ReactNode }) => (
+        <Provider store={store}>{children}</Provider>
+      );
 
-      // Navigate to settings
+      // Render main screen
+      const { rerender } = render(
+        <NavigationContainer>
+          <PoseDetectionScreen />
+        </NavigationContainer>,
+        { wrapper: Wrapper }
+      );
+
+      // Navigate to settings (simulated)
       rerender(
-        <Provider store={store}>
-          <NavigationContainer>
-            <SettingsScreen />
-          </NavigationContainer>
-        </Provider>
+        <NavigationContainer independent={true}>
+          <SettingsScreen />
+        </NavigationContainer>
       );
 
       // Navigate back to main screen
       rerender(
-        <Provider store={store}>
-          <NavigationContainer>
-            <PoseDetectionScreen />
-          </NavigationContainer>
-        </Provider>
+        <NavigationContainer independent={true}>
+          <PoseDetectionScreen />
+        </NavigationContainer>
       );
 
       // Verify state preserved

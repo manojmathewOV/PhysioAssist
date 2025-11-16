@@ -84,8 +84,8 @@ class ErrorBoundary extends Component<Props, State> {
             </TouchableOpacity>
 
             <Text style={styles.helpText}>
-              If this persists, try restarting the app or checking camera permissions
-              in Settings.
+              If this persists, try restarting the app or checking camera permissions in
+              Settings.
             </Text>
           </View>
         </View>

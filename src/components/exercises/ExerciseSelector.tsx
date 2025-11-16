@@ -33,7 +33,11 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
   );
 
   return (
-    <View style={styles.container} testID="exercise-selector">
+    <View
+      style={styles.container}
+      testID="exercise-selector"
+      accessibilityLabel="Select exercise type"
+    >
       <Text style={styles.title}>Select Exercise</Text>
       <FlatList
         data={exercises}

@@ -7,7 +7,13 @@
  */
 
 import { ProcessedPoseData } from '../types/pose';
-import { GroundTruth, ValidationResult, ValidationReport, ValidationConfig, DEFAULT_VALIDATION_CONFIG } from '../types/validation';
+import {
+  GroundTruth,
+  ValidationResult,
+  ValidationReport,
+  ValidationConfig,
+  DEFAULT_VALIDATION_CONFIG,
+} from '../types/validation';
 import { SyntheticPoseDataGenerator } from './SyntheticPoseDataGenerator';
 import { ClinicalMeasurementService } from '../services/biomechanics/ClinicalMeasurementService';
 import { AnatomicalReferenceService } from '../services/biomechanics/AnatomicalReferenceService';
@@ -108,17 +114,32 @@ export class ValidationPipeline {
     for (const side of sides) {
       for (const angle of testAngles) {
         // Test 1: Normal flexion (no compensations)
-        const { poseData, groundTruth } = this.generator.generateShoulderFlexion(angle, 'movenet-17', { side });
+        const { poseData, groundTruth } = this.generator.generateShoulderFlexion(
+          angle,
+          'movenet-17',
+          { side }
+        );
         const enrichedPose = this.addAnatomicalFrames(poseData);
-        const measurement = this.createMeasurementService().measureShoulderFlexion(enrichedPose, side);
+        const measurement = this.createMeasurementService().measureShoulderFlexion(
+          enrichedPose,
+          side
+        );
 
         measurements.push({
           testCase: `shoulder_flexion_${side}_${angle}deg`,
           groundTruth: groundTruth.primaryMeasurement.angle,
           measured: measurement.primaryJoint.angle,
-          error: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle),
-          passed: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle) <= this.config.angleTolerance,
-          compensationMatches: this.checkCompensationMatch(groundTruth.compensations, measurement.compensations),
+          error: Math.abs(
+            measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+          ),
+          passed:
+            Math.abs(
+              measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+            ) <= this.config.angleTolerance,
+          compensationMatches: this.checkCompensationMatch(
+            groundTruth.compensations,
+            measurement.compensations
+          ),
           timestamp: Date.now(),
         });
 
@@ -129,21 +150,35 @@ export class ValidationPipeline {
 
         // Test 2: Flexion with trunk lean compensation (for angles >= 90°)
         if (angle >= 90) {
-          const { poseData: compensatedPose, groundTruth: compensatedGT } = this.generator.generateShoulderFlexion(
-            angle,
-            'movenet-17',
-            { side, trunkLean: 15 }
-          );
+          const { poseData: compensatedPose, groundTruth: compensatedGT } =
+            this.generator.generateShoulderFlexion(angle, 'movenet-17', {
+              side,
+              trunkLean: 15,
+            });
           const enrichedCompensatedPose = this.addAnatomicalFrames(compensatedPose);
-          const compensatedMeasurement = this.createMeasurementService().measureShoulderFlexion(enrichedCompensatedPose, side);
+          const compensatedMeasurement =
+            this.createMeasurementService().measureShoulderFlexion(
+              enrichedCompensatedPose,
+              side
+            );
 
           measurements.push({
             testCase: `shoulder_flexion_${side}_${angle}deg_trunk_lean`,
             groundTruth: compensatedGT.primaryMeasurement.angle,
             measured: compensatedMeasurement.primaryJoint.angle,
-            error: Math.abs(compensatedMeasurement.primaryJoint.angle - compensatedGT.primaryMeasurement.angle),
-            passed: Math.abs(compensatedMeasurement.primaryJoint.angle - compensatedGT.primaryMeasurement.angle) <= this.config.angleTolerance,
-            compensationMatches: this.checkCompensationMatch(compensatedGT.compensations, compensatedMeasurement.compensations),
+            error: Math.abs(
+              compensatedMeasurement.primaryJoint.angle -
+                compensatedGT.primaryMeasurement.angle
+            ),
+            passed:
+              Math.abs(
+                compensatedMeasurement.primaryJoint.angle -
+                  compensatedGT.primaryMeasurement.angle
+              ) <= this.config.angleTolerance,
+            compensationMatches: this.checkCompensationMatch(
+              compensatedGT.compensations,
+              compensatedMeasurement.compensations
+            ),
             timestamp: Date.now(),
           });
 
@@ -174,17 +209,32 @@ export class ValidationPipeline {
     for (const side of sides) {
       for (const angle of testAngles) {
         // Test 1: Normal abduction (no compensations)
-        const { poseData, groundTruth } = this.generator.generateShoulderAbduction(angle, 'movenet-17', { side });
+        const { poseData, groundTruth } = this.generator.generateShoulderAbduction(
+          angle,
+          'movenet-17',
+          { side }
+        );
         const enrichedPose = this.addAnatomicalFrames(poseData);
-        const measurement = this.createMeasurementService().measureShoulderAbduction(enrichedPose, side);
+        const measurement = this.createMeasurementService().measureShoulderAbduction(
+          enrichedPose,
+          side
+        );
 
         measurements.push({
           testCase: `shoulder_abduction_${side}_${angle}deg`,
           groundTruth: groundTruth.primaryMeasurement.angle,
           measured: measurement.primaryJoint.angle,
-          error: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle),
-          passed: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle) <= this.config.angleTolerance,
-          compensationMatches: this.checkCompensationMatch(groundTruth.compensations, measurement.compensations),
+          error: Math.abs(
+            measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+          ),
+          passed:
+            Math.abs(
+              measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+            ) <= this.config.angleTolerance,
+          compensationMatches: this.checkCompensationMatch(
+            groundTruth.compensations,
+            measurement.compensations
+          ),
           timestamp: Date.now(),
         });
 
@@ -195,21 +245,35 @@ export class ValidationPipeline {
 
         // Test 2: Abduction with shoulder hiking (for angles >= 90°)
         if (angle >= 90) {
-          const { poseData: compensatedPose, groundTruth: compensatedGT } = this.generator.generateShoulderAbduction(
-            angle,
-            'movenet-17',
-            { side, shoulderHiking: 25 }
-          );
+          const { poseData: compensatedPose, groundTruth: compensatedGT } =
+            this.generator.generateShoulderAbduction(angle, 'movenet-17', {
+              side,
+              shoulderHiking: 25,
+            });
           const enrichedCompensatedPose = this.addAnatomicalFrames(compensatedPose);
-          const compensatedMeasurement = this.createMeasurementService().measureShoulderAbduction(enrichedCompensatedPose, side);
+          const compensatedMeasurement =
+            this.createMeasurementService().measureShoulderAbduction(
+              enrichedCompensatedPose,
+              side
+            );
 
           measurements.push({
             testCase: `shoulder_abduction_${side}_${angle}deg_shoulder_hiking`,
             groundTruth: compensatedGT.primaryMeasurement.angle,
             measured: compensatedMeasurement.primaryJoint.angle,
-            error: Math.abs(compensatedMeasurement.primaryJoint.angle - compensatedGT.primaryMeasurement.angle),
-            passed: Math.abs(compensatedMeasurement.primaryJoint.angle - compensatedGT.primaryMeasurement.angle) <= this.config.angleTolerance,
-            compensationMatches: this.checkCompensationMatch(compensatedGT.compensations, compensatedMeasurement.compensations),
+            error: Math.abs(
+              compensatedMeasurement.primaryJoint.angle -
+                compensatedGT.primaryMeasurement.angle
+            ),
+            passed:
+              Math.abs(
+                compensatedMeasurement.primaryJoint.angle -
+                  compensatedGT.primaryMeasurement.angle
+              ) <= this.config.angleTolerance,
+            compensationMatches: this.checkCompensationMatch(
+              compensatedGT.compensations,
+              compensatedMeasurement.compensations
+            ),
             timestamp: Date.now(),
           });
 
@@ -240,17 +304,32 @@ export class ValidationPipeline {
     for (const side of sides) {
       for (const angle of testAngles) {
         // Test: Rotation with elbow at 90° (valid measurement)
-        const { poseData, groundTruth } = this.generator.generateShoulderRotation(angle, 'movenet-17', { side, elbowAngle: 90 });
+        const { poseData, groundTruth } = this.generator.generateShoulderRotation(
+          angle,
+          'movenet-17',
+          { side, elbowAngle: 90 }
+        );
         const enrichedPose = this.addAnatomicalFrames(poseData);
-        const measurement = this.createMeasurementService().measureShoulderRotation(enrichedPose, side);
+        const measurement = this.createMeasurementService().measureShoulderRotation(
+          enrichedPose,
+          side
+        );
 
         measurements.push({
           testCase: `shoulder_rotation_${side}_${angle}deg`,
           groundTruth: groundTruth.primaryMeasurement.angle,
           measured: measurement.primaryJoint.angle,
-          error: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle),
-          passed: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle) <= this.config.angleTolerance,
-          compensationMatches: this.checkCompensationMatch(groundTruth.compensations, measurement.compensations),
+          error: Math.abs(
+            measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+          ),
+          passed:
+            Math.abs(
+              measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+            ) <= this.config.angleTolerance,
+          compensationMatches: this.checkCompensationMatch(
+            groundTruth.compensations,
+            measurement.compensations
+          ),
           timestamp: Date.now(),
         });
 
@@ -280,17 +359,32 @@ export class ValidationPipeline {
     for (const side of sides) {
       for (const angle of testAngles) {
         // Test 1: Normal elbow flexion
-        const { poseData, groundTruth } = this.generator.generateElbowFlexion(angle, 'movenet-17', { side });
+        const { poseData, groundTruth } = this.generator.generateElbowFlexion(
+          angle,
+          'movenet-17',
+          { side }
+        );
         const enrichedPose = this.addAnatomicalFrames(poseData);
-        const measurement = this.createMeasurementService().measureElbowFlexion(enrichedPose, side);
+        const measurement = this.createMeasurementService().measureElbowFlexion(
+          enrichedPose,
+          side
+        );
 
         measurements.push({
           testCase: `elbow_flexion_${side}_${angle}deg`,
           groundTruth: groundTruth.primaryMeasurement.angle,
           measured: measurement.primaryJoint.angle,
-          error: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle),
-          passed: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle) <= this.config.angleTolerance,
-          compensationMatches: this.checkCompensationMatch(groundTruth.compensations, measurement.compensations),
+          error: Math.abs(
+            measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+          ),
+          passed:
+            Math.abs(
+              measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+            ) <= this.config.angleTolerance,
+          compensationMatches: this.checkCompensationMatch(
+            groundTruth.compensations,
+            measurement.compensations
+          ),
           timestamp: Date.now(),
         });
 
@@ -304,17 +398,32 @@ export class ValidationPipeline {
     // Test 2: Elbow with trunk lean compensation (3 cases)
     const compensatedAngles = [90, 120, 150];
     for (const angle of compensatedAngles) {
-      const { poseData, groundTruth } = this.generator.generateElbowFlexion(angle, 'movenet-17', { side: 'right', trunkLean: 10 });
+      const { poseData, groundTruth } = this.generator.generateElbowFlexion(
+        angle,
+        'movenet-17',
+        { side: 'right', trunkLean: 10 }
+      );
       const enrichedPose = this.addAnatomicalFrames(poseData);
-      const measurement = this.createMeasurementService().measureElbowFlexion(enrichedPose, 'right');
+      const measurement = this.createMeasurementService().measureElbowFlexion(
+        enrichedPose,
+        'right'
+      );
 
       measurements.push({
         testCase: `elbow_flexion_right_${angle}deg_trunk_lean`,
         groundTruth: groundTruth.primaryMeasurement.angle,
         measured: measurement.primaryJoint.angle,
-        error: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle),
-        passed: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle) <= this.config.angleTolerance,
-        compensationMatches: this.checkCompensationMatch(groundTruth.compensations, measurement.compensations),
+        error: Math.abs(
+          measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+        ),
+        passed:
+          Math.abs(
+            measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+          ) <= this.config.angleTolerance,
+        compensationMatches: this.checkCompensationMatch(
+          groundTruth.compensations,
+          measurement.compensations
+        ),
         timestamp: Date.now(),
       });
 
@@ -343,17 +452,32 @@ export class ValidationPipeline {
     for (const side of sides) {
       for (const angle of testAngles) {
         // Test 1: Normal knee flexion
-        const { poseData, groundTruth } = this.generator.generateKneeFlexion(angle, 'movenet-17', { side });
+        const { poseData, groundTruth } = this.generator.generateKneeFlexion(
+          angle,
+          'movenet-17',
+          { side }
+        );
         const enrichedPose = this.addAnatomicalFrames(poseData);
-        const measurement = this.createMeasurementService().measureKneeFlexion(enrichedPose, side);
+        const measurement = this.createMeasurementService().measureKneeFlexion(
+          enrichedPose,
+          side
+        );
 
         measurements.push({
           testCase: `knee_flexion_${side}_${angle}deg`,
           groundTruth: groundTruth.primaryMeasurement.angle,
           measured: measurement.primaryJoint.angle,
-          error: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle),
-          passed: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle) <= this.config.angleTolerance,
-          compensationMatches: this.checkCompensationMatch(groundTruth.compensations, measurement.compensations),
+          error: Math.abs(
+            measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+          ),
+          passed:
+            Math.abs(
+              measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+            ) <= this.config.angleTolerance,
+          compensationMatches: this.checkCompensationMatch(
+            groundTruth.compensations,
+            measurement.compensations
+          ),
           timestamp: Date.now(),
         });
 
@@ -367,17 +491,32 @@ export class ValidationPipeline {
     // Test 2: Knee with hip hike compensation (3 cases)
     const compensatedAngles = [60, 90, 120];
     for (const angle of compensatedAngles) {
-      const { poseData, groundTruth } = this.generator.generateKneeFlexion(angle, 'movenet-17', { side: 'right', hipHike: 30 });
+      const { poseData, groundTruth } = this.generator.generateKneeFlexion(
+        angle,
+        'movenet-17',
+        { side: 'right', hipHike: 30 }
+      );
       const enrichedPose = this.addAnatomicalFrames(poseData);
-      const measurement = this.createMeasurementService().measureKneeFlexion(enrichedPose, 'right');
+      const measurement = this.createMeasurementService().measureKneeFlexion(
+        enrichedPose,
+        'right'
+      );
 
       measurements.push({
         testCase: `knee_flexion_right_${angle}deg_hip_hike`,
         groundTruth: groundTruth.primaryMeasurement.angle,
         measured: measurement.primaryJoint.angle,
-        error: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle),
-        passed: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle) <= this.config.angleTolerance,
-        compensationMatches: this.checkCompensationMatch(groundTruth.compensations, measurement.compensations),
+        error: Math.abs(
+          measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+        ),
+        passed:
+          Math.abs(
+            measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+          ) <= this.config.angleTolerance,
+        compensationMatches: this.checkCompensationMatch(
+          groundTruth.compensations,
+          measurement.compensations
+        ),
         timestamp: Date.now(),
       });
 
@@ -415,34 +554,70 @@ export class ValidationPipeline {
     for (const test of nearZeroTests) {
       let poseData, groundTruth;
       if (test.movement === 'shoulder_flexion') {
-        ({ poseData, groundTruth } = this.generator.generateShoulderFlexion(test.angle, 'movenet-17', { side: test.side }));
+        ({ poseData, groundTruth } = this.generator.generateShoulderFlexion(
+          test.angle,
+          'movenet-17',
+          { side: test.side }
+        ));
       } else if (test.movement === 'shoulder_abduction') {
-        ({ poseData, groundTruth } = this.generator.generateShoulderAbduction(test.angle, 'movenet-17', { side: test.side }));
+        ({ poseData, groundTruth } = this.generator.generateShoulderAbduction(
+          test.angle,
+          'movenet-17',
+          { side: test.side }
+        ));
       } else if (test.movement === 'elbow_flexion') {
-        ({ poseData, groundTruth } = this.generator.generateElbowFlexion(test.angle, 'movenet-17', { side: test.side }));
+        ({ poseData, groundTruth } = this.generator.generateElbowFlexion(
+          test.angle,
+          'movenet-17',
+          { side: test.side }
+        ));
       } else {
-        ({ poseData, groundTruth } = this.generator.generateKneeFlexion(test.angle, 'movenet-17', { side: test.side }));
+        ({ poseData, groundTruth } = this.generator.generateKneeFlexion(
+          test.angle,
+          'movenet-17',
+          { side: test.side }
+        ));
       }
 
       const enrichedPose = this.addAnatomicalFrames(poseData);
       let measurement;
       if (test.movement === 'shoulder_flexion') {
-        measurement = this.createMeasurementService().measureShoulderFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureShoulderFlexion(
+          enrichedPose,
+          test.side
+        );
       } else if (test.movement === 'shoulder_abduction') {
-        measurement = this.createMeasurementService().measureShoulderAbduction(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureShoulderAbduction(
+          enrichedPose,
+          test.side
+        );
       } else if (test.movement === 'elbow_flexion') {
-        measurement = this.createMeasurementService().measureElbowFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureElbowFlexion(
+          enrichedPose,
+          test.side
+        );
       } else {
-        measurement = this.createMeasurementService().measureKneeFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureKneeFlexion(
+          enrichedPose,
+          test.side
+        );
       }
 
       measurements.push({
         testCase: `edge_${test.movement}_${test.side}_near_zero`,
         groundTruth: groundTruth.primaryMeasurement.angle,
         measured: measurement.primaryJoint.angle,
-        error: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle),
-        passed: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle) <= this.config.angleTolerance,
-        compensationMatches: this.checkCompensationMatch(groundTruth.compensations, measurement.compensations),
+        error: Math.abs(
+          measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+        ),
+        passed:
+          Math.abs(
+            measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+          ) <= this.config.angleTolerance,
+        compensationMatches: this.checkCompensationMatch(
+          groundTruth.compensations,
+          measurement.compensations
+        ),
         timestamp: Date.now(),
       });
 
@@ -463,34 +638,70 @@ export class ValidationPipeline {
     for (const test of maxROMTests) {
       let poseData, groundTruth;
       if (test.movement === 'shoulder_flexion') {
-        ({ poseData, groundTruth } = this.generator.generateShoulderFlexion(test.angle, 'movenet-17', { side: test.side }));
+        ({ poseData, groundTruth } = this.generator.generateShoulderFlexion(
+          test.angle,
+          'movenet-17',
+          { side: test.side }
+        ));
       } else if (test.movement === 'shoulder_abduction') {
-        ({ poseData, groundTruth } = this.generator.generateShoulderAbduction(test.angle, 'movenet-17', { side: test.side }));
+        ({ poseData, groundTruth } = this.generator.generateShoulderAbduction(
+          test.angle,
+          'movenet-17',
+          { side: test.side }
+        ));
       } else if (test.movement === 'elbow_flexion') {
-        ({ poseData, groundTruth } = this.generator.generateElbowFlexion(test.angle, 'movenet-17', { side: test.side }));
+        ({ poseData, groundTruth } = this.generator.generateElbowFlexion(
+          test.angle,
+          'movenet-17',
+          { side: test.side }
+        ));
       } else {
-        ({ poseData, groundTruth } = this.generator.generateKneeFlexion(test.angle, 'movenet-17', { side: test.side }));
+        ({ poseData, groundTruth } = this.generator.generateKneeFlexion(
+          test.angle,
+          'movenet-17',
+          { side: test.side }
+        ));
       }
 
       const enrichedPose = this.addAnatomicalFrames(poseData);
       let measurement;
       if (test.movement === 'shoulder_flexion') {
-        measurement = this.createMeasurementService().measureShoulderFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureShoulderFlexion(
+          enrichedPose,
+          test.side
+        );
       } else if (test.movement === 'shoulder_abduction') {
-        measurement = this.createMeasurementService().measureShoulderAbduction(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureShoulderAbduction(
+          enrichedPose,
+          test.side
+        );
       } else if (test.movement === 'elbow_flexion') {
-        measurement = this.createMeasurementService().measureElbowFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureElbowFlexion(
+          enrichedPose,
+          test.side
+        );
       } else {
-        measurement = this.createMeasurementService().measureKneeFlexion(enrichedPose, test.side);
+        measurement = this.createMeasurementService().measureKneeFlexion(
+          enrichedPose,
+          test.side
+        );
       }
 
       measurements.push({
         testCase: `edge_${test.movement}_${test.side}_max_rom`,
         groundTruth: groundTruth.primaryMeasurement.angle,
         measured: measurement.primaryJoint.angle,
-        error: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle),
-        passed: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle) <= this.config.angleTolerance,
-        compensationMatches: this.checkCompensationMatch(groundTruth.compensations, measurement.compensations),
+        error: Math.abs(
+          measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+        ),
+        passed:
+          Math.abs(
+            measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+          ) <= this.config.angleTolerance,
+        compensationMatches: this.checkCompensationMatch(
+          groundTruth.compensations,
+          measurement.compensations
+        ),
         timestamp: Date.now(),
       });
 
@@ -513,48 +724,84 @@ export class ValidationPipeline {
     for (const test of multiCompTests) {
       let poseData, groundTruth;
       if (test.movement === 'shoulder_flexion') {
-        ({ poseData, groundTruth } = this.generator.generateShoulderFlexion(test.angle, 'movenet-17', {
-          side: 'right',
-          trunkLean: test.trunkLean,
-          shoulderHiking: test.shoulderHiking,
-        }));
+        ({ poseData, groundTruth } = this.generator.generateShoulderFlexion(
+          test.angle,
+          'movenet-17',
+          {
+            side: 'right',
+            trunkLean: test.trunkLean,
+            shoulderHiking: test.shoulderHiking,
+          }
+        ));
       } else if (test.movement === 'shoulder_abduction') {
-        ({ poseData, groundTruth } = this.generator.generateShoulderAbduction(test.angle, 'movenet-17', {
-          side: 'right',
-          trunkLean: test.trunkLean,
-          shoulderHiking: test.shoulderHiking,
-        }));
+        ({ poseData, groundTruth } = this.generator.generateShoulderAbduction(
+          test.angle,
+          'movenet-17',
+          {
+            side: 'right',
+            trunkLean: test.trunkLean,
+            shoulderHiking: test.shoulderHiking,
+          }
+        ));
       } else if (test.movement === 'elbow_flexion') {
-        ({ poseData, groundTruth } = this.generator.generateElbowFlexion(test.angle, 'movenet-17', {
-          side: 'right',
-          trunkLean: test.trunkLean,
-        }));
+        ({ poseData, groundTruth } = this.generator.generateElbowFlexion(
+          test.angle,
+          'movenet-17',
+          {
+            side: 'right',
+            trunkLean: test.trunkLean,
+          }
+        ));
       } else {
-        ({ poseData, groundTruth } = this.generator.generateKneeFlexion(test.angle, 'movenet-17', {
-          side: 'right',
-          hipHike: (test as any).hipHike,
-        }));
+        ({ poseData, groundTruth } = this.generator.generateKneeFlexion(
+          test.angle,
+          'movenet-17',
+          {
+            side: 'right',
+            hipHike: (test as any).hipHike,
+          }
+        ));
       }
 
       const enrichedPose = this.addAnatomicalFrames(poseData);
       let measurement;
       if (test.movement === 'shoulder_flexion') {
-        measurement = this.createMeasurementService().measureShoulderFlexion(enrichedPose, 'right');
+        measurement = this.createMeasurementService().measureShoulderFlexion(
+          enrichedPose,
+          'right'
+        );
       } else if (test.movement === 'shoulder_abduction') {
-        measurement = this.createMeasurementService().measureShoulderAbduction(enrichedPose, 'right');
+        measurement = this.createMeasurementService().measureShoulderAbduction(
+          enrichedPose,
+          'right'
+        );
       } else if (test.movement === 'elbow_flexion') {
-        measurement = this.createMeasurementService().measureElbowFlexion(enrichedPose, 'right');
+        measurement = this.createMeasurementService().measureElbowFlexion(
+          enrichedPose,
+          'right'
+        );
       } else {
-        measurement = this.createMeasurementService().measureKneeFlexion(enrichedPose, 'right');
+        measurement = this.createMeasurementService().measureKneeFlexion(
+          enrichedPose,
+          'right'
+        );
       }
 
       measurements.push({
         testCase: `edge_${test.movement}_multiple_compensations`,
         groundTruth: groundTruth.primaryMeasurement.angle,
         measured: measurement.primaryJoint.angle,
-        error: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle),
-        passed: Math.abs(measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle) <= this.config.angleTolerance,
-        compensationMatches: this.checkCompensationMatch(groundTruth.compensations, measurement.compensations),
+        error: Math.abs(
+          measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+        ),
+        passed:
+          Math.abs(
+            measurement.primaryJoint.angle - groundTruth.primaryMeasurement.angle
+          ) <= this.config.angleTolerance,
+        compensationMatches: this.checkCompensationMatch(
+          groundTruth.compensations,
+          measurement.compensations
+        ),
         timestamp: Date.now(),
       });
 
@@ -568,22 +815,35 @@ export class ValidationPipeline {
     const bilateralAngles = [60, 90, 120];
     for (const angle of bilateralAngles) {
       // Generate left shoulder flexion
-      const { poseData: leftPose, groundTruth: leftGT } = this.generator.generateShoulderFlexion(angle, 'movenet-17', { side: 'left' });
+      const { poseData: leftPose, groundTruth: leftGT } =
+        this.generator.generateShoulderFlexion(angle, 'movenet-17', { side: 'left' });
       const enrichedLeftPose = this.addAnatomicalFrames(leftPose);
-      const leftMeasurement = this.createMeasurementService().measureShoulderFlexion(enrichedLeftPose, 'left');
+      const leftMeasurement = this.createMeasurementService().measureShoulderFlexion(
+        enrichedLeftPose,
+        'left'
+      );
 
       // Generate right shoulder flexion
-      const { poseData: rightPose, groundTruth: rightGT } = this.generator.generateShoulderFlexion(angle, 'movenet-17', { side: 'right' });
+      const { poseData: rightPose, groundTruth: rightGT } =
+        this.generator.generateShoulderFlexion(angle, 'movenet-17', { side: 'right' });
       const enrichedRightPose = this.addAnatomicalFrames(rightPose);
-      const rightMeasurement = this.createMeasurementService().measureShoulderFlexion(enrichedRightPose, 'right');
+      const rightMeasurement = this.createMeasurementService().measureShoulderFlexion(
+        enrichedRightPose,
+        'right'
+      );
 
       // Left side measurement
       measurements.push({
         testCase: `edge_bilateral_left_shoulder_${angle}deg`,
         groundTruth: leftGT.primaryMeasurement.angle,
         measured: leftMeasurement.primaryJoint.angle,
-        error: Math.abs(leftMeasurement.primaryJoint.angle - leftGT.primaryMeasurement.angle),
-        passed: Math.abs(leftMeasurement.primaryJoint.angle - leftGT.primaryMeasurement.angle) <= this.config.angleTolerance,
+        error: Math.abs(
+          leftMeasurement.primaryJoint.angle - leftGT.primaryMeasurement.angle
+        ),
+        passed:
+          Math.abs(
+            leftMeasurement.primaryJoint.angle - leftGT.primaryMeasurement.angle
+          ) <= this.config.angleTolerance,
         compensationMatches: true,
         timestamp: Date.now(),
       });
@@ -593,8 +853,13 @@ export class ValidationPipeline {
         testCase: `edge_bilateral_right_shoulder_${angle}deg`,
         groundTruth: rightGT.primaryMeasurement.angle,
         measured: rightMeasurement.primaryJoint.angle,
-        error: Math.abs(rightMeasurement.primaryJoint.angle - rightGT.primaryMeasurement.angle),
-        passed: Math.abs(rightMeasurement.primaryJoint.angle - rightGT.primaryMeasurement.angle) <= this.config.angleTolerance,
+        error: Math.abs(
+          rightMeasurement.primaryJoint.angle - rightGT.primaryMeasurement.angle
+        ),
+        passed:
+          Math.abs(
+            rightMeasurement.primaryJoint.angle - rightGT.primaryMeasurement.angle
+          ) <= this.config.angleTolerance,
         compensationMatches: true,
         timestamp: Date.now(),
       });
@@ -737,17 +1002,28 @@ export class ValidationPipeline {
     const meetsSpecificity = specificity >= this.config.targetSpecificity;
 
     const status: 'PASS' | 'FAIL' =
-      meetsMAE && meetsRMSE && meetsR2 && meetsSensitivity && meetsSpecificity ? 'PASS' : 'FAIL';
+      meetsMAE && meetsRMSE && meetsR2 && meetsSensitivity && meetsSpecificity
+        ? 'PASS'
+        : 'FAIL';
 
     // Generate summary notes
     const notes: string[] = [];
-    if (!meetsMAE) notes.push(`MAE (${mae.toFixed(2)}°) exceeds target (${this.config.targetMAE}°)`);
-    if (!meetsRMSE) notes.push(`RMSE (${rmse.toFixed(2)}°) exceeds target (${this.config.targetRMSE}°)`);
-    if (!meetsR2) notes.push(`R² (${r2.toFixed(3)}) below target (${this.config.targetR2})`);
+    if (!meetsMAE)
+      notes.push(`MAE (${mae.toFixed(2)}°) exceeds target (${this.config.targetMAE}°)`);
+    if (!meetsRMSE)
+      notes.push(
+        `RMSE (${rmse.toFixed(2)}°) exceeds target (${this.config.targetRMSE}°)`
+      );
+    if (!meetsR2)
+      notes.push(`R² (${r2.toFixed(3)}) below target (${this.config.targetR2})`);
     if (!meetsSensitivity)
-      notes.push(`Sensitivity (${(sensitivity * 100).toFixed(1)}%) below target (${this.config.targetSensitivity * 100}%)`);
+      notes.push(
+        `Sensitivity (${(sensitivity * 100).toFixed(1)}%) below target (${this.config.targetSensitivity * 100}%)`
+      );
     if (!meetsSpecificity)
-      notes.push(`Specificity (${(specificity * 100).toFixed(1)}%) below target (${this.config.targetSpecificity * 100}%)`);
+      notes.push(
+        `Specificity (${(specificity * 100).toFixed(1)}%) below target (${this.config.targetSpecificity * 100}%)`
+      );
 
     if (status === 'PASS') {
       notes.push('✓ All validation targets achieved');
@@ -819,17 +1095,29 @@ export class ValidationPipeline {
     console.log('');
 
     console.log('ANGLE MEASUREMENT ACCURACY:');
-    console.log(`  MAE (Mean Absolute Error): ${report.metrics.mae.toFixed(2)}° (target: ≤${this.config.targetMAE}°) ${report.metrics.mae <= this.config.targetMAE ? '✓' : '✗'}`);
-    console.log(`  RMSE (Root Mean Square Error): ${report.metrics.rmse.toFixed(2)}° (target: ≤${this.config.targetRMSE}°) ${report.metrics.rmse <= this.config.targetRMSE ? '✓' : '✗'}`);
+    console.log(
+      `  MAE (Mean Absolute Error): ${report.metrics.mae.toFixed(2)}° (target: ≤${this.config.targetMAE}°) ${report.metrics.mae <= this.config.targetMAE ? '✓' : '✗'}`
+    );
+    console.log(
+      `  RMSE (Root Mean Square Error): ${report.metrics.rmse.toFixed(2)}° (target: ≤${this.config.targetRMSE}°) ${report.metrics.rmse <= this.config.targetRMSE ? '✓' : '✗'}`
+    );
     console.log(`  Max Error: ${report.metrics.maxError.toFixed(2)}°`);
-    console.log(`  R² (Coefficient of Determination): ${report.metrics.r2.toFixed(3)} (target: ≥${this.config.targetR2}) ${report.metrics.r2 >= this.config.targetR2 ? '✓' : '✗'}`);
+    console.log(
+      `  R² (Coefficient of Determination): ${report.metrics.r2.toFixed(3)} (target: ≥${this.config.targetR2}) ${report.metrics.r2 >= this.config.targetR2 ? '✓' : '✗'}`
+    );
     console.log('');
 
     console.log('COMPENSATION DETECTION ACCURACY:');
     console.log(`  Overall Accuracy: ${report.compensationMetrics.accuracy.toFixed(1)}%`);
-    console.log(`  Sensitivity (True Positive Rate): ${(report.compensationMetrics.sensitivity * 100).toFixed(1)}% (target: ≥${this.config.targetSensitivity * 100}%) ${report.compensationMetrics.sensitivity >= this.config.targetSensitivity ? '✓' : '✗'}`);
-    console.log(`  Specificity (True Negative Rate): ${(report.compensationMetrics.specificity * 100).toFixed(1)}% (target: ≥${this.config.targetSpecificity * 100}%) ${report.compensationMetrics.specificity >= this.config.targetSpecificity ? '✓' : '✗'}`);
-    console.log(`  Precision: ${(report.compensationMetrics.precision! * 100).toFixed(1)}%`);
+    console.log(
+      `  Sensitivity (True Positive Rate): ${(report.compensationMetrics.sensitivity * 100).toFixed(1)}% (target: ≥${this.config.targetSensitivity * 100}%) ${report.compensationMetrics.sensitivity >= this.config.targetSensitivity ? '✓' : '✗'}`
+    );
+    console.log(
+      `  Specificity (True Negative Rate): ${(report.compensationMetrics.specificity * 100).toFixed(1)}% (target: ≥${this.config.targetSpecificity * 100}%) ${report.compensationMetrics.specificity >= this.config.targetSpecificity ? '✓' : '✗'}`
+    );
+    console.log(
+      `  Precision: ${(report.compensationMetrics.precision! * 100).toFixed(1)}%`
+    );
     console.log(`  F1 Score: ${report.compensationMetrics.f1Score!.toFixed(3)}`);
     console.log('');
 

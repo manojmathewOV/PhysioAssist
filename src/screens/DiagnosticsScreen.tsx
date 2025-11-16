@@ -121,9 +121,7 @@ const DiagnosticsScreen: React.FC = () => {
       name: 'Authentication',
       status: user.isAuthenticated ? 'success' : 'warning',
       message: user.isAuthenticated ? 'User authenticated' : 'Not authenticated',
-      details: user.currentUser
-        ? `User: ${user.currentUser.email}`
-        : 'No user session',
+      details: user.currentUser ? `User: ${user.currentUser.email}` : 'No user session',
     });
 
     // 6. Check Onboarding Status
@@ -255,20 +253,16 @@ const DiagnosticsScreen: React.FC = () => {
       },
     };
 
-    Alert.alert(
-      'Diagnostics Report',
-      JSON.stringify(report, null, 2),
-      [
-        { text: 'OK' },
-        {
-          text: 'Copy',
-          onPress: () => {
-            // In a real app, use Clipboard.setString()
-            console.log('Diagnostics report:', report);
-          },
+    Alert.alert('Diagnostics Report', JSON.stringify(report, null, 2), [
+      { text: 'OK' },
+      {
+        text: 'Copy',
+        onPress: () => {
+          // In a real app, use Clipboard.setString()
+          console.log('Diagnostics report:', report);
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
@@ -297,9 +291,7 @@ const DiagnosticsScreen: React.FC = () => {
                 <Text style={styles.checkMessage}>{check.message}</Text>
               </View>
             </View>
-            {check.details && (
-              <Text style={styles.checkDetails}>{check.details}</Text>
-            )}
+            {check.details && <Text style={styles.checkDetails}>{check.details}</Text>}
           </View>
         ))}
       </ScrollView>

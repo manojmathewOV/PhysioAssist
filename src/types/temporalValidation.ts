@@ -214,24 +214,27 @@ export const DEFAULT_TEMPORAL_CONFIG: TemporalValidationConfig = {
 /**
  * Movement trajectory patterns for different ROM tests
  */
-export const EXPECTED_TRAJECTORIES: Record<string, 'increasing' | 'decreasing' | 'static' | 'oscillating'> = {
+export const EXPECTED_TRAJECTORIES: Record<
+  string,
+  'increasing' | 'decreasing' | 'static' | 'oscillating'
+> = {
   // Increasing ROM (0° → max)
-  'shoulder_flexion_active': 'increasing',
-  'shoulder_abduction_active': 'increasing',
-  'elbow_flexion_active': 'increasing',
-  'knee_flexion_active': 'increasing',
+  shoulder_flexion_active: 'increasing',
+  shoulder_abduction_active: 'increasing',
+  elbow_flexion_active: 'increasing',
+  knee_flexion_active: 'increasing',
 
   // Decreasing ROM (max → 0°)
-  'shoulder_flexion_return': 'decreasing',
-  'shoulder_abduction_return': 'decreasing',
-  'elbow_extension': 'decreasing',
-  'knee_extension': 'decreasing',
+  shoulder_flexion_return: 'decreasing',
+  shoulder_abduction_return: 'decreasing',
+  elbow_extension: 'decreasing',
+  knee_extension: 'decreasing',
 
   // Static poses (isometric)
-  'shoulder_flexion_hold': 'static',
-  'plank_hold': 'static',
+  shoulder_flexion_hold: 'static',
+  plank_hold: 'static',
 
   // Oscillating (repetitions)
-  'shoulder_flexion_reps': 'oscillating',
-  'elbow_flexion_reps': 'oscillating',
+  shoulder_flexion_reps: 'oscillating',
+  elbow_flexion_reps: 'oscillating',
 };
