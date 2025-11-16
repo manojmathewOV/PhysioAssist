@@ -16,11 +16,10 @@
  */
 
 import { ProcessedPoseData } from '../../types/pose';
-import { AnatomicalReferenceFrame, AnatomicalPlane } from '../../types/biomechanics';
+import { AnatomicalReferenceFrame, CompensationPattern } from '../../types/biomechanics';
 import {
   ClinicalJointMeasurement,
   ClinicalThresholds,
-  CompensationPattern,
   MeasurementQuality,
   DEFAULT_CLINICAL_THRESHOLDS,
   DEFAULT_COMPENSATION_CONFIG,
@@ -30,7 +29,7 @@ import { GoniometerServiceV2 } from '../goniometerService.v2';
 import { AnatomicalReferenceService } from './AnatomicalReferenceService';
 import { CompensationDetectionService } from './CompensationDetectionService';
 import { Vector3D } from '../../types/common';
-import { angleBetweenVectors, projectVectorOntoPlane, crossProduct, dotProduct } from '../../utils/vectorMath';
+import { angleBetweenVectors, projectVectorOntoPlane } from '../../utils/vectorMath';
 
 /**
  * Clinical-grade joint measurement service
@@ -54,14 +53,14 @@ export class ClinicalMeasurementService {
   ) {
     this.goniometer = new GoniometerServiceV2();
     this.anatomicalService = new AnatomicalReferenceService();
-    this.compensationDetector = new CompensationDetectionService();
-    this.clinicalThresholds = {
-      ...DEFAULT_CLINICAL_THRESHOLDS,
-      ...thresholds,
-    };
     this.compensationConfig = {
       ...DEFAULT_COMPENSATION_CONFIG,
       ...compensationConfig,
+    };
+    this.compensationDetector = new CompensationDetectionService(this.compensationConfig);
+    this.clinicalThresholds = {
+      ...DEFAULT_CLINICAL_THRESHOLDS,
+      ...thresholds,
     };
   }
 
@@ -105,7 +104,9 @@ export class ClinicalMeasurementService {
 
     // 2. Get cached frames (from Gate 9B.5)
     if (!poseData.cachedAnatomicalFrames) {
-      throw new Error('cachedAnatomicalFrames not available. Ensure Gate 9B.5 frame caching is active.');
+      throw new Error(
+        'cachedAnatomicalFrames not available. Ensure Gate 9B.5 frame caching is active.'
+      );
     }
 
     const { global, thorax } = poseData.cachedAnatomicalFrames;
@@ -131,7 +132,10 @@ export class ClinicalMeasurementService {
     const flexionAngle = 180 - angleFromUp;
 
     // 6. Measure secondary joints (elbow should be extended)
-    const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
+    const elbowMeasurement = this.goniometer.calculateJointAngle(
+      poseData,
+      `${side}_elbow`
+    );
     const elbowExtended = elbowMeasurement.angle >= 175; // Should be ~180° (fully extended)
     const elbowDeviation = 180 - elbowMeasurement.angle;
 
@@ -245,7 +249,10 @@ export class ClinicalMeasurementService {
     const scapularPlane = this.anatomicalService.calculateScapularPlane(thorax, 35);
 
     // 4. Total abduction: Humerus angle from vertical in scapular plane
-    const humerusProjected = projectVectorOntoPlane(humerusFrame.yAxis, scapularPlane.normal);
+    const humerusProjected = projectVectorOntoPlane(
+      humerusFrame.yAxis,
+      scapularPlane.normal
+    );
     const angleFromVertical = angleBetweenVectors(humerusProjected, thorax.yAxis);
 
     // Clinical abduction angle conversion
@@ -286,7 +293,10 @@ export class ClinicalMeasurementService {
     }
 
     // 10. Detect other compensations
-    const otherCompensations = this.detectCompensations(poseData, `${side}_shoulder_abduction`);
+    const otherCompensations = this.detectCompensations(
+      poseData,
+      `${side}_shoulder_abduction`
+    );
     compensations.push(...otherCompensations);
 
     // 11. Compare to clinical target
@@ -361,9 +371,13 @@ export class ClinicalMeasurementService {
     targetElbowAngle: number = 90
   ): ClinicalJointMeasurement {
     // 1. Measure elbow angle first (GATING CONDITION)
-    const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
+    const elbowMeasurement = this.goniometer.calculateJointAngle(
+      poseData,
+      `${side}_elbow`
+    );
     const elbowDeviation = Math.abs(elbowMeasurement.angle - targetElbowAngle);
-    const elbowTolerance = this.clinicalThresholds.shoulder.externalRotation.elbowAngleTolerance;
+    const elbowTolerance =
+      this.clinicalThresholds.shoulder.externalRotation.elbowAngleTolerance;
     const elbowInTolerance = elbowDeviation <= elbowTolerance;
 
     if (!elbowInTolerance) {
@@ -377,7 +391,7 @@ export class ClinicalMeasurementService {
       throw new Error('cachedAnatomicalFrames not available.');
     }
 
-    const { global, thorax } = poseData.cachedAnatomicalFrames;
+    const { global } = poseData.cachedAnatomicalFrames;
     const forearmFrame = poseData.cachedAnatomicalFrames[`${side}_forearm`];
 
     if (!forearmFrame) {
@@ -447,7 +461,10 @@ export class ClinicalMeasurementService {
     }
 
     // Detect trunk compensations
-    const trunkCompensations = this.detectCompensations(poseData, `${side}_shoulder_rotation`);
+    const trunkCompensations = this.detectCompensations(
+      poseData,
+      `${side}_shoulder_rotation`
+    );
     compensations.push(...trunkCompensations);
 
     // 9. Clinical target
@@ -505,7 +522,10 @@ export class ClinicalMeasurementService {
     side: 'left' | 'right'
   ): ClinicalJointMeasurement {
     // Use refactored goniometer (already plane-projected)
-    const elbowMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_elbow`);
+    const elbowMeasurement = this.goniometer.calculateJointAngle(
+      poseData,
+      `${side}_elbow`
+    );
 
     // Convert geometric angle to clinical flexion angle
     // Geometric: 180° = straight, 30° = bent
@@ -513,7 +533,10 @@ export class ClinicalMeasurementService {
     const flexionAngle = 180 - elbowMeasurement.angle;
 
     // Check shoulder stabilization
-    const shoulderMeasurement = this.goniometer.calculateJointAngle(poseData, `${side}_shoulder`);
+    const shoulderMeasurement = this.goniometer.calculateJointAngle(
+      poseData,
+      `${side}_shoulder`
+    );
 
     if (!poseData.cachedAnatomicalFrames) {
       throw new Error('cachedAnatomicalFrames not available.');
@@ -675,7 +698,9 @@ export class ClinicalMeasurementService {
       .filter((v) => v > 0);
 
     const landmarkVisibility =
-      visibilities.length > 0 ? visibilities.reduce((sum, v) => sum + v, 0) / visibilities.length : 0;
+      visibilities.length > 0
+        ? visibilities.reduce((sum, v) => sum + v, 0) / visibilities.length
+        : 0;
 
     // Factor 2: Frame stability (check if cached frames have high confidence)
     const frameConfidences = [
@@ -710,10 +735,14 @@ export class ClinicalMeasurementService {
     // Generate recommendations
     const recommendations: string[] = [];
     if (landmarkVisibility < 0.7) {
-      recommendations.push('Improve lighting or camera position to increase landmark visibility.');
+      recommendations.push(
+        'Improve lighting or camera position to increase landmark visibility.'
+      );
     }
     if (frameStability < 0.7) {
-      recommendations.push('Reduce camera shake or body movement for more stable measurements.');
+      recommendations.push(
+        'Reduce camera shake or body movement for more stable measurements.'
+      );
     }
     if (!poseData.viewOrientation) {
       recommendations.push(
@@ -772,8 +801,11 @@ export class ClinicalMeasurementService {
     return allCompensations
       .filter((comp) => {
         // Convert snake_case to camelCase for config lookup
-        const configKey = comp.type.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-        const config = this.compensationConfig[configKey as keyof typeof this.compensationConfig];
+        const configKey = comp.type.replace(/_([a-z])/g, (_, letter) =>
+          letter.toUpperCase()
+        );
+        const config =
+          this.compensationConfig[configKey as keyof typeof this.compensationConfig];
         if (!config) return true; // Keep if no config defined
 
         // Check if magnitude exceeds the threshold
@@ -781,11 +813,14 @@ export class ClinicalMeasurementService {
       })
       .map((comp) => {
         // Recalculate severity based on ClinicalMeasurementService's severityThresholds
-        const configKey = comp.type.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-        const config = this.compensationConfig[configKey as keyof typeof this.compensationConfig];
+        const configKey = comp.type.replace(/_([a-z])/g, (_, letter) =>
+          letter.toUpperCase()
+        );
+        const config =
+          this.compensationConfig[configKey as keyof typeof this.compensationConfig];
 
         if (config && config.severityThresholds) {
-          const { minimal, mild, moderate, severe } = config.severityThresholds;
+          const { mild, moderate, severe } = config.severityThresholds;
           let newSeverity: 'minimal' | 'mild' | 'moderate' | 'severe';
 
           if (comp.magnitude < mild) {
@@ -822,7 +857,7 @@ export class ClinicalMeasurementService {
    */
   private calculateScapularUpwardRotation(
     poseData: ProcessedPoseData,
-    thoraxFrame: AnatomicalReferenceFrame
+    _thoraxFrame: AnatomicalReferenceFrame
   ): number {
     const leftShoulder = poseData.landmarks.find((lm) => lm.name === 'left_shoulder');
     const rightShoulder = poseData.landmarks.find((lm) => lm.name === 'right_shoulder');
@@ -841,7 +876,10 @@ export class ClinicalMeasurementService {
     // For frontal view, project onto XY plane (image plane, normal = Z-axis)
     // This preserves the visible left-right and up-down components
     const frontalPlaneNormal: Vector3D = { x: 0, y: 0, z: 1 };
-    const shoulderLineProjected = projectVectorOntoPlane(shoulderLine, frontalPlaneNormal);
+    const shoulderLineProjected = projectVectorOntoPlane(
+      shoulderLine,
+      frontalPlaneNormal
+    );
 
     // Horizontal reference (left-right direction in image)
     const horizontal: Vector3D = { x: 1, y: 0, z: 0 };

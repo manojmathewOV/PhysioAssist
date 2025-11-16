@@ -24,6 +24,10 @@ import { CompensationPattern, AnatomicalReferenceFrame } from '../../types/biome
 import { Vector3D } from '../../types/common';
 import { angleBetweenVectors, projectVectorOntoPlane } from '../../utils/vectorMath';
 import { PoseSchemaRegistry } from '../pose/PoseSchemaRegistry';
+import {
+  CompensationDetectionConfig,
+  DEFAULT_COMPENSATION_CONFIG,
+} from '../../types/clinicalMeasurement';
 
 /**
  * Compensation Detection Service
@@ -42,9 +46,14 @@ import { PoseSchemaRegistry } from '../pose/PoseSchemaRegistry';
  */
 export class CompensationDetectionService {
   private schemaRegistry: PoseSchemaRegistry;
+  private config: CompensationDetectionConfig;
 
-  constructor() {
+  constructor(config?: Partial<CompensationDetectionConfig>) {
     this.schemaRegistry = PoseSchemaRegistry.getInstance();
+    this.config = {
+      ...DEFAULT_COMPENSATION_CONFIG,
+      ...config,
+    };
   }
 
   /**
@@ -202,7 +211,7 @@ export class CompensationDetectionService {
     }
 
     // Grade severity
-    const severity = this.gradeSeverity(deviation, 'degrees');
+    const severity = this.gradeSeverity(deviation, 'degrees', 'trunkLean');
 
     // Only report mild or worse
     if (severity === 'minimal') {
@@ -292,7 +301,7 @@ export class CompensationDetectionService {
     );
 
     // Grade severity
-    const severity = this.gradeSeverity(rotationDeviation, 'degrees');
+    const severity = this.gradeSeverity(rotationDeviation, 'degrees', 'trunkRotation');
 
     // Only report mild or worse
     if (severity === 'minimal') {
@@ -671,7 +680,7 @@ export class CompensationDetectionService {
     }
 
     // Grade severity
-    const severity = this.gradeSeverity(leanAngle, 'degrees');
+    const severity = this.gradeSeverity(leanAngle, 'degrees', 'contralateralLean');
 
     if (severity === 'minimal') {
       return null;
@@ -695,7 +704,8 @@ export class CompensationDetectionService {
   /**
    * Grade compensation severity based on magnitude
    *
-   * Clinical thresholds:
+   * Uses configurable thresholds from DEFAULT_COMPENSATION_CONFIG or custom config.
+   * Default thresholds:
    * - minimal: <5° or <1cm (normal variation)
    * - mild: 5-10° or 1-2cm (noteworthy)
    * - moderate: 10-20° or 2-5cm (clinically significant)
@@ -703,20 +713,56 @@ export class CompensationDetectionService {
    *
    * @param magnitude Compensation magnitude
    * @param unit 'degrees' or 'cm'
+   * @param compensationType Type of compensation (for specialized thresholds)
    * @returns Severity grade
    */
   private gradeSeverity(
     magnitude: number,
-    unit: 'degrees' | 'cm'
+    unit: 'degrees' | 'cm',
+    compensationType:
+      | 'trunkLean'
+      | 'trunkRotation'
+      | 'shoulderHiking'
+      | 'elbowFlexion'
+      | 'hipHike'
+      | 'contralateralLean' = 'trunkLean'
   ): 'minimal' | 'mild' | 'moderate' | 'severe' {
-    const thresholds =
-      unit === 'degrees'
-        ? { mild: 5, moderate: 10, severe: 20 }
-        : { mild: 1, moderate: 2, severe: 5 };
+    // Get thresholds from config based on compensation type and unit
+    let thresholds;
 
-    if (magnitude < thresholds.mild) return 'minimal';
-    if (magnitude < thresholds.moderate) return 'mild';
-    if (magnitude < thresholds.severe) return 'moderate';
+    if (unit === 'degrees') {
+      // Use configured thresholds for degree-based compensations
+      if (compensationType === 'trunkLean' && this.config.trunkLean) {
+        thresholds = this.config.trunkLean.severityThresholds;
+      } else if (compensationType === 'trunkRotation' && this.config.trunkRotation) {
+        thresholds = this.config.trunkRotation.severityThresholds;
+      } else {
+        // Default degree thresholds
+        thresholds = {
+          minimal: 5,
+          mild: 10,
+          moderate: 20,
+          severe: 30,
+        };
+      }
+    } else {
+      // For cm measurements (shoulder hiking, etc.)
+      if (compensationType === 'shoulderHiking' && this.config.shoulderHiking) {
+        thresholds = this.config.shoulderHiking.severityThresholds;
+      } else {
+        // Default cm thresholds
+        thresholds = {
+          minimal: 1,
+          mild: 2,
+          moderate: 5,
+          severe: 10,
+        };
+      }
+    }
+
+    if (magnitude < thresholds.minimal) return 'minimal';
+    if (magnitude < thresholds.mild) return 'mild';
+    if (magnitude < thresholds.moderate) return 'moderate';
     return 'severe';
   }
 
