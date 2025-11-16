@@ -1,11 +1,19 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { useDispatch } from 'react-redux';
+import OnboardingFlow from '@components/common/OnboardingFlow';
+import { completeOnboarding } from '@store/slices/userSlice';
 
 const OnboardingScreen: React.FC = () => {
+  const dispatch = useDispatch();
+
+  const handleComplete = () => {
+    dispatch(completeOnboarding());
+  };
+
   return (
     <View style={styles.container} testID="onboarding-screen">
-      <Text style={styles.title}>Welcome to PhysioAssist</Text>
-      <Text>Onboarding content</Text>
+      <OnboardingFlow visible={true} onComplete={handleComplete} />
     </View>
   );
 };
@@ -13,13 +21,6 @@ const OnboardingScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
   },
 });
 

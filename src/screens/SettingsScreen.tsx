@@ -21,6 +21,10 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.settingLabel}>Voice Instructions</Text>
           <Switch
             testID="voice-instructions-toggle"
+            accessible={true}
+            accessibilityLabel="Voice instructions"
+            accessibilityHint="Enable or disable voice instructions during exercises"
+            accessibilityRole="switch"
             value={settings.voiceInstructionsEnabled}
             onValueChange={(value) =>
               handleToggleSetting('voiceInstructionsEnabled', value)
@@ -32,6 +36,10 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.settingLabel}>Sound Effects</Text>
           <Switch
             testID="sound-effects-toggle"
+            accessible={true}
+            accessibilityLabel="Sound effects"
+            accessibilityHint="Enable or disable sound effects for exercise feedback"
+            accessibilityRole="switch"
             value={settings.soundEffectsEnabled}
             onValueChange={(value) => handleToggleSetting('soundEffectsEnabled', value)}
           />
@@ -45,6 +53,10 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.settingLabel}>Show Joint Angles</Text>
           <Switch
             testID="show-angles-toggle"
+            accessible={true}
+            accessibilityLabel="Show joint angles"
+            accessibilityHint="Display real-time joint angle measurements during exercises"
+            accessibilityRole="switch"
             value={settings.showJointAngles}
             onValueChange={(value) => handleToggleSetting('showJointAngles', value)}
           />
@@ -54,6 +66,10 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.settingLabel}>Show Pose Overlay</Text>
           <Switch
             testID="show-overlay-toggle"
+            accessible={true}
+            accessibilityLabel="Show pose overlay"
+            accessibilityHint="Display visual skeleton overlay on camera feed"
+            accessibilityRole="switch"
             value={settings.showPoseOverlay}
             onValueChange={(value) => handleToggleSetting('showPoseOverlay', value)}
           />
@@ -67,6 +83,10 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.settingLabel}>High Performance Mode</Text>
           <Switch
             testID="high-performance-toggle"
+            accessible={true}
+            accessibilityLabel="High performance mode"
+            accessibilityHint="Process every frame for maximum accuracy, uses more battery"
+            accessibilityRole="switch"
             value={settings.highPerformanceMode}
             onValueChange={(value) => handleToggleSetting('highPerformanceMode', value)}
           />
@@ -80,6 +100,10 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.settingLabel}>Reduced Motion</Text>
           <Switch
             testID="reduced-motion-toggle"
+            accessible={true}
+            accessibilityLabel="Reduced motion"
+            accessibilityHint="Minimize animations and transitions for better accessibility"
+            accessibilityRole="switch"
             value={settings.reducedMotion}
             onValueChange={(value) => handleToggleSetting('reducedMotion', value)}
           />
@@ -89,6 +113,10 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.settingLabel}>High Contrast</Text>
           <Switch
             testID="high-contrast-toggle"
+            accessible={true}
+            accessibilityLabel="High contrast"
+            accessibilityHint="Increase contrast for better visibility"
+            accessibilityRole="switch"
             value={settings.highContrast}
             onValueChange={(value) => handleToggleSetting('highContrast', value)}
           />
