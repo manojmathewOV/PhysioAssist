@@ -480,7 +480,7 @@ export class MultiFrameSequenceGenerator {
         const genOptions: {
           side: 'left' | 'right';
           trunkLean?: number;
-          viewOrientation?: 'frontal' | 'sagittal' | 'posterior';
+          viewOrientation?: 'frontal' | 'sagittal';
         } = { side };
         if (compensationType === 'trunk_lean') {
           genOptions.trunkLean = compensationMagnitude;
