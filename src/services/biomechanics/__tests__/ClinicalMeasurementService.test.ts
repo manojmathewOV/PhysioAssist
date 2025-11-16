@@ -210,8 +210,8 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       xAxis: { x: 0.707, y: -0.707, z: 0 },
       yAxis: isAbduction
         ? {
-            x: -Math.sin(primaryAngleRad), // Negative for left side abduction
-            y: -Math.cos(primaryAngleRad), // Upward rotation
+            x: -Math.sin(primaryAngleRad), // Negative for left side abduction (lateral movement)
+            y: Math.cos(primaryAngleRad), // Same vertical component as flexion
             z: 0,
           }
         : {

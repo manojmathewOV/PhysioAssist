@@ -426,11 +426,11 @@ export class ClinicalMeasurementService {
 
     const signedRotation = isExternalRotation ? rotationAngle : -rotationAngle;
 
-    // Define rotation plane for reference (perpendicular to humerus, contains vertical and anterior-posterior)
+    // Define transverse plane for reference (perpendicular to humerus, contains vertical and anterior-posterior)
     const rotationPlane = {
-      name: 'rotation' as const,
+      name: 'transverse' as const,
       normal: { x: 1, y: 0, z: 0 }, // Normal to YZ plane (lateral direction)
-      confidence: forearmFrame.confidence,
+      point: forearmFrame.origin, // Plane passes through elbow joint center
     };
 
     // 7. Secondary joints (elbow gating)
