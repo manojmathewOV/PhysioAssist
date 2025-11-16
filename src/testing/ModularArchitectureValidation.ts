@@ -10,8 +10,14 @@
  * Run this to ensure everything works after refactoring.
  */
 
-import { MovementRegistry, MOVEMENT_REGISTRY, JOINT_METADATA, AVAILABLE_JOINTS, JointType, MovementType } from '../config/movements.config';
-import { demoManager, DemoManager } from '../services/DemoManager';
+import {
+  MovementRegistry,
+  MOVEMENT_REGISTRY,
+  JOINT_METADATA,
+  AVAILABLE_JOINTS,
+  JointType,
+} from '../config/movements.config';
+import { demoManager } from '../services/DemoManager';
 import { ProtocolManager, PROTOCOL_REGISTRY } from '../config/protocols.config';
 
 interface ValidationResult {
@@ -28,7 +34,12 @@ export class ModularArchitectureValidator {
   /**
    * Run all validation tests
    */
-  async runAll(): Promise<{ passed: number; failed: number; warnings: number; results: ValidationResult[] }> {
+  async runAll(): Promise<{
+    passed: number;
+    failed: number;
+    warnings: number;
+    results: ValidationResult[];
+  }> {
     console.log('🔍 Starting Modular Architecture Validation...\n');
 
     this.validateMovementRegistry();
@@ -37,9 +48,9 @@ export class ModularArchitectureValidator {
     this.validateProtocolManager();
     this.validateIntegration();
 
-    const passed = this.results.filter(r => r.status === 'PASS').length;
-    const failed = this.results.filter(r => r.status === 'FAIL').length;
-    const warnings = this.results.filter(r => r.status === 'WARN').length;
+    const passed = this.results.filter((r) => r.status === 'PASS').length;
+    const failed = this.results.filter((r) => r.status === 'FAIL').length;
+    const warnings = this.results.filter((r) => r.status === 'WARN').length;
 
     console.log('\n' + '='.repeat(80));
     console.log('📊 VALIDATION SUMMARY');
@@ -70,100 +81,198 @@ export class ModularArchitectureValidator {
     // Test 1: Registry exists and has movements
     try {
       if (MOVEMENT_REGISTRY.length > 0) {
-        this.addResult('Movement Registry', 'Registry populated', 'PASS', `Found ${MOVEMENT_REGISTRY.length} movements`);
+        this.addResult(
+          'Movement Registry',
+          'Registry populated',
+          'PASS',
+          `Found ${MOVEMENT_REGISTRY.length} movements`
+        );
       } else {
-        this.addResult('Movement Registry', 'Registry populated', 'FAIL', 'No movements found');
+        this.addResult(
+          'Movement Registry',
+          'Registry populated',
+          'FAIL',
+          'No movements found'
+        );
       }
     } catch (e) {
-      this.addResult('Movement Registry', 'Registry populated', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Movement Registry',
+        'Registry populated',
+        'FAIL',
+        `Error: ${e instanceof Error ? (e instanceof Error ? e.message : String(e)) : String(e)}`
+      );
     }
 
     // Test 2: All movements have required fields
     let invalidCount = 0;
-    MOVEMENT_REGISTRY.forEach(movement => {
+    MOVEMENT_REGISTRY.forEach((movement) => {
       const validation = MovementRegistry.validate(movement.id);
       if (!validation.valid) {
         invalidCount++;
-        this.addResult('Movement Registry', `Validate ${movement.id}`, 'FAIL', validation.errors.join(', '));
+        this.addResult(
+          'Movement Registry',
+          `Validate ${movement.id}`,
+          'FAIL',
+          validation.errors.join(', ')
+        );
       }
     });
 
     if (invalidCount === 0) {
-      this.addResult('Movement Registry', 'Movement validation', 'PASS', 'All movements valid');
+      this.addResult(
+        'Movement Registry',
+        'Movement validation',
+        'PASS',
+        'All movements valid'
+      );
     }
 
     // Test 3: Movement counts by joint
     const jointCounts: Record<string, number> = {};
-    MOVEMENT_REGISTRY.forEach(m => {
+    MOVEMENT_REGISTRY.forEach((m) => {
       jointCounts[m.joint] = (jointCounts[m.joint] || 0) + 1;
     });
 
-    this.addResult('Movement Registry', 'Joint distribution', 'PASS', JSON.stringify(jointCounts));
+    this.addResult(
+      'Movement Registry',
+      'Joint distribution',
+      'PASS',
+      JSON.stringify(jointCounts)
+    );
 
     // Test 4: Dual-mode display names
     let missingModeNames = 0;
-    MOVEMENT_REGISTRY.forEach(m => {
+    MOVEMENT_REGISTRY.forEach((m) => {
       if (!m.displayName.simple || !m.displayName.advanced) {
         missingModeNames++;
       }
     });
 
     if (missingModeNames === 0) {
-      this.addResult('Movement Registry', 'Dual-mode names', 'PASS', 'All movements have simple & advanced names');
+      this.addResult(
+        'Movement Registry',
+        'Dual-mode names',
+        'PASS',
+        'All movements have simple & advanced names'
+      );
     } else {
-      this.addResult('Movement Registry', 'Dual-mode names', 'FAIL', `${missingModeNames} movements missing mode names`);
+      this.addResult(
+        'Movement Registry',
+        'Dual-mode names',
+        'FAIL',
+        `${missingModeNames} movements missing mode names`
+      );
     }
 
     // Test 5: Demo availability
     let noDemoCount = 0;
-    MOVEMENT_REGISTRY.forEach(m => {
+    MOVEMENT_REGISTRY.forEach((m) => {
       if (!m.demos.svg && !m.demos.video && !m.demos['3d']) {
         noDemoCount++;
       }
     });
 
     if (noDemoCount === 0) {
-      this.addResult('Movement Registry', 'Demo availability', 'PASS', 'All movements have at least one demo format');
+      this.addResult(
+        'Movement Registry',
+        'Demo availability',
+        'PASS',
+        'All movements have at least one demo format'
+      );
     } else {
-      this.addResult('Movement Registry', 'Demo availability', 'WARN', `${noDemoCount} movements have no demo`);
+      this.addResult(
+        'Movement Registry',
+        'Demo availability',
+        'WARN',
+        `${noDemoCount} movements have no demo`
+      );
     }
 
     // Test 6: MovementRegistry helper methods
     try {
       const shoulderMovements = MovementRegistry.getMovementsByJoint('shoulder');
       if (shoulderMovements.length === 4) {
-        this.addResult('Movement Registry', 'getMovementsByJoint()', 'PASS', 'Found 4 shoulder movements');
+        this.addResult(
+          'Movement Registry',
+          'getMovementsByJoint()',
+          'PASS',
+          'Found 4 shoulder movements'
+        );
       } else {
-        this.addResult('Movement Registry', 'getMovementsByJoint()', 'FAIL', `Expected 4, got ${shoulderMovements.length}`);
+        this.addResult(
+          'Movement Registry',
+          'getMovementsByJoint()',
+          'FAIL',
+          `Expected 4, got ${shoulderMovements.length}`
+        );
       }
     } catch (e) {
-      this.addResult('Movement Registry', 'getMovementsByJoint()', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Movement Registry',
+        'getMovementsByJoint()',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 7: Display name retrieval
     try {
       const simpleName = MovementRegistry.getDisplayName('shoulder_flexion', 'simple');
-      const advancedName = MovementRegistry.getDisplayName('shoulder_flexion', 'advanced');
+      const advancedName = MovementRegistry.getDisplayName(
+        'shoulder_flexion',
+        'advanced'
+      );
 
       if (simpleName === 'Lift Forward' && advancedName === 'Forward Flexion') {
-        this.addResult('Movement Registry', 'getDisplayName()', 'PASS', 'Correct names for both modes');
+        this.addResult(
+          'Movement Registry',
+          'getDisplayName()',
+          'PASS',
+          'Correct names for both modes'
+        );
       } else {
-        this.addResult('Movement Registry', 'getDisplayName()', 'FAIL', `Got: ${simpleName} / ${advancedName}`);
+        this.addResult(
+          'Movement Registry',
+          'getDisplayName()',
+          'FAIL',
+          `Got: ${simpleName} / ${advancedName}`
+        );
       }
     } catch (e) {
-      this.addResult('Movement Registry', 'getDisplayName()', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Movement Registry',
+        'getDisplayName()',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 8: Total assessments calculation
     try {
       const total = MovementRegistry.getTotalAssessments();
       if (total >= 20) {
-        this.addResult('Movement Registry', 'getTotalAssessments()', 'PASS', `${total} unique assessments`);
+        this.addResult(
+          'Movement Registry',
+          'getTotalAssessments()',
+          'PASS',
+          `${total} unique assessments`
+        );
       } else {
-        this.addResult('Movement Registry', 'getTotalAssessments()', 'WARN', `Only ${total} assessments (expected 20+)`);
+        this.addResult(
+          'Movement Registry',
+          'getTotalAssessments()',
+          'WARN',
+          `Only ${total} assessments (expected 20+)`
+        );
       }
     } catch (e) {
-      this.addResult('Movement Registry', 'getTotalAssessments()', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Movement Registry',
+        'getTotalAssessments()',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
   }
 
@@ -177,32 +286,64 @@ export class ModularArchitectureValidator {
     try {
       const jointCount = Object.keys(JOINT_METADATA).length;
       if (jointCount >= 4) {
-        this.addResult('Joint Metadata', 'JOINT_METADATA defined', 'PASS', `${jointCount} joints defined`);
+        this.addResult(
+          'Joint Metadata',
+          'JOINT_METADATA defined',
+          'PASS',
+          `${jointCount} joints defined`
+        );
       } else {
-        this.addResult('Joint Metadata', 'JOINT_METADATA defined', 'FAIL', `Only ${jointCount} joints`);
+        this.addResult(
+          'Joint Metadata',
+          'JOINT_METADATA defined',
+          'FAIL',
+          `Only ${jointCount} joints`
+        );
       }
     } catch (e) {
-      this.addResult('Joint Metadata', 'JOINT_METADATA defined', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Joint Metadata',
+        'JOINT_METADATA defined',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 2: AVAILABLE_JOINTS matches joints with movements
     try {
-      const jointsWithMovements = [...new Set(MOVEMENT_REGISTRY.map(m => m.joint))];
-      const availableMatch = AVAILABLE_JOINTS.every(j => jointsWithMovements.includes(j));
+      const jointsWithMovements = [...new Set(MOVEMENT_REGISTRY.map((m) => m.joint))];
+      const availableMatch = AVAILABLE_JOINTS.every((j) =>
+        jointsWithMovements.includes(j)
+      );
 
       if (availableMatch && AVAILABLE_JOINTS.length === jointsWithMovements.length) {
-        this.addResult('Joint Metadata', 'AVAILABLE_JOINTS accuracy', 'PASS', `${AVAILABLE_JOINTS.length} joints have movements`);
+        this.addResult(
+          'Joint Metadata',
+          'AVAILABLE_JOINTS accuracy',
+          'PASS',
+          `${AVAILABLE_JOINTS.length} joints have movements`
+        );
       } else {
-        this.addResult('Joint Metadata', 'AVAILABLE_JOINTS accuracy', 'WARN', 'Mismatch between AVAILABLE_JOINTS and actual movements');
+        this.addResult(
+          'Joint Metadata',
+          'AVAILABLE_JOINTS accuracy',
+          'WARN',
+          'Mismatch between AVAILABLE_JOINTS and actual movements'
+        );
       }
     } catch (e) {
-      this.addResult('Joint Metadata', 'AVAILABLE_JOINTS accuracy', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Joint Metadata',
+        'AVAILABLE_JOINTS accuracy',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 3: All joints have required fields
     try {
       let missingFields = 0;
-      AVAILABLE_JOINTS.forEach(joint => {
+      AVAILABLE_JOINTS.forEach((joint) => {
         const meta = JOINT_METADATA[joint];
         if (!meta.displayName || !meta.description || !meta.icon) {
           missingFields++;
@@ -210,12 +351,27 @@ export class ModularArchitectureValidator {
       });
 
       if (missingFields === 0) {
-        this.addResult('Joint Metadata', 'Required fields', 'PASS', 'All joints have displayName, description, icon');
+        this.addResult(
+          'Joint Metadata',
+          'Required fields',
+          'PASS',
+          'All joints have displayName, description, icon'
+        );
       } else {
-        this.addResult('Joint Metadata', 'Required fields', 'FAIL', `${missingFields} joints missing fields`);
+        this.addResult(
+          'Joint Metadata',
+          'Required fields',
+          'FAIL',
+          `${missingFields} joints missing fields`
+        );
       }
     } catch (e) {
-      this.addResult('Joint Metadata', 'Required fields', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Joint Metadata',
+        'Required fields',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
   }
 
@@ -228,12 +384,27 @@ export class ModularArchitectureValidator {
     // Test 1: DemoManager instantiates
     try {
       if (demoManager) {
-        this.addResult('Demo Manager', 'Instantiation', 'PASS', 'DemoManager singleton created');
+        this.addResult(
+          'Demo Manager',
+          'Instantiation',
+          'PASS',
+          'DemoManager singleton created'
+        );
       } else {
-        this.addResult('Demo Manager', 'Instantiation', 'FAIL', 'DemoManager not created');
+        this.addResult(
+          'Demo Manager',
+          'Instantiation',
+          'FAIL',
+          'DemoManager not created'
+        );
       }
     } catch (e) {
-      this.addResult('Demo Manager', 'Instantiation', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Demo Manager',
+        'Instantiation',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 2: Get demo asset for SVG
@@ -244,12 +415,27 @@ export class ModularArchitectureValidator {
       });
 
       if (demo && demo.format === 'svg') {
-        this.addResult('Demo Manager', 'getDemoAsset() SVG', 'PASS', `Got SVG demo: ${demo.uri}`);
+        this.addResult(
+          'Demo Manager',
+          'getDemoAsset() SVG',
+          'PASS',
+          `Got SVG demo: ${demo.uri}`
+        );
       } else {
-        this.addResult('Demo Manager', 'getDemoAsset() SVG', 'FAIL', 'Could not get SVG demo');
+        this.addResult(
+          'Demo Manager',
+          'getDemoAsset() SVG',
+          'FAIL',
+          'Could not get SVG demo'
+        );
       }
     } catch (e) {
-      this.addResult('Demo Manager', 'getDemoAsset() SVG', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Demo Manager',
+        'getDemoAsset() SVG',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 3: Auto-detect best format
@@ -259,24 +445,49 @@ export class ModularArchitectureValidator {
       });
 
       if (demo) {
-        this.addResult('Demo Manager', 'Auto-detect format', 'PASS', `Selected: ${demo.format}`);
+        this.addResult(
+          'Demo Manager',
+          'Auto-detect format',
+          'PASS',
+          `Selected: ${demo.format}`
+        );
       } else {
         this.addResult('Demo Manager', 'Auto-detect format', 'FAIL', 'No demo returned');
       }
     } catch (e) {
-      this.addResult('Demo Manager', 'Auto-detect format', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Demo Manager',
+        'Auto-detect format',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 4: Get available formats
     try {
       const formats = demoManager.getAvailableFormats('shoulder_flexion');
       if (formats.length > 0) {
-        this.addResult('Demo Manager', 'getAvailableFormats()', 'PASS', `${formats.length} formats available`);
+        this.addResult(
+          'Demo Manager',
+          'getAvailableFormats()',
+          'PASS',
+          `${formats.length} formats available`
+        );
       } else {
-        this.addResult('Demo Manager', 'getAvailableFormats()', 'WARN', 'No formats found');
+        this.addResult(
+          'Demo Manager',
+          'getAvailableFormats()',
+          'WARN',
+          'No formats found'
+        );
       }
     } catch (e) {
-      this.addResult('Demo Manager', 'getAvailableFormats()', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Demo Manager',
+        'getAvailableFormats()',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 5: Preload demos
@@ -284,7 +495,12 @@ export class ModularArchitectureValidator {
       await demoManager.preloadDemos(['shoulder_flexion', 'shoulder_abduction']);
       this.addResult('Demo Manager', 'preloadDemos()', 'PASS', 'Preloaded 2 demos');
     } catch (e) {
-      this.addResult('Demo Manager', 'preloadDemos()', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Demo Manager',
+        'preloadDemos()',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 6: Cache management
@@ -292,7 +508,12 @@ export class ModularArchitectureValidator {
       const cacheSize = demoManager.getCacheSize();
       this.addResult('Demo Manager', 'Cache size', 'PASS', `${cacheSize.toFixed(2)} MB`);
     } catch (e) {
-      this.addResult('Demo Manager', 'Cache size', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Demo Manager',
+        'Cache size',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
   }
 
@@ -305,60 +526,135 @@ export class ModularArchitectureValidator {
     // Test 1: Protocol registry populated
     try {
       if (PROTOCOL_REGISTRY.length >= 6) {
-        this.addResult('Protocol Manager', 'Registry populated', 'PASS', `${PROTOCOL_REGISTRY.length} protocols defined`);
+        this.addResult(
+          'Protocol Manager',
+          'Registry populated',
+          'PASS',
+          `${PROTOCOL_REGISTRY.length} protocols defined`
+        );
       } else {
-        this.addResult('Protocol Manager', 'Registry populated', 'FAIL', `Only ${PROTOCOL_REGISTRY.length} protocols`);
+        this.addResult(
+          'Protocol Manager',
+          'Registry populated',
+          'FAIL',
+          `Only ${PROTOCOL_REGISTRY.length} protocols`
+        );
       }
     } catch (e) {
-      this.addResult('Protocol Manager', 'Registry populated', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Protocol Manager',
+        'Registry populated',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 2: Get protocol by ID
     try {
       const protocol = ProtocolManager.getProtocol('rotator_cuff_week6');
       if (protocol && protocol.name === 'Post Rotator Cuff Surgery - Week 6') {
-        this.addResult('Protocol Manager', 'getProtocol()', 'PASS', 'Found correct protocol');
+        this.addResult(
+          'Protocol Manager',
+          'getProtocol()',
+          'PASS',
+          'Found correct protocol'
+        );
       } else {
-        this.addResult('Protocol Manager', 'getProtocol()', 'FAIL', 'Protocol not found or incorrect');
+        this.addResult(
+          'Protocol Manager',
+          'getProtocol()',
+          'FAIL',
+          'Protocol not found or incorrect'
+        );
       }
     } catch (e) {
-      this.addResult('Protocol Manager', 'getProtocol()', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Protocol Manager',
+        'getProtocol()',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 3: Get protocol steps
     try {
       const steps = ProtocolManager.getProtocolSteps('rotator_cuff_week6');
       if (steps.length === 4) {
-        this.addResult('Protocol Manager', 'getProtocolSteps()', 'PASS', '4 steps in protocol');
+        this.addResult(
+          'Protocol Manager',
+          'getProtocolSteps()',
+          'PASS',
+          '4 steps in protocol'
+        );
       } else {
-        this.addResult('Protocol Manager', 'getProtocolSteps()', 'FAIL', `Expected 4 steps, got ${steps.length}`);
+        this.addResult(
+          'Protocol Manager',
+          'getProtocolSteps()',
+          'FAIL',
+          `Expected 4 steps, got ${steps.length}`
+        );
       }
     } catch (e) {
-      this.addResult('Protocol Manager', 'getProtocolSteps()', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Protocol Manager',
+        'getProtocolSteps()',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 4: Filter protocols by category
     try {
       const postSurgery = ProtocolManager.getProtocolsByCategory('post-surgery');
       if (postSurgery.length >= 3) {
-        this.addResult('Protocol Manager', 'getProtocolsByCategory()', 'PASS', `${postSurgery.length} post-surgery protocols`);
+        this.addResult(
+          'Protocol Manager',
+          'getProtocolsByCategory()',
+          'PASS',
+          `${postSurgery.length} post-surgery protocols`
+        );
       } else {
-        this.addResult('Protocol Manager', 'getProtocolsByCategory()', 'WARN', `Only ${postSurgery.length} post-surgery protocols`);
+        this.addResult(
+          'Protocol Manager',
+          'getProtocolsByCategory()',
+          'WARN',
+          `Only ${postSurgery.length} post-surgery protocols`
+        );
       }
     } catch (e) {
-      this.addResult('Protocol Manager', 'getProtocolsByCategory()', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Protocol Manager',
+        'getProtocolsByCategory()',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 5: Search protocols
     try {
       const shoulderProtocols = ProtocolManager.searchProtocols('shoulder');
       if (shoulderProtocols.length > 0) {
-        this.addResult('Protocol Manager', 'searchProtocols()', 'PASS', `Found ${shoulderProtocols.length} shoulder protocols`);
+        this.addResult(
+          'Protocol Manager',
+          'searchProtocols()',
+          'PASS',
+          `Found ${shoulderProtocols.length} shoulder protocols`
+        );
       } else {
-        this.addResult('Protocol Manager', 'searchProtocols()', 'WARN', 'No shoulder protocols found');
+        this.addResult(
+          'Protocol Manager',
+          'searchProtocols()',
+          'WARN',
+          'No shoulder protocols found'
+        );
       }
     } catch (e) {
-      this.addResult('Protocol Manager', 'searchProtocols()', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Protocol Manager',
+        'searchProtocols()',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 6: Generate protocol link
@@ -367,26 +663,46 @@ export class ModularArchitectureValidator {
       if (link.startsWith('physioassist://protocol/')) {
         this.addResult('Protocol Manager', 'generateProtocolLink()', 'PASS', link);
       } else {
-        this.addResult('Protocol Manager', 'generateProtocolLink()', 'FAIL', `Invalid link format: ${link}`);
+        this.addResult(
+          'Protocol Manager',
+          'generateProtocolLink()',
+          'FAIL',
+          `Invalid link format: ${link}`
+        );
       }
     } catch (e) {
-      this.addResult('Protocol Manager', 'generateProtocolLink()', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Protocol Manager',
+        'generateProtocolLink()',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 7: Validate all protocol steps reference valid movements
     let invalidSteps = 0;
-    PROTOCOL_REGISTRY.forEach(protocol => {
-      protocol.steps.forEach(step => {
+    PROTOCOL_REGISTRY.forEach((protocol) => {
+      protocol.steps.forEach((step) => {
         const movement = MovementRegistry.getMovement(step.movementId);
         if (!movement) {
           invalidSteps++;
-          this.addResult('Protocol Manager', `Protocol ${protocol.id}`, 'FAIL', `Invalid movement: ${step.movementId}`);
+          this.addResult(
+            'Protocol Manager',
+            `Protocol ${protocol.id}`,
+            'FAIL',
+            `Invalid movement: ${step.movementId}`
+          );
         }
       });
     });
 
     if (invalidSteps === 0) {
-      this.addResult('Protocol Manager', 'Protocol step validation', 'PASS', 'All protocol steps reference valid movements');
+      this.addResult(
+        'Protocol Manager',
+        'Protocol step validation',
+        'PASS',
+        'All protocol steps reference valid movements'
+      );
     }
   }
 
@@ -405,12 +721,27 @@ export class ModularArchitectureValidator {
       const movement = MovementRegistry.getMovement(firstStep.movementId);
 
       if (movement) {
-        this.addResult('Integration', 'Protocol → Movement Registry', 'PASS', `Protocol step resolved to movement: ${movement.displayName.simple}`);
+        this.addResult(
+          'Integration',
+          'Protocol → Movement Registry',
+          'PASS',
+          `Protocol step resolved to movement: ${movement.displayName.simple}`
+        );
       } else {
-        this.addResult('Integration', 'Protocol → Movement Registry', 'FAIL', 'Could not resolve movement from protocol step');
+        this.addResult(
+          'Integration',
+          'Protocol → Movement Registry',
+          'FAIL',
+          'Could not resolve movement from protocol step'
+        );
       }
     } catch (e) {
-      this.addResult('Integration', 'Protocol → Movement Registry', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Integration',
+        'Protocol → Movement Registry',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 2: Movement → Demo Manager integration
@@ -420,12 +751,27 @@ export class ModularArchitectureValidator {
 
       // Check if demo path from registry can be used by demo manager
       if (movement.demos.svg || movement.demos.video) {
-        this.addResult('Integration', 'Movement → Demo Manager', 'PASS', 'Movement has demo paths for manager');
+        this.addResult(
+          'Integration',
+          'Movement → Demo Manager',
+          'PASS',
+          'Movement has demo paths for manager'
+        );
       } else {
-        this.addResult('Integration', 'Movement → Demo Manager', 'WARN', 'Movement has no demos');
+        this.addResult(
+          'Integration',
+          'Movement → Demo Manager',
+          'WARN',
+          'Movement has no demos'
+        );
       }
     } catch (e) {
-      this.addResult('Integration', 'Movement → Demo Manager', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Integration',
+        'Movement → Demo Manager',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 3: Complete workflow simulation
@@ -436,9 +782,19 @@ export class ModularArchitectureValidator {
       const firstMovement = movements[0];
       const simpleName = firstMovement.displayName.simple;
 
-      this.addResult('Integration', 'Complete workflow', 'PASS', `Joint(${joint}) → ${movements.length} movements → ${simpleName}`);
+      this.addResult(
+        'Integration',
+        'Complete workflow',
+        'PASS',
+        `Joint(${joint}) → ${movements.length} movements → ${simpleName}`
+      );
     } catch (e) {
-      this.addResult('Integration', 'Complete workflow', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Integration',
+        'Complete workflow',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
 
     // Test 4: Mode switching (simple ↔ advanced)
@@ -452,19 +808,40 @@ export class ModularArchitectureValidator {
       const advancedDesc = movement.description.advanced;
 
       if (simple !== advanced && simpleDesc !== advancedDesc) {
-        this.addResult('Integration', 'Mode switching', 'PASS', `Simple: "${simple}" / Advanced: "${advanced}"`);
+        this.addResult(
+          'Integration',
+          'Mode switching',
+          'PASS',
+          `Simple: "${simple}" / Advanced: "${advanced}"`
+        );
       } else {
-        this.addResult('Integration', 'Mode switching', 'WARN', 'Simple and advanced content are the same');
+        this.addResult(
+          'Integration',
+          'Mode switching',
+          'WARN',
+          'Simple and advanced content are the same'
+        );
       }
     } catch (e) {
-      this.addResult('Integration', 'Mode switching', 'FAIL', `Error: ${e.message}`);
+      this.addResult(
+        'Integration',
+        'Mode switching',
+        'FAIL',
+        `Error: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
   }
 
   /**
    * Add a validation result
    */
-  private addResult(category: string, test: string, status: 'PASS' | 'FAIL' | 'WARN', message: string, details?: any): void {
+  private addResult(
+    category: string,
+    test: string,
+    status: 'PASS' | 'FAIL' | 'WARN',
+    message: string,
+    details?: any
+  ): void {
     const result: ValidationResult = { category, test, status, message, details };
     this.results.push(result);
 
@@ -480,14 +857,15 @@ export class ModularArchitectureValidator {
     console.log('📋 DETAILED RESULTS');
     console.log('='.repeat(80));
 
-    const categories = [...new Set(this.results.map(r => r.category))];
+    const categories = [...new Set(this.results.map((r) => r.category))];
 
-    categories.forEach(category => {
+    categories.forEach((category) => {
       console.log(`\n${category}:`);
-      const categoryResults = this.results.filter(r => r.category === category);
+      const categoryResults = this.results.filter((r) => r.category === category);
 
-      categoryResults.forEach(result => {
-        const icon = result.status === 'PASS' ? '✅' : result.status === 'FAIL' ? '❌' : '⚠️ ';
+      categoryResults.forEach((result) => {
+        const icon =
+          result.status === 'PASS' ? '✅' : result.status === 'FAIL' ? '❌' : '⚠️ ';
         console.log(`  ${icon} ${result.test}`);
         console.log(`     ${result.message}`);
         if (result.details) {
@@ -501,9 +879,9 @@ export class ModularArchitectureValidator {
    * Generate validation report as JSON
    */
   generateReport(): any {
-    const passed = this.results.filter(r => r.status === 'PASS').length;
-    const failed = this.results.filter(r => r.status === 'FAIL').length;
-    const warnings = this.results.filter(r => r.status === 'WARN').length;
+    const passed = this.results.filter((r) => r.status === 'PASS').length;
+    const failed = this.results.filter((r) => r.status === 'FAIL').length;
+    const warnings = this.results.filter((r) => r.status === 'WARN').length;
     const total = this.results.length;
 
     return {
@@ -530,7 +908,7 @@ export class ModularArchitectureValidator {
 
   private getMovementCountsByJoint(): Record<string, number> {
     const counts: Record<string, number> = {};
-    MOVEMENT_REGISTRY.forEach(m => {
+    MOVEMENT_REGISTRY.forEach((m) => {
       counts[m.joint] = (counts[m.joint] || 0) + 1;
     });
     return counts;
@@ -538,7 +916,7 @@ export class ModularArchitectureValidator {
 
   private getProtocolCountsByCategory(): Record<string, number> {
     const counts: Record<string, number> = {};
-    PROTOCOL_REGISTRY.forEach(p => {
+    PROTOCOL_REGISTRY.forEach((p) => {
       counts[p.category] = (counts[p.category] || 0) + 1;
     });
     return counts;
