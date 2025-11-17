@@ -5,8 +5,6 @@
  * Comprehensive validation testing to verify ±5° MAE accuracy target
  */
 
-/* eslint-disable no-console */
-
 import { ValidationPipeline } from '../ValidationPipeline';
 import { DEFAULT_VALIDATION_CONFIG } from '../../types/validation';
 

@@ -204,7 +204,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             onPress={handleNext}
             testID="onboarding-get-started"
             accessible={true}
-            accessibilityLabel={isLastStep ? 'Get started with PhysioAssist' : 'Next step'}
+            accessibilityLabel={
+              isLastStep ? 'Get started with PhysioAssist' : 'Next step'
+            }
             accessibilityRole="button"
           >
             <LinearGradient

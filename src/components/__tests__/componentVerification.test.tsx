@@ -30,7 +30,6 @@ import * as testData from '../../__tests__/fixtures/testData';
 
 // Mock all native modules
 jest.mock('react-native-vision-camera', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const MockCamera = ({ children, ...props }: any) => (
     <div data-testid="mock-camera" {...props}>
       {children}

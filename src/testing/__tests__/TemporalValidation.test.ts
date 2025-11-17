@@ -111,7 +111,6 @@ describe('TemporalValidationPipeline - Gate 10D', () => {
 
       // Debug output
       if (!result.passed) {
-        // eslint-disable-next-line no-console
         console.log(
           '[DEBUG] Test failed. Result:',
           JSON.stringify(
@@ -181,7 +180,6 @@ describe('TemporalValidationPipeline - Gate 10D', () => {
 
       // Debug
       if (!result.passed) {
-        // eslint-disable-next-line no-console
         console.log(
           '[DEBUG] Noise test failed:',
           JSON.stringify(
@@ -267,7 +265,6 @@ describe('TemporalValidationPipeline - Gate 10D', () => {
 
       // Debug
       if (!result.passed) {
-        // eslint-disable-next-line no-console
         console.log(
           '[DEBUG] Oscillating test failed:',
           JSON.stringify(
@@ -577,7 +574,7 @@ describe('TemporalValidationPipeline - Gate 10D', () => {
       );
 
       // Debug - check all compensations
-      // eslint-disable-next-line no-console
+
       console.log(
         '[DEBUG] All compensations:',
         JSON.stringify(
