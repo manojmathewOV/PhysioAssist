@@ -15,7 +15,10 @@
 
 import { Camera } from 'react-native-vision-camera';
 import { poseDetectionService } from '@services/poseDetectionService';
-import { mockPoseDataSimulator } from '@services/mockPoseDataSimulator';
+// Conditional import: Only include mock simulator in development builds
+const mockPoseDataSimulator = __DEV__
+  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator // eslint-disable-line @typescript-eslint/no-var-requires
+  : null;
 import { Platform } from 'react-native';
 
 export interface SmokeTestResult {
@@ -188,6 +191,16 @@ async function testMockDataSimulator(): Promise<SmokeTestResult> {
   const startTime = Date.now();
   const name = 'Mock Data Simulator';
 
+  // Skip test in production (mock simulator not available)
+  if (!mockPoseDataSimulator) {
+    return {
+      name,
+      passed: true, // Pass by default in production
+      error: 'Skipped - mock simulator only available in development',
+      duration: Date.now() - startTime,
+    };
+  }
+
   try {
     let frameReceived = false;
 
@@ -232,7 +245,9 @@ async function testMockDataSimulator(): Promise<SmokeTestResult> {
       duration: Date.now() - startTime,
     };
   } catch (error) {
-    mockPoseDataSimulator.stop(); // Clean up
+    if (mockPoseDataSimulator) {
+      mockPoseDataSimulator.stop(); // Clean up
+    }
     return {
       name,
       passed: false,
@@ -251,7 +266,7 @@ async function testErrorHandling(): Promise<SmokeTestResult> {
 
   try {
     // Verify error boundary exists
-    const ErrorBoundary = require('@components/common/ErrorBoundary').default;
+    const ErrorBoundary = require('@components/common/ErrorBoundary').default; // eslint-disable-line @typescript-eslint/no-var-requires
 
     if (!ErrorBoundary) {
       return {
