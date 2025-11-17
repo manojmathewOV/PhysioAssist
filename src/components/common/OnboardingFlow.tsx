@@ -137,11 +137,19 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       animationType="slide"
       statusBarTranslucent
       transparent={false}
+      testID="onboarding-welcome"
     >
       <LinearGradient colors={['#1a1a1a', '#0d0d0d']} style={styles.container}>
         {/* Skip Button */}
         {!isLastStep && (
-          <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={handleSkip}
+            testID="onboarding-skip"
+            accessible={true}
+            accessibilityLabel="Skip onboarding"
+            accessibilityRole="button"
+          >
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
         )}
@@ -194,6 +202,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           <TouchableOpacity
             style={[styles.nextButton, currentStep === 0 && styles.nextButtonFull]}
             onPress={handleNext}
+            testID="onboarding-get-started"
+            accessible={true}
+            accessibilityLabel={isLastStep ? 'Get started with PhysioAssist' : 'Next step'}
+            accessibilityRole="button"
           >
             <LinearGradient
               colors={['#4CAF50', '#45a049']}

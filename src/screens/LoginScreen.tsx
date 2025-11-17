@@ -19,6 +19,7 @@ const LoginScreen: React.FC = () => {
   const { isLoading, error } = useSelector((state: RootState) => state.user);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     // Basic validation
@@ -107,29 +108,54 @@ const LoginScreen: React.FC = () => {
             autoCapitalize="none"
             autoCorrect={false}
             editable={!isLoading}
-            testID="email-input"
+            testID="auth-email-input"
+            accessible={true}
+            accessibilityLabel="Email address"
+            accessibilityHint="Enter your email address"
           />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#999"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!isLoading}
-            testID="password-input"
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password"
+              placeholderTextColor="#999"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!isLoading}
+              testID="auth-password-input"
+              accessible={true}
+              accessibilityLabel="Password"
+              accessibilityHint="Enter your password"
+            />
+            <TouchableOpacity
+              style={styles.passwordToggle}
+              onPress={() => setShowPassword(!showPassword)}
+              testID="password-toggle"
+              accessible={true}
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+              accessibilityRole="button"
+            >
+              <Text style={styles.passwordToggleText}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+            </TouchableOpacity>
+          </View>
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && (
+            <Text style={styles.errorText} testID="auth-error-message">
+              {error}
+            </Text>
+          )}
 
           <TouchableOpacity
             style={[styles.loginButton, isLoading && styles.disabledButton]}
             onPress={handleLogin}
             disabled={isLoading}
-            testID="login-button"
+            testID="auth-login-button"
+            accessible={true}
+            accessibilityLabel="Sign in"
+            accessibilityRole="button"
           >
             {isLoading ? (
               <ActivityIndicator color="#fff" />
@@ -199,6 +225,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#f9f9f9',
     color: '#333',
+  },
+  passwordContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  passwordInput: {
+    height: 56,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingRight: 50,
+    fontSize: 16,
+    backgroundColor: '#f9f9f9',
+    color: '#333',
+  },
+  passwordToggle: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+    padding: 4,
+  },
+  passwordToggleText: {
+    fontSize: 20,
   },
   errorText: {
     color: '#F44336',
