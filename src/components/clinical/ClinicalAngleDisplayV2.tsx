@@ -13,12 +13,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-} from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { ClinicalJointMeasurement } from '@types/clinicalMeasurement';
 import Svg, { Circle, Line, G } from 'react-native-svg';
@@ -83,9 +78,9 @@ const ClinicalAngleDisplayV2: React.FC<ClinicalAngleDisplayV2Props> = ({
   // Get dynamic instruction
   const getInstruction = (): string => {
     if (percentOfTarget < 25) return 'Begin the movement slowly';
-    if (percentOfTarget < 50) return "Great start! Keep going!";
+    if (percentOfTarget < 50) return 'Great start! Keep going!';
     if (percentOfTarget < 75) return "You're doing wonderful!";
-    if (percentOfTarget < 95) return "Excellent! Almost there!";
+    if (percentOfTarget < 95) return 'Excellent! Almost there!';
     return 'Perfect! Hold it right there!';
   };
 

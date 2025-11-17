@@ -211,7 +211,10 @@ describe('GoniometerServiceV2 - Gate 9B.6', () => {
 
       // Both should succeed despite different index mappings
       const moveNetAngle = goniometer.calculateJointAngle(moveNetPose, 'left_shoulder');
-      const mediaPipeAngle = goniometer.calculateJointAngle(mediaPipePose, 'left_shoulder');
+      const mediaPipeAngle = goniometer.calculateJointAngle(
+        mediaPipePose,
+        'left_shoulder'
+      );
 
       expect(moveNetAngle.angle).toBeDefined();
       expect(mediaPipeAngle.angle).toBeDefined();

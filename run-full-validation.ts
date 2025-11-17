@@ -44,21 +44,31 @@ async function main() {
   console.log(`  Status: ${report.status}`);
 
   console.log(`\n📐 Angle Measurement Accuracy:`);
-  console.log(`  MAE (Mean Absolute Error): ${report.metrics.mae.toFixed(2)}° ${report.metrics.mae <= 5 ? '✓' : '✗ (target: ≤5°)'}`);
-  console.log(`  RMSE (Root Mean Square Error): ${report.metrics.rmse.toFixed(2)}° ${report.metrics.rmse <= 7 ? '✓' : '✗ (target: ≤7°)'}`);
-  console.log(`  R² (Coefficient): ${report.metrics.r2.toFixed(3)} ${report.metrics.r2 >= 0.95 ? '✓' : '✗ (target: ≥0.95)'}`);
+  console.log(
+    `  MAE (Mean Absolute Error): ${report.metrics.mae.toFixed(2)}° ${report.metrics.mae <= 5 ? '✓' : '✗ (target: ≤5°)'}`
+  );
+  console.log(
+    `  RMSE (Root Mean Square Error): ${report.metrics.rmse.toFixed(2)}° ${report.metrics.rmse <= 7 ? '✓' : '✗ (target: ≤7°)'}`
+  );
+  console.log(
+    `  R² (Coefficient): ${report.metrics.r2.toFixed(3)} ${report.metrics.r2 >= 0.95 ? '✓' : '✗ (target: ≥0.95)'}`
+  );
   console.log(`  Max Error: ${report.metrics.maxError.toFixed(2)}°`);
 
   console.log(`\n🎯 Compensation Detection:`);
   console.log(`  Accuracy: ${report.compensationMetrics.accuracy.toFixed(2)}%`);
-  console.log(`  Sensitivity: ${report.compensationMetrics.sensitivity.toFixed(2)}% ${report.compensationMetrics.sensitivity >= 80 ? '✓' : '✗ (target: ≥80%)'}`);
-  console.log(`  Specificity: ${report.compensationMetrics.specificity.toFixed(2)}% ${report.compensationMetrics.specificity >= 80 ? '✓' : '✗ (target: ≥80%)'}`);
+  console.log(
+    `  Sensitivity: ${report.compensationMetrics.sensitivity.toFixed(2)}% ${report.compensationMetrics.sensitivity >= 80 ? '✓' : '✗ (target: ≥80%)'}`
+  );
+  console.log(
+    `  Specificity: ${report.compensationMetrics.specificity.toFixed(2)}% ${report.compensationMetrics.specificity >= 80 ? '✓' : '✗ (target: ≥80%)'}`
+  );
   console.log(`  Precision: ${report.compensationMetrics.precision?.toFixed(2)}%`);
   console.log(`  F1 Score: ${report.compensationMetrics.f1Score?.toFixed(3)}`);
 
   if (report.notes && report.notes.length > 0) {
     console.log(`\n📝 Notes:`);
-    report.notes.forEach(note => console.log(`  - ${note}`));
+    report.notes.forEach((note) => console.log(`  - ${note}`));
   }
 
   // Save JSON report
@@ -72,7 +82,10 @@ async function main() {
   console.log(`\n💾 Report saved to: ${jsonPath}`);
 
   // Generate summary by movement type
-  const byMovement = new Map<string, { passed: number; total: number; errors: number[] }>();
+  const byMovement = new Map<
+    string,
+    { passed: number; total: number; errors: number[] }
+  >();
 
   for (const result of report.detailedResults) {
     const movement = result.testCase.split('_').slice(0, 2).join('_'); // e.g., "shoulder_flexion"
@@ -89,10 +102,21 @@ async function main() {
 
   console.log(`\n📈 Results by Movement Type:`);
   for (const [movement, stats] of byMovement.entries()) {
-    const passRate = (stats.passed / stats.total * 100).toFixed(1);
-    const avgError = (stats.errors.reduce((a, b) => a + b, 0) / stats.errors.length).toFixed(2);
-    const status = stats.passed === stats.total ? '✓✓✓' : stats.passed / stats.total >= 0.9 ? '✓✓' : stats.passed / stats.total >= 0.7 ? '✓' : '✗';
-    console.log(`  ${movement.padEnd(25)}: ${stats.passed}/${stats.total} (${passRate}%) - Avg error: ${avgError}° ${status}`);
+    const passRate = ((stats.passed / stats.total) * 100).toFixed(1);
+    const avgError = (
+      stats.errors.reduce((a, b) => a + b, 0) / stats.errors.length
+    ).toFixed(2);
+    const status =
+      stats.passed === stats.total
+        ? '✓✓✓'
+        : stats.passed / stats.total >= 0.9
+          ? '✓✓'
+          : stats.passed / stats.total >= 0.7
+            ? '✓'
+            : '✗';
+    console.log(
+      `  ${movement.padEnd(25)}: ${stats.passed}/${stats.total} (${passRate}%) - Avg error: ${avgError}° ${status}`
+    );
   }
 
   console.log('\n' + '='.repeat(80));

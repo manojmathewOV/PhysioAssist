@@ -104,10 +104,15 @@ export const PROTOCOL_REGISTRY: AssessmentProtocol[] = [
   {
     id: 'rotator_cuff_week1',
     name: 'Post Rotator Cuff Surgery - Week 1',
-    description: 'Initial ROM assessment following rotator cuff repair. Focus on passive ROM only.',
+    description:
+      'Initial ROM assessment following rotator cuff repair. Focus on passive ROM only.',
     category: 'post-surgery',
     targetPopulation: 'Adults 40-70 recovering from rotator cuff repair',
-    conditions: ['Rotator cuff tear repair', 'Supraspinatus repair', 'Infraspinatus repair'],
+    conditions: [
+      'Rotator cuff tear repair',
+      'Supraspinatus repair',
+      'Infraspinatus repair',
+    ],
     timeframe: {
       week: 1,
       phase: 'Passive ROM Phase',
@@ -224,7 +229,8 @@ export const PROTOCOL_REGISTRY: AssessmentProtocol[] = [
   {
     id: 'acl_week2',
     name: 'ACL Reconstruction - Week 2',
-    description: 'Early knee ROM assessment post-ACL reconstruction. Focus on extension and gentle flexion.',
+    description:
+      'Early knee ROM assessment post-ACL reconstruction. Focus on extension and gentle flexion.',
     category: 'post-surgery',
     targetPopulation: 'Athletes and active adults post-ACL reconstruction',
     conditions: ['ACL reconstruction', 'ACL tear repair'],
@@ -360,7 +366,8 @@ export const PROTOCOL_REGISTRY: AssessmentProtocol[] = [
   {
     id: 'tkr_week4',
     name: 'Total Knee Replacement - Week 4',
-    description: 'Post-TKR ROM goals at 4 weeks. Focus on achieving 0° extension and 90°+ flexion.',
+    description:
+      'Post-TKR ROM goals at 4 weeks. Focus on achieving 0° extension and 90°+ flexion.',
     category: 'post-surgery',
     targetPopulation: 'Adults 60+ post total knee replacement',
     conditions: ['Total knee replacement', 'TKR', 'TKA'],
@@ -412,30 +419,32 @@ export class ProtocolManager {
    * Get protocol by ID
    */
   static getProtocol(id: string): AssessmentProtocol | undefined {
-    return PROTOCOL_REGISTRY.find(p => p.id === id);
+    return PROTOCOL_REGISTRY.find((p) => p.id === id);
   }
 
   /**
    * Get all protocols for a specific joint
    */
   static getProtocolsByJoint(joint: JointType): AssessmentProtocol[] {
-    return PROTOCOL_REGISTRY.filter(protocol =>
-      protocol.steps.some(step => step.movementId.startsWith(joint))
+    return PROTOCOL_REGISTRY.filter((protocol) =>
+      protocol.steps.some((step) => step.movementId.startsWith(joint))
     );
   }
 
   /**
    * Get protocols by category
    */
-  static getProtocolsByCategory(category: AssessmentProtocol['category']): AssessmentProtocol[] {
-    return PROTOCOL_REGISTRY.filter(p => p.category === category);
+  static getProtocolsByCategory(
+    category: AssessmentProtocol['category']
+  ): AssessmentProtocol[] {
+    return PROTOCOL_REGISTRY.filter((p) => p.category === category);
   }
 
   /**
    * Get protocols by tag
    */
   static getProtocolsByTag(tag: string): AssessmentProtocol[] {
-    return PROTOCOL_REGISTRY.filter(p => p.tags.includes(tag));
+    return PROTOCOL_REGISTRY.filter((p) => p.tags.includes(tag));
   }
 
   /**
@@ -444,10 +453,10 @@ export class ProtocolManager {
   static searchProtocols(query: string): AssessmentProtocol[] {
     const lowerQuery = query.toLowerCase();
     return PROTOCOL_REGISTRY.filter(
-      p =>
+      (p) =>
         p.name.toLowerCase().includes(lowerQuery) ||
         p.description.toLowerCase().includes(lowerQuery) ||
-        p.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
+        p.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
     );
   }
 
@@ -456,7 +465,7 @@ export class ProtocolManager {
    */
   static getPostSurgeryProtocolsByWeek(week: number): AssessmentProtocol[] {
     return PROTOCOL_REGISTRY.filter(
-      p => p.category === 'post-surgery' && p.timeframe?.week === week
+      (p) => p.category === 'post-surgery' && p.timeframe?.week === week
     );
   }
 
@@ -475,7 +484,7 @@ export class ProtocolManager {
   static getRequiredStepsCount(protocolId: string): number {
     const protocol = this.getProtocol(protocolId);
     if (!protocol) return 0;
-    return protocol.steps.filter(s => s.required).length;
+    return protocol.steps.filter((s) => s.required).length;
   }
 
   /**
@@ -483,8 +492,8 @@ export class ProtocolManager {
    */
   static getAllTags(): string[] {
     const tagsSet = new Set<string>();
-    PROTOCOL_REGISTRY.forEach(p => {
-      p.tags.forEach(tag => tagsSet.add(tag));
+    PROTOCOL_REGISTRY.forEach((p) => {
+      p.tags.forEach((tag) => tagsSet.add(tag));
     });
     return Array.from(tagsSet).sort();
   }

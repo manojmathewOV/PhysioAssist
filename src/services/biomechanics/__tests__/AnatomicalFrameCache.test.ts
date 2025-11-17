@@ -290,7 +290,7 @@ describe('AnatomicalFrameCache', () => {
       const { calculator, getCallCount } = createMockCalculator();
 
       // Original position
-      const landmarks1 = createMockLandmarks(0.400, 0.300, 0.600, 0.300);
+      const landmarks1 = createMockLandmarks(0.4, 0.3, 0.6, 0.3);
       cache.get('thorax', landmarks1, calculator);
 
       // Small movement (< 0.01 units): should hit cache due to bucketing
@@ -308,7 +308,7 @@ describe('AnatomicalFrameCache', () => {
       const { calculator, getCallCount } = createMockCalculator();
 
       // Original position
-      const landmarks1 = createMockLandmarks(0.40, 0.30, 0.60, 0.30);
+      const landmarks1 = createMockLandmarks(0.4, 0.3, 0.6, 0.3);
       cache.get('thorax', landmarks1, calculator);
 
       // Large movement (>= 0.01 units): should miss cache
@@ -323,7 +323,7 @@ describe('AnatomicalFrameCache', () => {
       const cache1 = new AnatomicalFrameCache(60, 1000, 1);
       const { calculator: calc1, getCallCount: count1 } = createMockCalculator();
 
-      const landmarks1 = createMockLandmarks(0.40, 0.30, 0.60, 0.30);
+      const landmarks1 = createMockLandmarks(0.4, 0.3, 0.6, 0.3);
       const landmarks2 = createMockLandmarks(0.45, 0.35, 0.65, 0.35); // 0.05 movement
 
       cache1.get('thorax', landmarks1, calc1);
@@ -423,8 +423,10 @@ describe('AnatomicalFrameCache', () => {
     it('should handle multi-joint measurement scenario efficiently', () => {
       const cache = new AnatomicalFrameCache();
       const landmarks = createMockLandmarks();
-      const { calculator: globalCalc, getCallCount: globalCount } = createMockCalculator();
-      const { calculator: thoraxCalc, getCallCount: thoraxCount } = createMockCalculator();
+      const { calculator: globalCalc, getCallCount: globalCount } =
+        createMockCalculator();
+      const { calculator: thoraxCalc, getCallCount: thoraxCount } =
+        createMockCalculator();
 
       // Simulate multi-joint measurement (shoulder + elbow)
       // Both require thorax frame

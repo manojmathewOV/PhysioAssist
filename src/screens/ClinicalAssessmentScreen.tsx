@@ -240,7 +240,7 @@ const ClinicalAssessmentScreen: React.FC = () => {
         if (!currentMeasurement) return 'Detecting pose...';
         const percent = currentMeasurement.primaryJoint.percentOfTarget || 0;
         if (percent < 30) return 'Begin the movement slowly';
-        if (percent < 70) return 'Keep going, you\'re doing great!';
+        if (percent < 70) return "Keep going, you're doing great!";
         if (percent < 95) return 'Almost there!';
         return 'Perfect! Hold this position';
       case 'complete':

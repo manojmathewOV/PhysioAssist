@@ -190,10 +190,7 @@ const JointSelectionPanel: React.FC<JointSelectionPanelProps> = ({
           <Text style={styles.sideSelectorLabel}>Side:</Text>
           <View style={styles.sideButtons}>
             <TouchableOpacity
-              style={[
-                styles.sideButton,
-                side === 'left' && styles.sideButtonActive,
-              ]}
+              style={[styles.sideButton, side === 'left' && styles.sideButtonActive]}
               onPress={() => onSelectSide('left')}
               accessibilityLabel="Select left side"
               accessibilityRole="button"
@@ -208,10 +205,7 @@ const JointSelectionPanel: React.FC<JointSelectionPanelProps> = ({
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                styles.sideButton,
-                side === 'right' && styles.sideButtonActive,
-              ]}
+              style={[styles.sideButton, side === 'right' && styles.sideButtonActive]}
               onPress={() => onSelectSide('right')}
               accessibilityLabel="Select right side"
               accessibilityRole="button"
@@ -261,8 +255,7 @@ const JointSelectionPanel: React.FC<JointSelectionPanelProps> = ({
                     key={movement.type}
                     style={[
                       styles.movementButton,
-                      selectedMovement === movement.type &&
-                        styles.movementButtonSelected,
+                      selectedMovement === movement.type && styles.movementButtonSelected,
                     ]}
                     onPress={() => handleMovementPress(movement.type)}
                     accessibilityLabel={`${movement.label}: ${movement.description}`}

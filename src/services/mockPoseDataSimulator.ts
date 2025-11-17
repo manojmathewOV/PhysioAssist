@@ -143,9 +143,7 @@ export class MockPoseDataSimulator {
   /**
    * Get base position for a landmark (standing pose)
    */
-  private getBaseLandmarkPosition(
-    index: number
-  ): { x: number; y: number; z: number } {
+  private getBaseLandmarkPosition(index: number): { x: number; y: number; z: number } {
     // Normalized coordinates (0-1) representing a person standing
     // facing the camera in the center of frame
     const positions: Record<number, { x: number; y: number; z: number }> = {

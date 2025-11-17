@@ -17,13 +17,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { ClinicalJointMeasurement } from '@types/clinicalMeasurement';
 
@@ -146,10 +140,7 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
     <View style={[styles.container, compact && styles.containerCompact]}>
       {/* Main Angle Display */}
       <Animated.View
-        style={[
-          styles.angleContainer,
-          { transform: [{ scale: pulseAnim }] },
-        ]}
+        style={[styles.angleContainer, { transform: [{ scale: pulseAnim }] }]}
         accessibilityLabel={`Current angle: ${Math.round(primaryAngle)} degrees`}
         accessibilityRole="text"
         accessibilityLiveRegion="polite"
@@ -164,12 +155,7 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
 
         {/* Clinical Grade Badge */}
         {clinicalGrade && !compact && (
-          <View
-            style={[
-              styles.gradeBadge,
-              { backgroundColor: progressColor + '30' },
-            ]}
-          >
+          <View style={[styles.gradeBadge, { backgroundColor: progressColor + '30' }]}>
             <Text style={[styles.gradeText, { color: progressColor }]}>
               {getGradeLabel()}
             </Text>
@@ -263,15 +249,8 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
         <View style={styles.qualitySection}>
           <View style={styles.qualityRow}>
             <Text style={styles.qualityLabel}>Tracking Quality:</Text>
-            <View
-              style={[
-                styles.qualityBadge,
-                { backgroundColor: qualityColor + '30' },
-              ]}
-            >
-              <View
-                style={[styles.qualityDot, { backgroundColor: qualityColor }]}
-              />
+            <View style={[styles.qualityBadge, { backgroundColor: qualityColor + '30' }]}>
+              <View style={[styles.qualityDot, { backgroundColor: qualityColor }]} />
               <Text style={[styles.qualityText, { color: qualityColor }]}>
                 {quality.charAt(0).toUpperCase() + quality.slice(1)}
               </Text>
@@ -292,67 +271,60 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
       )}
 
       {/* Compensation Alerts */}
-      {showCompensations &&
-        measurement.compensations.length > 0 &&
-        !compact && (
-          <View style={styles.compensationSection}>
-            <Text style={styles.compensationTitle}>
-              ⚠ Compensations Detected
-            </Text>
-            {measurement.compensations.map((comp, idx) => (
-              <View key={idx} style={styles.compensationItem}>
-                <View style={styles.compensationHeader}>
-                  <Text style={styles.compensationType}>
-                    {comp.type.replace(/_/g, ' ')}
-                  </Text>
-                  <View
+      {showCompensations && measurement.compensations.length > 0 && !compact && (
+        <View style={styles.compensationSection}>
+          <Text style={styles.compensationTitle}>⚠ Compensations Detected</Text>
+          {measurement.compensations.map((comp, idx) => (
+            <View key={idx} style={styles.compensationItem}>
+              <View style={styles.compensationHeader}>
+                <Text style={styles.compensationType}>
+                  {comp.type.replace(/_/g, ' ')}
+                </Text>
+                <View
+                  style={[
+                    styles.severityBadge,
+                    { backgroundColor: getSeverityColor(comp.severity) + '30' },
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.severityBadge,
-                      { backgroundColor: getSeverityColor(comp.severity) + '30' },
+                      styles.severityText,
+                      { color: getSeverityColor(comp.severity) },
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.severityText,
-                        { color: getSeverityColor(comp.severity) },
-                      ]}
-                    >
-                      {comp.severity}
-                    </Text>
-                  </View>
+                    {comp.severity}
+                  </Text>
                 </View>
-                {comp.clinicalNote && (
-                  <Text style={styles.compensationNote}>{comp.clinicalNote}</Text>
-                )}
               </View>
-            ))}
-          </View>
-        )}
+              {comp.clinicalNote && (
+                <Text style={styles.compensationNote}>{comp.clinicalNote}</Text>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* Secondary Joints */}
       {!compact && Object.keys(measurement.secondaryJoints).length > 0 && (
         <View style={styles.secondarySection}>
           <Text style={styles.secondaryTitle}>Secondary Joints</Text>
-          {Object.entries(measurement.secondaryJoints).map(
-            ([jointName, jointData]) => (
-              <View key={jointName} style={styles.secondaryItem}>
-                <Text style={styles.secondaryJointName}>
-                  {jointName.replace(/_/g, ' ')}:
-                </Text>
-                <Text
-                  style={[
-                    styles.secondaryJointValue,
-                    {
-                      color: jointData.withinTolerance ? '#4CAF50' : '#FFC107',
-                    },
-                  ]}
-                >
-                  {Math.round(jointData.angle)}°
-                  {!jointData.withinTolerance && ' ⚠'}
-                </Text>
-              </View>
-            )
-          )}
+          {Object.entries(measurement.secondaryJoints).map(([jointName, jointData]) => (
+            <View key={jointName} style={styles.secondaryItem}>
+              <Text style={styles.secondaryJointName}>
+                {jointName.replace(/_/g, ' ')}:
+              </Text>
+              <Text
+                style={[
+                  styles.secondaryJointValue,
+                  {
+                    color: jointData.withinTolerance ? '#4CAF50' : '#FFC107',
+                  },
+                ]}
+              >
+                {Math.round(jointData.angle)}°{!jointData.withinTolerance && ' ⚠'}
+              </Text>
+            </View>
+          ))}
         </View>
       )}
     </View>

@@ -31,11 +31,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
       {Array.from({ length: totalSteps }, (_, index) => (
         <Text
           key={index}
-          style={[
-            styles.dot,
-            { color },
-            index < currentStep && styles.dotActive,
-          ]}
+          style={[styles.dot, { color }, index < currentStep && styles.dotActive]}
         >
           {index < currentStep ? '●' : '○'}
         </Text>

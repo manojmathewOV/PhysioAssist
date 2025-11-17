@@ -260,13 +260,7 @@ const WebClinicalAssessmentScreen: React.FC = () => {
     <div style={webStyles.container}>
       {/* Video Feed */}
       <div style={webStyles.videoContainer}>
-        <video
-          ref={videoRef}
-          style={webStyles.video}
-          autoPlay
-          playsInline
-          muted
-        />
+        <video ref={videoRef} style={webStyles.video} autoPlay playsInline muted />
         <canvas ref={canvasRef} style={webStyles.hiddenCanvas} />
       </div>
 

@@ -74,8 +74,8 @@ function generateShoulderFlexionPose(progress, side = 'left') {
     { x: 0.5, y: 0.15, visibility: 0.95, name: 'nose' }, // 0: nose
     { x: 0.48, y: 0.13, visibility: 0.95, name: 'left_eye' }, // 1
     { x: 0.52, y: 0.13, visibility: 0.95, name: 'right_eye' }, // 2
-    { x: 0.46, y: 0.15, visibility: 0.90, name: 'left_ear' }, // 3
-    { x: 0.54, y: 0.15, visibility: 0.90, name: 'right_ear' }, // 4
+    { x: 0.46, y: 0.15, visibility: 0.9, name: 'left_ear' }, // 3
+    { x: 0.54, y: 0.15, visibility: 0.9, name: 'right_ear' }, // 4
     { x: 0.42, y: 0.28, visibility: 0.98, name: 'left_shoulder' }, // 5
     { x: 0.58, y: 0.28, visibility: 0.98, name: 'right_shoulder' }, // 6
   ];
@@ -95,7 +95,7 @@ function generateShoulderFlexionPose(progress, side = 'left') {
 
     basePose.push(
       { x: elbowX, y: elbowY, visibility: 0.95, name: 'left_elbow' }, // 7
-      { x: 0.65, y: 0.45, visibility: 0.90, name: 'right_elbow' }, // 8
+      { x: 0.65, y: 0.45, visibility: 0.9, name: 'right_elbow' }, // 8
       { x: wristX, y: wristY, visibility: 0.92, name: 'left_wrist' }, // 9
       { x: 0.62, y: 0.55, visibility: 0.88, name: 'right_wrist' } // 10
     );
@@ -108,7 +108,7 @@ function generateShoulderFlexionPose(progress, side = 'left') {
     const wristY = elbowY - Math.cos(radians) * armLength * 0.4;
 
     basePose.push(
-      { x: 0.35, y: 0.45, visibility: 0.90, name: 'left_elbow' }, // 7
+      { x: 0.35, y: 0.45, visibility: 0.9, name: 'left_elbow' }, // 7
       { x: elbowX, y: elbowY, visibility: 0.95, name: 'right_elbow' }, // 8
       { x: 0.38, y: 0.55, visibility: 0.88, name: 'left_wrist' }, // 9
       { x: wristX, y: wristY, visibility: 0.92, name: 'right_wrist' } // 10
@@ -121,8 +121,8 @@ function generateShoulderFlexionPose(progress, side = 'left') {
     { x: 0.55, y: 0.55, visibility: 0.95, name: 'right_hip' }, // 12
     { x: 0.44, y: 0.75, visibility: 0.93, name: 'left_knee' }, // 13
     { x: 0.56, y: 0.75, visibility: 0.93, name: 'right_knee' }, // 14
-    { x: 0.43, y: 0.95, visibility: 0.90, name: 'left_ankle' }, // 15
-    { x: 0.57, y: 0.95, visibility: 0.90, name: 'right_ankle' } // 16
+    { x: 0.43, y: 0.95, visibility: 0.9, name: 'left_ankle' }, // 15
+    { x: 0.57, y: 0.95, visibility: 0.9, name: 'right_ankle' } // 16
   );
 
   return basePose;
@@ -140,8 +140,8 @@ function generateKneeFlexionPose(progress, side = 'left') {
     { x: 0.5, y: 0.25, visibility: 0.95, name: 'nose' },
     { x: 0.48, y: 0.23, visibility: 0.95, name: 'left_eye' },
     { x: 0.52, y: 0.23, visibility: 0.95, name: 'right_eye' },
-    { x: 0.46, y: 0.25, visibility: 0.90, name: 'left_ear' },
-    { x: 0.54, y: 0.25, visibility: 0.90, name: 'right_ear' },
+    { x: 0.46, y: 0.25, visibility: 0.9, name: 'left_ear' },
+    { x: 0.54, y: 0.25, visibility: 0.9, name: 'right_ear' },
     { x: 0.42, y: 0.35, visibility: 0.98, name: 'left_shoulder' },
     { x: 0.58, y: 0.35, visibility: 0.98, name: 'right_shoulder' },
     { x: 0.38, y: 0.45, visibility: 0.95, name: 'left_elbow' },
@@ -159,8 +159,8 @@ function generateKneeFlexionPose(progress, side = 'left') {
   // Calculate knee flexion (0-135 degrees)
   const maxAngle = 135;
   const currentAngle = progress * maxAngle;
-  const thighLength = 0.20;
-  const shinLength = 0.20;
+  const thighLength = 0.2;
+  const shinLength = 0.2;
 
   if (side === 'left') {
     // Left knee bends
@@ -175,8 +175,8 @@ function generateKneeFlexionPose(progress, side = 'left') {
     basePose.push(
       { x: kneeX, y: kneeY, visibility: 0.93, name: 'left_knee' },
       { x: 0.56, y: 0.85, visibility: 0.93, name: 'right_knee' }, // Right leg straight
-      { x: ankleX, y: ankleY, visibility: 0.90, name: 'left_ankle' },
-      { x: 0.57, y: 0.95, visibility: 0.90, name: 'right_ankle' }
+      { x: ankleX, y: ankleY, visibility: 0.9, name: 'left_ankle' },
+      { x: 0.57, y: 0.95, visibility: 0.9, name: 'right_ankle' }
     );
   } else {
     // Right knee bends
@@ -191,8 +191,8 @@ function generateKneeFlexionPose(progress, side = 'left') {
     basePose.push(
       { x: 0.44, y: 0.85, visibility: 0.93, name: 'left_knee' }, // Left leg straight
       { x: kneeX, y: kneeY, visibility: 0.93, name: 'right_knee' },
-      { x: 0.43, y: 0.95, visibility: 0.90, name: 'left_ankle' },
-      { x: ankleX, y: ankleY, visibility: 0.90, name: 'right_ankle' }
+      { x: 0.43, y: 0.95, visibility: 0.9, name: 'left_ankle' },
+      { x: ankleX, y: ankleY, visibility: 0.9, name: 'right_ankle' }
     );
   }
 
@@ -210,8 +210,8 @@ function generateElbowFlexionPose(progress, side = 'left') {
     { x: 0.5, y: 0.15, visibility: 0.95, name: 'nose' },
     { x: 0.48, y: 0.13, visibility: 0.95, name: 'left_eye' },
     { x: 0.52, y: 0.13, visibility: 0.95, name: 'right_eye' },
-    { x: 0.46, y: 0.15, visibility: 0.90, name: 'left_ear' },
-    { x: 0.54, y: 0.15, visibility: 0.90, name: 'right_ear' },
+    { x: 0.46, y: 0.15, visibility: 0.9, name: 'left_ear' },
+    { x: 0.54, y: 0.15, visibility: 0.9, name: 'right_ear' },
     { x: 0.42, y: 0.28, visibility: 0.98, name: 'left_shoulder' },
     { x: 0.58, y: 0.28, visibility: 0.98, name: 'right_shoulder' },
   ];
@@ -235,7 +235,7 @@ function generateElbowFlexionPose(progress, side = 'left') {
 
     basePose.push(
       { x: elbowX, y: elbowY, visibility: 0.95, name: 'left_elbow' },
-      { x: 0.65, y: 0.45, visibility: 0.90, name: 'right_elbow' },
+      { x: 0.65, y: 0.45, visibility: 0.9, name: 'right_elbow' },
       { x: wristX, y: wristY, visibility: 0.92, name: 'left_wrist' },
       { x: 0.62, y: 0.55, visibility: 0.88, name: 'right_wrist' }
     );
@@ -250,7 +250,7 @@ function generateElbowFlexionPose(progress, side = 'left') {
     const wristY = elbowY - Math.cos(radians) * forearmLength;
 
     basePose.push(
-      { x: 0.35, y: 0.45, visibility: 0.90, name: 'left_elbow' },
+      { x: 0.35, y: 0.45, visibility: 0.9, name: 'left_elbow' },
       { x: elbowX, y: elbowY, visibility: 0.95, name: 'right_elbow' },
       { x: 0.38, y: 0.55, visibility: 0.88, name: 'left_wrist' },
       { x: wristX, y: wristY, visibility: 0.92, name: 'right_wrist' }
@@ -263,8 +263,8 @@ function generateElbowFlexionPose(progress, side = 'left') {
     { x: 0.55, y: 0.55, visibility: 0.95, name: 'right_hip' },
     { x: 0.44, y: 0.75, visibility: 0.93, name: 'left_knee' },
     { x: 0.56, y: 0.75, visibility: 0.93, name: 'right_knee' },
-    { x: 0.43, y: 0.95, visibility: 0.90, name: 'left_ankle' },
-    { x: 0.57, y: 0.95, visibility: 0.90, name: 'right_ankle' }
+    { x: 0.43, y: 0.95, visibility: 0.9, name: 'left_ankle' },
+    { x: 0.57, y: 0.95, visibility: 0.9, name: 'right_ankle' }
   );
 
   return basePose;
@@ -278,7 +278,8 @@ function generateElbowFlexionPose(progress, side = 'left') {
  * Analyze shoulder flexion from pose data
  */
 function analyzeShoulderFlexion(pose, side = 'left') {
-  const shoulderIdx = side === 'left' ? LANDMARKS.LEFT_SHOULDER : LANDMARKS.RIGHT_SHOULDER;
+  const shoulderIdx =
+    side === 'left' ? LANDMARKS.LEFT_SHOULDER : LANDMARKS.RIGHT_SHOULDER;
   const elbowIdx = side === 'left' ? LANDMARKS.LEFT_ELBOW : LANDMARKS.RIGHT_ELBOW;
   const hipIdx = side === 'left' ? LANDMARKS.LEFT_HIP : LANDMARKS.RIGHT_HIP;
 
@@ -325,7 +326,8 @@ function analyzeKneeFlexion(pose, side = 'left') {
  * Analyze elbow flexion from pose data
  */
 function analyzeElbowFlexion(pose, side = 'left') {
-  const shoulderIdx = side === 'left' ? LANDMARKS.LEFT_SHOULDER : LANDMARKS.RIGHT_SHOULDER;
+  const shoulderIdx =
+    side === 'left' ? LANDMARKS.LEFT_SHOULDER : LANDMARKS.RIGHT_SHOULDER;
   const elbowIdx = side === 'left' ? LANDMARKS.LEFT_ELBOW : LANDMARKS.RIGHT_ELBOW;
   const wristIdx = side === 'left' ? LANDMARKS.LEFT_WRIST : LANDMARKS.RIGHT_WRIST;
 
@@ -348,8 +350,9 @@ function analyzeElbowFlexion(pose, side = 'left') {
  * Assess pose quality based on landmark visibility
  */
 function assessPoseQuality(pose, ...landmarkIndices) {
-  const avgVisibility = landmarkIndices.reduce((sum, idx) =>
-    sum + pose[idx].visibility, 0) / landmarkIndices.length;
+  const avgVisibility =
+    landmarkIndices.reduce((sum, idx) => sum + pose[idx].visibility, 0) /
+    landmarkIndices.length;
 
   if (avgVisibility > 0.9) return 'excellent';
   if (avgVisibility > 0.75) return 'good';
@@ -385,7 +388,7 @@ function generateFeedback(analysis, target, previousAngle = 0) {
     feedback.instruction = 'Move slowly and steadily';
   } else if (progress < 50) {
     feedback.message = 'Keep going!';
-    feedback.instruction = 'You\'re doing great';
+    feedback.instruction = "You're doing great";
   } else if (progress < 75) {
     feedback.message = 'Halfway there!';
     feedback.instruction = 'Maintain smooth motion';
@@ -405,7 +408,7 @@ function generateFeedback(analysis, target, previousAngle = 0) {
   if (Math.abs(angleChange) < 1 && progress < 95) {
     feedback.instruction = 'Continue lifting';
   } else if (angleChange < -5) {
-    feedback.instruction = 'Keep arm up - don\'t drop yet';
+    feedback.instruction = "Keep arm up - don't drop yet";
   }
 
   // Compensation detection (simplified)

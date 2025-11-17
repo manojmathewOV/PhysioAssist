@@ -24,7 +24,13 @@ async function main() {
     const report = await runModularArchitectureValidation();
 
     // Save report to file
-    const reportPath = path.join(__dirname, '..', 'docs', 'validation', 'MODULAR_ARCHITECTURE_VALIDATION.json');
+    const reportPath = path.join(
+      __dirname,
+      '..',
+      'docs',
+      'validation',
+      'MODULAR_ARCHITECTURE_VALIDATION.json'
+    );
     const reportDir = path.dirname(reportPath);
 
     // Ensure directory exists

@@ -75,7 +75,11 @@ async function main() {
 /**
  * Generate markdown summary of validation report
  */
-async function generateMarkdownSummary(report: any, filepath: string, duration: number): Promise<void> {
+async function generateMarkdownSummary(
+  report: any,
+  filepath: string,
+  duration: number
+): Promise<void> {
   const markdown = `# Gate 10C: Clinical Validation Report
 
 ## Summary
@@ -110,16 +114,19 @@ async function generateMarkdownSummary(report: any, filepath: string, duration: 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
 | **Overall Accuracy** | ${report.compensationMetrics.accuracy.toFixed(1)}% | - | - |
-| **Sensitivity** (True Positive Rate) | ${(report.compensationMetrics.sensitivity * 100).toFixed(1)}% | ≥80% | ${report.compensationMetrics.sensitivity >= 0.80 ? '✅' : '❌'} |
-| **Specificity** (True Negative Rate) | ${(report.compensationMetrics.specificity * 100).toFixed(1)}% | ≥80% | ${report.compensationMetrics.specificity >= 0.80 ? '✅' : '❌'} |
+| **Sensitivity** (True Positive Rate) | ${(report.compensationMetrics.sensitivity * 100).toFixed(1)}% | ≥80% | ${report.compensationMetrics.sensitivity >= 0.8 ? '✅' : '❌'} |
+| **Specificity** (True Negative Rate) | ${(report.compensationMetrics.specificity * 100).toFixed(1)}% | ≥80% | ${report.compensationMetrics.specificity >= 0.8 ? '✅' : '❌'} |
 | **Precision** | ${(report.compensationMetrics.precision * 100).toFixed(1)}% | ≥75% | ${report.compensationMetrics.precision >= 0.75 ? '✅' : '❌'} |
 | **F1 Score** | ${report.compensationMetrics.f1Score.toFixed(3)} | ≥0.77 | ${report.compensationMetrics.f1Score >= 0.77 ? '✅' : '❌'} |
 
 ### Clinical Interpretation
 
-${report.compensationMetrics.sensitivity >= 0.80 && report.compensationMetrics.specificity >= 0.80
+${
+  report.compensationMetrics.sensitivity >= 0.8 &&
+  report.compensationMetrics.specificity >= 0.8
     ? '✅ **Compensation detection meets clinical standards** - High sensitivity and specificity ensure reliable compensation identification for clinical decision-making.'
-    : '⚠️ **Compensation detection requires improvement** - Review detection thresholds and algorithms to improve clinical reliability.'}
+    : '⚠️ **Compensation detection requires improvement** - Review detection thresholds and algorithms to improve clinical reliability.'
+}
 
 ---
 
@@ -160,7 +167,8 @@ ${report.notes && report.notes.length > 0 ? report.notes.map((note: string) => `
 
 ## Conclusion
 
-${report.status === 'PASS'
+${
+  report.status === 'PASS'
     ? `✅ **Gate 10C Validation: PASS**
 
 The PhysioAssist clinical measurement system has successfully achieved all validation targets:
@@ -181,7 +189,8 @@ ${report.notes && report.notes.length > 0 ? report.notes.map((note: string) => `
 1. Review measurement algorithms for accuracy improvements
 2. Analyze failed test cases to identify systematic errors
 3. Adjust compensation detection thresholds if needed
-4. Rerun validation after improvements`}
+4. Rerun validation after improvements`
+}
 
 ---
 
