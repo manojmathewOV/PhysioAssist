@@ -3,7 +3,7 @@ import '@tensorflow/tfjs-react-native';
 import { Pose, Results } from '@mediapipe/pose';
 import { Camera } from 'react-native-vision-camera';
 
-import { PoseLandmark, PoseDetectionConfig, ProcessedPoseData } from '@types/pose';
+import { PoseLandmark, PoseDetectionConfig, ProcessedPoseData } from '../types/pose';
 import { calculateConfidenceScore } from '@utils/poseUtils';
 
 export class PoseDetectionService {

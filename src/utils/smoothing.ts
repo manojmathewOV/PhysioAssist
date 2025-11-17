@@ -338,11 +338,11 @@ export class PoseLandmarkFilter {
  * const smoothedElbowAngle = angleFilter.filter(noisyAngle, timestamp);
  */
 export class AngleFilter {
-  private filter: OneEuroFilter;
+  private oneEuroFilter: OneEuroFilter;
   private prevAngle: number | null = null;
 
   constructor(minCutoff: number = 1.0, beta: number = 0.007, dCutoff: number = 1.0) {
-    this.filter = new OneEuroFilter(minCutoff, beta, dCutoff);
+    this.oneEuroFilter = new OneEuroFilter(minCutoff, beta, dCutoff);
   }
 
   /**
@@ -370,7 +370,7 @@ export class AngleFilter {
     }
 
     const unwrapped = this.prevAngle + delta;
-    const smoothed = this.filter.filter(unwrapped, timestamp);
+    const smoothed = this.oneEuroFilter.filter(unwrapped, timestamp);
 
     // Normalize result back to [0, 360)
     const result = ((smoothed % 360) + 360) % 360;
@@ -380,7 +380,7 @@ export class AngleFilter {
   }
 
   reset(): void {
-    this.filter.reset();
+    this.oneEuroFilter.reset();
     this.prevAngle = null;
   }
 }

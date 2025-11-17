@@ -13,8 +13,8 @@
  */
 
 import { GoniometerServiceV2, ShoulderEulerAngles } from '../goniometerService.v2';
-import { ProcessedPoseData, PoseLandmark } from '@types/pose';
-import { AnatomicalReferenceFrame, AnatomicalPlane } from '@types/biomechanics';
+import { ProcessedPoseData, PoseLandmark } from '../../types/pose';
+import { AnatomicalReferenceFrame, AnatomicalPlane } from '../../types/biomechanics';
 import { PoseSchemaRegistry } from '../pose/PoseSchemaRegistry';
 
 describe('GoniometerServiceV2 - Gate 9B.6', () => {

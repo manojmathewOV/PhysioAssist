@@ -1,4 +1,4 @@
-import { Exercise } from '@types/exercise';
+import { Exercise } from '../types/exercise';
 
 export const EXERCISES: Record<string, Exercise> = {
   bicepCurl: {

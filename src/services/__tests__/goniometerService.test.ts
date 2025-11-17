@@ -1,7 +1,7 @@
 import { goniometerService, GoniometerService } from '../goniometerService';
 import { PoseLandmark } from '../../types/pose';
-import { AnatomicalPlane } from '@types/biomechanics';
-import { Vector3D } from '@types/common';
+import { AnatomicalPlane } from '../../types/biomechanics';
+import { Vector3D } from '../../types/common';
 
 describe('GoniometerService', () => {
   beforeEach(() => {
@@ -11,9 +11,9 @@ describe('GoniometerService', () => {
 
   describe('calculateAngle', () => {
     it('should calculate 90 degrees for right angle', () => {
-      const pointA: PoseLandmark = { x: 0, y: 1, z: 0, visibility: 1, name: 'pointA' };
-      const pointB: PoseLandmark = { x: 0, y: 0, z: 0, visibility: 1, name: 'pointB' };
-      const pointC: PoseLandmark = { x: 1, y: 0, z: 0, visibility: 1, name: 'pointC' };
+      const pointA: PoseLandmark = { x: 0, y: 1, z: 0, visibility: 1, name: 'pointA', index: 0 };
+      const pointB: PoseLandmark = { x: 0, y: 0, z: 0, visibility: 1, name: 'pointB', index: 1 };
+      const pointC: PoseLandmark = { x: 1, y: 0, z: 0, visibility: 1, name: 'pointC', index: 2 };
 
       const result = goniometerService.calculateAngle(pointA, pointB, pointC);
       expect(result.angle).toBeCloseTo(90, 0);
@@ -21,9 +21,9 @@ describe('GoniometerService', () => {
     });
 
     it('should calculate 180 degrees for straight line', () => {
-      const pointA: PoseLandmark = { x: 0, y: 0, z: 0, visibility: 1, name: 'pointA' };
-      const pointB: PoseLandmark = { x: 1, y: 0, z: 0, visibility: 1, name: 'pointB' };
-      const pointC: PoseLandmark = { x: 2, y: 0, z: 0, visibility: 1, name: 'pointC' };
+      const pointA: PoseLandmark = { x: 0, y: 0, z: 0, visibility: 1, name: 'pointA', index: 0 };
+      const pointB: PoseLandmark = { x: 1, y: 0, z: 0, visibility: 1, name: 'pointB', index: 1 };
+      const pointC: PoseLandmark = { x: 2, y: 0, z: 0, visibility: 1, name: 'pointC', index: 2 };
 
       const result = goniometerService.calculateAngle(pointA, pointB, pointC);
       expect(result.angle).toBeCloseTo(180, 0);
@@ -31,9 +31,9 @@ describe('GoniometerService', () => {
     });
 
     it('should calculate 45 degrees for diagonal', () => {
-      const pointA: PoseLandmark = { x: 0, y: 1, z: 0, visibility: 1, name: 'pointA' };
-      const pointB: PoseLandmark = { x: 0, y: 0, z: 0, visibility: 1, name: 'pointB' };
-      const pointC: PoseLandmark = { x: 1, y: 1, z: 0, visibility: 1, name: 'pointC' };
+      const pointA: PoseLandmark = { x: 0, y: 1, z: 0, visibility: 1, name: 'pointA', index: 0 };
+      const pointB: PoseLandmark = { x: 0, y: 0, z: 0, visibility: 1, name: 'pointB', index: 1 };
+      const pointC: PoseLandmark = { x: 1, y: 1, z: 0, visibility: 1, name: 'pointC', index: 2 };
 
       const result = goniometerService.calculateAngle(pointA, pointB, pointC);
       expect(result.angle).toBeCloseTo(45, 0);
@@ -46,9 +46,9 @@ describe('GoniometerService', () => {
       // Enable 3D mode
       goniometerService.updateConfig({ use3D: true });
 
-      const pointA: PoseLandmark = { x: 0, y: 0, z: 1, visibility: 1, name: 'pointA' };
-      const pointB: PoseLandmark = { x: 0, y: 0, z: 0, visibility: 1, name: 'pointB' };
-      const pointC: PoseLandmark = { x: 1, y: 0, z: 0, visibility: 1, name: 'pointC' };
+      const pointA: PoseLandmark = { x: 0, y: 0, z: 1, visibility: 1, name: 'pointA', index: 0 };
+      const pointB: PoseLandmark = { x: 0, y: 0, z: 0, visibility: 1, name: 'pointB', index: 1 };
+      const pointC: PoseLandmark = { x: 1, y: 0, z: 0, visibility: 1, name: 'pointC', index: 2 };
 
       const result = goniometerService.calculateAngle(pointA, pointB, pointC, 'test3D');
       expect(result.angle).toBeCloseTo(90, 0);
@@ -70,9 +70,9 @@ describe('GoniometerService', () => {
       }));
 
       // Set up right arm in 90-degree position (MoveNet keypoints: 6=shoulder, 8=elbow, 10=wrist)
-      landmarks[6] = { x: 0, y: 0, z: 0, visibility: 1, name: 'right_shoulder' }; // shoulder
-      landmarks[8] = { x: 1, y: 0, z: 0, visibility: 1, name: 'right_elbow' }; // elbow
-      landmarks[10] = { x: 1, y: 1, z: 0, visibility: 1, name: 'right_wrist' }; // wrist
+      landmarks[6] = { x: 0, y: 0, z: 0, visibility: 1, name: 'right_shoulder', index: 6 }; // shoulder
+      landmarks[8] = { x: 1, y: 0, z: 0, visibility: 1, name: 'right_elbow', index: 8 }; // elbow
+      landmarks[10] = { x: 1, y: 1, z: 0, visibility: 1, name: 'right_wrist', index: 10 }; // wrist
 
       const angle = goniometerService.getJointAngle('rightElbow', landmarks);
       expect(angle).toBeCloseTo(90, 0);

@@ -10,7 +10,7 @@
  */
 
 import { convertVideoToImageData, validateImageData } from './frameConverter';
-import { ProcessedPoseData } from '@types/pose';
+import { ProcessedPoseData } from '../types/pose';
 
 export interface VideoFrameFeederOptions {
   fps?: number;

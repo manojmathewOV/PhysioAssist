@@ -4,8 +4,8 @@ import {
   ValidationResult,
   RepetitionData,
   ExerciseMetrics,
-} from '@types/exercise';
-import { JointAngle, ProcessedPoseData } from '@types/pose';
+} from '../types/exercise';
+import { JointAngle, ProcessedPoseData } from '../types/pose';
 import { goniometerService } from './goniometerService';
 
 export class ExerciseValidationService {

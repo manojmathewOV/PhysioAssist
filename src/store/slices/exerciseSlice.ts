@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Exercise, ValidationResult, ExerciseMetrics } from '@types/exercise';
+import { Exercise, ValidationResult, ExerciseMetrics } from '../../types/exercise';
 
 interface ExerciseHistory {
   id: string;

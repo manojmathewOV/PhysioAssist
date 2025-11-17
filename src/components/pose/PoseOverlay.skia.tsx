@@ -17,7 +17,7 @@ import { useSharedValue, useDerivedValue } from 'react-native-reanimated';
 import { useSelector } from 'react-redux';
 import { RootState } from '@store/index';
 import { POSE_CONNECTIONS } from '@services/PoseDetectionService.v2';
-import { PoseLandmark } from '@types/pose';
+import { PoseLandmark } from '../../types/pose';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 

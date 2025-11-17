@@ -1,4 +1,4 @@
-import { PoseLandmark } from '@types/pose';
+import { PoseLandmark } from '../types/pose';
 
 /**
  * Calculate overall confidence score from landmarks
