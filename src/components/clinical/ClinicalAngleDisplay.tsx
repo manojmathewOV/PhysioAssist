@@ -19,7 +19,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { ClinicalJointMeasurement } from '@types/clinicalMeasurement';
+import { ClinicalJointMeasurement } from '../../types/clinicalMeasurement';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

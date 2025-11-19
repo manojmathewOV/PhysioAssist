@@ -1,5 +1,5 @@
 import { OrientationClassifier } from '../OrientationClassifier';
-import { PoseLandmark } from '@types/pose';
+import { PoseLandmark } from '../../../types/pose';
 
 describe('OrientationClassifier - Gate 9B.3', () => {
   let classifier: OrientationClassifier;

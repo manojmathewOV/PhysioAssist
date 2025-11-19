@@ -7,7 +7,7 @@
 jest.mock('react-native-fast-tflite');
 
 import { PoseDetectionServiceV2 } from '../PoseDetectionService.v2';
-import { PoseLandmark } from '@types/pose';
+import { PoseLandmark } from '../../types/pose';
 
 describe('PoseDetectionServiceV2 - Gate 9B.4 Integration', () => {
   // Helper to create mock landmarks

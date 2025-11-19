@@ -151,7 +151,7 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const shoulder = validPose.landmarks.find((l) => l.name === 'right_shoulder');
       const elbow = validPose.landmarks.find((l) => l.name === 'right_elbow');
       const wrist = validPose.landmarks.find((l) => l.name === 'right_wrist');
-      // eslint-disable-next-line no-console
+
       console.log(
         `[TEST] Joint positions:`,
         JSON.stringify({ shoulder, elbow, wrist }, null, 2)
@@ -172,13 +172,12 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
         const mag1 = Math.sqrt(v1.x ** 2 + v1.y ** 2 + v1.z ** 2);
         const mag2 = Math.sqrt(v2.x ** 2 + v2.y ** 2 + v2.z ** 2);
         const manualAngle = (Math.acos(dot / (mag1 * mag2)) * 180) / Math.PI;
-        // eslint-disable-next-line no-console
+
         console.log(`[TEST] Manual elbow angle calculation: ${manualAngle.toFixed(1)}°`);
       }
 
-      // eslint-disable-next-line no-console
       console.log(`[TEST] Valid case warnings:`, validMeasurement.quality.warnings);
-      // eslint-disable-next-line no-console
+
       console.log(
         `[TEST] Valid case elbow angle:`,
         validMeasurement.secondaryJoints.right_elbow?.angle
@@ -206,9 +205,9 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       );
 
       // Debug: Check invalid case warnings
-      // eslint-disable-next-line no-console
+
       console.log(`[TEST] Invalid case warnings:`, invalidMeasurement.quality.warnings);
-      // eslint-disable-next-line no-console
+
       console.log(
         `[TEST] Invalid case elbow angle:`,
         invalidMeasurement.secondaryJoints.right_elbow?.angle
@@ -282,13 +281,13 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const hip = testFrame.landmarks.find(
         (l) => l.name === 'right_hip' || l.name === 'left_hip'
       );
-      // eslint-disable-next-line no-console
+
       console.log(`[TEST] Frame 100 nose/hip:`, {
         nose: nose?.x,
         hip: hip?.x,
         diff: nose && hip ? Math.abs(nose.x - hip.x) : 0,
       });
-      // eslint-disable-next-line no-console
+
       console.log(`[TEST] Frame 100 viewOrientation:`, testFrame.viewOrientation);
 
       const measurementSequence = sequenceGenerator.convertToMeasurementSequence(
@@ -300,12 +299,11 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const framesWithCompensations = measurementSequence.measurements.filter(
         (m) => m.compensations && m.compensations.length > 0
       );
-      // eslint-disable-next-line no-console
+
       console.log(
         `[TEST] Frames with compensations: ${framesWithCompensations.length}/${measurementSequence.measurements.length}`
       );
       if (framesWithCompensations.length > 0) {
-        // eslint-disable-next-line no-console
         console.log(
           `[TEST] Sample compensation:`,
           framesWithCompensations[0].compensations[0]
@@ -317,14 +315,14 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
         const rightShoulder = frame0.landmarks.find((l) => l.name === 'right_shoulder');
         const leftHip = frame0.landmarks.find((l) => l.name === 'left_hip');
         const rightHip = frame0.landmarks.find((l) => l.name === 'right_hip');
-        // eslint-disable-next-line no-console
+
         console.log(`[TEST] Frame 0 shoulders Y:`, {
           left: leftShoulder?.y,
           right: rightShoulder?.y,
         });
-        // eslint-disable-next-line no-console
+
         console.log(`[TEST] Frame 0 hips Y:`, { left: leftHip?.y, right: rightHip?.y });
-        // eslint-disable-next-line no-console
+
         console.log(
           `[TEST] Frame 0 thorax from measurement:`,
           measurement0.referenceFrames?.global?.yAxis
@@ -338,13 +336,13 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       );
 
       // Should detect trunk lean compensation
-      // eslint-disable-next-line no-console
+
       console.log(`[TEST] Detected compensations:`, temporalResult.compensations);
       const trunkLean = temporalResult.compensations.find(
         (c) => c.compensationType === 'trunk_lean'
       );
       expect(trunkLean).toBeDefined();
-      // eslint-disable-next-line no-console
+
       console.log(`[TEST] Trunk lean details:`, {
         isPersistent: trunkLean?.isPersistent,
         isProgressive: trunkLean?.isProgressive,
@@ -357,7 +355,7 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       trunkLean?.severityProgression?.forEach((p) => {
         severityCounts[p.severity] = (severityCounts[p.severity] || 0) + 1;
       });
-      // eslint-disable-next-line no-console
+
       console.log(`[TEST] Severity distribution:`, severityCounts);
       expect(trunkLean!.isPersistent).toBe(true); // Present in >50% of frames
       expect(trunkLean!.isProgressive).toBe(true); // Severity increases
@@ -580,12 +578,11 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const mae = errors.reduce((sum, e) => sum + e, 0) / errors.length;
 
       if (mae > 5) {
-        // eslint-disable-next-line no-console
         console.log(
           '[DEBUG] Elbow flexion accuracy failures:',
           JSON.stringify(details, null, 2)
         );
-        // eslint-disable-next-line no-console
+
         console.log(`[DEBUG] MAE: ${mae.toFixed(2)}°`);
       }
 
@@ -704,7 +701,6 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
 
-      // eslint-disable-next-line no-console
       console.log(`Single frame measurement: ${duration}ms`);
       expect(duration).toBeLessThan(50);
     });
@@ -726,7 +722,6 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
 
-      // eslint-disable-next-line no-console
       console.log(`30-frame sequence processing: ${duration}ms`);
       expect(duration).toBeLessThan(2000); // <2 seconds for 30 frames
     });
@@ -747,7 +742,7 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
       const duration = endTime - startTime;
 
       const msPerFrame = duration / poseSequence.frames.length;
-      // eslint-disable-next-line no-console
+
       console.log(`Average processing time per frame: ${msPerFrame.toFixed(1)}ms`);
       expect(msPerFrame).toBeLessThan(120); // Real-time threshold for 30 FPS
     });

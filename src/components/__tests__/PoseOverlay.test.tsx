@@ -6,9 +6,9 @@ import { renderWithProviders } from '../../utils/testHelpers';
 
 describe('PoseOverlay', () => {
   const mockLandmarks: PoseLandmark[] = [
-    { x: 0.5, y: 0.5, z: 0, visibility: 0.9, name: 'nose' },
-    { x: 0.4, y: 0.4, z: 0, visibility: 0.9, name: 'left_eye' },
-    { x: 0.6, y: 0.4, z: 0, visibility: 0.9, name: 'right_eye' },
+    { x: 0.5, y: 0.5, z: 0, visibility: 0.9, name: 'nose', index: 0 },
+    { x: 0.4, y: 0.4, z: 0, visibility: 0.9, name: 'left_eye', index: 1 },
+    { x: 0.6, y: 0.4, z: 0, visibility: 0.9, name: 'right_eye', index: 2 },
   ];
 
   const mockAngles = {
@@ -163,9 +163,9 @@ describe('PoseOverlay', () => {
 
   it('should not render landmarks with low visibility', () => {
     const landmarksWithLowVisibility: PoseLandmark[] = [
-      { x: 0.5, y: 0.5, z: 0, visibility: 0.3, name: 'at_threshold' },
-      { x: 0.5, y: 0.5, z: 0, visibility: 0.1, name: 'invisible_2' },
-      { x: 0.5, y: 0.5, z: 0, visibility: 0.8, name: 'visible' },
+      { x: 0.5, y: 0.5, z: 0, visibility: 0.3, name: 'at_threshold', index: 0 },
+      { x: 0.5, y: 0.5, z: 0, visibility: 0.1, name: 'invisible_2', index: 1 },
+      { x: 0.5, y: 0.5, z: 0, visibility: 0.8, name: 'visible', index: 2 },
     ];
 
     const { toJSON } = renderWithProviders(

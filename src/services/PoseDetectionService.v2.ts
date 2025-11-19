@@ -13,7 +13,7 @@
  */
 
 import { TFLiteModel } from 'react-native-fast-tflite';
-import { ProcessedPoseData, PoseLandmark, PoseDetectionConfig } from '@types/pose';
+import { ProcessedPoseData, PoseLandmark, PoseDetectionConfig } from '../types/pose';
 import {
   getPatientFriendlyError,
   AdaptiveSettings,

@@ -8,7 +8,7 @@ import {
   angleBetweenVectors,
   projectVectorOntoPlane,
 } from '../vectorMath';
-import { Vector3D } from '@types/common';
+import { Vector3D } from '../../types/common';
 
 describe('Vector Math Utilities', () => {
   describe('midpoint3D', () => {

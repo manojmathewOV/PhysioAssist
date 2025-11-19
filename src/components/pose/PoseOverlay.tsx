@@ -4,7 +4,7 @@ import Svg, { Circle, Line, Text as SvgText } from 'react-native-svg';
 import { useSelector } from 'react-redux';
 
 import { RootState } from '@store/index';
-import { PoseLandmark } from '@types/pose';
+import { PoseLandmark } from '../../types/pose';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 

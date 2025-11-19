@@ -41,8 +41,8 @@ import { RootState } from '@store/index';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
 import { poseDetectionService } from '@services/poseDetectionService';
 import { ClinicalMeasurementService } from '@services/biomechanics/ClinicalMeasurementService';
-import { ProcessedPoseData } from '@types/pose';
-import { ClinicalJointMeasurement } from '@types/clinicalMeasurement';
+import { ProcessedPoseData } from '../types/pose';
+import { ClinicalJointMeasurement } from '../types/clinicalMeasurement';
 import PoseOverlay from '@components/pose/PoseOverlay';
 import JointSelectionPanel, {
   JointType,

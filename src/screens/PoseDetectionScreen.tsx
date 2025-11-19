@@ -5,7 +5,7 @@ import {
   Text,
   TouchableOpacity,
   Alert,
-  Dimensions,
+  // Dimensions,
 } from 'react-native';
 import {
   Camera,
@@ -20,11 +20,14 @@ import { runOnJS } from 'react-native-reanimated';
 import { RootState } from '@store/index';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
 import { poseDetectionService } from '@services/poseDetectionService';
-import { mockPoseDataSimulator } from '@services/mockPoseDataSimulator';
+// Conditional import: Only include mock simulator in development builds
+const mockPoseDataSimulator = __DEV__
+  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator // eslint-disable-line @typescript-eslint/no-var-requires
+  : null;
 import PoseOverlay from '@components/pose/PoseOverlay';
 import ExerciseControls from '@components/exercises/ExerciseControls';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+// const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const PoseDetectionScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -99,8 +102,8 @@ const PoseDetectionScreen: React.FC = () => {
     if (isInitialized) {
       dispatch(setDetecting(true));
 
-      // Start mock simulator if using mock data
-      if (useMockData) {
+      // Start mock simulator if using mock data (dev only)
+      if (useMockData && mockPoseDataSimulator) {
         mockPoseDataSimulator.start((poseData) => {
           dispatch(setPoseData(poseData));
         }, 30);
@@ -111,8 +114,8 @@ const PoseDetectionScreen: React.FC = () => {
   const stopPoseDetection = () => {
     dispatch(setDetecting(false));
 
-    // Stop mock simulator if running
-    if (useMockData && mockPoseDataSimulator.isActive()) {
+    // Stop mock simulator if running (dev only)
+    if (useMockData && mockPoseDataSimulator && mockPoseDataSimulator.isActive()) {
       mockPoseDataSimulator.stop();
     }
   };
@@ -143,7 +146,7 @@ const PoseDetectionScreen: React.FC = () => {
   }, []);
 
   // Process frame callback (must be non-worklet function)
-  const processFrameData = useCallback(async (width: number, height: number) => {
+  const processFrameData = useCallback(async (_width: number, _height: number) => {
     try {
       // In a real implementation, you would:
       // 1. Convert the Frame buffer to ImageData

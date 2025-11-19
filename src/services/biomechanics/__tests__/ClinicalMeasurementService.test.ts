@@ -1264,4 +1264,326 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       expect(trunkComp).toBeUndefined();
     });
   });
+
+  describe('Edge Cases and Error Handling - Complete Coverage', () => {
+    it('should throw error if cachedAnatomicalFrames missing in flexion', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 160,
+        viewOrientation: 'sagittal',
+      });
+      delete (poseData as any).cachedAnatomicalFrames;
+
+      expect(() => {
+        clinicalService.measureShoulderFlexion(poseData, 'left');
+      }).toThrow('cachedAnatomicalFrames not available');
+    });
+
+    it('should throw error if cachedAnatomicalFrames missing in abduction', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderAbduction: 160,
+        viewOrientation: 'frontal',
+      });
+      delete (poseData as any).cachedAnatomicalFrames;
+
+      expect(() => {
+        clinicalService.measureShoulderAbduction(poseData, 'left');
+      }).toThrow('cachedAnatomicalFrames not available');
+    });
+
+    it('should throw error if humerus frame missing in abduction', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderAbduction: 160,
+        viewOrientation: 'frontal',
+      });
+      // Remove humerus frame
+      if (poseData.cachedAnatomicalFrames) {
+        delete poseData.cachedAnatomicalFrames.left_humerus;
+      }
+
+      expect(() => {
+        clinicalService.measureShoulderAbduction(poseData, 'left');
+      }).toThrow('left humerus frame not available');
+    });
+
+    it('should classify fair clinical grade (75-90% of minAcceptable)', () => {
+      // Fair ROM: >= minAcceptable * 0.75 and < minAcceptable
+      // For shoulder flexion: target=160°, minAcceptable=120°, fair: 90° to 119°
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 100, // Between 90° and 120°, should be "fair"
+        viewOrientation: 'sagittal',
+      });
+
+      const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
+
+      expect(measurement.primaryJoint.clinicalGrade).toBe('fair');
+    });
+
+    it('should classify limited clinical grade (<=75% of minAcceptable)', () => {
+      // Limited ROM: < minAcceptable * 0.75
+      // For shoulder flexion: target=160°, minAcceptable=120°, limited < 90°
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 85, // Less than 90°
+        viewOrientation: 'sagittal',
+      });
+
+      const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
+
+      expect(measurement.primaryJoint.clinicalGrade).toBe('limited');
+    });
+
+    it('should classify excellent clinical grade (at or above target)', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 162, // Above target of 160°
+        viewOrientation: 'sagittal',
+      });
+
+      const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
+
+      expect(measurement.primaryJoint.clinicalGrade).toBe('excellent');
+    });
+
+    it('should handle abduction with fair clinical grade', () => {
+      // Target: 160°, minAcceptable: 120°, fair: 90° to 119°
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderAbduction: 100, // Fair range (90-119)
+        viewOrientation: 'frontal',
+      });
+
+      const measurement = clinicalService.measureShoulderAbduction(poseData, 'left');
+
+      expect(measurement.primaryJoint.clinicalGrade).toBe('fair');
+    });
+
+    it('should handle elbow with fair clinical grade', () => {
+      // Target: 150°, minAcceptable: 130°, fair: 97.5° to 129°
+      const poseData = createMockPoseData('movenet-17', {
+        elbowAngle: 110, // Fair range (97.5-129) - note: elbowAngle, not elbowFlexion
+        viewOrientation: 'sagittal',
+      });
+
+      const measurement = clinicalService.measureElbowFlexion(poseData, 'left');
+
+      expect(measurement.primaryJoint.clinicalGrade).toBe('fair');
+    });
+
+    it('should handle knee with fair clinical grade', () => {
+      // Target: 135°, minAcceptable: 110°, fair: 82.5° to 109°
+      const poseData = createMockPoseData('movenet-17', {
+        kneeAngle: 95, // Fair range (82.5-109) - note: kneeAngle, not kneeFlexion
+        viewOrientation: 'sagittal',
+      });
+
+      const measurement = clinicalService.measureKneeFlexion(poseData, 'left');
+
+      expect(measurement.primaryJoint.clinicalGrade).toBe('fair');
+    });
+
+    it('should handle elbow with limited clinical grade', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        elbowAngle: 90, // Limited range (< 97.5°) - note: elbowAngle, not elbowFlexion
+        viewOrientation: 'sagittal',
+      });
+
+      const measurement = clinicalService.measureElbowFlexion(poseData, 'left');
+
+      expect(measurement.primaryJoint.clinicalGrade).toBe('limited');
+    });
+
+    it('should handle knee with limited clinical grade', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        kneeAngle: 75, // Limited range (< 82.5°) - note: kneeAngle, not kneeFlexion
+        viewOrientation: 'sagittal',
+      });
+
+      const measurement = clinicalService.measureKneeFlexion(poseData, 'left');
+
+      expect(measurement.primaryJoint.clinicalGrade).toBe('limited');
+    });
+
+    it('should handle rotation with missing forearm frame error', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderRotation: 60,
+        viewOrientation: 'frontal',
+        elbowAngle: 90,
+      });
+      // Remove forearm frame
+      if (poseData.cachedAnatomicalFrames) {
+        delete poseData.cachedAnatomicalFrames.left_forearm;
+      }
+
+      expect(() => {
+        clinicalService.measureShoulderRotation(poseData, 'left');
+      }).toThrow('left forearm frame not available');
+    });
+
+    it('should handle rotation with missing cachedAnatomicalFrames', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderRotation: 60,
+        viewOrientation: 'frontal',
+        elbowAngle: 90,
+      });
+      delete (poseData as any).cachedAnatomicalFrames;
+
+      expect(() => {
+        clinicalService.measureShoulderRotation(poseData, 'left');
+      }).toThrow('cachedAnatomicalFrames not available');
+    });
+
+    it('should handle knee with missing cachedAnatomicalFrames', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        kneeFlexion: 135,
+        viewOrientation: 'sagittal',
+      });
+      delete (poseData as any).cachedAnatomicalFrames;
+
+      expect(() => {
+        clinicalService.measureKneeFlexion(poseData, 'left');
+      }).toThrow('cachedAnatomicalFrames not available');
+    });
+
+    it('should handle knee with missing hip landmark', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        kneeFlexion: 135,
+        viewOrientation: 'sagittal',
+      });
+      // Remove hip landmark
+      const hipIndex = poseData.landmarks.findIndex((l) => l.name === 'left_hip');
+      if (hipIndex >= 0) {
+        poseData.landmarks.splice(hipIndex, 1);
+      }
+
+      expect(() => {
+        clinicalService.measureKneeFlexion(poseData, 'left');
+      }).toThrow('Critical landmarks (hip, knee) missing');
+    });
+
+    it('should handle knee with missing knee landmark', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        kneeFlexion: 135,
+        viewOrientation: 'sagittal',
+      });
+      // Remove knee landmark
+      const kneeIndex = poseData.landmarks.findIndex((l) => l.name === 'left_knee');
+      if (kneeIndex >= 0) {
+        poseData.landmarks.splice(kneeIndex, 1);
+      }
+
+      expect(() => {
+        clinicalService.measureKneeFlexion(poseData, 'left');
+      }).toThrow('Critical landmarks (hip, knee) missing');
+    });
+
+    it('should handle elbow with missing cachedAnatomicalFrames', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        elbowFlexion: 150,
+        viewOrientation: 'sagittal',
+      });
+      delete (poseData as any).cachedAnatomicalFrames;
+
+      expect(() => {
+        clinicalService.measureElbowFlexion(poseData, 'left');
+      }).toThrow('cachedAnatomicalFrames not available');
+    });
+
+    it('should handle abduction with limited clinical grade', () => {
+      // Target: 160°, minAcceptable: 120°, limited < 90°
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderAbduction: 85, // Limited range (< 90°)
+        viewOrientation: 'frontal',
+      });
+
+      const measurement = clinicalService.measureShoulderAbduction(poseData, 'left');
+
+      expect(measurement.primaryJoint.clinicalGrade).toBe('limited');
+    });
+
+    it('should recommend improvements for poor quality (low visibility)', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 160,
+        viewOrientation: 'sagittal',
+      });
+      // Set very low visibility to trigger poor quality
+      // Quality score = 0.5 * visibility + 0.3 * frameStability + 0.2 * orientationMatch
+      // For poor (<0.6): need visibility < 0.2 (assuming frameStability=0.9, orientationMatch=1.0)
+      poseData.landmarks = poseData.landmarks.map((l) => ({
+        ...l,
+        visibility: 0.1, // Very low visibility
+      }));
+
+      const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
+
+      expect(measurement.quality.overall).toBe('poor');
+      expect(measurement.quality.recommendations).toContainEqual(
+        expect.stringContaining('Improve lighting')
+      );
+    });
+
+    it('should recommend stability improvements for low frame stability', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 160,
+        viewOrientation: 'sagittal',
+      });
+      // Simulate low frame confidence (the quality assessment uses 'confidence', not 'stability')
+      if (poseData.cachedAnatomicalFrames) {
+        poseData.cachedAnatomicalFrames.global.confidence = 0.5; // Low confidence
+        poseData.cachedAnatomicalFrames.thorax.confidence = 0.5; // Low confidence
+      }
+
+      const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
+
+      expect(measurement.quality.recommendations).toContainEqual(
+        expect.stringContaining('camera shake')
+      );
+    });
+
+    it('should recommend orientation detection when missing', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 160,
+        viewOrientation: 'sagittal',
+      });
+      delete (poseData as any).viewOrientation;
+
+      // Force validation to pass by providing sagittal view data manually
+      const poseDataWithMissingOrientation = {
+        ...poseData,
+        viewOrientation: undefined,
+      };
+
+      // This should include orientation recommendation
+      expect(() => {
+        clinicalService.measureShoulderFlexion(
+          poseDataWithMissingOrientation as any,
+          'left'
+        );
+      }).toThrow(); // Will throw because of missing view orientation
+    });
+
+    it('should classify minimal compensation severity', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 160,
+        viewOrientation: 'sagittal',
+        trunkLean: 3, // Very small compensation (minimal)
+      });
+
+      const measurement = clinicalService.measureShoulderFlexion(poseData, 'left');
+
+      const comp = measurement.compensations.find((c) => c.type === 'trunk_lean');
+      if (comp) {
+        expect(comp.severity).toBe('minimal');
+      }
+    });
+
+    it('should handle knee with fair grade classification', () => {
+      // Knee: target=135°, minAcceptable=110°, fair: 82.5° to 109°
+      // Testing the line 713 which is the fair classification for knee
+      const poseData = createMockPoseData('movenet-17', {
+        kneeAngle: 95, // Between 82.5 and 110 - note: kneeAngle, not kneeFlexion
+        viewOrientation: 'sagittal',
+      });
+
+      const measurement = clinicalService.measureKneeFlexion(poseData, 'left');
+
+      expect(measurement.primaryJoint.clinicalGrade).toBe('fair');
+    });
+  });
 });

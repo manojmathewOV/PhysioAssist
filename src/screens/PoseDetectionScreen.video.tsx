@@ -18,7 +18,7 @@ import {
   Text,
   TouchableOpacity,
   Alert,
-  Dimensions,
+  // Dimensions,
   Platform,
 } from 'react-native';
 import {
@@ -34,12 +34,15 @@ import { runOnJS } from 'react-native-reanimated';
 import { RootState } from '@store/index';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
 import { poseDetectionService } from '@services/poseDetectionService';
-import { mockPoseDataSimulator } from '@services/mockPoseDataSimulator';
+// Conditional import: Only include mock simulator in development builds
+const mockPoseDataSimulator = __DEV__
+  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator // eslint-disable-line @typescript-eslint/no-var-requires
+  : null;
 import { VideoFrameFeeder, createPoseVideoFeeder } from '@utils/videoFrameFeeder';
 import PoseOverlay from '@components/pose/PoseOverlay';
 import ExerciseControls from '@components/exercises/ExerciseControls';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+// const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 // Test mode configuration
 const TEST_MODE = process.env.TEST_MODE || 'mock'; // 'camera' | 'video' | 'mock'
@@ -198,7 +201,7 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
           await videoFeederRef.current.start();
           console.log('Video feed started');
         }
-      } else if (useMockData) {
+      } else if (useMockData && mockPoseDataSimulator) {
         mockPoseDataSimulator.start((poseData) => {
           dispatch(setPoseData(poseData));
         }, 30);
@@ -211,7 +214,7 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
 
     if (useVideoFeed && videoFeederRef.current) {
       videoFeederRef.current.stop();
-    } else if (useMockData && mockPoseDataSimulator.isActive()) {
+    } else if (useMockData && mockPoseDataSimulator && mockPoseDataSimulator.isActive()) {
       mockPoseDataSimulator.stop();
     }
   };
@@ -250,7 +253,7 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
     }
   }, [useVideoFeed]);
 
-  const processFrameData = useCallback(async (width: number, height: number) => {
+  const processFrameData = useCallback(async (_width: number, _height: number) => {
     try {
       // Real frame processing would happen here in production
       // await poseDetectionService.processFrame(imageData);

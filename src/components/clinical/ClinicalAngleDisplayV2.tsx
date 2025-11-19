@@ -15,7 +15,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { ClinicalJointMeasurement } from '@types/clinicalMeasurement';
+import { ClinicalJointMeasurement } from '../../types/clinicalMeasurement';
 import Svg, { Circle, Line, G } from 'react-native-svg';
 
 interface ClinicalAngleDisplayV2Props {

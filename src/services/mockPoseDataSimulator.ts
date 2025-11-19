@@ -8,7 +8,7 @@
  * - Developing UI without hardware dependencies
  */
 
-import { ProcessedPoseData, PoseLandmark } from '@types/pose';
+import { ProcessedPoseData, PoseLandmark } from '../types/pose';
 
 export class MockPoseDataSimulator {
   private isRunning: boolean = false;

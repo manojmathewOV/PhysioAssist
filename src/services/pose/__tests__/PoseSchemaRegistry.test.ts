@@ -1,5 +1,5 @@
 import { PoseSchemaRegistry } from '../PoseSchemaRegistry';
-import { PoseSchema } from '@types/pose';
+import { PoseSchema } from '../../../types/pose';
 
 describe('PoseSchemaRegistry - Gate 9B.2', () => {
   let registry: PoseSchemaRegistry;

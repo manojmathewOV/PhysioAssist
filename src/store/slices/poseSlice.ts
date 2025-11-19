@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ProcessedPoseData, JointAngle } from '@types/pose';
+import { ProcessedPoseData, JointAngle } from '../../types/pose';
 
 interface PoseState {
   currentPose: ProcessedPoseData | null;
