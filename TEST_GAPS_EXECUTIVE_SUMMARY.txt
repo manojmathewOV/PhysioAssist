@@ -1,0 +1,283 @@
+===============================================================================
+BIOMECHANICS & MEASUREMENTS TEST COVERAGE GAPS - EXECUTIVE SUMMARY
+===============================================================================
+
+CURRENT STATUS:
+  Statements: 90.29%
+  Branches:   80.32%  <-- Primary weakness
+  Lines:      97.19%
+  Functions:  89.93%
+
+TARGET: 10/10 Coverage (100% + Edge Cases)
+GAP: ~10% coverage + significant edge cases
+
+===============================================================================
+TOP 20 MOST CRITICAL GAPS TO 10/10 COVERAGE
+===============================================================================
+
+PRIORITY 1 - QUICK WINS (1-2 days to implement):
+═══════════════════════════════════════════════════════════════════════════
+
+1. ✗ FOREARM FRAME MISSING ERROR PATH
+   File: ClinicalMeasurementService.ts, Line 576-581
+   Issue: No test when cachedAnatomicalFrames.left_forearm is undefined
+   Impact: Rotation measurement fails ungracefully
+   Fix: 2 test cases (left, right)
+
+2. ✗ ELBOW GATING VALIDATION WARNING
+   File: ClinicalMeasurementService.ts, Line 405-410
+   Issue: Console warning not tested when elbow deviation > tolerance
+   Impact: Silent failure in shoulder rotation measurement
+   Fix: 1 test case
+
+3. ✗ VIEW ORIENTATION NULL/INVALID CASES
+   File: CompensationDetectionService.ts, Lines 184, 260, 285-288
+   Issue: 4 separate view orientation validation paths untested
+   Impact: Incorrect compensation detection with invalid camera orientation
+   Fix: 6 test cases
+
+4. ✗ SHOULDER HIKING VISIBILITY THRESHOLD
+   File: CompensationDetectionService.ts, Line 352
+   Issue: Low visibility check (<0.5) for shoulder/ear not tested
+   Impact: False positives when landmarks are occluded
+   Fix: 3 test cases
+
+5. ✗ SHOULDER NOT ELEVATED CHECK
+   File: CompensationDetectionService.ts, Line 407
+   Issue: When target shoulder not elevated, compensation not detected
+   Impact: Missing validation of elevated shoulder condition
+   Fix: 2 test cases
+
+6. ✗ QUALITY RECOMMENDATION BRANCHES
+   File: ClinicalMeasurementService.ts, Lines 820, 825
+   Issue: hasDepth=false and viewOrientation=undefined branches untested
+   Impact: User doesn't get depth sensor recommendations
+   Fix: 3 test cases
+
+7. ✗ COMPENSATION SEVERITY THRESHOLD REMAPPING
+   File: ClinicalMeasurementService.ts, Lines 899-908
+   Issue: Custom severity threshold recalculation not tested
+   Impact: Compensation severity may be incorrect with custom config
+   Fix: 3 test cases at threshold boundaries
+
+8. ✗ CACHE LRU EVICTION EDGE CASE
+   File: AnatomicalFrameCache.ts, Lines 208-217
+   Issue: Cache overflow handling and LRU eviction not tested
+   Impact: Memory leaks or cache misses under heavy load
+   Fix: 3 test cases
+
+9. ✗ SPATIAL BUCKETING DISTAL JOINTS
+   File: AnatomicalFrameCache.ts, Lines 221-230
+   Issue: Wrist/elbow position bucketing precision not tested
+   Impact: Forearm frame cache misses despite stable position
+   Fix: 2 test cases
+
+10. ✗ FULL MEASUREMENT PIPELINE INTEGRATION
+    File: Multiple services working together
+    Issue: No end-to-end test from PoseData → Measurement
+    Impact: Unknown cascade failures when services interact
+    Fix: 3 integration test cases
+
+SUBTOTAL PRIORITY 1: 30 test cases → Expected coverage: 93%+
+
+───────────────────────────────────────────────────────────────────────────
+
+PRIORITY 2 - CLINICAL COMPLETENESS (3-5 days):
+═══════════════════════════════════════════════════════════════════════════
+
+11. ✗ PELVIS FRAME IMPLEMENTATION (TODO)
+    File: AnatomicalReferenceService.ts, Line 281
+    Issue: Stub - uses global frame, not ISB-compliant
+    Impact: Hip flexion measurements may be inaccurate
+    Fix: Implement proper ISB coordinate system + 2 tests
+
+12. ✗ FOREARM FRAME IMPLEMENTATION (TODO)
+    File: AnatomicalReferenceService.ts, Line 293
+    Issue: Stub - uses non-anatomical orthogonal axes
+    Impact: Elbow pronation/supination measurements incorrect
+    Fix: Implement proper anatomical alignment + 2 tests
+
+13. ✗ HIP FLEXION MEASUREMENT
+    Completely missing - no measurement method
+    Impact: Cannot assess lower extremity ROM
+    Fix: Implement + 4 tests
+
+14. ✗ BILATERAL SHOULDER COMPARISON
+    Issue: No test for left vs right asymmetry detection
+    Impact: Cannot diagnose asymmetrical movement disorders
+    Fix: 2 tests
+
+15. ✗ COMPOUND MOVEMENTS
+    Issue: No tests for overhead reach, squat, lunge
+    Impact: Cannot assess functional movements
+    Fix: 4 tests
+
+16-20. Additional lower extremity, temporal, schema, boundary tests
+    Fix: ~20 tests total
+
+SUBTOTAL PRIORITY 2: 44 test cases → Expected coverage: 97%+
+
+───────────────────────────────────────────────────────────────────────────
+
+PRIORITY 3 - EDGE CASE ROBUSTNESS (1 week):
+═══════════════════════════════════════════════════════════════════════════
+
+Boundary Conditions (10 tests):
+  - Joint angles: 0°, 90°, 180°, 360°
+  - Visibility: 0, 0.5, 0.7, 0.85, 1.0
+  - Quality scores: at threshold crossings
+  - Frame confidence: 0 (completely unreliable)
+
+Missing Landmarks Cascade (5 tests):
+  - Progressive occlusion: 1, 2, 3+ landmarks missing
+  - Graceful degradation with quality warnings
+
+Temporal Anomalies (6 tests):
+  - Single/two-frame sequences
+  - Frame jumps: 0°, ±180°, ±360°
+  - Erratic motion detection
+  - Quality dropout handling
+
+Schema Compatibility (4 tests):
+  - MoveNet-17 landmark mapping
+  - MediaPipe-33 landmark mapping
+  - Schema detection fallback
+
+Performance Benchmarks (2 tests):
+  - Cache hit rate > 80%
+  - Lookup time < 0.1ms
+
+SUBTOTAL PRIORITY 3: ~30 test cases → Expected coverage: 98%+
+
+===============================================================================
+COVERAGE BY SERVICE
+===============================================================================
+
+ClinicalMeasurementService.ts
+  Current:  97.24% statements | 90.2% branches
+  Gaps:     5 untested paths (configuration, recommendations, error handling)
+  Impact:   MEDIUM (mostly tested, few edge cases)
+  Fix:      8-10 test cases → 99%+ coverage
+
+CompensationDetectionService.ts
+  Current:  90.27% statements | 86.14% branches
+  Gaps:     12 untested paths (validation, visibility, boundaries)
+  Impact:   MEDIUM (core logic covered, edge cases missing)
+  Fix:      15-20 test cases → 97%+ coverage
+
+AnatomicalReferenceService.ts
+  Current:  80.59% statements | 46.66% branches
+  Gaps:     2 TODO stubs (pelvis, forearm frames)
+  Impact:   HIGH (incomplete implementations, affects lower extremity)
+  Fix:      Implement + 6 test cases → 95%+ coverage
+
+AnatomicalFrameCache.ts
+  Current:  81.25% statements | 50.81% branches
+  Gaps:     3 paths (LRU, bucketing, memory management)
+  Impact:   MEDIUM (performance-critical but rarely triggers)
+  Fix:      5-8 test cases → 92%+ coverage
+
+TemporalConsistencyAnalyzer.ts
+  Current:  91.04% statements | 79.61% branches
+  Gaps:     10 edge cases in trend/quality analysis
+  Impact:   MEDIUM (temporal validation incomplete)
+  Fix:      10-15 test cases → 96%+ coverage
+
+GoniometerServiceV2.ts
+  Current:  65.3% statements | 68.62% branches
+  Gaps:     MAJOR - separate analysis required
+  Impact:   HIGH (schema-aware measurement logic)
+  Fix:      15-20 test cases → 85%+ coverage
+
+ShoulderROMService.ts & ShoulderROMTracker.ts
+  Current:  0% - NO TEST FILE
+  Gaps:     COMPLETE - all functionality
+  Impact:   CRITICAL (session management, progress tracking)
+  Fix:      Create test files + 30 test cases
+
+===============================================================================
+KEY STATISTICS
+===============================================================================
+
+Total Source Files Analyzed:        5 (biomechanics) + 2 (features)
+Total Test Files:                   5 (biomechanics) + 0 (features)
+Total Existing Test Cases:          204
+Test Cases Needed for 10/10:        ~74 additional
+Lines of Test Code Needed:          ~2000 additional
+
+Current Coverage:                   90.29% statements
+Target Coverage:                    100% + edge cases
+Estimated Time to 95%:             1-2 days
+Estimated Time to 99%:             3-5 days
+Estimated Time to 10/10:           2-3 weeks
+
+Biggest Gaps:
+  1. Stub implementations (pelvis, forearm frames)
+  2. Lower extremity measurements (hip, ankle completely missing)
+  3. View orientation validation (6 untested paths)
+  4. Cache performance paths (LRU, bucketing)
+  5. Temporal edge cases (single frames, jumps)
+
+===============================================================================
+RECOMMENDED ACTION PLAN
+===============================================================================
+
+PHASE 1 (DAY 1-2): Fix Priority 1 Gaps
+  └─ Add 30 test cases covering critical paths
+  └─ Expected: 93%+ statement coverage
+  └─ Time: 1-2 days
+
+PHASE 2 (DAY 3-5): Clinical Completeness
+  └─ Implement pelvis/forearm frames
+  └─ Add lower extremity measurements
+  └─ Add bilateral comparison tests
+  └─ Expected: 97%+ statement coverage
+  └─ Time: 3-5 days
+
+PHASE 3 (WEEK 1): Edge Case Robustness
+  └─ Add 30+ edge case tests
+  └─ Boundary conditions, missing landmarks, temporal anomalies
+  └─ Expected: 98%+ statement coverage
+  └─ Time: 1 week
+
+PHASE 4 (WEEK 2-3): Integration & Polish
+  └─ End-to-end pipeline tests
+  └─ Schema compatibility validation
+  └─ Performance benchmarking
+  └─ Expected: 99%+ coverage with 10/10 quality
+  └─ Time: 2-3 weeks
+
+===============================================================================
+FILES REQUIRING ATTENTION
+===============================================================================
+
+IMMEDIATE FIXES NEEDED:
+  ✓ src/services/biomechanics/ClinicalMeasurementService.ts (lines 405-410, 576-581, 820, 825, 899-908, 985)
+  ✓ src/services/biomechanics/CompensationDetectionService.ts (lines 184, 260, 285-288, 352, 407, 458-467, 560-598, 744-748)
+  ✓ src/services/biomechanics/AnatomicalReferenceService.ts (lines 281-323 - TODO stubs)
+  ✓ src/services/biomechanics/AnatomicalFrameCache.ts (lines 208-230, 272)
+
+MISSING TEST FILES:
+  ✗ src/features/shoulderAnalytics/__tests__/ShoulderROMService.test.ts (CREATE NEW)
+  ✗ src/features/shoulderAnalytics/__tests__/ShoulderROMTracker.test.ts (CREATE NEW)
+
+MAJOR GAPS - SEPARATE ANALYSIS:
+  ✗ src/services/goniometerService.v2.ts (65.3% coverage - needs dedicated review)
+
+===============================================================================
+DETAILED REPORT
+===============================================================================
+
+See: /home/user/PhysioAssist/COVERAGE_ANALYSIS_REPORT.md
+  - Full breakdown of all 12 major + 23 minor gaps
+  - 50+ missing edge cases detailed
+  - 20+ missing clinical measurements
+  - 15+ missing compensation patterns
+  - Integration test gaps explained
+  - Line-by-line analysis
+
+===============================================================================
+Generated: 2025-11-19
+Analysis Type: Very Thorough (Comprehensive Gap Analysis)
+Total Coverage: 8.5/10 → Target 10/10
+===============================================================================
