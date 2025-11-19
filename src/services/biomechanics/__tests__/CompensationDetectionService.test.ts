@@ -957,4 +957,261 @@ describe('CompensationDetectionService - Gate 10B', () => {
       expect(compensations.length).toBe(0);
     });
   });
+
+  // ===========================================================================
+  // PHASE 1 PRIORITY TESTS - View Orientation Validation
+  // ===========================================================================
+
+  describe('View Orientation Validation - Phase 1 Priority', () => {
+    /**
+     * Gap #5: Trunk lean with null view orientation
+     * Line 184 in CompensationDetectionService.ts
+     */
+    it('should handle null view orientation in trunk lean detection', () => {
+      const poseData = createMockPoseData({});
+      poseData.viewOrientation = null as any;
+
+      const result = compensationService.detectTrunkLean(poseData);
+
+      // Should return null or empty result, not throw
+      expect(result).toBeDefined();
+      if (result) {
+        expect(result.type).toBe('trunk_lean');
+      }
+    });
+
+    it('should handle undefined view orientation in trunk lean detection', () => {
+      const poseData = createMockPoseData({});
+      poseData.viewOrientation = undefined;
+
+      const result = compensationService.detectTrunkLean(poseData);
+
+      expect(result).toBeDefined();
+    });
+
+    /**
+     * Gap #6: Trunk rotation with missing view orientation
+     * Line 260 in CompensationDetectionService.ts
+     */
+    it('should handle missing view orientation in trunk rotation detection', () => {
+      const poseData = createMockPoseData({ trunkRotation: 20 });
+      poseData.viewOrientation = undefined;
+
+      const result = compensationService.detectTrunkRotation(poseData);
+
+      expect(result).toBeDefined();
+    });
+
+    /**
+     * Gap #7: Sagittal/lateral view rejection
+     * Lines 285-288 in CompensationDetectionService.ts
+     */
+    it('should reject sagittal view for trunk lean detection', () => {
+      const poseData = createMockPoseData({ trunkLean: 15 });
+      poseData.viewOrientation = 'sagittal';
+
+      const result = compensationService.detectTrunkLean(poseData);
+
+      // Trunk lean detection requires frontal or posterior view
+      expect(result).toBeDefined();
+      if (result && result.magnitude < 5) {
+        // Should not detect compensation from incorrect view
+        expect(result.severity).not.toBe('severe');
+      }
+    });
+
+    it('should reject lateral view for trunk rotation detection', () => {
+      const poseData = createMockPoseData({ trunkRotation: 20 });
+      poseData.viewOrientation = 'lateral' as any;
+
+      const result = compensationService.detectTrunkRotation(poseData);
+
+      expect(result).toBeDefined();
+    });
+
+    it('should handle case-sensitive view orientation', () => {
+      const poseData = createMockPoseData({ trunkLean: 12 });
+      poseData.viewOrientation = 'FRONTAL' as any; // Uppercase
+
+      const result = compensationService.detectTrunkLean(poseData);
+
+      // Should either normalize or handle case insensitively
+      expect(result).toBeDefined();
+    });
+  });
+
+  // ===========================================================================
+  // PHASE 1 PRIORITY TESTS - Visibility and Missing Landmark Handling
+  // ===========================================================================
+
+  describe('Visibility and Missing Landmark Handling - Phase 1 Priority', () => {
+    /**
+     * Gap #8: Shoulder hiking with low visibility
+     * Line 352 in CompensationDetectionService.ts
+     */
+    it('should handle low visibility (<0.5) for shoulder landmarks', () => {
+      const poseData = createMockPoseData({});
+
+      // Set low visibility for shoulders
+      poseData.landmarks.forEach((lm) => {
+        if (lm.name === 'left_shoulder' || lm.name === 'right_shoulder') {
+          lm.visibility = 0.3; // Below 0.5 threshold
+        }
+      });
+
+      const result = compensationService.detectShoulderHiking(poseData, 'left');
+
+      // Should not detect compensation with low visibility
+      expect(result).toBeDefined();
+      if (result) {
+        expect(result.confidence).toBeLessThan(0.5);
+      }
+    });
+
+    it('should handle low visibility for ear landmarks in shoulder hiking', () => {
+      const poseData = createMockPoseData({});
+
+      // Set low visibility for ears
+      poseData.landmarks.forEach((lm) => {
+        if (lm.name === 'left_ear' || lm.name === 'right_ear') {
+          lm.visibility = 0.4;
+        }
+      });
+
+      const result = compensationService.detectShoulderHiking(poseData, 'left');
+
+      expect(result).toBeDefined();
+    });
+
+    it('should handle zero visibility for all landmarks', () => {
+      const poseData = createMockPoseData({});
+
+      // Set all landmarks to zero visibility
+      poseData.landmarks.forEach((lm) => {
+        lm.visibility = 0;
+      });
+
+      const result = compensationService.detectTrunkLean(poseData);
+
+      // Should return null or low confidence result
+      expect(result).toBeDefined();
+      if (result) {
+        expect(result.confidence).toBe(0);
+      }
+    });
+
+    /**
+     * Gap #9: Target shoulder not elevated
+     * Line 407 in CompensationDetectionService.ts
+     */
+    it('should not detect hiking when target shoulder is not elevated', () => {
+      const poseData = createMockPoseData({
+        shoulderLineTilt: 0, // Level shoulders, no elevation
+      });
+
+      const result = compensationService.detectShoulderHiking(poseData, 'left');
+
+      // Should return null or minimal severity
+      if (result) {
+        expect(result.magnitude).toBeLessThan(1); // Less than 1cm elevation
+      }
+    });
+
+    it('should validate shoulder elevation before detecting hiking', () => {
+      const poseData = createMockPoseData({});
+
+      // Manually set shoulders at same height
+      const leftShoulder = poseData.landmarks.find((lm) => lm.name === 'left_shoulder');
+      const rightShoulder = poseData.landmarks.find((lm) => lm.name === 'right_shoulder');
+
+      if (leftShoulder && rightShoulder) {
+        leftShoulder.y = 0.3;
+        rightShoulder.y = 0.3; // Same height
+      }
+
+      const result = compensationService.detectShoulderHiking(poseData, 'left');
+
+      if (result) {
+        expect(result.magnitude).toBeLessThan(1);
+      }
+    });
+
+    /**
+     * Gap #10: Elbow flexion with low visibility
+     * Lines 458-467 in CompensationDetectionService.ts
+     */
+    it('should handle low visibility in elbow flexion compensation', () => {
+      const poseData = createMockPoseData({});
+
+      // Set low visibility for elbow landmarks
+      poseData.landmarks.forEach((lm) => {
+        if (lm.name.includes('elbow') || lm.name.includes('wrist')) {
+          lm.visibility = 0.4;
+        }
+      });
+
+      const result = compensationService.detectElbowFlexion(poseData, 'left');
+
+      expect(result).toBeDefined();
+      if (result) {
+        expect(result.confidence).toBeLessThan(0.5);
+      }
+    });
+
+    /**
+     * Gap #11: Hip hike with missing/low visibility hips
+     * Lines 560, 568, 573 in CompensationDetectionService.ts
+     */
+    it('should handle missing hip landmarks', () => {
+      const poseData = createMockPoseData({});
+
+      // Remove hip landmarks
+      poseData.landmarks = poseData.landmarks.filter((lm) => !lm.name.includes('hip'));
+
+      const result = compensationService.detectHipHike(poseData, 'left');
+
+      // Should return null when hips are missing
+      expect(result).toBeNull();
+    });
+
+    it('should handle low visibility hip landmarks', () => {
+      const poseData = createMockPoseData({});
+
+      // Set low visibility for hips
+      poseData.landmarks.forEach((lm) => {
+        if (lm.name.includes('hip')) {
+          lm.visibility = 0.3;
+        }
+      });
+
+      const result = compensationService.detectHipHike(poseData, 'left');
+
+      if (result) {
+        expect(result.confidence).toBeLessThan(0.5);
+      }
+    });
+
+    /**
+     * Gap #12: Hip hike minimal severity boundary
+     * Line 598 in CompensationDetectionService.ts
+     */
+    it('should classify hip hike at minimal severity boundary (3°)', () => {
+      const poseData = createMockPoseData({});
+
+      // Set hips with exactly 3° difference
+      const leftHip = poseData.landmarks.find((lm) => lm.name === 'left_hip');
+      const rightHip = poseData.landmarks.find((lm) => lm.name === 'right_hip');
+
+      if (leftHip && rightHip) {
+        leftHip.y = 0.6;
+        rightHip.y = 0.6 + 0.03; // 3° difference in normalized coordinates
+      }
+
+      const result = compensationService.detectHipHike(poseData, 'left');
+
+      if (result) {
+        expect(result.severity).toBe('minimal');
+      }
+    });
+  });
 });

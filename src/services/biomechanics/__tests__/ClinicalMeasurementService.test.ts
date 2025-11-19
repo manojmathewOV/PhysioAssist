@@ -1586,4 +1586,198 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       expect(measurement.primaryJoint.clinicalGrade).toBe('fair');
     });
   });
+
+  // ===========================================================================
+  // PHASE 1 PRIORITY TESTS - Error Handling & Edge Cases
+  // ===========================================================================
+
+  describe('Error Handling - Phase 1 Priority', () => {
+    /**
+     * Gap #1: Forearm frame missing error path
+     * Lines 576-581 in ClinicalMeasurementService.ts
+     */
+    it('should handle missing forearm frame for left shoulder rotation', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderAbduction: 90,
+        elbowAngle: 90,
+        viewOrientation: 'frontal',
+      });
+
+      // Remove forearm frame
+      if (poseData.cachedAnatomicalFrames) {
+        delete poseData.cachedAnatomicalFrames.left_forearm;
+      }
+
+      expect(() => {
+        clinicalService.measureShoulderRotation(poseData, 'left', 'internal');
+      }).toThrow(/forearm frame not available|required frame missing/i);
+    });
+
+    it('should handle missing forearm frame for right shoulder rotation', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderAbduction: 90,
+        elbowAngle: 90,
+        viewOrientation: 'frontal',
+      });
+
+      // Remove forearm frame
+      if (poseData.cachedAnatomicalFrames) {
+        delete poseData.cachedAnatomicalFrames.right_forearm;
+      }
+
+      expect(() => {
+        clinicalService.measureShoulderRotation(poseData, 'right', 'external');
+      }).toThrow(/forearm frame not available|required frame missing/i);
+    });
+
+    /**
+     * Gap #2: Elbow gating validation warning
+     * Lines 405-410 in ClinicalMeasurementService.ts
+     */
+    it('should warn when elbow deviates from 90° during rotation measurement', () => {
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderAbduction: 90,
+        elbowAngle: 105, // 15° deviation from 90°
+        viewOrientation: 'frontal',
+      });
+
+      const result = clinicalService.measureShoulderRotation(
+        poseData,
+        'left',
+        'external'
+      );
+
+      // Should log warning about elbow deviation
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/elbow.*deviates.*90.*rotation.*invalid/i)
+      );
+
+      // Should still return measurement but with warning
+      expect(result.warnings).toBeDefined();
+      expect(result.warnings!.length).toBeGreaterThan(0);
+      expect(result.warnings![0]).toMatch(/elbow.*90/i);
+
+      consoleSpy.mockRestore();
+    });
+
+    /**
+     * Gap #3: Quality recommendations for missing depth/view orientation
+     * Lines 820, 825 in ClinicalMeasurementService.ts
+     */
+    it('should recommend depth sensor when hasDepth is false', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 120,
+        viewOrientation: 'sagittal',
+      });
+      poseData.hasDepth = false;
+
+      const result = clinicalService.measureShoulderFlexion(
+        poseData,
+        'right',
+        'sagittal'
+      );
+
+      expect(result.qualityRecommendations).toBeDefined();
+      expect(result.qualityRecommendations!.some((rec) => rec.includes('depth'))).toBe(
+        true
+      );
+    });
+
+    it('should recommend view orientation when undefined', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 120,
+      });
+      poseData.viewOrientation = undefined;
+
+      const result = clinicalService.measureShoulderFlexion(
+        poseData,
+        'right',
+        'sagittal'
+      );
+
+      expect(result.qualityRecommendations).toBeDefined();
+      expect(
+        result.qualityRecommendations!.some((rec) =>
+          rec.toLowerCase().includes('view orientation')
+        )
+      ).toBe(true);
+    });
+
+    it('should provide both depth and view orientation recommendations when both missing', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 120,
+      });
+      poseData.hasDepth = false;
+      poseData.viewOrientation = undefined;
+
+      const result = clinicalService.measureShoulderFlexion(
+        poseData,
+        'right',
+        'sagittal'
+      );
+
+      expect(result.qualityRecommendations).toBeDefined();
+      expect(result.qualityRecommendations!.length).toBeGreaterThanOrEqual(2);
+    });
+
+    /**
+     * Gap #4: Compensation severity threshold remapping
+     * Lines 899-908 in ClinicalMeasurementService.ts
+     */
+    it('should remap compensation severity at mild threshold (5°)', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 120,
+        trunkLean: 5.0, // Exactly at mild threshold
+        viewOrientation: 'sagittal',
+      });
+
+      const result = clinicalService.measureShoulderFlexion(
+        poseData,
+        'right',
+        'sagittal'
+      );
+      const trunkComp = result.compensations?.find((c) => c.type === 'trunk_lean');
+
+      expect(trunkComp).toBeDefined();
+      expect(trunkComp!.severity).toBe('mild');
+    });
+
+    it('should remap compensation severity at moderate threshold (10°)', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 120,
+        trunkLean: 10.0, // Exactly at moderate threshold
+        viewOrientation: 'sagittal',
+      });
+
+      const result = clinicalService.measureShoulderFlexion(
+        poseData,
+        'right',
+        'sagittal'
+      );
+      const trunkComp = result.compensations?.find((c) => c.type === 'trunk_lean');
+
+      expect(trunkComp).toBeDefined();
+      expect(trunkComp!.severity).toBe('moderate');
+    });
+
+    it('should remap compensation severity at severe threshold (15°)', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 120,
+        trunkLean: 15.0, // Exactly at severe threshold
+        viewOrientation: 'sagittal',
+      });
+
+      const result = clinicalService.measureShoulderFlexion(
+        poseData,
+        'right',
+        'sagittal'
+      );
+      const trunkComp = result.compensations?.find((c) => c.type === 'trunk_lean');
+
+      expect(trunkComp).toBeDefined();
+      expect(trunkComp!.severity).toBe('severe');
+    });
+  });
 });
