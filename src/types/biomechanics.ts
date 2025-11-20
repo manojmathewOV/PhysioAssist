@@ -21,7 +21,7 @@ export interface AnatomicalReferenceFrame {
   zAxis: Vector3D;
 
   /** Frame type for documentation and validation */
-  frameType: 'global' | 'thorax' | 'scapula' | 'humerus' | 'forearm';
+  frameType: 'global' | 'thorax' | 'scapula' | 'humerus' | 'forearm' | 'pelvis';
 
   /** Confidence in frame accuracy (0-1) based on landmark visibility */
   confidence: number;

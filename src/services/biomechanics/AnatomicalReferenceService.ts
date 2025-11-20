@@ -1,7 +1,13 @@
 import { PoseLandmark } from '../../types/pose';
 import { AnatomicalReferenceFrame, AnatomicalPlane } from '../../types/biomechanics';
 import { Vector3D } from '../../types/common';
-import { midpoint3D, subtract3D, normalize, crossProduct } from '../../utils/vectorMath';
+import {
+  midpoint3D,
+  subtract3D,
+  normalize,
+  crossProduct,
+  projectVectorOntoPlane,
+} from '../../utils/vectorMath';
 
 /**
  * Anatomical Reference Frame Service
@@ -267,7 +273,15 @@ export class AnatomicalReferenceService {
 
   /**
    * Calculate pelvis anatomical reference frame
-   * TODO: Implement ISB-compliant pelvis frame calculation
+   * ISB-compliant coordinate system for lower extremity measurements
+   *
+   * Based on ISB recommendations (Wu et al., 2002):
+   * - Origin: Midpoint between left and right hip centers
+   * - Y-axis: Superior direction (pelvis to thorax)
+   * - Z-axis: Lateral direction (left hip to right hip)
+   * - X-axis: Anterior direction (Y × Z)
+   *
+   * Used for measuring hip flexion, abduction, and rotation
    *
    * @param landmarks - Pose landmarks
    * @param schemaId - Pose schema identifier
@@ -275,15 +289,70 @@ export class AnatomicalReferenceService {
    */
   calculatePelvisFrame(
     landmarks: PoseLandmark[],
-    schemaId?: string
+    _schemaId?: string
   ): AnatomicalReferenceFrame {
-    // Stub implementation - uses global frame as placeholder
-    return this.calculateGlobalFrame(landmarks);
+    const leftHip = landmarks.find((lm) => lm.name === 'left_hip');
+    const rightHip = landmarks.find((lm) => lm.name === 'right_hip');
+    const leftShoulder = landmarks.find((lm) => lm.name === 'left_shoulder');
+    const rightShoulder = landmarks.find((lm) => lm.name === 'right_shoulder');
+
+    if (!leftHip || !rightHip) {
+      throw new Error('Hip landmarks required for pelvis frame calculation');
+    }
+
+    // Origin: midpoint between hip centers
+    const origin = midpoint3D(leftHip, rightHip);
+
+    // Z-axis: lateral direction (left to right)
+    const zAxis = normalize(subtract3D(rightHip, leftHip));
+
+    // Y-axis: superior direction (pelvis to trunk)
+    // If shoulders available, use hip-to-shoulder vector
+    // Otherwise, use vertical (global Y-axis)
+    let yAxis: Vector3D;
+    if (leftShoulder && rightShoulder) {
+      const shoulderCenter = midpoint3D(leftShoulder, rightShoulder);
+      yAxis = normalize(subtract3D(shoulderCenter, origin));
+    } else {
+      // Fallback: use global vertical, perpendicular to Z-axis
+      const globalUp: Vector3D = { x: 0, y: -1, z: 0 }; // Negative Y is up in image coords
+      // Project onto plane perpendicular to Z-axis
+      yAxis = normalize(projectVectorOntoPlane(globalUp, zAxis));
+    }
+
+    // X-axis: anterior direction (Y × Z)
+    const xAxis = normalize(crossProduct(yAxis, zAxis));
+
+    // Recalculate Y for orthogonality (X × Z)
+    const yAxisCorrected = normalize(crossProduct(zAxis, xAxis));
+
+    const confidenceLandmarks =
+      leftShoulder && rightShoulder
+        ? [leftHip, rightHip, leftShoulder, rightShoulder]
+        : [leftHip, rightHip];
+    const confidence = this.calculateFrameConfidence(confidenceLandmarks);
+
+    return {
+      origin,
+      xAxis,
+      yAxis: yAxisCorrected,
+      zAxis,
+      frameType: 'pelvis',
+      confidence,
+    };
   }
 
   /**
    * Calculate forearm anatomical reference frame
-   * TODO: Implement ISB-compliant forearm frame calculation
+   * ISB-compliant coordinate system for forearm measurements
+   *
+   * Based on ISB recommendations (Wu et al., 2005):
+   * - Origin: Elbow joint center (medial-lateral midpoint)
+   * - Y-axis: Longitudinal axis (elbow to wrist)
+   * - X-axis: Anterior direction (perpendicular to forearm in sagittal plane)
+   * - Z-axis: Lateral direction (perpendicular to X and Y)
+   *
+   * Used for measuring elbow flexion and forearm pronation/supination
    *
    * @param landmarks - Pose landmarks
    * @param side - Which forearm ('left' or 'right')
@@ -293,30 +362,51 @@ export class AnatomicalReferenceService {
   calculateForearmFrame(
     landmarks: PoseLandmark[],
     side: 'left' | 'right',
-    schemaId?: string
+    _schemaId?: string
   ): AnatomicalReferenceFrame {
-    // Stub implementation - uses elbow to wrist vector as longitudinal axis
-    const elbowIdx = side === 'left' ? 7 : 8;
-    const wristIdx = side === 'left' ? 9 : 10;
+    const shoulder = landmarks.find((lm) => lm.name === `${side}_shoulder`);
+    const elbow = landmarks.find((lm) => lm.name === `${side}_elbow`);
+    const wrist = landmarks.find((lm) => lm.name === `${side}_wrist`);
 
-    const elbow = landmarks[elbowIdx];
-    const wrist = landmarks[wristIdx];
+    if (!elbow || !wrist) {
+      throw new Error(`Elbow and wrist landmarks required for ${side} forearm frame`);
+    }
 
+    // Origin: elbow joint center
     const origin: Vector3D = { x: elbow.x, y: elbow.y, z: elbow.z ?? 0 };
+
+    // Y-axis: longitudinal axis (elbow to wrist)
     const yAxis = normalize(subtract3D(wrist, elbow));
 
-    // Simple orthogonal axes (not anatomically accurate - placeholder)
-    const zAxis: Vector3D = { x: 0, y: 0, z: 1 };
-    const xAxis = normalize(crossProduct(yAxis, zAxis));
-    const zAxisCorrected = normalize(crossProduct(xAxis, yAxis));
+    // X-axis: anterior direction
+    // Use upper arm direction (shoulder to elbow) to establish X-axis
+    // in the plane perpendicular to the forearm
+    let xAxis: Vector3D;
+    if (shoulder) {
+      const upperArmVector = normalize(subtract3D(elbow, shoulder));
+      // X-axis perpendicular to forearm (Y-axis), in direction of upper arm
+      // Project upper arm vector onto plane perpendicular to forearm
+      xAxis = normalize(projectVectorOntoPlane(upperArmVector, yAxis));
+    } else {
+      // Fallback: use global anterior direction
+      const globalAnterior: Vector3D = { x: 1, y: 0, z: 0 };
+      xAxis = normalize(projectVectorOntoPlane(globalAnterior, yAxis));
+    }
 
-    const confidence = this.calculateFrameConfidence([elbow, wrist]);
+    // Z-axis: lateral direction (X × Y)
+    const zAxis = normalize(crossProduct(xAxis, yAxis));
+
+    // Recalculate X for perfect orthogonality (Y × Z)
+    const xAxisCorrected = normalize(crossProduct(yAxis, zAxis));
+
+    const confidenceLandmarks = shoulder ? [shoulder, elbow, wrist] : [elbow, wrist];
+    const confidence = this.calculateFrameConfidence(confidenceLandmarks);
 
     return {
       origin,
-      xAxis,
+      xAxis: xAxisCorrected,
       yAxis,
-      zAxis: zAxisCorrected,
+      zAxis,
       frameType: 'forearm',
       confidence,
     };

@@ -386,4 +386,90 @@ describe('AnatomicalReferenceService', () => {
       expect(thoraxFrame.confidence).toBeGreaterThan(0.8);
     });
   });
+
+  describe('Pelvis Frame (ISB-compliant)', () => {
+    it('should calculate pelvis frame with proper ISB coordinate system', () => {
+      const landmarks = createNeutralStandingPose();
+
+      const pelvisFrame = service.calculatePelvisFrame(landmarks);
+
+      // Verify frame type
+      expect(pelvisFrame.frameType).toBe('pelvis');
+
+      // Origin should be between hips
+      expect(pelvisFrame.origin).toBeDefined();
+
+      // Y-axis should point superior (upward)
+      // In neutral stance, Y should have negative value (image coords)
+      expect(pelvisFrame.yAxis.y).toBeLessThan(0);
+
+      // Z-axis should point laterally (left to right)
+      // Should be roughly horizontal (small Y component)
+      expect(Math.abs(pelvisFrame.zAxis.y)).toBeLessThan(0.3);
+
+      // Verify orthogonality
+      const dotXY = Math.abs(
+        pelvisFrame.xAxis.x * pelvisFrame.yAxis.x +
+          pelvisFrame.xAxis.y * pelvisFrame.yAxis.y +
+          pelvisFrame.xAxis.z * pelvisFrame.yAxis.z
+      );
+      expect(dotXY).toBeLessThan(0.01); // Nearly perpendicular
+
+      // Confidence should be high
+      expect(pelvisFrame.confidence).toBeGreaterThan(0.8);
+    });
+
+    it('should throw error when hip landmarks are missing', () => {
+      const landmarks = createNeutralStandingPose().filter(
+        (lm) => !lm.name.includes('hip')
+      );
+
+      expect(() => {
+        service.calculatePelvisFrame(landmarks);
+      }).toThrow(/hip landmarks required/i);
+    });
+  });
+
+  describe('Forearm Frame (ISB-compliant)', () => {
+    it('should calculate forearm frame with anatomical alignment', () => {
+      const landmarks = createNeutralStandingPose();
+
+      const forearmFrameLeft = service.calculateForearmFrame(landmarks, 'left');
+      const forearmFrameRight = service.calculateForearmFrame(landmarks, 'right');
+
+      // Verify frame type
+      expect(forearmFrameLeft.frameType).toBe('forearm');
+      expect(forearmFrameRight.frameType).toBe('forearm');
+
+      // Origin should be at elbow
+      expect(forearmFrameLeft.origin).toBeDefined();
+      expect(forearmFrameRight.origin).toBeDefined();
+
+      // Y-axis should point from elbow to wrist (longitudinal)
+      // For left arm in neutral, wrist is below elbow
+      expect(forearmFrameLeft.yAxis).toBeDefined();
+
+      // Verify orthogonality
+      const dotXY = Math.abs(
+        forearmFrameLeft.xAxis.x * forearmFrameLeft.yAxis.x +
+          forearmFrameLeft.xAxis.y * forearmFrameLeft.yAxis.y +
+          forearmFrameLeft.xAxis.z * forearmFrameLeft.yAxis.z
+      );
+      expect(dotXY).toBeLessThan(0.01);
+
+      // Confidence should be high when shoulder is visible
+      expect(forearmFrameLeft.confidence).toBeGreaterThan(0.8);
+      expect(forearmFrameRight.confidence).toBeGreaterThan(0.8);
+    });
+
+    it('should throw error when elbow or wrist landmarks are missing', () => {
+      const landmarks = createNeutralStandingPose().filter(
+        (lm) => !lm.name.includes('wrist')
+      );
+
+      expect(() => {
+        service.calculateForearmFrame(landmarks, 'left');
+      }).toThrow(/elbow and wrist landmarks required/i);
+    });
+  });
 });

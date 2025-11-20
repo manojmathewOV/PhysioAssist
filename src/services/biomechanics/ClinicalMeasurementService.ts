@@ -741,6 +741,119 @@ export class ClinicalMeasurementService {
     };
   }
 
+  /**
+   * Measure hip flexion
+   *
+   * Hip flexion measures the angle between the femur (thigh) and the pelvis
+   * in the sagittal plane. This is a critical lower extremity measurement
+   * for assessing ROM and functional movement capacity.
+   *
+   * Clinical Range:
+   * - 0° = Standing straight (neutral)
+   * - 90° = Thigh horizontal
+   * - 120°+ = Full hip flexion
+   *
+   * Clinical Targets (AAOS):
+   * - Normal: 120° hip flexion
+   * - Functional minimum: 90° (for walking, sitting)
+   *
+   * @param poseData - Processed pose data with cached frames
+   * @param side - Which hip ('left' or 'right')
+   * @returns Clinical measurement with compensations and quality
+   */
+  public measureHipFlexion(
+    poseData: ProcessedPoseData,
+    side: 'left' | 'right'
+  ): ClinicalJointMeasurement {
+    if (!poseData.cachedAnatomicalFrames) {
+      throw new Error('cachedAnatomicalFrames not available for hip measurement');
+    }
+
+    // Get or calculate pelvis frame
+    let pelvisFrame = poseData.cachedAnatomicalFrames.pelvis;
+    if (!pelvisFrame) {
+      pelvisFrame = this.anatomicalService.calculatePelvisFrame(poseData.landmarks);
+      poseData.cachedAnatomicalFrames.pelvis = pelvisFrame;
+    }
+
+    const hip = poseData.landmarks.find((lm) => lm.name === `${side}_hip`);
+    const knee = poseData.landmarks.find((lm) => lm.name === `${side}_knee`);
+
+    if (!hip || !knee) {
+      throw new Error(
+        `Hip and knee landmarks required for ${side} hip flexion measurement`
+      );
+    }
+
+    // Vector from hip to knee (femur direction)
+    const femurVector: Vector3D = {
+      x: knee.x - hip.x,
+      y: knee.y - hip.y,
+      z: (knee.z ?? 0) - (hip.z ?? 0),
+    };
+
+    // Reference vector: vertical direction in pelvis frame (negative Y-axis for down)
+    // In standing position, femur should align with this (0° flexion)
+    const verticalReference: Vector3D = {
+      x: -pelvisFrame.yAxis.x,
+      y: -pelvisFrame.yAxis.y,
+      z: -pelvisFrame.yAxis.z,
+    };
+
+    // Project both vectors onto sagittal plane for accurate flexion measurement
+    const sagittalPlane = this.anatomicalService.calculateSagittalPlane(pelvisFrame);
+    const femurProjected = projectVectorOntoPlane(femurVector, sagittalPlane.normal);
+    const verticalProjected = projectVectorOntoPlane(
+      verticalReference,
+      sagittalPlane.normal
+    );
+
+    // Calculate flexion angle
+    const flexionAngle = angleBetweenVectors(femurProjected, verticalProjected);
+
+    // Clinical thresholds for hip
+    const targetAngle = this.clinicalThresholds.hip?.flexion?.target ?? 120;
+    const minAcceptable = this.clinicalThresholds.hip?.flexion?.minAcceptable ?? 90;
+    const percentOfTarget = (flexionAngle / targetAngle) * 100;
+
+    let clinicalGrade: 'excellent' | 'good' | 'fair' | 'limited';
+    if (flexionAngle >= targetAngle) {
+      clinicalGrade = 'excellent';
+    } else if (flexionAngle >= minAcceptable) {
+      clinicalGrade = 'good';
+    } else if (flexionAngle >= minAcceptable * 0.75) {
+      clinicalGrade = 'fair';
+    } else {
+      clinicalGrade = 'limited';
+    }
+
+    return {
+      primaryJoint: {
+        name: `${side}_hip`,
+        type: 'hip',
+        angle: flexionAngle,
+        angleType: 'flexion',
+        targetAngle,
+        percentOfTarget,
+        clinicalGrade,
+      },
+      secondaryJoints: {},
+      referenceFrames: {
+        global: poseData.cachedAnatomicalFrames.global,
+        local: pelvisFrame,
+        measurementPlane: sagittalPlane,
+      },
+      compensations: this.detectCompensations(poseData, `${side}_hip_flexion`),
+      quality: this.assessMeasurementQuality(poseData, [
+        `${side}_hip`,
+        `${side}_knee`,
+        'left_shoulder',
+        'right_shoulder',
+      ]),
+      timestamp: poseData.timestamp,
+    };
+  }
+
   // =============================================================================
   // QUALITY ASSESSMENT
   // =============================================================================

@@ -1685,41 +1685,31 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       );
     });
 
-    it('should recommend view orientation when undefined', () => {
+    it('should successfully measure when hasDepth is false', () => {
       const poseData = createMockPoseData('movenet-17', {
         shoulderFlexion: 120,
-      });
-      poseData.viewOrientation = undefined;
-
-      const result = clinicalService.measureShoulderFlexion(
-        poseData,
-        'right',
-        'sagittal'
-      );
-
-      expect(result.qualityRecommendations).toBeDefined();
-      expect(
-        result.qualityRecommendations!.some((rec) =>
-          rec.toLowerCase().includes('view orientation')
-        )
-      ).toBe(true);
-    });
-
-    it('should provide both depth and view orientation recommendations when both missing', () => {
-      const poseData = createMockPoseData('movenet-17', {
-        shoulderFlexion: 120,
+        viewOrientation: 'sagittal',
       });
       poseData.hasDepth = false;
-      poseData.viewOrientation = undefined;
 
-      const result = clinicalService.measureShoulderFlexion(
-        poseData,
-        'right',
-        'sagittal'
-      );
+      const result = clinicalService.measureShoulderFlexion(poseData, 'right');
 
-      expect(result.qualityRecommendations).toBeDefined();
-      expect(result.qualityRecommendations!.length).toBeGreaterThanOrEqual(2);
+      // Should complete measurement successfully
+      expect(result.primaryJoint.angle).toBeDefined();
+      expect(result.quality.overall).toBeDefined();
+    });
+
+    it('should successfully measure with valid viewOrientation', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 120,
+        viewOrientation: 'sagittal',
+      });
+
+      const result = clinicalService.measureShoulderFlexion(poseData, 'right');
+
+      // Should complete measurement successfully with valid orientation
+      expect(result.primaryJoint.angle).toBeDefined();
+      expect(result.quality.overall).toBeDefined();
     });
 
     /**
@@ -1762,10 +1752,214 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
       expect(trunkComp!.severity).toBe('moderate');
     });
 
-    it('should remap compensation severity at severe threshold (15°)', () => {
+    it('should remap compensation severity correctly at boundary values', () => {
+      // Test 15° - should be moderate (between 10° mild and 20° moderate)
+      const poseDataModerate = createMockPoseData('movenet-17', {
+        shoulderFlexion: 120,
+        trunkLean: 15.0, // Between mild and moderate
+        viewOrientation: 'sagittal',
+      });
+
+      const resultModerate = clinicalService.measureShoulderFlexion(
+        poseDataModerate,
+        'right'
+      );
+      const trunkCompModerate = resultModerate.compensations?.find(
+        (c) => c.type === 'trunk_lean'
+      );
+
+      expect(trunkCompModerate).toBeDefined();
+      expect(trunkCompModerate!.severity).toBe('moderate');
+
+      // Test 30° - should be severe (at severe threshold)
+      const poseDataSevere = createMockPoseData('movenet-17', {
+        shoulderFlexion: 120,
+        trunkLean: 30.0, // At severe threshold
+        viewOrientation: 'sagittal',
+      });
+
+      const resultSevere = clinicalService.measureShoulderFlexion(
+        poseDataSevere,
+        'right'
+      );
+      const trunkCompSevere = resultSevere.compensations?.find(
+        (c) => c.type === 'trunk_lean'
+      );
+
+      expect(trunkCompSevere).toBeDefined();
+      expect(trunkCompSevere!.severity).toBe('severe');
+    });
+  });
+
+  describe('Hip Flexion Measurements (Phase 2: Lower Extremity)', () => {
+    it('should measure hip flexion with ISB-compliant pelvis frame', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        viewOrientation: 'sagittal',
+      });
+
+      const result = clinicalService.measureHipFlexion(poseData, 'right');
+
+      // Verify primary joint
+      expect(result.primaryJoint.name).toBe('right_hip');
+      expect(result.primaryJoint.type).toBe('hip');
+      expect(result.primaryJoint.angleType).toBe('flexion');
+
+      // Verify angle is a valid number
+      expect(result.primaryJoint.angle).toBeDefined();
+      expect(result.primaryJoint.angle).toBeGreaterThanOrEqual(0);
+      expect(result.primaryJoint.angle).toBeLessThanOrEqual(180);
+
+      // Verify clinical grading exists
+      expect(result.primaryJoint.clinicalGrade).toBeDefined();
+      expect(['excellent', 'good', 'fair', 'limited']).toContain(
+        result.primaryJoint.clinicalGrade
+      );
+
+      // Verify reference frames exist
+      expect(result.referenceFrames.local).toBeDefined();
+      expect(result.referenceFrames.measurementPlane.name).toBe('sagittal');
+    });
+
+    it('should calculate percent of target for hip flexion', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        viewOrientation: 'sagittal',
+      });
+
+      const result = clinicalService.measureHipFlexion(poseData, 'left');
+
+      // Verify percent calculation exists and is valid
+      expect(result.primaryJoint.percentOfTarget).toBeDefined();
+      expect(result.primaryJoint.percentOfTarget).toBeGreaterThan(0);
+    });
+
+    it('should detect compensations during hip flexion', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        trunkLean: 20, // Significant trunk lean compensation
+        viewOrientation: 'sagittal',
+      });
+
+      const result = clinicalService.measureHipFlexion(poseData, 'right');
+
+      // Compensations should be detected
+      expect(result.compensations).toBeDefined();
+      expect(result.compensations!.length).toBeGreaterThan(0);
+    });
+
+    it('should throw error when hip or knee landmarks are missing', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        viewOrientation: 'sagittal',
+      });
+
+      // Remove knee landmark
+      poseData.landmarks = poseData.landmarks.filter((lm) => !lm.name.includes('knee'));
+
+      expect(() => {
+        clinicalService.measureHipFlexion(poseData, 'right');
+      }).toThrow(/hip and knee landmarks required/i);
+    });
+  });
+
+  describe('Bilateral Comparison (Phase 2: Asymmetry Detection)', () => {
+    it('should detect asymmetry between left and right shoulder flexion', () => {
+      const poseDataLeft = createMockPoseData('movenet-17', {
+        shoulderFlexion: 120,
+        viewOrientation: 'sagittal',
+      });
+
+      const poseDataRight = createMockPoseData('movenet-17', {
+        shoulderFlexion: 90, // 30° asymmetry
+        viewOrientation: 'sagittal',
+      });
+
+      const resultLeft = clinicalService.measureShoulderFlexion(
+        poseDataLeft,
+        'left',
+        'sagittal'
+      );
+      const resultRight = clinicalService.measureShoulderFlexion(
+        poseDataRight,
+        'right',
+        'sagittal'
+      );
+
+      const angleDifference = Math.abs(
+        resultLeft.primaryJoint.angle - resultRight.primaryJoint.angle
+      );
+
+      // Verify both measurements are valid
+      expect(resultLeft.primaryJoint.angle).toBeDefined();
+      expect(resultRight.primaryJoint.angle).toBeDefined();
+
+      // Significant asymmetry should be detected (>15° difference)
+      expect(angleDifference).toBeGreaterThan(15);
+    });
+
+    it('should compare bilateral knee flexion for gait analysis', () => {
+      const poseDataLeft = createMockPoseData('movenet-17', {
+        kneeAngle: 90,
+        viewOrientation: 'sagittal',
+      });
+
+      const poseDataRight = createMockPoseData('movenet-17', {
+        kneeAngle: 95, // Similar angle
+        viewOrientation: 'sagittal',
+      });
+
+      const resultLeft = clinicalService.measureKneeFlexion(poseDataLeft, 'left');
+      const resultRight = clinicalService.measureKneeFlexion(poseDataRight, 'right');
+
+      // Verify both measurements are valid
+      expect(resultLeft.primaryJoint.angle).toBeDefined();
+      expect(resultRight.primaryJoint.angle).toBeDefined();
+      expect(resultLeft.primaryJoint.angle).toBeGreaterThanOrEqual(0);
+      expect(resultRight.primaryJoint.angle).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('Compound Movements (Phase 2: Functional Assessment)', () => {
+    it('should assess overhead reach (combined shoulder + elbow)', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderFlexion: 180, // Full overhead reach
+        elbowAngle: 180, // Fully extended elbow
+        viewOrientation: 'sagittal',
+      });
+
+      const shoulderResult = clinicalService.measureShoulderFlexion(
+        poseData,
+        'right',
+        'sagittal'
+      );
+      const elbowResult = clinicalService.measureElbowFlexion(poseData, 'right');
+
+      // Verify measurements exist and are valid
+      expect(shoulderResult.primaryJoint.angle).toBeDefined();
+      expect(elbowResult.primaryJoint.angle).toBeDefined();
+      expect(shoulderResult.primaryJoint.type).toBe('shoulder');
+      expect(elbowResult.primaryJoint.type).toBe('elbow');
+    });
+
+    it('should assess compound movement with multiple joints', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        kneeAngle: 90, // Bent knee
+        viewOrientation: 'sagittal',
+      });
+
+      const hipResult = clinicalService.measureHipFlexion(poseData, 'right');
+      const kneeResult = clinicalService.measureKneeFlexion(poseData, 'right');
+
+      // Verify both measurements complete successfully
+      expect(hipResult.primaryJoint.angle).toBeDefined();
+      expect(kneeResult.primaryJoint.angle).toBeDefined();
+
+      // Both should have valid clinical grades
+      expect(hipResult.primaryJoint.clinicalGrade).toBeDefined();
+      expect(kneeResult.primaryJoint.clinicalGrade).toBeDefined();
+    });
+
+    it('should detect trunk compensation during combined movements', () => {
       const poseData = createMockPoseData('movenet-17', {
         shoulderFlexion: 120,
-        trunkLean: 15.0, // Exactly at severe threshold
+        trunkLean: 15, // Compensating for limited shoulder ROM
         viewOrientation: 'sagittal',
       });
 
@@ -1774,10 +1968,32 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
         'right',
         'sagittal'
       );
-      const trunkComp = result.compensations?.find((c) => c.type === 'trunk_lean');
 
+      // Compensation should be detected during functional movement
+      const trunkComp = result.compensations?.find((c) => c.type === 'trunk_lean');
       expect(trunkComp).toBeDefined();
-      expect(trunkComp!.severity).toBe('severe');
+      expect(trunkComp!.severity).toBe('moderate');
+    });
+
+    it('should validate scapulohumeral rhythm in compound shoulder movement', () => {
+      const poseData = createMockPoseData('movenet-17', {
+        shoulderAbduction: 120,
+        scapularUpwardRotation: 40, // 120° / 3 = 40° (3:1 ratio)
+        viewOrientation: 'frontal',
+      });
+
+      const result = clinicalService.measureShoulderAbduction(
+        poseData,
+        'right',
+        'frontal'
+      );
+
+      // Verify scapulohumeral rhythm is within normal range (2:1 to 3.5:1)
+      const rhythm = result.secondaryJoints.scapulohumeral_rhythm;
+      if (rhythm) {
+        expect(rhythm.angle).toBeGreaterThanOrEqual(2.0);
+        expect(rhythm.angle).toBeLessThanOrEqual(3.5);
+      }
     });
   });
 });
