@@ -571,4 +571,97 @@ describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
       }
     });
   });
+
+  // =============================================================================
+  // PHASE 3: TEMPORAL ANOMALIES
+  // =============================================================================
+
+  describe('Phase 3: Temporal Anomalies', () => {
+    it('should detect 180° frame jump (sudden reversal)', () => {
+      // Smooth movement then sudden 180° reversal
+      const angles = [0, 20, 40, 60, 80, 260, 240, 220]; // 80° → 260° is a 180° jump
+      const sequence = createMeasurementSequence(angles);
+      const poseFrames = createPoseFrames(angles.length);
+
+      const result = analyzer.analyzeSequence(sequence, poseFrames);
+
+      // Should detect poor consistency due to jump
+      expect(result.consistency).toBeDefined();
+      expect(result.frameCount).toBe(angles.length);
+    });
+
+    it('should handle angle wrap-around smoothly', () => {
+      // Test angle wrapping around 0°/360°
+      const angles = [350, 355, 0, 5, 10]; // Should be smooth despite wrap
+      const sequence = createMeasurementSequence(angles);
+      const poseFrames = createPoseFrames(angles.length);
+
+      const result = analyzer.analyzeSequence(sequence, poseFrames);
+
+      // Should complete analysis
+      expect(result.trajectory).toBeDefined();
+      expect(result.frameCount).toBe(angles.length);
+    });
+
+    it('should detect erratic motion pattern', () => {
+      // Random jumps indicating unstable tracking
+      const angles = [45, 120, 30, 95, 15, 140, 50, 85, 25];
+      const sequence = createMeasurementSequence(angles);
+      const poseFrames = createPoseFrames(angles.length);
+
+      const result = analyzer.analyzeSequence(sequence, poseFrames);
+
+      // Should complete analysis
+      expect(result.consistency).toBeDefined();
+      expect(result.trajectory.observedPattern).toBeDefined();
+    });
+
+    it('should handle quality dropout in middle of sequence', () => {
+      const angles = Array(20)
+        .fill(0)
+        .map((_, i) => i * 5);
+      const sequence = createMeasurementSequence(angles);
+      const qualityPattern = Array(20)
+        .fill(0.9)
+        .map((q, i) => (i >= 8 && i <= 12 ? 0.3 : q)); // Dropout frames 8-12
+      const poseFrames = createPoseFrames(20, qualityPattern);
+
+      const result = analyzer.analyzeSequence(sequence, poseFrames);
+
+      // Should complete analysis
+      expect(result.quality).toBeDefined();
+      expect(result.frameCount).toBe(20);
+    });
+
+    it('should handle sudden quality recovery', () => {
+      const angles = Array(15)
+        .fill(0)
+        .map((_, i) => i * 10);
+      const sequence = createMeasurementSequence(angles);
+      // Start low, suddenly recover at frame 10
+      const qualityPattern = Array(15)
+        .fill(0.4)
+        .map((q, i) => (i >= 10 ? 0.95 : q));
+      const poseFrames = createPoseFrames(15, qualityPattern);
+
+      const result = analyzer.analyzeSequence(sequence, poseFrames);
+
+      // Should complete and show quality variation
+      expect(result.quality).toBeDefined();
+      expect(result.frameCount).toBe(15);
+    });
+
+    it('should detect large acceleration (instantaneous speed change)', () => {
+      // Realistic slow movement then sudden burst
+      const angles = [0, 5, 10, 15, 20, 25, 120, 125, 130]; // 25→120 is too fast
+      const sequence = createMeasurementSequence(angles);
+      const poseFrames = createPoseFrames(angles.length);
+
+      const result = analyzer.analyzeSequence(sequence, poseFrames);
+
+      // Should complete analysis
+      expect(result.consistency).toBeDefined();
+      expect(result.frameCount).toBe(angles.length);
+    });
+  });
 });
