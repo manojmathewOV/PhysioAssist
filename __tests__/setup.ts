@@ -65,6 +65,14 @@ jest.mock('@mediapipe/camera_utils', () => ({
 }));
 
 // Mock React Native TTS
+// WebView (exercise videos) is native-only
+jest.mock('react-native-webview', () => {
+  const { View } = require('react-native');
+  const WebView = (props: Record<string, unknown>) =>
+    require('react').createElement(View, { ...props, testID: 'webview' });
+  return { __esModule: true, WebView, default: WebView };
+});
+
 jest.mock('react-native-tts', () => ({
   __esModule: true,
   default: {
