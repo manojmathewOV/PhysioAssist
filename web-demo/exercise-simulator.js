@@ -368,7 +368,7 @@ function assessPoseQuality(pose, ...landmarkIndices) {
  * Generate real-time feedback based on angle and progress
  */
 function generateFeedback(analysis, target, previousAngle = 0) {
-  const { angle, joint, movement } = analysis;
+  const { angle } = analysis;
   const progress = Math.min(100, (angle / target) * 100);
 
   // Determine feedback category

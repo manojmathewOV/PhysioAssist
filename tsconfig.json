@@ -29,5 +29,15 @@
       "@config/*": ["src/config/*"]
     }
   },
-  "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js"]
+  // The two Skia components need @shopify/react-native-skia, which isn't installed;
+  // no app code imports them (only the docs example below). Re-include if Skia is added.
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js",
+    "src/components/pose/PoseOverlay.skia.tsx",
+    "src/components/coaching/CoachingOverlay.tsx",
+    "docs/examples/screens/PoseDetectionScreenPatientCentric.example.tsx"
+  ]
 }

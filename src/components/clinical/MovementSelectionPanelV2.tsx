@@ -77,7 +77,7 @@ const MovementSelectionPanelV2: React.FC<MovementSelectionPanelV2Props> = ({
         <View style={styles.jointBadge}>
           <Text style={styles.jointIcon}>{jointInfo.icon}</Text>
           <Text style={styles.jointText}>
-            {side.charAt(0).toUpperCase() + side.slice(1)} {jointInfo.label}
+            {side.charAt(0).toUpperCase() + side.slice(1)} {jointInfo.displayName}
           </Text>
         </View>
         <Text style={styles.question}>How do you want to move it?</Text>

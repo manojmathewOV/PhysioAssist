@@ -1,5 +1,4 @@
 import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-react-native';
 import { Pose, Results } from '@mediapipe/pose';
 
 import { PoseLandmark, PoseDetectionConfig, ProcessedPoseData } from '../types/pose';

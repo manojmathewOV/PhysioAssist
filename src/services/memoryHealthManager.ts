@@ -5,7 +5,7 @@
  * Implements progressive degradation strategy when memory pressure increases.
  */
 
-import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { telemetryService } from '../features/videoComparison/services/telemetryService';
 
 export type MemoryPressureLevel = 'normal' | 'warning' | 'critical';

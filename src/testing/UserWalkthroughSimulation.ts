@@ -15,7 +15,6 @@ import {
   JOINT_METADATA,
   AVAILABLE_JOINTS,
   JointType,
-  MovementType,
 } from '../config/movements.config';
 import { demoManager } from '../services/DemoManager';
 import { ProtocolManager } from '../config/protocols.config';

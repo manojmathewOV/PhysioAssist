@@ -14,6 +14,7 @@ const compileNodeModules = [
   'react-native-screens',
   '@react-navigation',
   'react-native-linear-gradient',
+  '@react-native/assets-registry',
 ].map((moduleName) => path.resolve(appDirectory, `node_modules/${moduleName}`));
 
 const babelLoaderConfiguration = {
@@ -27,8 +28,9 @@ const babelLoaderConfiguration = {
     loader: 'babel-loader',
     options: {
       cacheDirectory: true,
-      presets: ['module:metro-react-native-babel-preset'],
-      plugins: ['react-native-web', 'react-native-reanimated/plugin'],
+      // Presets, path aliases and worklet/reanimated plugins come from babel.config.js;
+      // repeating the RN preset here applied the JSX transforms twice.
+      plugins: ['react-native-web'],
     },
   },
 };
@@ -61,7 +63,7 @@ const cssLoaderConfiguration = {
   use: ['style-loader', 'css-loader'],
 };
 
-module.exports = {
+module.exports = (_env, argv = {}) => ({
   entry: path.resolve(appDirectory, 'index.web.js'),
   output: {
     filename: 'bundle.[chunkhash].js',
@@ -81,6 +83,7 @@ module.exports = {
     alias: {
       'react-native$': 'react-native-web',
       'react-native-svg': 'react-native-svg-web',
+      'react-native-sound': path.resolve(appDirectory, 'web/shims/react-native-sound.js'),
       '@': path.resolve(appDirectory, 'src'),
     },
     fallback: {
@@ -96,11 +99,10 @@ module.exports = {
       inject: 'body',
     }),
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.EnvironmentPlugin({
-      NODE_ENV: 'development',
-    }),
+    // webpack's `mode` already sets process.env.NODE_ENV; derive __DEV__ from it too
+    // (a hard-coded NODE_ENV here used to make production builds run in dev mode).
     new webpack.DefinePlugin({
-      __DEV__: process.env.NODE_ENV !== 'production',
+      __DEV__: JSON.stringify(argv.mode !== 'production'),
     }),
   ],
   devServer: {
@@ -113,4 +115,4 @@ module.exports = {
     open: true,
     historyApiFallback: true,
   },
-};
+});

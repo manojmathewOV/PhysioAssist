@@ -263,7 +263,7 @@ export class SmartFeedbackGenerator {
     // Step 2: Calculate priority for each error group
     const prioritized: PrioritizedError[] = [];
 
-    for (const [key, { errors: errorGroup, count }] of grouped.entries()) {
+    for (const { errors: errorGroup, count } of grouped.values()) {
       // Use the most severe instance of each error type
       const mostSevere = errorGroup.reduce((prev, curr) =>
         curr.severity === 'critical' ? curr : prev.severity === 'critical' ? prev : curr
@@ -311,7 +311,8 @@ export class SmartFeedbackGenerator {
    */
   static generateLiveFeedback(
     errors: DetectedError[],
-    patientLevel: PatientLevel = 'intermediate',
+    // Live mode always surfaces a single error, so patient level doesn't apply.
+    _patientLevel: PatientLevel = 'intermediate',
     locale: 'en' | 'es' = 'en'
   ): PrioritizedError | null {
     if (errors.length === 0) {
@@ -322,7 +323,7 @@ export class SmartFeedbackGenerator {
     const grouped = groupAndCountErrors(errors);
     const prioritized: PrioritizedError[] = [];
 
-    for (const [key, { errors: errorGroup, count }] of grouped.entries()) {
+    for (const { errors: errorGroup, count } of grouped.values()) {
       const mostSevere = errorGroup.reduce((prev, curr) =>
         curr.severity === 'critical' ? curr : prev.severity === 'critical' ? prev : curr
       );

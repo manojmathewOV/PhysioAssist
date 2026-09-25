@@ -1,17 +1,15 @@
 import React from 'react';
-import { Platform } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Screens
-import PoseDetectionScreen from '../screens/PoseDetectionScreen';
+import PoseScreen from './PoseScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import LoginScreen from '../screens/LoginScreen';
-import WebPoseDetectionScreen from '../screens/web/WebPoseDetectionScreen';
 
 // Redux
 import type { RootState } from '../store';
@@ -19,13 +17,11 @@ import type { RootState } from '../store';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const PoseScreen = Platform.OS === 'web' ? WebPoseDetectionScreen : PoseDetectionScreen;
-
 const MainTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ color, size }) => {
           let iconName;
 
           if (route.name === 'PoseDetection') {

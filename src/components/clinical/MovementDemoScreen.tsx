@@ -13,22 +13,13 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import Svg, { Circle, Line, Path, G } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 // Import from centralized registry
 import { MovementRegistry, JointType, MovementType } from '@config/movements.config';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface MovementDemoScreenProps {
   movementType: MovementType;
@@ -51,16 +42,17 @@ const MovementDemoScreen: React.FC<MovementDemoScreenProps> = ({
     (m) => m.type === movementType
   );
 
-  if (!movementDef) {
-    console.error(`Movement definition not found for ${jointName} - ${movementType}`);
-    return null;
-  }
-
   // Animation value for arm rotation
+  // (hooks must run unconditionally, before any early return)
   const armRotation = useRef(new Animated.Value(0)).current;
   const buttonPulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    // Nothing to demo if the movement is unknown (component renders null below)
+    if (!movementDef) {
+      return undefined;
+    }
+
     // Start arm animation loop
     animateMovement();
 
@@ -125,21 +117,10 @@ const MovementDemoScreen: React.FC<MovementDemoScreenProps> = ({
     onReady();
   };
 
-  // Calculate rotation based on movement type
-  const getArmRotation = () => {
-    const rotation = armRotation.interpolate({
-      inputRange: [0, 1],
-      outputRange: [
-        '0deg',
-        movementType === 'flexion'
-          ? '-160deg'
-          : movementType === 'abduction'
-            ? '-90deg'
-            : '0deg',
-      ],
-    });
-    return rotation;
-  };
+  if (!movementDef) {
+    console.error(`Movement definition not found for ${jointName} - ${movementType}`);
+    return null;
+  }
 
   return (
     <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>

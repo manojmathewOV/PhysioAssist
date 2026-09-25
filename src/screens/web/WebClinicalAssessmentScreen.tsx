@@ -6,7 +6,6 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from '@store/index';

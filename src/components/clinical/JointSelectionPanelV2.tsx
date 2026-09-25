@@ -16,17 +16,12 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 // Import from centralized registry
-import {
-  JointType,
-  MovementType,
-  JOINT_METADATA,
-  AVAILABLE_JOINTS,
-} from '@config/movements.config';
+import { JointType, JOINT_METADATA, AVAILABLE_JOINTS } from '@config/movements.config';
 
 interface JointSelectionPanelV2Props {
   onSelect: (joint: JointType, side: 'left' | 'right') => void;

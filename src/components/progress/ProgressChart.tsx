@@ -196,14 +196,11 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
             <Text
               style={[
                 styles.statValue,
-                {
-                  color:
-                    stats.trend === 'improving'
-                      ? '#4CAF50'
-                      : stats.trend === 'declining'
-                        ? '#F44336'
-                        : '#FF9800',
-                },
+                stats.trend === 'improving'
+                  ? styles.trendImproving
+                  : stats.trend === 'declining'
+                    ? styles.trendDeclining
+                    : styles.trendNeutral,
               ]}
             >
               {stats.trend === 'improving'
@@ -319,6 +316,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+  },
+  trendImproving: {
+    color: '#4CAF50',
+  },
+  trendDeclining: {
+    color: '#F44336',
+  },
+  trendNeutral: {
+    color: '#FF9800',
   },
   chartScroll: {
     marginBottom: 16,

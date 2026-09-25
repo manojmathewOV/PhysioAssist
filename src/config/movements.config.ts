@@ -654,10 +654,7 @@ export class MovementRegistry {
   /**
    * Get all movements for a joint
    */
-  static getMovementsByJoint(
-    joint: JointType,
-    mode: InterfaceMode = 'simple'
-  ): MovementDefinition[] {
+  static getMovementsByJoint(joint: JointType): MovementDefinition[] {
     return MOVEMENT_REGISTRY.filter((m) => m.joint === joint);
   }
 

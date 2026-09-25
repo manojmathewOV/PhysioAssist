@@ -17,11 +17,9 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { ClinicalJointMeasurement } from '../../types/clinicalMeasurement';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface ClinicalAngleDisplayProps {
   measurement: ClinicalJointMeasurement;
@@ -230,11 +228,9 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
                 <Text
                   style={[
                     styles.multiPlaneValue,
-                    {
-                      color: measurement.primaryJoint.components.rhythmNormal
-                        ? '#4CAF50'
-                        : '#FFC107',
-                    },
+                    measurement.primaryJoint.components.rhythmNormal
+                      ? styles.rhythmNormal
+                      : styles.rhythmAbnormal,
                   ]}
                 >
                   {measurement.primaryJoint.components.rhythm.toFixed(1)}:1
@@ -479,6 +475,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#2196F3',
+  },
+  rhythmNormal: {
+    color: '#4CAF50',
+  },
+  rhythmAbnormal: {
+    color: '#FFC107',
   },
   multiPlaneDivider: {
     width: 1,

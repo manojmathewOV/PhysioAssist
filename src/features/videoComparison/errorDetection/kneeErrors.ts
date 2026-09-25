@@ -201,7 +201,6 @@ export function detectHeelLift(
 
   // Normalize to stance width
   const userStanceWidth = getStanceWidth(userPose.keypoints);
-  const refStanceWidth = getStanceWidth(referencePose.keypoints);
 
   const userLiftPixels = Math.abs(userAnkleToKnee - refAnkleToKnee);
   const liftCm = pixelsToCm(userLiftPixels, userStanceWidth);

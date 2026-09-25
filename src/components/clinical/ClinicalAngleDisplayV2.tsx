@@ -16,7 +16,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { ClinicalJointMeasurement } from '../../types/clinicalMeasurement';
-import Svg, { Circle, Line, G } from 'react-native-svg';
+import Svg, { Circle, Line } from 'react-native-svg';
 
 interface ClinicalAngleDisplayV2Props {
   measurement: ClinicalJointMeasurement;
@@ -171,7 +171,6 @@ const styles = StyleSheet.create({
   },
   instructionBox: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(10px)',
     borderRadius: 20,
     borderWidth: 2,
     padding: 20,
