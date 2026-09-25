@@ -65,7 +65,16 @@ at the top and bottom:
 
 - one big Start/Stop button;
 - the current instruction in large text;
-- a large rep counter (`Metric`).
+- a rep progress ring (`RepRing`: count in the middle, "of N" below, green
+  with a tick at the goal).
+
+A session starts with a "get into position" step (dashed full-body frame,
+"Head visible / Feet visible" checklist; nothing is counted until the whole
+body has been in view for about a second), then a spoken 3-2-1-Go countdown.
+If the patient leaves the frame mid-session the screen says "Step back into
+view" and keeps the count. After each exercise the summary asks an optional
+0-10 pain question (`PainScale`); 7 or more shows a "tell your
+physiotherapist" warning.
 
 Feedback is spoken as well as shown. Technical numbers (confidence, FPS) are
 hidden unless the Advanced setting enables them.

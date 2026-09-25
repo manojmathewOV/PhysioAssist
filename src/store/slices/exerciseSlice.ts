@@ -10,6 +10,8 @@ export interface ExerciseHistory {
   duration: number;
   formScore: number;
   metrics?: ExerciseMetrics;
+  /** Patient-reported pain after the session, 0 (none) to 10 (worst). */
+  painScore?: number;
 }
 
 interface ExerciseState {
@@ -118,6 +120,13 @@ const exerciseSlice = createSlice({
         state.metrics = action.payload.metrics;
       }
     },
+    /** Pain (0-10) reported on the summary screen for the session just recorded. */
+    setLastSessionPain: (state, action: PayloadAction<number>) => {
+      const score = Math.round(action.payload);
+      if (state.history[0] && Number.isFinite(score)) {
+        state.history[0].painScore = Math.min(10, Math.max(0, score));
+      }
+    },
     clearExercise: (state) => {
       state.currentExercise = null;
       state.isExercising = false;
@@ -142,6 +151,7 @@ export const {
   setFeedback,
   setMetrics,
   updateExerciseProgress,
+  setLastSessionPain,
   clearExercise,
 } = exerciseSlice.actions;
 

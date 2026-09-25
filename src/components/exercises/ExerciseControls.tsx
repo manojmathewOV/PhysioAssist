@@ -3,8 +3,13 @@
  * screens" in docs/design/DESIGN_SYSTEM.md):
  * - top panel: the current instruction in large text (plus a "Turn side-on"
  *   hint when a joint reading is only an estimate);
- * - bottom panel: a big rep counter, form in words, and one big Stop button
+ * - bottom panel: a rep progress ring, form in words, and one big Stop button
  *   with a smaller Pause/Resume button beside it.
+ *
+ * Before counting starts (`gate`), the top panel asks the patient to get into
+ * position (with a "Head visible / Feet visible" checklist) and the middle of
+ * the screen shows a dashed full-body frame, then a big 3-2-1 countdown. The
+ * only button is Cancel. Mid-session, `outOfView` asks them to step back in.
  *
  * Technical numbers (tracking confidence) only appear when `showDetails` is on
  * (defaults to the "Show joint angles" setting).
@@ -25,8 +30,9 @@ import {
 import { RootState } from '../../store';
 import { AccessibilityIds } from '../../constants/accessibility';
 import { exerciseValidationService } from '../../services/exerciseValidationService';
-import { AppText, BigButton, Metric } from '../ui';
+import { AppText, BigButton } from '../ui';
 import { CameraPanel } from '../ui/CameraPanel';
+import { RepRing } from '../ui/RepRing';
 import { colors, radii, spacing, touch } from '../../theme';
 import {
   EXERCISE_OPTIONS,
@@ -35,6 +41,9 @@ import {
   formInWords,
   friendlyInstruction,
 } from './exerciseCatalog';
+import { CountdownBadge, FramingChecklist, FramingGuide } from './SessionGateViews';
+import { FramingState, INITIAL_FRAMING } from './useFramingReadiness';
+import { FRAMING_MESSAGE, OUT_OF_VIEW_MESSAGE } from './useSessionGate';
 
 /** Form scores below this threshold trigger a haptic cue. */
 const POOR_FORM_THRESHOLD = 0.6;
@@ -54,6 +63,14 @@ interface ExerciseControlsProps {
   showDetails?: boolean;
   /** Practice mode (simulated body, no camera). */
   practice?: boolean;
+  /** Before counting: getting into position, or the 3-2-1 countdown. */
+  gate?: 'framing' | 'countdown';
+  /** Framing checks while `gate` is 'framing'. */
+  framing?: FramingState;
+  /** 3, 2, 1, then 0 for "Go". */
+  countdown?: number | null;
+  /** Mid-session: the patient has stepped out of the frame. */
+  outOfView?: boolean;
 }
 
 const ExerciseControls: React.FC<ExerciseControlsProps> = ({
@@ -65,6 +82,10 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
   onReset: propOnReset,
   showDetails: propShowDetails,
   practice,
+  gate,
+  framing = INITIAL_FRAMING,
+  countdown = null,
+  outOfView = false,
 }) => {
   const dispatch = useDispatch();
   const {
@@ -181,12 +202,91 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
   const spoken = friendlyInstruction(feedback);
   const instruction = isPaused
     ? 'Paused. Take a rest.'
-    : spoken && spoken !== SIDE_ON_HINT
-      ? spoken
-      : !hasPose
-        ? 'Step into view so the camera can see you'
-        : currentExercise?.instructions?.[0] ?? 'Get into position';
+    : outOfView
+      ? OUT_OF_VIEW_MESSAGE
+      : spoken && spoken !== SIDE_ON_HINT
+        ? spoken
+        : !hasPose
+          ? 'Step into view so the camera can see you'
+          : currentExercise?.instructions?.[0] ?? 'Get into position';
   const showForm = repetitionCount > 0 || formScore > 0;
+
+  const header = (
+    <View style={styles.topRow}>
+      <AppText variant="label" color={ON_DARK_SOFT} style={styles.flex}>
+        {exerciseName.toUpperCase()}
+      </AppText>
+      {practice ? (
+        <View style={styles.pill} testID="practice-mode-badge">
+          <AppText variant="caption" color={ON_DARK}>
+            Practice
+          </AppText>
+        </View>
+      ) : null}
+      {showDetails ? (
+        <View
+          style={styles.pill}
+          testID={AccessibilityIds.poseDetection.confidenceIndicator}
+          accessibilityLabel={`Tracking ${Math.round(confidence * 100)} percent`}
+        >
+          <AppText variant="caption" color={ON_DARK}>
+            Tracking {Math.round(confidence * 100)}%
+          </AppText>
+        </View>
+      ) : null}
+    </View>
+  );
+
+  // ---------------------------------------------------------------------------
+  // Getting into position / countdown: nothing is counted yet
+  // ---------------------------------------------------------------------------
+  if (gate) {
+    const framingStep = gate === 'framing';
+    return (
+      <SafeAreaView
+        edges={['top', 'left', 'right']}
+        style={styles.overlay}
+        pointerEvents="box-none"
+        testID="exercise-controls"
+      >
+        <CameraPanel style={styles.topPanel}>
+          {header}
+          <AppText
+            variant="title"
+            color={ON_DARK}
+            testID={AccessibilityIds.exercise.feedbackText}
+            accessibilityLiveRegion="polite"
+          >
+            {framingStep ? FRAMING_MESSAGE : 'Get ready'}
+          </AppText>
+          {framingStep ? (
+            <FramingChecklist checks={framing.checks} progress={framing.progress} />
+          ) : currentExercise?.instructions?.[0] ? (
+            <AppText variant="body" color={ON_DARK_SOFT}>
+              {currentExercise.instructions[0]}
+            </AppText>
+          ) : null}
+        </CameraPanel>
+
+        {framingStep ? (
+          <FramingGuide inFrame={framing.checks.fullBody} />
+        ) : (
+          <CountdownBadge value={countdown} />
+        )}
+
+        <CameraPanel style={styles.gatePanel}>
+          <BigButton
+            label="Cancel"
+            icon="close"
+            variant="secondary"
+            onPress={handleReset}
+            testID="exercise-cancel"
+            accessibilityHint="Goes back to the list of exercises"
+          />
+        </CameraPanel>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -196,29 +296,7 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
       testID="exercise-controls"
     >
       <CameraPanel style={styles.topPanel}>
-        <View style={styles.topRow}>
-          <AppText variant="label" color={ON_DARK_SOFT} style={styles.flex}>
-            {exerciseName.toUpperCase()}
-          </AppText>
-          {practice ? (
-            <View style={styles.pill} testID="practice-mode-badge">
-              <AppText variant="caption" color={ON_DARK}>
-                Practice
-              </AppText>
-            </View>
-          ) : null}
-          {showDetails ? (
-            <View
-              style={styles.pill}
-              testID={AccessibilityIds.poseDetection.confidenceIndicator}
-              accessibilityLabel={`Tracking ${Math.round(confidence * 100)} percent`}
-            >
-              <AppText variant="caption" color={ON_DARK}>
-                Tracking {Math.round(confidence * 100)}%
-              </AppText>
-            </View>
-          ) : null}
-        </View>
+        {header}
         <AppText
           variant="title"
           color={ON_DARK}
@@ -237,21 +315,26 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
         ) : null}
       </CameraPanel>
 
+      {outOfView && !isPaused ? (
+        <FramingGuide inFrame={false} />
+      ) : (
+        <View style={styles.flex} pointerEvents="none" />
+      )}
+
       <CameraPanel style={styles.bottomPanel}>
         <View style={styles.statsRow}>
-          <View style={styles.counter}>
-            <Metric
-              value={String(repetitionCount)}
-              label={repetitionCount === 1 ? 'rep' : 'reps'}
-              color={ON_DARK}
-              labelColor={ON_DARK_SOFT}
-              testID={AccessibilityIds.exercise.repCounter}
-            />
-          </View>
+          <RepRing
+            value={repetitionCount}
+            target={target}
+            size={116}
+            strokeWidth={12}
+            testID="rep-ring"
+            valueTestID={AccessibilityIds.exercise.repCounter}
+          />
           <View style={styles.statsText}>
-            {target ? (
-              <AppText variant="bodyStrong" color={ON_DARK}>
-                Goal: {target}
+            {target && repetitionCount >= target ? (
+              <AppText variant="bodyStrong" color={colors.poseGood}>
+                Goal reached!
               </AppText>
             ) : null}
             {showForm ? (
@@ -349,8 +432,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.warningSoft,
   },
   bottomPanel: { padding: spacing.lg, gap: spacing.md },
+  gatePanel: { padding: spacing.md },
   statsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-  counter: { minWidth: 88 },
   statsText: { flex: 1, gap: spacing.xs },
   formRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   buttons: { flexDirection: 'row', gap: spacing.md, alignItems: 'stretch' },

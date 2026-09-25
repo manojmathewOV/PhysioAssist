@@ -31,6 +31,9 @@ const formatDate = (iso: string) =>
     month: 'long',
   });
 
+/** History stores form as 0-1 (very old sessions may hold 0-100). */
+const formPercent = (score: number) => Math.round(score <= 1 ? score * 100 : score);
+
 const ProgressScreen: React.FC = () => {
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const history = useSelector((s: RootState) => s.exercise.history);
@@ -115,8 +118,8 @@ const ProgressScreen: React.FC = () => {
             icon="fitness-center"
             title={h.exerciseName}
             description={`${formatDate(h.date)} · ${h.reps} reps${
-              h.formScore ? ` · form ${Math.round(h.formScore)}%` : ''
-            }`}
+              h.formScore ? ` · form ${formPercent(h.formScore)}%` : ''
+            }${h.painScore !== undefined ? ` · pain ${h.painScore}/10` : ''}`}
             last={i === list.length - 1}
             testID={`progress-session-${i}`}
           />

@@ -1,7 +1,8 @@
 /**
  * Exercise tab (web, MediaPipe in the browser). Same three steps as the native
- * screen: choose an exercise -> exercise with the camera filling the screen ->
- * a calm summary. When the browser has no camera or blocks it, a friendly
+ * screen: choose an exercise -> exercise with the camera filling the screen
+ * (get into position, 3-2-1 countdown, then counting) -> a calm summary with
+ * an optional pain check. When the browser has no camera or blocks it, a friendly
  * full-screen explanation offers "Try again" or practice mode.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -23,6 +24,7 @@ import { setPoseData, setDetecting } from '../../store/slices/poseSlice';
 import {
   clearExercise,
   setFeedback,
+  setLastSessionPain,
   startExercise,
   stopExercise,
   updateExerciseProgress,
@@ -38,6 +40,10 @@ import ExerciseSummary, {
   ExerciseSummaryProps,
 } from '../../components/exercises/ExerciseSummary';
 import CameraUnavailable from '../../components/exercises/CameraUnavailable';
+import {
+  FRAMING_MESSAGE,
+  useSessionGate,
+} from '../../components/exercises/useSessionGate';
 import {
   EXERCISE_OPTIONS,
   ExerciseKey,
@@ -89,20 +95,38 @@ const WebPoseDetectionScreen: React.FC = () => {
   const exerciseState = useSelector((s: RootState) => s.exercise);
   const showJointAngles = useSelector((s: RootState) => s.settings.showJointAngles);
   const showPoseOverlay = useSelector((s: RootState) => s.settings.showPoseOverlay);
+  const currentLandmarks = useSelector((s: RootState) => s.pose.currentPose?.landmarks);
 
   const [stage, setStage] = useState<Stage>('choose');
   const [selectedKey, setSelectedKey] = useState<ExerciseKey>('bicepCurl');
   const [cameraState, setCameraState] = useState<CameraState>('starting');
   const [practice, setPractice] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [summary, setSummary] = useState<ExerciseSummaryProps | null>(null);
+  const [summary, setSummary] = useState<
+    (ExerciseSummaryProps & { saved: boolean }) | null
+  >(null);
   const [area, setArea] = useState({ width: 0, height: 0 });
   const [videoAspect, setVideoAspect] = useState(16 / 9);
 
   const option = EXERCISE_OPTIONS.find((o) => o.key === selectedKey)!;
   const lastSpokenRef = useRef('');
+  const lastRepsRef = useRef(0);
   const pausedRef = useRef(false);
   pausedRef.current = isPaused;
+
+  // Get into position -> 3-2-1 countdown -> count. Validation (and the timer)
+  // starts at "Go".
+  const gate = useSessionGate({
+    landmarks: currentLandmarks,
+    onGo: () => {
+      lastRepsRef.current = 0;
+      dispatch(startExercise(option.exercise));
+      exerciseValidationService.startExercise(option.exercise);
+    },
+  });
+  const { start: startGate, reset: resetGate } = gate;
+  const outOfViewRef = useRef(false);
+  outOfViewRef.current = gate.outOfView;
   const settingsRef = useRef({ showJointAngles, showPoseOverlay });
   settingsRef.current = { showJointAngles, showPoseOverlay };
 
@@ -164,10 +188,21 @@ const WebPoseDetectionScreen: React.FC = () => {
             phase: validation.phase,
           })
         );
-        const message = friendlyInstruction(raw);
-        if (message && message !== lastSpokenRef.current) {
+        if (metrics.repetitionCount > lastRepsRef.current) {
+          audioFeedbackService.announceRep(
+            metrics.repetitionCount,
+            exerciseValidationService.getCurrentState().exercise?.targetRepetitions
+          );
+        }
+        lastRepsRef.current = metrics.repetitionCount;
+        // While out of view the screen already says "Step back into view"
+        const message = outOfViewRef.current ? '' : friendlyInstruction(raw);
+        if (
+          message &&
+          message !== lastSpokenRef.current &&
+          audioFeedbackService.speakCorrection(message)
+        ) {
           lastSpokenRef.current = message;
-          audioFeedbackService.speak(message);
         }
       }
 
@@ -199,10 +234,15 @@ const WebPoseDetectionScreen: React.FC = () => {
       lastSpokenRef.current = '';
       setIsPaused(false);
       setPractice(practiceMode);
+      // Shows the exercise on screen; counting only starts after the countdown
       dispatch(startExercise(exercise));
-      exerciseValidationService.startExercise(exercise);
       dispatch(setDetecting(true));
-      audioFeedbackService.speak(`Starting ${option.title}. ${exercise.instructions[0]}`);
+      audioFeedbackService.speak(
+        practiceMode
+          ? `${option.title}. Get ready.`
+          : `${option.title}. ${FRAMING_MESSAGE}.`
+      );
+      startGate({ skipFraming: practiceMode });
       if (practiceMode) {
         setCameraState('live');
         mockPoseDataSimulator.start(
@@ -211,7 +251,7 @@ const WebPoseDetectionScreen: React.FC = () => {
         );
       }
     },
-    [dispatch, handlePoseResults, option]
+    [dispatch, handlePoseResults, option, startGate]
   );
 
   const stopEverything = useCallback(() => {
@@ -287,6 +327,12 @@ const WebPoseDetectionScreen: React.FC = () => {
   };
 
   const handleStop = () => {
+    if (gate.phase !== 'active') {
+      // Still getting ready: nothing to save
+      backToChooser();
+      return;
+    }
+    resetGate();
     const { repetitionCount, formScore, startedAt, currentExercise } = exerciseState;
     exerciseValidationService.stopExercise();
     stopEverything();
@@ -300,12 +346,15 @@ const WebPoseDetectionScreen: React.FC = () => {
       formAccuracy: Math.round(formScore * 100),
       targetReps: currentExercise?.targetRepetitions,
       practice,
+      // stopExercise only records sessions with at least one rep
+      saved: !practice && repetitionCount > 0,
     });
     setIsPaused(false);
     setStage('summary');
   };
 
   const backToChooser = () => {
+    resetGate();
     exerciseValidationService.stopExercise();
     stopEverything();
     dispatch(clearExercise());
@@ -341,6 +390,12 @@ const WebPoseDetectionScreen: React.FC = () => {
       <View style={styles.flex} testID={AccessibilityIds.poseDetection.screen}>
         <ExerciseSummary
           {...summary}
+          onPainSelect={(score) => {
+            // Practice sessions aren't saved, so there is nothing to attach it to
+            if (summary.saved) {
+              dispatch(setLastSessionPain(score));
+            }
+          }}
           onDone={() => {
             setStage('choose');
             navigation.navigate('HomeTab', { screen: 'Home' });
@@ -446,6 +501,16 @@ const WebPoseDetectionScreen: React.FC = () => {
         isActive={exerciseState.isExercising || cameraState === 'starting'}
         isPaused={isPaused}
         practice={practice}
+        gate={
+          gate.phase === 'framing' || gate.phase === 'countdown'
+            ? gate.phase
+            : gate.phase === 'idle'
+              ? 'framing' // camera still opening
+              : undefined
+        }
+        framing={gate.framing}
+        countdown={gate.countdown}
+        outOfView={gate.outOfView}
         onStop={handleStop}
         onPause={() => setIsPaused((p) => !p)}
         onReset={backToChooser}

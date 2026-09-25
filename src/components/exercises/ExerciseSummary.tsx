@@ -1,14 +1,19 @@
 /**
  * ExerciseSummary: a calm, celebratory summary shown after the patient stops
- * an exercise. Reps, time and form (in words), then "Done" and "Do another".
+ * an exercise. Reps, time and form (in words), an optional 0-10 pain check,
+ * then "Done" and "Do another".
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import { AppText, Banner, BigButton, Card, Metric, Screen } from '../ui';
 import { colors, radii, spacing } from '../../theme';
 import { formatDuration } from './exerciseCatalog';
+import PainScale from './PainScale';
+
+/** Pain at or above this (0-10) asks the patient to tell their physio. */
+export const HIGH_PAIN = 7;
 
 export interface ExerciseSummaryProps {
   exercise?: string;
@@ -28,6 +33,12 @@ export interface ExerciseSummaryProps {
   onRepeat?: () => void;
   /** Practice mode: nothing was saved. */
   practice?: boolean;
+  /**
+   * Asks "How much pain did you feel?" (0-10) when set. Answering is optional.
+   */
+  onPainSelect?: (score: number) => void;
+  /** Initial pain answer, if already given. */
+  painScore?: number | null;
 }
 
 const formWords = (percent: number, reps: number) => {
@@ -69,7 +80,14 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   onDone,
   onRepeat,
   practice,
+  onPainSelect,
+  painScore = null,
 }) => {
+  const [pain, setPain] = useState<number | null>(painScore);
+  const choosePain = (value: number) => {
+    setPain(value);
+    onPainSelect?.(value);
+  };
   const percent = Math.round(formAccuracy ?? score);
   const reachedGoal = !!targetReps && reps >= targetReps;
   const isPersonalBest = previousBestScore !== undefined && score > previousBestScore;
@@ -167,6 +185,34 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
         ) : null}
       </Card>
 
+      {onPainSelect ? (
+        <Card style={styles.card} testID="pain-check">
+          <View>
+            <AppText variant="heading" accessibilityRole="header">
+              How much pain did you feel?
+            </AppText>
+            <AppText variant="body" color={colors.textSecondary}>
+              Tap a number. You can skip this.
+            </AppText>
+          </View>
+          <PainScale value={pain} onChange={choosePain} />
+          {pain !== null && pain >= HIGH_PAIN ? (
+            <Banner
+              tone="warning"
+              message="Please tell your physiotherapist about this pain before your next session."
+              testID="pain-warning"
+            />
+          ) : pain !== null ? (
+            <View style={styles.painSaved} testID="pain-saved">
+              <Icon name="check" size={22} color={colors.success} />
+              <AppText variant="bodyStrong" color={colors.success}>
+                Thank you. Pain {pain} out of 10{practice ? '' : ' saved'}.
+              </AppText>
+            </View>
+          ) : null}
+        </Card>
+      ) : null}
+
       {practice ? (
         <Banner tone="info" message="Practice mode: this session was not saved." />
       ) : null}
@@ -240,6 +286,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   goalReached: { backgroundColor: colors.successSoft },
+  painSaved: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   note: {
     flexDirection: 'row',
     gap: spacing.md,
