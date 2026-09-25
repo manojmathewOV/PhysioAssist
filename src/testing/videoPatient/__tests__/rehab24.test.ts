@@ -185,7 +185,9 @@ function groupBy<T>(items: T[], key: (t: T) => string | null): [string, T[]][] {
       f1(mean(low.map(Math.abs))),
     ];
   });
-  const countRows = groupBy(cameras, (c) => exName(c.exercise)).map(([k, cs]) => {
+  const countRows = groupBy(cameras, (c) =>
+    c.reps.length ? `${exName(c.exercise)}, ${c.reps[0].labelledView}` : null
+  ).map(([k, cs]) => {
     const diff = cs.map((c) => c.appReps - c.labelledReps);
     return [
       k,
@@ -314,7 +316,7 @@ ${table(['Exercise', 'Per participant (°)', 'Mean (95% CI)'], perPerson)}
 ${table([EX_VIEW, 'Labelled reps', 'Counted', 'Start/end timing error, median / 90th pct (ms)', 'Peak bias', 'Peak MAE', 'Bottom-of-range bias', 'Bottom-of-range MAE'], repRows)}
 
 Rep count per camera session:
-${table(['Exercise', 'Sessions', 'Exact', 'Within ±1', 'Mean difference'], countRows)}
+${table([EX_VIEW, 'Sessions', 'Exact', 'Within ±1', 'Mean difference'], countRows)}
 
 ## 5. Camera view
 ${table([EX_VIEW, 'Reps', 'Detected as labelled', 'App detected'], viewRows)}
