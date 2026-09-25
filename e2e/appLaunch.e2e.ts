@@ -25,10 +25,11 @@ describe('App launch smoke test', () => {
   });
 
   it('shows onboarding on first launch', async () => {
-    await waitFor(element(by.id('onboarding-screen')))
+    // Wait for what the patient sees (the container can sit under other views),
+    // with room for the first JS bundle load on a cold simulator
+    await waitFor(element(by.id('onboarding-get-started')))
       .toBeVisible()
-      .withTimeout(30000);
-    await detoxExpect(element(by.id('onboarding-get-started'))).toBeVisible();
+      .withTimeout(60000);
     await device.takeScreenshot('01-onboarding');
   });
 
