@@ -136,6 +136,15 @@ export function sessionOutcome(
     };
   }
   const reference = referenceFor(plan, exercise);
+  // A still measurement (heel prop): the steady resting angle, not one frame
+  const hold = analysis?.hold;
+  if (hold && sessionRange) {
+    sessionRange = {
+      ...sessionRange,
+      bestDegrees: Math.round(hold.degrees),
+      direction: 'toward',
+    };
+  }
   const range = sessionRange
     ? reference
       ? {

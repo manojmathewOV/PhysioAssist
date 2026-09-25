@@ -37,6 +37,7 @@ export interface Scenario {
 }
 
 const SIDE: BodyPose = { ...STANDING, view: 'side' };
+const LYING: BodyPose = { ...STANDING, view: 'lyingSide', leftKnee: 176 };
 const SEATED: BodyPose = { ...STANDING, view: 'seatedSide', leftKnee: 90, rightKnee: 90 };
 const FRONT: BodyPose = {
   ...STANDING,
@@ -387,6 +388,37 @@ export const SCENARIOS: Scenario[] = [
     }),
     plan: { joint: 'knee', side: 'left' },
     expect: { reps: 5, bestDegrees: 120 },
+  },
+  {
+    id: 'short-arc-quad-normal',
+    exerciseId: 'short-arc-quad',
+    title: 'Short-arc quad, nearly straight',
+    description: 'Lying side-on, roll under the knee: 40° bent to 4° short of straight.',
+    base: { ...LYING, kneeOnRoll: 1, leftKnee: 140, rightKnee: 140 },
+    timeline: repetitions({
+      rest: { leftKnee: 140 },
+      target: { leftKnee: 176 },
+      reps: 5,
+      moveMs: 1200,
+      holdMs: 2000,
+      restMs: 700,
+    }),
+    plan: { joint: 'knee', side: 'left' },
+    expect: { reps: 5, bestDegrees: 4 },
+  },
+  {
+    id: 'heel-prop-extension-normal',
+    exerciseId: 'heel-prop-extension',
+    title: 'Heel prop, knee resting 4° short of straight',
+    description:
+      'Lying side-on, heel on a roll, the left knee rests still: nothing to count.',
+    base: LYING,
+    timeline: [
+      { t: 0, angles: { leftKnee: 176 } },
+      { t: 8000, angles: { leftKnee: 176 } },
+    ],
+    plan: { joint: 'knee', side: 'left' },
+    expect: { reps: 0, bestDegrees: 4 },
   },
 ];
 

@@ -16,12 +16,25 @@ export interface ExerciseMovement {
    * over the toes, but its depth needs the side). Defaults to `view`.
    */
   rangeView?: CameraView;
+  /** 'hold': a still measurement (no repetitions), e.g. passive knee extension. */
+  mode?: 'reps' | 'hold';
 }
 
 export const EXERCISE_MOVEMENT: Record<string, ExerciseMovement> = {
   // Sitting, the knee straightens from about 90° towards 0°: the number that
   // matters is how close to straight it gets (active extension deficit)
   'seated-knee-extension': { direction: 'toward', posture: 'seated', view: 'side' },
+  // Lying, heel on a roll, the knee relaxed: how straight it rests (passive
+  // extension deficit), measured over a still window, not counted
+  'heel-prop-extension': {
+    direction: 'toward',
+    posture: 'lying',
+    view: 'side',
+    mode: 'hold',
+  },
+  // Lying, a roll under the knee: the heel lifts to straighten the knee while
+  // the thigh stays on the roll
+  'short-arc-quad': { direction: 'toward', posture: 'lying', view: 'side' },
   // Sitting, the foot slides back under the chair: bending past 90°
   'seated-knee-flexion': { direction: 'away', posture: 'seated', view: 'side' },
   // Knee flexion needs a side view: from the front the knee bends towards the

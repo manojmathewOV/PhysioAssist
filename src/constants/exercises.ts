@@ -351,6 +351,77 @@ export const EXERCISES: Record<string, Exercise> = {
     ],
   },
 
+  heelPropExtension: {
+    id: 'heel-prop-extension',
+    name: 'Heel Prop (Knee Straightening Stretch)',
+    description:
+      'Lying with the heel on a rolled towel, the knee relaxes towards straight; measured as it rests',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'knee',
+    targetMuscles: ['posterior knee capsule', 'hamstrings'],
+    equipment: ['rolled towel'],
+    targetRepetitions: 1,
+    targetSets: 1,
+    restDuration: 0,
+    instructions: [
+      'Lie on your back, side-on to the phone, with the leg you are exercising closest to it',
+      'Put the phone level with your knee, far enough away to see your hip, knee and foot',
+      'Rest your heel on a rolled towel, with nothing under your knee',
+      'Relax and let your knee sink towards straight; keep still while it is measured',
+    ],
+    warnings: ['Stop if it is painful; a gentle stretch is enough'],
+    phases: [
+      {
+        name: 'rest',
+        description: 'Heel propped, knee relaxed',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 150, maxAngle: 180, targetAngle: 180 },
+        ],
+        holdDuration: 30000,
+      },
+    ],
+  },
+
+  shortArcQuad: {
+    id: 'short-arc-quad',
+    name: 'Short-Arc Quad',
+    description:
+      'Lying with a roll under the knee, straightening the knee by lifting the heel',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'knee',
+    targetMuscles: ['quadriceps'],
+    equipment: ['rolled towel or foam roll'],
+    targetRepetitions: 10,
+    targetSets: 2,
+    restDuration: 30000,
+    instructions: [
+      'Lie on your back, side-on to the phone, with the leg you are exercising closest to it',
+      'Put the phone level with your knee, far enough away to see your hip, knee and foot',
+      'Place a rolled towel under your knee',
+      'Keeping the back of your thigh on the roll, lift your heel to straighten your knee, and hold',
+      'Lower your heel slowly',
+    ],
+    phases: [
+      {
+        name: 'bent',
+        description: 'Knee over the roll, heel down',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 110, maxAngle: 155, targetAngle: 140 },
+        ],
+      },
+      {
+        name: 'straight',
+        description: 'Heel lifted, knee straight',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 165, maxAngle: 180, targetAngle: 178 },
+        ],
+        holdDuration: 1500,
+      },
+    ],
+  },
+
   seatedKneeFlexion: {
     id: 'seated-knee-flexion',
     name: 'Seated Knee Bend',

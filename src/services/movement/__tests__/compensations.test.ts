@@ -34,7 +34,7 @@ const byId = (id: string) => COMPENSATION_SCENARIOS.find((s) => s.id === id)!;
 function repOf(
   scenario: CompensationScenario,
   {
-    view = scenario.base.view === 'seatedSide' ? 'side' : scenario.base.view,
+    view = scenario.base.view === 'front' ? 'front' : 'side',
     hidden,
   }: { view?: CameraView; hidden?: string } = {}
 ): Repetition {

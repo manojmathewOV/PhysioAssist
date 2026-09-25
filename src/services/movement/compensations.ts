@@ -133,7 +133,7 @@ export const PATIENT_CUES: Record<FindingId, string> = {
   trunk_forward_lean: 'Keep your body upright; let your arm do the work.',
   pelvic_shift: 'Try to keep your weight evenly on both feet.',
   lean_back: 'Sit tall; try not to lean back as you straighten your knee.',
-  thigh_lift: 'Keep your thigh resting on the chair; let your knee do the work.',
+  thigh_lift: 'Keep the back of your thigh resting down; let your knee do the work.',
   camera_view: 'Turn so your side faces the camera, then we can measure your movement.',
 };
 
@@ -193,7 +193,9 @@ const NEEDS_PLANTED_FEET: FindingId[] = ['knee_valgus', 'hip_hitch', 'pelvic_shi
 /** Checks that assume the patient is standing (feet on the floor, body upright). */
 const STANDING_ONLY: FindingId[] = [...NEEDS_PLANTED_FEET, 'heel_lift'];
 /** Checks for exercises done sitting. */
-const SEATED_ONLY: FindingId[] = ['lean_back', 'thigh_lift'];
+const SEATED_ONLY: FindingId[] = ['lean_back'];
+/** Checks for exercises with the thigh supported (on a chair or a roll). */
+const THIGH_SUPPORTED: FindingId[] = ['thigh_lift'];
 
 /** Whether a check applies to this exercise. */
 export const appliesTo = (id: FindingId, { joint, exerciseId }: MovementContext) =>
@@ -215,8 +217,10 @@ export const fitsPosture = (id: FindingId, rep: Repetition, ctx: MovementContext
   const posture = rep.baseline.posture ?? 'unknown';
   const expected = movementOf(ctx.exerciseId).posture;
   const seated = posture === 'seated' || (posture === 'unknown' && expected === 'seated');
+  const lying = posture === 'lying' || (posture === 'unknown' && expected === 'lying');
   if (SEATED_ONLY.includes(id)) return seated;
-  if (STANDING_ONLY.includes(id)) return !seated && posture !== 'lying';
+  if (THIGH_SUPPORTED.includes(id)) return seated || lying;
+  if (STANDING_ONLY.includes(id)) return !seated && !lying;
   return true;
 };
 
@@ -807,16 +811,21 @@ export const detectLeanBack = makeDetector({
 });
 
 /**
- * Thigh lift (side, seated): the working thigh rises off the chair (the hip
- * bends to help), measured as the hip-to-knee line's rise above its rest angle.
+ * Thigh lift (side, seated or lying): the working thigh rises off the chair or
+ * the roll (the hip bends to help), measured as the hip-to-knee line's rise
+ * above its rest angle.
  */
 export const detectThighLift = makeDetector({
   id: 'thigh_lift',
   unit: 'deg',
   views: ['side'],
   setup: (rest, { side }) => {
-    const dirn = facing(rest);
-    if (!dirn) return null;
+    // Forward = the way the thigh points at rest (works sitting and lying,
+    // where the toes point up and the feet can't tell which way is forward)
+    const h0 = seen(rest, `${side}_hip`);
+    const k0 = seen(rest, `${side}_knee`);
+    if (!h0 || !k0 || k0.x === h0.x) return null;
+    const dirn = k0.x > h0.x ? 1 : -1;
     const rise = (lms: PoseLandmark[]) => {
       const hip = seen(lms, `${side}_hip`);
       const knee = seen(lms, `${side}_knee`);

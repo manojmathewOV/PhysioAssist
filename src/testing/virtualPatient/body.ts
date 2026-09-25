@@ -23,8 +23,11 @@ export const FRAME_HEIGHT = 640;
 const PX_PER_M = 330;
 
 export interface BodyPose {
-  /** Standing side-on, standing facing the camera, or sitting side-on on a chair. */
-  view: 'side' | 'front' | 'seatedSide';
+  /**
+   * Standing side-on, standing facing the camera, sitting side-on on a chair,
+   * or lying on the back side-on (head towards -x, heel propped on a roll).
+   */
+  view: 'side' | 'front' | 'seatedSide' | 'lyingSide';
   leftElbow: number;
   rightElbow: number;
   leftShoulder: number;
@@ -56,8 +59,10 @@ export interface BodyPose {
   forwardHead: number;
   /** Front: degrees the head tilts (ear towards shoulder), about the nose. */
   headTilt: number;
-  /** Seated: degrees the left thigh rises off the chair. */
+  /** Seated or lying: degrees the left thigh rises off the chair or roll. */
   thighLift: number;
+  /** Lying: 1 = a roll under the knees (short-arc quad), 0 = heels propped. */
+  kneeOnRoll: number;
 }
 
 export const STANDING: BodyPose = {
@@ -81,6 +86,7 @@ export const STANDING: BodyPose = {
   forwardHead: 0,
   headTilt: 0,
   thighLift: 0,
+  kneeOnRoll: 0,
 };
 
 type P = { x: number; y: number; z?: number };
@@ -188,6 +194,51 @@ function seatedSidePose(pose: BodyPose): Record<string, P> {
   };
   const head = add(midShoulder, dir(180 - lean), L.neck);
   pts.nose = { x: head.x + 22, y: head.y };
+  return pts;
+}
+
+/**
+ * Lying on the back, filmed side-on: trunk horizontal (head towards -x), legs
+ * towards +x. Heels propped (a bent knee sags below the hip-heel line) or a
+ * roll under the knees (the thigh rests on it, the heel lifts to straighten).
+ * Knee angles are interior (180 = straight).
+ */
+function lyingSidePose(pose: BodyPose): Record<string, P> {
+  const pts: Record<string, P> = {};
+  const hipY = 470;
+  for (const [side, offset] of [
+    ['left', 0],
+    ['right', 6],
+  ] as const) {
+    const knee = side === 'left' ? pose.leftKnee : pose.rightKnee;
+    const bend = 180 - knee;
+    const hip = { x: 200 + offset, y: hipY };
+    const lift = side === 'left' ? pose.thighLift : 0;
+    let kneeP: P;
+    let ankle: P;
+    if (pose.kneeOnRoll) {
+      // Thigh up over the roll (20°); the lower leg drops from it by the bend
+      kneeP = add(hip, dir(110 + lift), L.thigh);
+      ankle = add(kneeP, dir(110 + lift - bend), L.shank);
+    } else {
+      // Thigh slopes down to the sagging knee, lower leg rises to the heel
+      kneeP = add(hip, dir(90 - bend / 2 + lift), L.thigh);
+      ankle = add(kneeP, dir(90 + bend / 2 + lift), L.shank);
+    }
+    pts[`${side}_hip`] = hip;
+    pts[`${side}_knee`] = kneeP;
+    pts[`${side}_ankle`] = ankle;
+    // Toes point up
+    pts[`${side}_heel`] = { x: ankle.x + 10, y: ankle.y + 8 };
+    pts[`${side}_foot_index`] = { x: ankle.x + 14, y: ankle.y - 40 };
+    // Trunk flat, towards -x; arms along the body
+    const shoulder = { x: hip.x - L.torso, y: hipY };
+    pts[`${side}_shoulder`] = shoulder;
+    const elbow = { x: shoulder.x + L.upperArm, y: hipY + 4 };
+    pts[`${side}_elbow`] = elbow;
+    pts[`${side}_wrist`] = { x: elbow.x + L.forearm, y: hipY + 6 };
+  }
+  pts.nose = { x: pts.left_shoulder.x - L.neck, y: hipY - 20 };
   return pts;
 }
 
@@ -391,7 +442,9 @@ export function renderBody(
       ? frontPose(pose)
       : pose.view === 'seatedSide'
         ? seatedSidePose(pose)
-        : sidePose(pose);
+        : pose.view === 'lyingSide'
+          ? lyingSidePose(pose)
+          : sidePose(pose);
   addDetail(pts);
   if (pose.view === 'front' && pose.headTilt) tiltHead(pts, pose.headTilt);
   const hipMid = {

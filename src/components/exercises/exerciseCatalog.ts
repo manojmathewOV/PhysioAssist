@@ -62,6 +62,22 @@ export const EXERCISE_OPTIONS: ExerciseOption[] = [
     icon: 'airline-seat-legroom-extra',
   },
   {
+    key: 'heelPropExtension',
+    exercise: EXERCISES.heelPropExtension,
+    title: 'Heel prop',
+    description: 'Lie side-on, heel on a rolled towel, and let your knee relax straight',
+    goal: 'Rest still for 30 seconds',
+    icon: 'hotel',
+  },
+  {
+    key: 'shortArcQuad',
+    exercise: EXERCISES.shortArcQuad,
+    title: 'Short-arc quad',
+    description: 'Lie side-on, roll under your knee, and lift your heel to straighten it',
+    goal: `${EXERCISES.shortArcQuad.targetRepetitions} repetitions`,
+    icon: 'airline-seat-flat-angled',
+  },
+  {
     key: 'seatedKneeFlexion',
     exercise: EXERCISES.seatedKneeFlexion,
     title: 'Seated knee bend',

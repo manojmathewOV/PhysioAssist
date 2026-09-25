@@ -7,6 +7,7 @@
  */
 import { directionOf, movementOf, rangeViewOf } from './exerciseMovement';
 import { segmentReps } from './repSegmentation';
+import { StaticMeasurement, measureStaticHold } from './staticHold';
 import type {
   CompensationHit,
   Finding,
@@ -49,6 +50,8 @@ export interface AnalysisOptions {
 }
 
 export interface SessionAnalysis {
+  /** For still measurements (e.g. heel-prop knee extension) the held angle. */
+  hold?: StaticMeasurement | null;
   reps: Repetition[];
   profile: MovementProfile | null;
   /** All findings, most important first. */
@@ -72,6 +75,12 @@ export const HOLD_SLACK_MS = 1000;
  */
 export const EXTENSION_DEFICIT_WARN_DEG = 10;
 export const EXTENSION_DEFICIT_FLAG_DEG = 20;
+/**
+ * Passive extension deficit (knee resting with the heel propped): above these
+ * it is reported. A few degrees of flexion contracture already affects gait.
+ */
+export const PASSIVE_DEFICIT_WARN_DEG = 5;
+export const PASSIVE_DEFICIT_FLAG_DEG = 10;
 
 /** Safety-related problems are raised before anything else. */
 const PRIORITY: FindingId[] = [
@@ -114,7 +123,7 @@ const DEFAULT_CUES: Record<FindingId, string> = {
   trunk_forward_lean: 'Keep your body upright; let your arm do the work.',
   pelvic_shift: 'Try to keep your weight evenly on both feet.',
   lean_back: 'Sit tall; try not to lean back as you straighten your knee.',
-  thigh_lift: 'Keep your thigh resting on the chair; let your knee do the work.',
+  thigh_lift: 'Keep the back of your thigh resting down; let your knee do the work.',
   camera_view: 'Turn so your side faces the camera, then we can measure your movement.',
 };
 
@@ -160,6 +169,7 @@ export function analyseSession(
 ): SessionAnalysis {
   const direction = directionOf(context);
   const movement = movementOf(context.exerciseId);
+  if (movement.mode === 'hold') return analyseHold(frames, context, targets, cues);
   const lowerLimb = context.joint === 'knee' || context.joint === 'hip';
   const segmented = segmentReps(frames, {
     fallback: lowerLimb && direction === 'away' ? 'hipDrop' : undefined,
@@ -358,4 +368,77 @@ export function analyseSession(
       PRIORITY.indexOf(a.id) - PRIORITY.indexOf(b.id)
   );
   return { reps, profile, findings, cues: findings.slice(0, 2).map((f) => f.cue) };
+}
+
+/**
+ * A still measurement: the knee (or other joint) held at rest, measured over
+ * its steadiest stretch. For straightening, reported as a passive extension
+ * deficit; never as "extension lag", which needs a passive and an active
+ * measurement to compare.
+ */
+function analyseHold(
+  frames: MovementFrame[],
+  context: MovementContext,
+  targets: SessionTargets,
+  cues: Partial<Record<FindingId, string>>
+): SessionAnalysis {
+  const direction = directionOf(context);
+  const movement = movementOf(context.exerciseId);
+  const cueFor = (id: FindingId) => cues[id] ?? DEFAULT_CUES[id];
+  const findings: Finding[] = [];
+  const joint = `${context.side} ${context.joint}`;
+
+  const views = frames.map((f) => f.view).filter((v) => v !== 'unknown');
+  const sideFrames = frames.filter((f) => f.view === 'side' && f.nearSide);
+  if (
+    movement.view !== undefined &&
+    views.length > 0 &&
+    views.filter((v) => v === movement.view).length < views.length / 2
+  ) {
+    findings.push({
+      id: 'camera_view',
+      severity: 'warn',
+      cue: cueFor('camera_view'),
+      detail: `This is measured from the ${movement.view}.`,
+      reps: [],
+    });
+  } else if (
+    sideFrames.length > 0 &&
+    sideFrames.filter((f) => f.nearSide !== context.side).length > sideFrames.length / 2
+  ) {
+    findings.push({
+      id: 'camera_view',
+      severity: 'warn',
+      cue: `Turn around so your ${context.side} leg is closest to the phone.`,
+      detail: `Your ${joint} was on the far side, hidden behind the other one.`,
+      reps: [],
+    });
+  }
+
+  const hold = findings.length ? null : measureStaticHold(frames, direction);
+  if (!findings.length && !hold) {
+    findings.push({
+      id: 'short_hold',
+      severity: 'warn',
+      cue: 'Rest your leg still and relaxed for a few seconds so it can be measured.',
+      detail: 'Your leg didn’t stay still long enough to measure.',
+      reps: [],
+    });
+  }
+  if (hold && direction === 'toward') {
+    const aim = targets.goalDegrees ?? 0;
+    const deficit = hold.degrees - aim;
+    if (deficit > PASSIVE_DEFICIT_WARN_DEG) {
+      findings.push({
+        id: 'reduced_range',
+        severity: deficit > PASSIVE_DEFICIT_FLAG_DEG ? 'flag' : 'warn',
+        cue: 'Let your knee relax and sink towards straight.',
+        detail: `Passive extension deficit: resting, your ${joint} was about ${Math.round(
+          hold.degrees
+        )}° short of straight${aim ? ` (your goal is ${Math.round(aim)}°)` : ''}.`,
+        reps: [],
+      });
+    }
+  }
+  return { hold, reps: [], profile: null, findings, cues: findings.map((f) => f.cue) };
 }
