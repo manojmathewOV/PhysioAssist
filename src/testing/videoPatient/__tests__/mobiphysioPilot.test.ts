@@ -45,6 +45,7 @@ const VARIATION: Record<string, string> = {
 const load = (file: string): VideoLandmarks =>
   JSON.parse(zlib.gunzipSync(fs.readFileSync(file)).toString('utf8'));
 const pct = (x: number) => `${Math.round(x * 100)}%`;
+const signedPct = (x: number) => (x > 0 ? `+${pct(x)}` : pct(x));
 const mean = (a: number[]) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : NaN);
 const med = (a: number[]) => {
   const s = a.filter(Number.isFinite).sort((x, y) => x - y);
@@ -91,7 +92,7 @@ const table = (header: string[], rows: string[][]) =>
     'Joint not measured',
     'Shown as estimate',
     'Median reps',
-    'Median peak (°)',
+    'Median top of range (°)',
     'Median jitter (°)',
     'Sessions with a flagged compensation',
     'Inference ms (CPU)',
@@ -120,6 +121,7 @@ const table = (header: string[], rows: string[][]) =>
 
   // Paired stress tests against the clean original
   const robustRows: string[][] = [];
+  const robustPairs: { transform: string; base: VideoMetrics; m: VideoMetrics }[] = [];
   const robustDir = path.join(dir!, 'robustness');
   if (fs.existsSync(robustDir)) {
     const transforms = new Map<string, { base: VideoMetrics; m: VideoMetrics }[]>();
@@ -131,20 +133,20 @@ const table = (header: string[], rows: string[][]) =>
         exerciseId: 'side-arm-raise',
       });
       transforms.set(transform, [...(transforms.get(transform) ?? []), { base, m }]);
+      robustPairs.push({ transform, base, m });
     }
     for (const [t, pairs] of [...transforms.entries()].sort()) {
+      const topChange = pairs.map((p) =>
+        Math.abs((p.m.peakDegrees ?? NaN) - (p.base.peakDegrees ?? NaN))
+      );
       robustRows.push([
         t,
         String(pairs.length),
         pct(mean(pairs.map((p) => p.m.poseRate))),
+        signedPct(mean(pairs.map((p) => p.m.unmeasuredRate - p.base.unmeasuredRate))),
         `${pairs.filter((p) => p.m.reps === p.base.reps).length}/${pairs.length}`,
-        f1(
-          mean(
-            pairs.map((p) =>
-              Math.abs((p.m.peakDegrees ?? NaN) - (p.base.peakDegrees ?? NaN))
-            )
-          )
-        ),
+        f1(med(topChange)),
+        f1(Math.max(...topChange.filter(Number.isFinite))),
         f1(
           mean(
             pairs.map((p) => (p.m.jitterDegrees ?? NaN) - (p.base.jitterDegrees ?? NaN))
@@ -235,14 +237,15 @@ ${
 }
 
 ## Paired stress tests (${robustRows.length ? 'clean front-view abduction clips, same movement, altered pixels' : 'not run'})
-${robustRows.length ? table(['Transform', 'Pairs', 'Frames with a pose', 'Same rep count', 'Mean peak change (°)', 'Jitter change (°)', 'Same view', 'Same working side', 'New flagged compensation'], robustRows) : ''}
+${robustRows.length ? table(['Transform', 'Pairs', 'Frames with a pose', 'Change in joint not measured', 'Same rep count', 'Median top-of-range change (°)', 'Largest change (°)', 'Jitter change (°)', 'Same view', 'Same working side', 'New flagged compensation'], robustRows) : ''}
 
 Physiotherapist scores (EAAQ, 0-100) are session-level quality ratings, not angle ground truth; median score of scored clips here: ${f1(med(results.map((r) => r.v.physioScore ?? NaN)))}.
-Unused in this pilot: ${e01.length - clean.filter((r) => r.v.exercise === 'E01').length} degraded abduction clips are summarised above by condition.
+Degraded-condition abduction clips: ${e01.length - clean.filter((r) => r.v.exercise === 'E01').length} (summarised by condition above).
 `;
   if (process.env.PILOT_OUT) fs.writeFileSync(process.env.PILOT_OUT, md);
   const jsonOut = process.env.PILOT_JSON;
-  if (jsonOut) fs.writeFileSync(jsonOut, JSON.stringify(results, null, 1));
+  if (jsonOut)
+    fs.writeFileSync(jsonOut, JSON.stringify({ results, robustPairs }, null, 1));
   console.log(md);
   expect(results.length).toBeGreaterThan(0);
 });

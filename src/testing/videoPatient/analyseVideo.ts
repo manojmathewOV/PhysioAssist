@@ -31,7 +31,10 @@ export interface VideoMetrics {
   view: CameraView;
   viewShare: Partial<Record<CameraView, number>>;
   reps: number;
-  /** Largest clinical angle reached, and the lowest (degrees). */
+  /**
+   * Top and bottom of the range (95th and 5th percentile clinical angle, so a
+   * single glitch frame can't set them), degrees.
+   */
   peakDegrees: number | null;
   minDegrees: number | null;
   /** High-frequency angle noise: RMS difference from a 5-frame median (degrees). */
@@ -50,6 +53,12 @@ const median = (a: number[]) => {
   return s[Math.floor(s.length / 2)];
 };
 
+const percentile = (a: number[], p: number) => {
+  if (!a.length) return null;
+  const s = [...a].sort((x, y) => x - y);
+  return s[Math.min(s.length - 1, Math.floor(s.length * p))];
+};
+
 function record(data: VideoLandmarks, context: MovementContext) {
   const recorder = new MovementRecorder(context);
   const frames: (MovementFrame | null)[] = [];
@@ -59,8 +68,10 @@ function record(data: VideoLandmarks, context: MovementContext) {
       frames.push(null);
       continue;
     }
-    frames.push(recorder.add(f.pose));
-    if (getOutOfPlaneJoints(f.pose).has(`${context.side}_${context.joint}`)) estimated++;
+    const frame = recorder.add(f.pose);
+    frames.push(frame);
+    const key = `${context.side}_${context.joint}`;
+    if (frame?.angle != null && getOutOfPlaneJoints(f.pose).has(key)) estimated++;
   }
   return { recorder, frames, estimated };
 }
@@ -127,8 +138,8 @@ export function analyseVideo(
       [...views.entries()].map(([v, n]) => [v, n / Math.max(1, withPose.length)])
     ),
     reps: analysis.reps.length,
-    peakDegrees: angles.length ? Math.max(...angles) : null,
-    minDegrees: angles.length ? Math.min(...angles) : null,
+    peakDegrees: percentile(angles, 0.95),
+    minDegrees: percentile(angles, 0.05),
     jitterDegrees: residuals.length
       ? Math.sqrt(residuals.reduce((t, r) => t + r * r, 0) / residuals.length)
       : null,
