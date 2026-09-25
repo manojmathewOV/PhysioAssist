@@ -49,7 +49,34 @@ export interface AnalysisOptions {
   cues?: Partial<Record<FindingId, string>>;
 }
 
+/** Why a session's measurement couldn't be accepted. */
+export type UnavailableReason =
+  /** Filmed from a view the measurement isn't valid from, or the joint was hidden. */
+  | 'camera_view'
+  /** The joint was never clearly seen. */
+  | 'not_seen'
+  /** Seen, but no complete repetition. */
+  | 'no_repetitions'
+  /** A still measurement, but the limb never stayed still long enough. */
+  | 'not_still';
+
+/**
+ * The one accepted result of a session: what the summary shows, what is saved
+ * and what progress is drawn from. "Unavailable" is a result in its own right:
+ * nothing else may stand in for it (not a live reading, not zero).
+ */
+export interface MeasurementResult {
+  status: 'measured' | 'unavailable';
+  /** Clinical degrees (best repetition, or the steady held angle). */
+  degrees?: number;
+  /** An estimate (3D from an angle to the movement, or rotation). */
+  approximate?: boolean;
+  reason?: UnavailableReason;
+}
+
 export interface SessionAnalysis {
+  /** The accepted measurement (see MeasurementResult). */
+  result: MeasurementResult;
   /** For still measurements (e.g. heel-prop knee extension) the held angle. */
   hold?: StaticMeasurement | null;
   reps: Repetition[];
@@ -238,7 +265,21 @@ export function analyseSession(
       reps: reps.map((r) => r.index),
     });
   }
-  if (!profile) return { reps, profile, findings, cues: findings.map((f) => f.cue) };
+  if (!profile) {
+    const reason: UnavailableReason =
+      farSide || wrongView
+        ? 'camera_view'
+        : frames.some((f) => f.angle !== null)
+          ? 'no_repetitions'
+          : 'not_seen';
+    return {
+      result: { status: 'unavailable', reason },
+      reps,
+      profile,
+      findings,
+      cues: findings.map((f) => f.cue),
+    };
+  }
 
   const joint = `${context.side} ${context.joint}`;
   const ref = targets.reference;
@@ -371,7 +412,24 @@ export function analyseSession(
       (a.severity === b.severity ? 0 : a.severity === 'flag' ? -1 : 1) ||
       PRIORITY.indexOf(a.id) - PRIORITY.indexOf(b.id)
   );
-  return { reps, profile, findings, cues: findings.slice(0, 2).map((f) => f.cue) };
+  // The range is only accepted from a view it is valid from, with the
+  // measured joint in sight
+  const repFrames = reps.flatMap((r) => r.frames).filter((f) => f.angle !== null);
+  const result: MeasurementResult =
+    wrongView || farSide
+      ? { status: 'unavailable', reason: 'camera_view' }
+      : {
+          status: 'measured',
+          degrees: profile.bestDegrees,
+          approximate: repFrames.filter((f) => f.estimated).length > repFrames.length / 2,
+        };
+  return {
+    result,
+    reps,
+    profile,
+    findings,
+    cues: findings.slice(0, 2).map((f) => f.cue),
+  };
 }
 
 /**
@@ -444,7 +502,24 @@ function analyseHold(
       });
     }
   }
-  return { hold, reps: [], profile: null, findings, cues: findings.map((f) => f.cue) };
+  const result: MeasurementResult = hold
+    ? { status: 'measured', degrees: hold.degrees }
+    : {
+        status: 'unavailable',
+        reason: findings.some((f) => f.id === 'camera_view')
+          ? 'camera_view'
+          : frames.some((f) => f.angle !== null)
+            ? 'not_still'
+            : 'not_seen',
+      };
+  return {
+    result,
+    hold,
+    reps: [],
+    profile: null,
+    findings,
+    cues: findings.map((f) => f.cue),
+  };
 }
 
 /** Set-up cue for the view an exercise needs. */

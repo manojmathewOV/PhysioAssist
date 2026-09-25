@@ -119,11 +119,7 @@ const ProgressScreen: React.FC = () => {
             title={h.exerciseName}
             description={`${formatDate(h.date)} · ${h.reps} reps${
               h.formScore ? ` · form ${formPercent(h.formScore)}%` : ''
-            }${
-              h.bestDegrees !== undefined
-                ? ` · ${h.bestDegrees}°${h.goalDegrees ? ` of ${h.goalDegrees}°` : ''}`
-                : ''
-            }${h.painScore !== undefined ? ` · pain ${h.painScore}/10` : ''}`}
+            }${sessionMeasurement(h)}${h.painScore !== undefined ? ` · pain ${h.painScore}/10` : ''}`}
             last={i === list.length - 1}
             testID={`progress-session-${i}`}
           />
@@ -149,3 +145,24 @@ const styles = StyleSheet.create({
 });
 
 export default ProgressScreen;
+
+/**
+ * The measurement part of a history row: "not measured" when it couldn't be
+ * measured, "~60° rotation" for an estimate, "8° from straight" for
+ * straightening, else "95° of 120°".
+ */
+export function sessionMeasurement(h: {
+  bestDegrees?: number;
+  goalDegrees?: number;
+  measured?: boolean;
+  approximate?: boolean;
+  direction?: 'away' | 'toward';
+  measure?: string;
+}): string {
+  if (h.measured === false) return ' · not measured';
+  if (h.bestDegrees === undefined) return '';
+  const value = `${h.approximate ? '~' : ''}${h.bestDegrees}°`;
+  if (h.measure) return ` · ${value} ${h.measure}`;
+  if (h.direction === 'toward') return ` · ${value} from straight`;
+  return ` · ${value}${h.goalDegrees ? ` of ${h.goalDegrees}°` : ''}`;
+}

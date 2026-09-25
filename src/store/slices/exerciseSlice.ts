@@ -33,6 +33,10 @@ export interface SessionResult {
   approximate?: boolean;
   /** Repetitions from the movement analysis, when the live counter can't count them. */
   reps?: number;
+  /** False when the session couldn't be measured (kept, so gaps stay visible). */
+  measured?: boolean;
+  /** Why it couldn't be measured. */
+  unavailableReason?: string;
 }
 
 interface ExerciseState {
@@ -83,8 +87,12 @@ const exerciseSlice = createSlice({
       // (Rotation and still measurements are counted by the movement analysis,
       // so their result carries the reps, or a measurement with no reps at all)
       const reps = action.payload?.reps ?? state.repetitionCount;
-      const measured = reps > 0 || action.payload?.bestDegrees !== undefined;
-      if (state.isExercising && state.currentExercise && measured) {
+      // An attempt that couldn't be measured is kept too, marked as such
+      const worthKeeping =
+        reps > 0 ||
+        action.payload?.bestDegrees !== undefined ||
+        action.payload?.measured === false;
+      if (state.isExercising && state.currentExercise && worthKeeping) {
         const now = Date.now();
         state.history.unshift({
           id: `${state.currentExercise.id}-${now}`,

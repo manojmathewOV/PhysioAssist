@@ -15,6 +15,12 @@ export const HOLD_WINDOW_MS = 2000;
  * MediaPipe's frame-to-frame jitter on a still limb (about 1-2°).
  */
 export const HOLD_MAX_SPREAD_DEG = 3;
+/**
+ * A hold must be seen throughout: a frame without the angle, or a gap longer
+ * than this between observations (ms), breaks it. Two similar readings seconds
+ * apart say nothing about what happened in between.
+ */
+export const HOLD_MAX_GAP_MS = 250;
 
 export interface StaticMeasurement {
   /** Average clinical angle over the chosen still window. */
@@ -39,9 +45,39 @@ export function measureStaticHold(
   direction: MovementDirection = 'toward',
   { windowMs = HOLD_WINDOW_MS, maxSpread = HOLD_MAX_SPREAD_DEG } = {}
 ): StaticMeasurement | null {
-  const pts = frames.filter((f) => f.angle !== null) as (MovementFrame & {
-    angle: number;
-  })[];
+  let best: StaticMeasurement | null = null;
+  // Split into stretches observed without a break, and search each on its own
+  let segment: MovementFrame[] = [];
+  const flush = () => {
+    const found = measureContinuous(segment, direction, windowMs, maxSpread);
+    if (
+      found &&
+      (!best ||
+        (direction === 'toward'
+          ? found.degrees < best.degrees
+          : found.degrees > best.degrees))
+    ) {
+      best = found;
+    }
+    segment = [];
+  };
+  for (const f of frames) {
+    const prev = segment[segment.length - 1];
+    if (f.angle === null || (prev && f.t - prev.t > HOLD_MAX_GAP_MS)) flush();
+    if (f.angle !== null) segment.push(f);
+  }
+  flush();
+  return best;
+}
+
+/** The best still window within frames observed without a break. */
+function measureContinuous(
+  frames: MovementFrame[],
+  direction: MovementDirection,
+  windowMs: number,
+  maxSpread: number
+): StaticMeasurement | null {
+  const pts = frames as (MovementFrame & { angle: number })[];
   const spread = (a: number, b: number) => {
     let lo = Infinity;
     let hi = -Infinity;

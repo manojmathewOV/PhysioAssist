@@ -17,6 +17,7 @@ import {
 } from '../../services/pose/exercisePlan';
 import { MovementRecorder } from '../../services/movement/recorder';
 import {
+  MeasurementResult,
   MovementProfile,
   SessionAnalysis,
   analyseSession,
@@ -145,53 +146,59 @@ export function sessionOutcome(
     };
   }
   const reference = referenceFor(plan, exercise);
-  // Rotation isn't what the live counter measures (it tracks arm height):
-  // take the repetitions and range from the movement analysis, as an estimate
-  const measure = movementOf(exercise.id).measure;
-  let reps: number | undefined;
-  if (measure && analysis) {
-    reps = analysis.reps.length;
-    sessionRange =
-      sessionRange && analysis.profile
-        ? {
-            ...sessionRange,
-            bestDegrees: analysis.profile.bestDegrees,
-            goalDegrees: undefined,
-            measure: 'rotation',
-            approximate: true,
-          }
-        : null;
-  }
-  // A still measurement (heel prop): the steady resting angle, not one frame
-  const hold = analysis?.hold;
-  if (hold && sessionRange) {
-    sessionRange = {
-      ...sessionRange,
-      bestDegrees: Math.round(hold.degrees),
-      direction: 'toward',
+  const movement = movementOf(exercise.id);
+  const joint =
+    sessionRange?.joint ??
+    (plan && exercise.primaryJoint ? `${plan.side}_${exercise.primaryJoint}` : undefined);
+  // Repetitions the live counter can't count (it tracks a different quantity)
+  const reps = movement.measure && analysis ? analysis.reps.length : undefined;
+  // The clinician's prescription sets the goal; a demonstration explains the
+  // movement and only stands in when nothing was prescribed. (A goal set for
+  // the joint's usual range doesn't apply to rotation.)
+  const prescribed = movement.measure ? undefined : sessionRange?.goalDegrees;
+
+  let range: RangeResultProps | null = null;
+  let notice: string | undefined;
+  let historyResult: SessionResult | undefined;
+  if (analysis && joint) {
+    // With the movement analysis, its result is the only one: an unavailable
+    // measurement stays unavailable (never a live reading, never zero)
+    const r = analysis.result;
+    const measured = r.status === 'measured' && r.degrees !== undefined;
+    const common = {
+      joint,
+      direction: movement.direction,
+      measure: movement.measure ? 'rotation' : undefined,
+      approximate: measured ? r.approximate : undefined,
     };
-  }
-  const range = sessionRange
-    ? reference
+    if (measured) {
+      const useDemo = prescribed === undefined && reference && !movement.measure;
+      range = {
+        ...common,
+        bestDegrees: Math.round(r.degrees as number),
+        goalDegrees: useDemo ? reference.peakDegrees : prescribed,
+        goalLabel: useDemo ? 'the demonstration' : undefined,
+      };
+    } else {
+      notice = unavailableNotice(joint, r.reason);
+    }
+    historyResult = {
+      ...common,
+      bestDegrees: measured ? Math.round(r.degrees as number) : undefined,
+      goalDegrees: prescribed,
+      measured,
+      unavailableReason: measured ? undefined : r.reason,
+      reps,
+    };
+  } else if (sessionRange) {
+    // No movement analysis (no plan): the live counter's range
+    range = reference
       ? {
           ...sessionRange,
-          goalDegrees: reference.peakDegrees,
-          goalLabel: 'the demonstration',
+          goalDegrees: sessionRange.goalDegrees ?? reference.peakDegrees,
         }
-      : sessionRange
-    : null;
-  const historyResult: SessionResult | undefined =
-    (measure || hold) && sessionRange
-      ? {
-          joint: sessionRange.joint,
-          bestDegrees: sessionRange.bestDegrees,
-          goalDegrees: sessionRange.goalDegrees,
-          direction: sessionRange.direction,
-          measure: sessionRange.measure,
-          approximate: sessionRange.approximate,
-          reps,
-        }
-      : undefined;
+      : sessionRange;
+  }
   return {
     historyResult,
     summary: {
@@ -200,7 +207,26 @@ export function sessionOutcome(
       findings: analysis?.findings ?? null,
       comparedWithDemo: Boolean(reference),
       reps,
+      notice,
     },
     spokenCue: analysis?.cues[0],
   };
+}
+
+const REASON_TEXT: Record<NonNullable<MeasurementResult['reason']>, string> = {
+  camera_view: 'the camera couldn’t see it from the right angle',
+  not_seen: 'it wasn’t clearly in view',
+  no_repetitions: 'no complete repetitions were seen',
+  not_still: 'it didn’t stay still long enough to measure',
+};
+
+/** "We couldn't measure your left knee today: ..." (the session still counts). */
+export function unavailableNotice(
+  joint: string,
+  reason: MeasurementResult['reason']
+): string {
+  const name = joint.replace(/_/g, ' ');
+  return `We couldn’t measure your ${name} today${
+    reason ? `: ${REASON_TEXT[reason]}` : ''
+  }. Your exercise still counts.`;
 }
