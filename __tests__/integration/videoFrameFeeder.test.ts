@@ -12,6 +12,7 @@
  */
 
 import { validateImageData, getImageDataInfo } from '@utils/frameConverter';
+import type { VideoFrameFeederStats } from '@utils/videoFrameFeeder';
 
 describe('Frame Converter Tests', () => {
   describe('ImageData Validation', () => {
@@ -161,16 +162,15 @@ describe('Frame Converter Tests', () => {
 describe('Video Frame Feeder Types', () => {
   it('should have correct VideoFrameFeederStats interface', () => {
     // This test verifies the type exists and can be used
-    const stats: Partial<typeof import('@utils/videoFrameFeeder').VideoFrameFeederStats> =
-      {
-        totalFrames: expect.any(Number),
-        processedFrames: expect.any(Number),
-        skippedFrames: expect.any(Number),
-        errors: expect.any(Number),
-        fps: expect.any(Number),
-        duration: expect.any(Number),
-        isPlaying: expect.any(Boolean),
-      };
+    const stats: Partial<VideoFrameFeederStats> = {
+      totalFrames: expect.any(Number),
+      processedFrames: expect.any(Number),
+      skippedFrames: expect.any(Number),
+      errors: expect.any(Number),
+      fps: expect.any(Number),
+      duration: expect.any(Number),
+      isPlaying: expect.any(Boolean),
+    };
 
     expect(stats).toBeDefined();
   });

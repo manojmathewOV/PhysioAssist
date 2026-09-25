@@ -22,7 +22,13 @@ const createMockLandmarks = (config: {
   // Create 17 landmarks (MoveNet standard)
   const landmarks: PoseLandmark[] = Array(17)
     .fill(null)
-    .map(() => ({ x: 0.5, y: 0.5, score: 0.9 }));
+    .map((_, i) => ({
+      x: 0.5,
+      y: 0.5,
+      visibility: 0.9,
+      index: i,
+      name: `landmark_${i}`,
+    }));
 
   // MoveNet indices
   const shoulderIdx = side === 'left' ? 5 : 6;
@@ -31,9 +37,27 @@ const createMockLandmarks = (config: {
   const hipIdx = side === 'left' ? 11 : 12;
 
   // Set fixed positions
-  landmarks[hipIdx] = { x: 0.5, y: 0.7, score: 0.9 }; // Hip
-  landmarks[shoulderIdx] = { x: 0.5, y: 0.5, score: 0.9 }; // Shoulder
-  landmarks[elbowIdx] = { x: 0.5, y: 0.4, score: 0.9 }; // Elbow
+  landmarks[hipIdx] = {
+    x: 0.5,
+    y: 0.7,
+    visibility: 0.9,
+    index: hipIdx,
+    name: `${side}_hip`,
+  }; // Hip
+  landmarks[shoulderIdx] = {
+    x: 0.5,
+    y: 0.5,
+    visibility: 0.9,
+    index: shoulderIdx,
+    name: `${side}_shoulder`,
+  }; // Shoulder
+  landmarks[elbowIdx] = {
+    x: 0.5,
+    y: 0.4,
+    visibility: 0.9,
+    index: elbowIdx,
+    name: `${side}_elbow`,
+  }; // Elbow
 
   // Calculate wrist position based on angle
   // In screen coords: y increases downward
@@ -42,7 +66,9 @@ const createMockLandmarks = (config: {
   landmarks[wristIdx] = {
     x: 0.5 + Math.sin(angleRad) * 0.3,
     y: 0.5 + Math.cos(angleRad) * 0.3, // Fixed: + instead of - for proper orientation
-    score: 0.9,
+    visibility: 0.9,
+    index: wristIdx,
+    name: `${side}_wrist`,
   };
 
   return landmarks;
@@ -421,7 +447,7 @@ describe('ShoulderROMTracker', () => {
 
       // Create landmarks with missing keypoints
       const landmarks = createMockLandmarks({ shoulderAngle: 120 });
-      landmarks[5] = { x: 0, y: 0, score: 0 }; // Zero out shoulder
+      landmarks[5] = { x: 0, y: 0, visibility: 0, index: 5, name: 'left_shoulder' }; // Zero out shoulder
 
       const result = tracker.trackFrame(landmarks, 1000, 0.8);
 

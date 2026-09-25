@@ -1,7 +1,32 @@
 import { exerciseValidationService } from '../exerciseValidationService';
-import { ProcessedPoseData } from '../../types/pose';
+import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
 import { Exercise } from '../../types/exercise';
-import { mockExercise, mockPoseLandmarks } from '../../utils/testHelpers';
+import {
+  mockExercise as rawMockExercise,
+  mockPoseLandmarks as rawMockPoseLandmarks,
+} from '../../utils/testHelpers';
+
+// The shared testHelpers fixtures are untyped literals that predate the current
+// Exercise / PoseLandmark types; adapt them here so the service receives
+// fully-typed inputs.
+const mockExercise: Exercise = {
+  ...rawMockExercise,
+  description: 'Bicep curl',
+  category: 'strength',
+  difficulty: 'beginner',
+  equipment: [],
+  targetSets: 1,
+  restDuration: 0,
+  phases: rawMockExercise.phases.map((phase) => ({
+    ...phase,
+    description: phase.name,
+  })),
+};
+
+const mockPoseLandmarks: PoseLandmark[] = rawMockPoseLandmarks.map((landmark, index) => ({
+  ...landmark,
+  index,
+}));
 
 describe('ExerciseValidationService', () => {
   const createMockPoseData = (
@@ -71,6 +96,7 @@ describe('ExerciseValidationService', () => {
       // Create proper rest position (elbows at ~170 degrees)
       const restLandmarks = [...mockPoseLandmarks];
       restLandmarks[11] = {
+        index: 11,
         x: 0.45,
         y: 0.3,
         z: 0,
@@ -78,16 +104,39 @@ describe('ExerciseValidationService', () => {
         name: 'left_shoulder',
       }; // left shoulder
       restLandmarks[12] = {
+        index: 12,
         x: 0.55,
         y: 0.3,
         z: 0,
         visibility: 0.9,
         name: 'right_shoulder',
       }; // right shoulder
-      restLandmarks[13] = { x: 0.43, y: 0.4, z: 0, visibility: 0.9, name: 'left_elbow' }; // left elbow
-      restLandmarks[14] = { x: 0.57, y: 0.4, z: 0, visibility: 0.9, name: 'right_elbow' }; // right elbow
-      restLandmarks[15] = { x: 0.42, y: 0.48, z: 0, visibility: 0.9, name: 'left_wrist' }; // left wrist (down)
+      restLandmarks[13] = {
+        index: 13,
+        x: 0.43,
+        y: 0.4,
+        z: 0,
+        visibility: 0.9,
+        name: 'left_elbow',
+      }; // left elbow
+      restLandmarks[14] = {
+        index: 14,
+        x: 0.57,
+        y: 0.4,
+        z: 0,
+        visibility: 0.9,
+        name: 'right_elbow',
+      }; // right elbow
+      restLandmarks[15] = {
+        index: 15,
+        x: 0.42,
+        y: 0.48,
+        z: 0,
+        visibility: 0.9,
+        name: 'left_wrist',
+      }; // left wrist (down)
       restLandmarks[16] = {
+        index: 16,
         x: 0.58,
         y: 0.48,
         z: 0,
@@ -98,6 +147,7 @@ describe('ExerciseValidationService', () => {
       // Create flexed position (elbows at ~45 degrees)
       const flexedLandmarks = [...mockPoseLandmarks];
       flexedLandmarks[11] = {
+        index: 11,
         x: 0.45,
         y: 0.3,
         z: 0,
@@ -105,6 +155,7 @@ describe('ExerciseValidationService', () => {
         name: 'left_shoulder',
       }; // left shoulder (same)
       flexedLandmarks[12] = {
+        index: 12,
         x: 0.55,
         y: 0.3,
         z: 0,
@@ -112,6 +163,7 @@ describe('ExerciseValidationService', () => {
         name: 'right_shoulder',
       }; // right shoulder (same)
       flexedLandmarks[13] = {
+        index: 13,
         x: 0.43,
         y: 0.4,
         z: 0,
@@ -119,6 +171,7 @@ describe('ExerciseValidationService', () => {
         name: 'left_elbow',
       }; // left elbow (same)
       flexedLandmarks[14] = {
+        index: 14,
         x: 0.57,
         y: 0.4,
         z: 0,
@@ -126,6 +179,7 @@ describe('ExerciseValidationService', () => {
         name: 'right_elbow',
       }; // right elbow (same)
       flexedLandmarks[15] = {
+        index: 15,
         x: 0.35,
         y: 0.32,
         z: 0,
@@ -133,6 +187,7 @@ describe('ExerciseValidationService', () => {
         name: 'left_wrist',
       }; // left wrist (up and in)
       flexedLandmarks[16] = {
+        index: 16,
         x: 0.65,
         y: 0.32,
         z: 0,
@@ -193,6 +248,7 @@ describe('ExerciseValidationService', () => {
       // Create proper rest position (elbows at ~170 degrees)
       const restLandmarks = [...mockPoseLandmarks];
       restLandmarks[11] = {
+        index: 11,
         x: 0.45,
         y: 0.3,
         z: 0,
@@ -200,16 +256,39 @@ describe('ExerciseValidationService', () => {
         name: 'left_shoulder',
       };
       restLandmarks[12] = {
+        index: 12,
         x: 0.55,
         y: 0.3,
         z: 0,
         visibility: 0.9,
         name: 'right_shoulder',
       };
-      restLandmarks[13] = { x: 0.43, y: 0.4, z: 0, visibility: 0.9, name: 'left_elbow' };
-      restLandmarks[14] = { x: 0.57, y: 0.4, z: 0, visibility: 0.9, name: 'right_elbow' };
-      restLandmarks[15] = { x: 0.42, y: 0.48, z: 0, visibility: 0.9, name: 'left_wrist' };
+      restLandmarks[13] = {
+        index: 13,
+        x: 0.43,
+        y: 0.4,
+        z: 0,
+        visibility: 0.9,
+        name: 'left_elbow',
+      };
+      restLandmarks[14] = {
+        index: 14,
+        x: 0.57,
+        y: 0.4,
+        z: 0,
+        visibility: 0.9,
+        name: 'right_elbow',
+      };
+      restLandmarks[15] = {
+        index: 15,
+        x: 0.42,
+        y: 0.48,
+        z: 0,
+        visibility: 0.9,
+        name: 'left_wrist',
+      };
       restLandmarks[16] = {
+        index: 16,
         x: 0.58,
         y: 0.48,
         z: 0,
@@ -220,6 +299,7 @@ describe('ExerciseValidationService', () => {
       // Create flexed position (elbows at ~45 degrees)
       const flexedLandmarks = [...mockPoseLandmarks];
       flexedLandmarks[11] = {
+        index: 11,
         x: 0.45,
         y: 0.3,
         z: 0,
@@ -227,6 +307,7 @@ describe('ExerciseValidationService', () => {
         name: 'left_shoulder',
       };
       flexedLandmarks[12] = {
+        index: 12,
         x: 0.55,
         y: 0.3,
         z: 0,
@@ -234,6 +315,7 @@ describe('ExerciseValidationService', () => {
         name: 'right_shoulder',
       };
       flexedLandmarks[13] = {
+        index: 13,
         x: 0.43,
         y: 0.4,
         z: 0,
@@ -241,6 +323,7 @@ describe('ExerciseValidationService', () => {
         name: 'left_elbow',
       };
       flexedLandmarks[14] = {
+        index: 14,
         x: 0.57,
         y: 0.4,
         z: 0,
@@ -248,6 +331,7 @@ describe('ExerciseValidationService', () => {
         name: 'right_elbow',
       };
       flexedLandmarks[15] = {
+        index: 15,
         x: 0.35,
         y: 0.32,
         z: 0,
@@ -255,6 +339,7 @@ describe('ExerciseValidationService', () => {
         name: 'left_wrist',
       };
       flexedLandmarks[16] = {
+        index: 16,
         x: 0.65,
         y: 0.32,
         z: 0,

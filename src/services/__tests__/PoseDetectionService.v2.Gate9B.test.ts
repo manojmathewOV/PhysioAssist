@@ -219,7 +219,6 @@ describe('PoseDetectionServiceV2 - Gate 9B.4 Integration', () => {
         minConfidence: 0.6,
         smoothing: 0.7,
         exposureCompensation: 0.5,
-        frameSkipInterval: 2,
       });
 
       const settings = service.getAdaptiveSettings();
@@ -240,7 +239,6 @@ describe('PoseDetectionServiceV2 - Gate 9B.4 Integration', () => {
         minConfidence: 0.6,
         smoothing: 0.7,
         exposureCompensation: 0.5,
-        frameSkipInterval: 2,
       });
 
       service.resetAdaptiveSettings();

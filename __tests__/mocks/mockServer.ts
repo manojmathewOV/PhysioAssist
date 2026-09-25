@@ -18,12 +18,26 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+interface SessionMetrics {
+  reps: number;
+  sets: number;
+  formScore: number;
+  duration: number;
+}
+
+interface ProgressEntry {
+  sessionId: string;
+  exerciseId: string;
+  date: string;
+  metrics: SessionMetrics;
+}
+
 // In-memory database
 const mockDatabase = {
   users: new Map(),
   exercises: new Map(),
   sessions: new Map(),
-  progress: new Map(),
+  progress: new Map<string, ProgressEntry[]>(),
 };
 
 // Test data

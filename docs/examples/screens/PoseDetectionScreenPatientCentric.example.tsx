@@ -25,10 +25,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
 // Patient-centric components
-import SetupWizard from '../components/common/SetupWizard';
-import CoachingOverlay from '../components/coaching/CoachingOverlay';
-import SimpleModeUI from '../components/simple/SimpleModeUI';
-import LoadingOverlay from '../components/common/LoadingOverlay';
+import SetupWizard from '../../../src/components/common/SetupWizard';
+import CoachingOverlay from '../../../src/components/coaching/CoachingOverlay';
+import SimpleModeUI from '../../../src/components/simple/SimpleModeUI';
+import LoadingOverlay from '../../../src/components/common/LoadingOverlay';
 
 // Compensatory mechanisms
 import {
@@ -42,11 +42,11 @@ import {
   PatientProfile,
   EnvironmentConditions,
   AccuracyTier,
-} from '../utils/compensatoryMechanisms';
+} from '../../../src/utils/compensatoryMechanisms';
 
 // Services
-import { poseDetectionService } from '../services/PoseDetectionService.v2';
-import { PoseLandmark } from '../types/pose';
+import { poseDetectionService } from '../../../src/services/PoseDetectionService.v2';
+import { PoseLandmark } from '../../../src/types/pose';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -292,7 +292,7 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
     // Check 1: Lighting conditions
     // Note: In production, pass actual frame from camera
     const mockFrame = {} as any;
-    const lightingCheck = checkLightingConditions(mockFrame);
+    const lightingCheck = await checkLightingConditions(mockFrame);
 
     if (!lightingCheck.canProceed) {
       Alert.alert(
@@ -352,11 +352,15 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
       // Assess current environment
       // Note: In production, pass actual frame and landmarks
       const mockFrame = {} as any;
-      const currentEnvironment = assessEnvironment(mockFrame, landmarks, SCREEN_HEIGHT);
+      const currentEnvironment = await assessEnvironment(
+        mockFrame,
+        landmarks,
+        SCREEN_HEIGHT
+      );
       setEnvironment(currentEnvironment);
 
       // Get lighting assessment
-      const lightingCheck = checkLightingConditions(mockFrame);
+      const lightingCheck = await checkLightingConditions(mockFrame);
 
       // Get comprehensive adaptive settings
       const adaptiveSettings = getComprehensiveAdaptiveSettings(
@@ -455,7 +459,8 @@ const PoseDetectionScreenPatientCentric: React.FC = () => {
               isDetecting={isDetecting}
               onStart={handleStart}
               onStop={handleStop}
-              currentStatus={status}
+              // SimpleModeUI has no 'setup' state; the wizard is shown instead
+              currentStatus={status === 'setup' ? 'initializing' : status}
               currentAngle={currentAngle}
               targetAngle={exerciseConfig.targetAngle}
               exerciseName={exerciseConfig.name}

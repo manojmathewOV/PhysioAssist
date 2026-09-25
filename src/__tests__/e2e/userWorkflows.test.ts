@@ -5,8 +5,6 @@
 
 // Skip E2E tests in unit test environment
 if (process.env.DETOX_MODE === 'true') {
-  // Only import Detox when running E2E tests
-  const { device, element, by, expect: detoxExpect, waitFor } = require('detox');
   runE2ETests();
 } else {
   // Skip E2E tests in normal Jest runs
@@ -17,7 +15,29 @@ if (process.env.DETOX_MODE === 'true') {
   });
 }
 
+/** Wait for a fixed amount of wall-clock time (Detox has no device.pause()). */
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 function runE2ETests() {
+  // Only load Detox when running E2E tests
+  const {
+    device,
+    element,
+    by,
+    expect: detoxExpect,
+    waitFor,
+  }: typeof import('detox') = require('detox');
+
+  /** Detox elements have no isVisible(); probe via a visibility expectation. */
+  const isVisible = async (matcher: Detox.NativeMatcher): Promise<boolean> => {
+    try {
+      await detoxExpect(element(matcher).atIndex(0)).toBeVisible();
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   describe('PhysioAssist E2E User Workflows', () => {
     beforeAll(async () => {
       await device.launchApp({
@@ -49,7 +69,7 @@ function runE2ETests() {
           .withTimeout(3000);
 
         // Read privacy policy (simulate delay)
-        await device.pause(1000);
+        await sleep(1000);
 
         await element(by.id('onboarding-privacy-checkbox')).tap();
         await element(by.id('onboarding-next')).tap();
@@ -86,7 +106,7 @@ function runE2ETests() {
           .withTimeout(5000);
 
         // Handle system permission dialog
-        await device.pause(1000); // Wait for permission dialog
+        await sleep(1000); // Wait for permission dialog
 
         // Step 6: First Exercise Tutorial
         await waitFor(element(by.id('tutorial-overlay')))
@@ -109,7 +129,7 @@ function runE2ETests() {
           .withTimeout(3000);
 
         // Simulate exercise for 10 seconds
-        await device.pause(10000);
+        await sleep(10000);
 
         // Step 9: Complete Exercise
         await element(by.id('exercise-end')).tap();
@@ -132,7 +152,7 @@ function runE2ETests() {
     describe('Returning User Daily Routine', () => {
       it('should login and complete daily exercise routine', async () => {
         // Skip onboarding for returning user
-        if (await element(by.id('onboarding-skip')).atIndex(0).isVisible()) {
+        if (await isVisible(by.id('onboarding-skip'))) {
           await element(by.id('onboarding-skip')).tap();
         }
 
@@ -166,12 +186,12 @@ function runE2ETests() {
         // Perform 3 sets
         for (let set = 0; set < 3; set++) {
           // Simulate exercise
-          await device.pause(15000);
+          await sleep(15000);
 
           // Rest between sets
           if (set < 2) {
             await element(by.id('exercise-pause')).tap();
-            await device.pause(5000); // Rest
+            await sleep(5000); // Rest
             await element(by.id('exercise-resume')).tap();
           }
         }
@@ -230,7 +250,7 @@ function runE2ETests() {
         await detoxExpect(element(by.id('form-quality-indicator'))).toHaveText('Poor');
 
         // Simulate form improvement
-        await device.pause(3000);
+        await sleep(3000);
 
         // Verify positive feedback
         await waitFor(element(by.id('exercise-feedback')))
@@ -284,7 +304,7 @@ function runE2ETests() {
                 .toBeVisible()
                 .withTimeout(3000);
 
-              await device.pause(10000);
+              await sleep(10000);
             }
           }
         }
@@ -331,8 +351,10 @@ function runE2ETests() {
         // Start exercise to verify settings applied
         await element(by.id('quick-start-last-exercise')).tap();
 
-        // Verify high contrast mode active
-        await detoxExpect(element(by.id('pose-overlay'))).toHaveStyle({ borderWidth: 3 }); // High contrast indicator
+        // Verify the overlay renders with the new settings. Detox has no style
+        // matcher (the former toHaveStyle({ borderWidth: 3 }) does not exist and
+        // would throw), so the high-contrast border cannot be asserted here.
+        await detoxExpect(element(by.id('pose-overlay'))).toBeVisible();
 
         // Verify no sound (we disabled it)
         // This would be tested by checking audio service state
@@ -366,12 +388,12 @@ function runE2ETests() {
         await element(by.id('exercise-squat')).tap();
         await element(by.id('exercise-start')).tap();
 
-        await device.pause(5000);
+        await sleep(5000);
 
         await element(by.id('exercise-end')).tap();
 
         // Re-enable network
-        await device.clearURLBlacklist();
+        await device.setURLBlacklist([]);
 
         // Verify sync indicator
         await waitFor(element(by.id('syncing-indicator')))
@@ -392,7 +414,7 @@ function runE2ETests() {
         await element(by.id('exercise-start')).tap();
 
         // Wait for some progress
-        await device.pause(5000);
+        await sleep(5000);
 
         // Simulate crash
         await device.terminateApp();
@@ -464,11 +486,11 @@ function runE2ETests() {
 
     // Helper functions
     async function loginQuickly() {
-      if (await element(by.id('onboarding-skip')).atIndex(0).isVisible()) {
+      if (await isVisible(by.id('onboarding-skip'))) {
         await element(by.id('onboarding-skip')).tap();
       }
 
-      if (await element(by.id('auth-email-input')).atIndex(0).isVisible()) {
+      if (await isVisible(by.id('auth-email-input'))) {
         await element(by.id('auth-email-input')).clearText();
         await element(by.id('auth-email-input')).typeText('test@physioassist.com');
         await element(by.id('auth-password-input')).typeText('Test123!');

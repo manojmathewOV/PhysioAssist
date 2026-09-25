@@ -36,7 +36,12 @@ describe('GoniometerService', () => {
         index: 2,
       };
 
-      const result = goniometerService.calculateAngle(pointA, pointB, pointC);
+      const result = goniometerService.calculateAngle(
+        pointA,
+        pointB,
+        pointC,
+        'rightAngle'
+      );
       expect(result.angle).toBeCloseTo(90, 0);
       expect(result.isValid).toBe(true);
     });
@@ -67,7 +72,12 @@ describe('GoniometerService', () => {
         index: 2,
       };
 
-      const result = goniometerService.calculateAngle(pointA, pointB, pointC);
+      const result = goniometerService.calculateAngle(
+        pointA,
+        pointB,
+        pointC,
+        'straightLine'
+      );
       expect(result.angle).toBeCloseTo(180, 0);
       expect(result.isValid).toBe(true);
     });
@@ -98,7 +108,7 @@ describe('GoniometerService', () => {
         index: 2,
       };
 
-      const result = goniometerService.calculateAngle(pointA, pointB, pointC);
+      const result = goniometerService.calculateAngle(pointA, pointB, pointC, 'diagonal');
       expect(result.angle).toBeCloseTo(45, 0);
       expect(result.isValid).toBe(true);
     });
@@ -151,6 +161,7 @@ describe('GoniometerService', () => {
         z: 0,
         visibility: 1,
         name: `landmark_${i}`,
+        index: i,
       }));
 
       // Set up right arm in 90-degree position (MoveNet keypoints: 6=shoulder, 8=elbow, 10=wrist)
@@ -184,6 +195,7 @@ describe('GoniometerService', () => {
         z: 0,
         visibility: 1,
         name: `landmark_${i}`,
+        index: i,
       }));
 
       const angles = goniometerService.getAllJointAngles(landmarks);

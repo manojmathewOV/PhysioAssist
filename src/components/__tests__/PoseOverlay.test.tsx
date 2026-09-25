@@ -193,6 +193,7 @@ describe('PoseOverlay', () => {
         z: 0,
         visibility: 0.9,
         name: `landmark_${i}`,
+        index: i,
       }));
 
     const { toJSON } = renderWithProviders(

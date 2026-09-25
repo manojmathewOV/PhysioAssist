@@ -15,10 +15,12 @@
 
 import { TemporalConsistencyAnalyzer } from '../TemporalConsistencyAnalyzer';
 import {
+  DEFAULT_TEMPORAL_CONFIG,
   TemporalMeasurementSequence,
   TemporalValidationConfig,
 } from '../../../types/temporalValidation';
 import { ClinicalJointMeasurement } from '../../../types/clinicalMeasurement';
+import { AnatomicalReferenceFrame } from '../../../types/biomechanics';
 import { ProcessedPoseData, PoseLandmark } from '../../../types/pose';
 
 describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
@@ -39,28 +41,45 @@ describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
     angle: number,
     frameIndex: number
   ): ClinicalJointMeasurement {
+    const origin = { x: 0, y: 0, z: 0 };
+    const createFrame = (
+      frameType: AnatomicalReferenceFrame['frameType']
+    ): AnatomicalReferenceFrame => ({
+      origin,
+      xAxis: { x: 1, y: 0, z: 0 },
+      yAxis: { x: 0, y: 1, z: 0 },
+      zAxis: { x: 0, y: 0, z: 1 },
+      frameType,
+      confidence: 0.9,
+    });
+
     return {
-      measurementType: 'shoulder_flexion',
       primaryJoint: {
-        jointName: 'left_shoulder',
+        name: 'left_shoulder',
+        type: 'shoulder',
         angle,
-        angleRange: { min: 0, max: 180 },
-        targetROM: 160,
+        angleType: 'flexion',
+        targetAngle: 160,
         percentOfTarget: (angle / 160) * 100,
-        plane: 'sagittal',
+      },
+      secondaryJoints: {},
+      referenceFrames: {
+        global: createFrame('global'),
+        local: createFrame('humerus'),
         measurementPlane: {
           name: 'sagittal',
           normal: { x: 1, y: 0, z: 0 },
+          point: origin,
         },
-        isValid: true,
-      },
-      quality: {
-        overall: 0.85,
-        landmarkVisibility: 0.9,
-        viewAngle: 0.8,
-        frameStability: 0.85,
       },
       compensations: [],
+      quality: {
+        overall: 'good',
+        depthReliability: 0.8,
+        landmarkVisibility: 0.9,
+        frameStability: 0.85,
+        recommendations: [],
+      },
       timestamp: Date.now() + frameIndex * 33, // ~30fps
     };
   }
@@ -106,10 +125,9 @@ describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
     return {
       sequenceId,
       measurements,
+      timestamps: measurements.map((m) => m.timestamp),
       frameRate: 30,
       duration: (angles.length / 30) * 1000, // ms
-      startTime: Date.now(),
-      endTime: Date.now() + (angles.length / 30) * 1000,
     };
   }
 
@@ -269,10 +287,9 @@ describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
       const sequence: TemporalMeasurementSequence = {
         sequenceId: 'test',
         measurements,
+        timestamps: measurements.map((m) => m.timestamp),
         frameRate: 30,
         duration: 1000,
-        startTime: Date.now(),
-        endTime: Date.now() + 1000,
       };
 
       const poseFrames = createPoseFrames(30);
@@ -281,8 +298,8 @@ describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
 
       // Compensation tracking is defined but may have different structure
       expect(result.compensations).toBeDefined();
-      if (result.compensations.detected && result.compensations.detected.length > 0) {
-        expect(result.compensations.detected[0].compensationType).toBeDefined();
+      if (result.compensations.length > 0) {
+        expect(result.compensations[0].compensationType).toBeDefined();
       }
     });
 
@@ -369,7 +386,10 @@ describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
     it('should detect frames with sudden jumps', () => {
       const angles = [0, 10, 20, 30, 100, 40, 50, 60]; // Jump at index 4
 
-      const anomalies = analyzer.detectAnomalousFrames(angles, 30);
+      const anomalies = analyzer.detectAnomalousFrames(
+        angles,
+        Array(angles.length).fill(0.9) // good quality on every frame
+      );
 
       // Detection depends on threshold configuration
       expect(anomalies).toBeDefined();
@@ -381,7 +401,10 @@ describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
         .fill(0)
         .map((_, i) => 5 * i);
 
-      const anomalies = analyzer.detectAnomalousFrames(angles, 30);
+      const anomalies = analyzer.detectAnomalousFrames(
+        angles,
+        Array(angles.length).fill(0.9) // good quality on every frame
+      );
 
       expect(anomalies).toHaveLength(0);
     });
@@ -389,7 +412,10 @@ describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
     it('should detect impossible velocity', () => {
       const angles = [0, 10, 20, 30, 150, 40, 50]; // 120° jump in 1 frame
 
-      const anomalies = analyzer.detectAnomalousFrames(angles, 30);
+      const anomalies = analyzer.detectAnomalousFrames(
+        angles,
+        Array(angles.length).fill(0.9) // good quality on every frame
+      );
 
       // Large jumps should be detected
       expect(anomalies).toBeDefined();
@@ -403,7 +429,10 @@ describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
         angles.push(45 + 45 * Math.sin((i * Math.PI) / 10));
       }
 
-      const anomalies = analyzer.detectAnomalousFrames(angles, 30);
+      const anomalies = analyzer.detectAnomalousFrames(
+        angles,
+        Array(angles.length).fill(0.9) // good quality on every frame
+      );
 
       expect(anomalies.length).toBeLessThan(2); // Allow 1-2 edge cases
     });
@@ -415,21 +444,14 @@ describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
 
   describe('Custom Configuration', () => {
     it('should use custom consistency thresholds', () => {
-      const customConfig: Partial<TemporalValidationConfig> = {
-        consistencyThresholds: {
-          maxAngleJumpPerFrame: 10, // Very strict
-          maxVelocity: 50,
-          minSmoothness: 0.9,
-        },
-        qualityThresholds: {
-          minQualityScore: 0.7,
-          maxConsecutiveLowQuality: 3,
-          maxQualityDropouts: 2,
-        },
+      const customConfig: TemporalValidationConfig = {
+        ...DEFAULT_TEMPORAL_CONFIG,
+        maxFrameToFrameDelta: 10, // Very strict
+        smoothnessThreshold: 0.9,
+        minQualityScore: 0.7,
+        maxQualityDropouts: 2,
       };
-      const strictAnalyzer = new TemporalConsistencyAnalyzer(
-        customConfig as TemporalValidationConfig
-      );
+      const strictAnalyzer = new TemporalConsistencyAnalyzer(customConfig);
 
       const angles = [0, 10, 25, 35, 45, 55]; // 15° jumps exceed strict 10° limit
       const sequence = createMeasurementSequence(angles);
@@ -442,21 +464,14 @@ describe('TemporalConsistencyAnalyzer - Functional Tests', () => {
     });
 
     it('should use custom quality thresholds', () => {
-      const customConfig: Partial<TemporalValidationConfig> = {
-        consistencyThresholds: {
-          maxAngleJumpPerFrame: 30,
-          maxVelocity: 200,
-          minSmoothness: 0.5,
-        },
-        qualityThresholds: {
-          minQualityScore: 0.4, // Lenient
-          maxConsecutiveLowQuality: 10,
-          maxQualityDropouts: 10,
-        },
+      const customConfig: TemporalValidationConfig = {
+        ...DEFAULT_TEMPORAL_CONFIG,
+        maxFrameToFrameDelta: 30,
+        smoothnessThreshold: 0.5,
+        minQualityScore: 0.4, // Lenient
+        maxQualityDropouts: 10,
       };
-      const lenientAnalyzer = new TemporalConsistencyAnalyzer(
-        customConfig as TemporalValidationConfig
-      );
+      const lenientAnalyzer = new TemporalConsistencyAnalyzer(customConfig);
 
       const angles = Array(20)
         .fill(0)

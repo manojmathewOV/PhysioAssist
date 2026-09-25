@@ -3,7 +3,7 @@
  * Ensures features work consistently across iOS and Android
  */
 
-import { Platform } from 'react-native';
+import { Platform, View, Text } from 'react-native';
 import { render } from '@testing-library/react-native';
 import React from 'react';
 
@@ -117,9 +117,9 @@ describe('Cross-Platform Compatibility Tests', () => {
       describe('UI Rendering', () => {
         it(`should render exercise cards on ${platform}`, () => {
           const ExerciseCard = ({ title }: { title: string }) => (
-            <div testID="exercise-card" style={{ padding: 16, borderRadius: 8 }}>
-              <h3>{title}</h3>
-            </div>
+            <View testID="exercise-card" style={{ padding: 16, borderRadius: 8 }}>
+              <Text accessibilityRole="header">{title}</Text>
+            </View>
           );
 
           const { getByTestId } = render(<ExerciseCard title="Bicep Curls" />);
@@ -226,8 +226,10 @@ describe('Cross-Platform Compatibility Tests', () => {
         },
       };
 
-      const checkFeature = (platform: string, feature: string) => {
-        return features[platform as keyof typeof features]?.[feature as any] || false;
+      const checkFeature = (platform: string, feature: string): boolean => {
+        const platformFeatures: Record<string, boolean> | undefined =
+          features[platform as keyof typeof features];
+        return platformFeatures?.[feature] || false;
       };
 
       expect(checkFeature('ios', 'faceId')).toBe(true);
