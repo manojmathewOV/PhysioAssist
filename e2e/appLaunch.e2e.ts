@@ -35,9 +35,11 @@ describe('App launch smoke test', () => {
 
   it('requires privacy consent before continuing', async () => {
     await element(by.id('onboarding-get-started')).tap();
+    // On smaller screens the checkbox sits below the explanation: scroll to it
     await waitFor(element(by.id('onboarding-privacy-checkbox')))
       .toBeVisible()
-      .withTimeout(5000);
+      .whileElement(by.id('onboarding-scroll'))
+      .scroll(200, 'down');
     await device.takeScreenshot('02-privacy-consent');
 
     await element(by.id('onboarding-privacy-checkbox')).tap();

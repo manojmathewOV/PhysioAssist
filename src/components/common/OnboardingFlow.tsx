@@ -249,6 +249,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
       <ScrollView
         ref={scrollRef}
+        testID="onboarding-scroll"
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
