@@ -26,10 +26,12 @@ export interface OrientationResult {
 /**
  * Shoulder and hip width as a fraction of torso length (shoulder midpoint to
  * hip midpoint). Unlike widths in image units, these don't depend on how far
- * the patient stands from the camera. Measured on real MediaPipe output
- * (Clemente et al. 2024 dataset): facing the camera shoulder/torso ≈ 0.64-0.77
- * and hip/torso ≈ 0.44-0.53; turned 35° ≈ 0.50-0.62 / 0.38-0.46; side-on
- * both fall towards 0.1-0.3.
+ * the patient stands from the camera. They depend on the landmark set: on
+ * MediaPipe image landmarks from real smartphone video (MobiPhysio) people
+ * facing the camera measured shoulders 0.64-0.73 and hips 0.35-0.39, and
+ * turned 40-50° 0.39-0.46 / 0.21-0.30. Projected world landmarks (Clemente et
+ * al. 2024) are wider at the hips (0.44-0.53 facing the camera), so prefer
+ * bodyYawDegrees when world landmarks are available.
  */
 export function bodyWidthRatios(
   landmarks: PoseLandmark[]
@@ -45,6 +47,38 @@ export function bodyWidthRatios(
   );
   if (torso < 1e-6) return null;
   return { shoulder: Math.abs(rs.x - ls.x) / torso, hip: Math.abs(rh.x - lh.x) / torso };
+}
+
+/** Shorter body lines have no reliable direction (metres). */
+const MIN_LINE_METRES = 0.05;
+
+/**
+ * How far the body is turned from facing the camera, in degrees (0 = facing
+ * it, 90 = side-on), from MediaPipe's 3D world landmarks: the angle of the
+ * shoulder line and of the hip line out of the image plane, averaged.
+ *
+ * Unlike width ratios this doesn't depend on body proportions or on which
+ * landmark set is used. On real smartphone video (MobiPhysio, inspection
+ * participants) people facing the camera measured 0.5-8°, and clips filmed
+ * from the side 37-74°. On the Clemente et al. recordings, frontal-plane
+ * exercises measured 0.5-6° and the 35° camera 19-36°.
+ */
+export function bodyYawDegrees(world: PoseLandmark[] | undefined): number | null {
+  if (!world?.length) return null;
+  const lineYaw = (a: string, b: string): number | null => {
+    const p = findLandmark(world, a);
+    const q = findLandmark(world, b);
+    if (!p || !q || p.z === undefined || q.z === undefined) return null;
+    const dx = Math.abs(p.x - q.x);
+    const dz = Math.abs(p.z - q.z);
+    if (Math.hypot(dx, dz) < MIN_LINE_METRES) return null;
+    return (Math.atan2(dz, dx) * 180) / Math.PI;
+  };
+  const yaws = [
+    lineYaw('left_shoulder', 'right_shoulder'),
+    lineYaw('left_hip', 'right_hip'),
+  ].filter((y): y is number => y !== null);
+  return yaws.length ? yaws.reduce((s, y) => s + y, 0) / yaws.length : null;
 }
 
 export class OrientationClassifier {

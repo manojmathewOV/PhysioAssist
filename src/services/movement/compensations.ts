@@ -37,13 +37,42 @@ const SMOOTHING_FRAMES = 5;
 
 // Thresholds (heuristic; tune with physio). Distances in % of torso length
 // unless stated otherwise.
-/** Shoulder hike, as a share of the rest shoulder width. */
+/**
+ * Shoulder hike: rise of the working shoulder beyond the normal rise for the
+ * arm angle (NORMAL_SHOULDER_RISE), as a share of the rest shoulder width.
+ */
 export const SHOULDER_HIKE_WARN = 0.08;
 export const SHOULDER_HIKE_FLAG = 0.12;
-/** Above this shoulder angle the shoulder normally rises a little, so the bar rises. */
-export const SHOULDER_HIKE_OVERHEAD_DEG = 120;
-export const SHOULDER_HIKE_OVERHEAD_WARN = 0.12;
-export const SHOULDER_HIKE_OVERHEAD_FLAG = 0.16;
+/**
+ * Normal rise of the working shoulder with arm elevation (the shoulder girdle
+ * elevates as the arm goes up), as a share of the rest shoulder width, by
+ * clinical shoulder angle: the median over 7,108 frames of healthy expert
+ * performers facing the camera (MobiPhysio inspection participants,
+ * physiotherapist scores 64-100). The 97th percentile sat 0.08-0.11 above it,
+ * so the thresholds above only catch rises outside the healthy range.
+ */
+export const NORMAL_SHOULDER_RISE: [number, number][] = [
+  [0, 0],
+  [45, 0.035],
+  [75, 0.084],
+  [105, 0.126],
+  [135, 0.159],
+  [165, 0.189],
+];
+
+/** Normal shoulder rise at a clinical shoulder angle (linear between points). */
+export function normalShoulderRise(angle: number): number {
+  const table = NORMAL_SHOULDER_RISE;
+  if (angle <= table[0][0]) return table[0][1];
+  for (let i = 1; i < table.length; i++) {
+    const [a1, r1] = table[i];
+    if (angle <= a1) {
+      const [a0, r0] = table[i - 1];
+      return r0 + ((r1 - r0) * (angle - a0)) / (a1 - a0);
+    }
+  }
+  return table[table.length - 1][1];
+}
 export const TRUNK_SIDE_LEAN_WARN_DEG = 8;
 export const TRUNK_SIDE_LEAN_FLAG_DEG = 12;
 /** Shoulder width (relative to hip width) as a share of the rest width. */
@@ -380,17 +409,20 @@ function shoulderAngle(frame: MovementFrame, ctx: MovementContext): number | nul
 
 /**
  * Shoulder hike (front): the working shoulder shrugs up towards the ear. To
- * avoid false alarms from normal arm elevation, all three must agree (the
- * smallest counts), in shares of the rest shoulder width:
+ * avoid false alarms, all three must agree (the smallest counts), in shares of
+ * the rest shoulder width:
  *  - the ear-to-shoulder gap shrinks (along the trunk, so a side lean isn't a shrug),
  *  - the shoulder rises relative to the other shoulder,
  *  - the shoulder rises relative to the mid-hip (so moving the whole body isn't).
+ * The normal rise for the arm angle is subtracted: raising the arm overhead
+ * lifts a healthy shoulder by about 0.19 of its width.
  */
 export const detectShoulderHike = makeDetector({
   id: 'shoulder_hike',
   unit: 'ratio',
   views: ['front'],
-  setup: (rest, { side }) => {
+  setup: (rest, ctx) => {
+    const { side } = ctx;
     const heights = (lms: PoseLandmark[]) => {
       const ear = seen(lms, `${side}_ear`);
       const work = seen(lms, `${side}_shoulder`);
@@ -410,22 +442,18 @@ export const detectShoulderHike = makeDetector({
     if (!width || !base) return null;
     return (f) => {
       const h = heights(f.landmarks);
-      if (!h) return null;
-      return (
+      const angle = shoulderAngle(f, ctx);
+      if (!h || angle === null) return null;
+      const rise =
         Math.min(
           base.earGap - h.earGap,
           h.overOther - base.overOther,
           h.overHip - base.overHip
-        ) / width
-      );
+        ) / width;
+      return rise - normalShoulderRise(angle);
     };
   },
-  level: (v, frame, ctx) => {
-    const angle = shoulderAngle(frame, ctx);
-    return angle !== null && angle >= SHOULDER_HIKE_OVERHEAD_DEG
-      ? byThreshold(SHOULDER_HIKE_OVERHEAD_WARN, SHOULDER_HIKE_OVERHEAD_FLAG)(v)
-      : byThreshold(SHOULDER_HIKE_WARN, SHOULDER_HIKE_FLAG)(v);
-  },
+  level: byThreshold(SHOULDER_HIKE_WARN, SHOULDER_HIKE_FLAG),
 });
 
 /**

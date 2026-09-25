@@ -11,6 +11,7 @@
  * frames go through exactly the same conversion and enrichment code as camera
  * frames.
  */
+import { normalShoulderRise } from '../../services/movement/compensations';
 import type {
   MediaPipeLandmark,
   MediaPipePoseResultBundle,
@@ -190,19 +191,25 @@ function frontPose(pose: BodyPose): Record<string, P> {
   });
   const halfWidth = 54 * Math.cos(rad(pose.trunkRotation));
   pts.nose = place(0, -L.torso - L.neck);
+  // Each shoulder rises as its arm goes up, as real shoulders do (the normal
+  // rise measured on real video, as a share of the 108 px rest shoulder
+  // width), plus any hike on the left
+  const lift = {
+    left: normalShoulderRise(pose.leftShoulder) * 108 + pose.shoulderHike,
+    right: normalShoulderRise(pose.rightShoulder) * 108,
+  };
   for (const [side, sign] of [
     ['left', 1],
     ['right', -1],
   ] as const) {
-    const hike = side === 'left' ? pose.shoulderHike : 0;
-    const shoulder = place(sign * halfWidth, -L.torso - hike);
+    const shoulder = place(sign * halfWidth, -L.torso - lift[side]);
     pts[`${side}_shoulder`] = shoulder;
     const shoulderAngle = side === 'left' ? pose.leftShoulder : pose.rightShoulder;
     const elbowAngle = side === 'left' ? pose.leftElbow : pose.rightElbow;
     // Abduction: rotate outward from the trunk midline (shoulder midpoint ->
     // hip midpoint), the line the shoulder angle is measured against
-    const lsh = place(halfWidth, -L.torso - pose.shoulderHike);
-    const rsh = place(-halfWidth, -L.torso);
+    const lsh = place(halfWidth, -L.torso - lift.left);
+    const rsh = place(-halfWidth, -L.torso - lift.right);
     const trunk =
       Math.atan2(hipMid.x - (lsh.x + rsh.x) / 2, hipMid.y - (lsh.y + rsh.y) / 2) *
       (180 / Math.PI);
@@ -299,6 +306,28 @@ export interface FrameEffects {
   depth?: Record<string, number>;
 }
 
+/** Half the shoulder and hip widths in metres (front view proportions). */
+const SHOULDER_HALF_M = 54 / PX_PER_M;
+const HIP_HALF_M = 38 / PX_PER_M;
+
+/**
+ * Depth of a point in world landmarks (metres, positive = away from the
+ * camera), so the world landmarks show how far the body is turned, as
+ * MediaPipe's do. Each side of the body moves as one piece, which keeps limb
+ * segments in the image plane.
+ */
+function sideDepth(name: string, pose: BodyPose): number {
+  const sign = name.startsWith('left_') ? 1 : name.startsWith('right_') ? -1 : 0;
+  const part = name.replace(/^(left|right)_/, '');
+  const upper = ['shoulder', 'elbow', 'wrist', 'pinky', 'index', 'thumb'].includes(part);
+  const lower = ['hip', 'knee', 'ankle', 'heel', 'foot_index'].includes(part);
+  if (pose.view === 'side') {
+    // Far (left) side away from the camera
+    return sign * (upper ? SHOULDER_HALF_M : lower ? HIP_HALF_M : 0);
+  }
+  return upper ? sign * SHOULDER_HALF_M * Math.sin(rad(pose.trunkRotation)) : 0;
+}
+
 /** Pose a body and return it as a MediaPipe Pose Landmarker result bundle. */
 export function renderBody(
   pose: BodyPose,
@@ -330,7 +359,7 @@ export function renderBody(
     world.push({
       x: (p.x - hipMid.x) / PX_PER_M,
       y: (p.y - hipMid.y) / PX_PER_M,
-      z: effects.depth?.[name] ?? 0,
+      z: sideDepth(name, pose) + (effects.depth?.[name] ?? 0),
       visibility,
     });
   }

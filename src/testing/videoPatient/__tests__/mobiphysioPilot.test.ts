@@ -14,6 +14,8 @@ import { analyseVideo, VideoMetrics } from '../analyseVideo';
 import type { VideoLandmarks } from '../VideoPatient';
 
 const dir = process.env.MOBIPHYSIO_DIR;
+/** Comma-separated participant groups to run (default: all). */
+const groups = process.env.PILOT_GROUPS?.split(',');
 
 interface ManifestVideo {
   name: string;
@@ -59,7 +61,9 @@ const table = (header: string[], rows: string[][]) =>
 
 (dir ? it : it.skip)('MobiPhysio pilot', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(dir!, 'manifest.json'), 'utf8'));
-  const videos: ManifestVideo[] = manifest.videos;
+  const videos: ManifestVideo[] = manifest.videos.filter(
+    (v: ManifestVideo) => !groups || groups.includes(v.group)
+  );
   const results: { v: ManifestVideo; m: VideoMetrics }[] = [];
   for (const v of videos) {
     const file = path.join(dir!, 'landmarks', `${v.name}.json.gz`);

@@ -94,5 +94,10 @@ Report measured ranges as **approximate**, and only from the recommended camera 
 - **Model version:** the dataset's own MediaPipe Pose from 2023, not the app's
   `pose_landmarker_full.task`.
 - **Detection of real compensations:** still validated only on the virtual patient.
-  Real-video datasets (MobiPhysio; REHAB24-6 for internal benchmarking only, CC BY-NC)
-  are the next layer.
+- **Real smartphone video:** the MobiPhysio pilot ([MOBIPHYSIO_PILOT.md](MOBIPHYSIO_PILOT.md))
+  runs the app's own model on real phone video. It found that the width-ratio view rule
+  above, calibrated here on projected world landmarks, never recognised a front view on
+  real image landmarks. The view now comes from body yaw in world landmarks: front ≤ 15°,
+  side ≥ 60°. It also found that shoulder hike needed to be measured against the normal
+  shoulder rise with arm elevation. Both changes keep this benchmark's results, and the
+  35° recordings are now all classified as oblique.

@@ -4,7 +4,9 @@ The recorded-patient layer ([REAL_HUMAN_VALIDATION.md](REAL_HUMAN_VALIDATION.md)
 MediaPipe output that someone else produced. This layer starts from **real smartphone
 video** and runs it through **the app's own pose model** and then the unchanged session
 pipeline. It is a frozen inference benchmark: nothing is trained on it, and no threshold was
-changed before the baseline below was recorded.
+changed before the baseline below was recorded. Two fixes followed. Each was designed on the
+inspection group, checked on the validation group, and then run once on the untouched test
+group (see [Fixes after the baseline](#fixes-after-the-baseline)).
 
 ## Data
 
@@ -148,10 +150,86 @@ Darkness mainly makes the app withhold measurement, which is the safe way to fai
 
 **Not yet tested:** a second person in the frame.
 
+## Fixes after the baseline
+
+Final tables: [MOBIPHYSIO_PILOT_AFTER.md](MOBIPHYSIO_PILOT_AFTER.md).
+
+### Camera view from body yaw
+
+The view now comes from how far the body is turned, measured in MediaPipe's 3D world
+landmarks: the angle of the shoulder line and the hip line out of the image plane,
+averaged. The view is front up to 15°, side from 60°, and oblique in between. This
+measurement doesn't depend on body proportions or on which landmark set is used.
+
+| Source (rest posture)                         | Measured yaw |
+| --------------------------------------------- | ------------ |
+| MobiPhysio, facing the camera (inspection)    | 0.5–8°       |
+| Clemente, frontal-plane exercises             | 0.5–6°       |
+| Clemente, 35° camera                          | 19–36°       |
+| MobiPhysio, filmed from the side (inspection) | 37–74°       |
+
+- **Fallback without world landmarks:** the width-ratio rule now uses image-landmark
+  proportions (front if shoulders ≥ 0.58 and hips ≥ 0.33 of torso length).
+- **Virtual patient:** its world landmarks now carry depth for each side of the body, so
+  it exercises the same code.
+- **Label noise:** yaw and image proportions agree on which clips face the camera, and
+  they often disagree with the dataset's angle label. For example, 10 of 16
+  "right"-labelled clips read as facing the camera (within 15°).
+- **Clemente side effect:** the 35° recordings are now all oblique (seated knee
+  extension had read as front in 7 of 8, shoulder flexion in 1 of 7), and a false flag on
+  seated knee extension disappeared. See [REAL_HUMAN_RESULTS.md](REAL_HUMAN_RESULTS.md).
+
+### Shoulder hike measured against the normal rise
+
+Once front views were recognised, shoulder hike fired on almost every repetition from
+**expert** performers, including clips scored 100/100. When the arm rises, the shoulder
+girdle elevates normally (scapulohumeral rhythm), and the model's shoulder point moves
+with it. The previous thresholds were set on the virtual patient, which had no such
+movement.
+
+The normal rise was measured on the inspection experts (7,108 frames, facing the camera,
+scores 64–100), as a share of shoulder width:
+
+| Arm angle | 30–60° | 60–90° | 90–120° | 120–150° | 150°+ |
+| --------- | ------ | ------ | ------- | -------- | ----- |
+| Median    | 0.035  | 0.084  | 0.126   | 0.159    | 0.189 |
+| 97th pct  | 0.115  | 0.170  | 0.229   | 0.280    | 0.297 |
+
+- **New rule:** the detector subtracts the median curve (`NORMAL_SHOULDER_RISE`) and flags
+  a rise more than 0.12 of shoulder width above normal (warns above 0.08). That is above
+  the healthy 97th percentile at every arm angle.
+- **Virtual patient:** its shoulders now rise along the same curve, so its hike scenarios
+  must exceed the normal rise to be detected.
+
+### Before and after
+
+| Group                            | Clips | Front view recognised | Sessions flagged | Sessions warned |
+| -------------------------------- | ----- | --------------------- | ---------------- | --------------- |
+| Inspection (fixes designed here) | 65    | 0 → 41                | 0 → 4            | 0 → 6           |
+| Validation                       | 12    | 0 → 6                 | 0 → 0            | 0 → 0           |
+| Untouched test (run once)        | 12    | 0 → 7                 | 0 → 1            | 0 → 0           |
+
+Between the two fixes, a compensation (almost always shoulder hike) was flagged in 21 of
+65 inspection sessions and 4 of 12 validation sessions. The remaining flags are:
+
+- **Inspection:**
+  - shoulder hike on one circumduction clip (3 repetitions), where the shoulder
+    legitimately rises more than in abduction;
+  - shoulder hike on one high-jitter abduction clip scored 70;
+  - elbow bend on two lateral-rotation clips, where the elbow is held at 90° by design.
+    The app doesn't offer that exercise.
+- **Test:** shoulder hike and head tilt on one front abduction clip (P07, scored 84). With
+  no frame-level labels it can't be called right or wrong, and it was not tuned on.
+
 ## What this does not show
 
-- **Correct compensation detection.** It could not be shown here, because the front-view
-  checks never ran (finding 1).
+- **Correct detection of real compensations.** The dataset has no frame-level
+  compensation labels, and the performers are healthy. This pilot measures false alarms
+  on correct performances. Detection of actual hiking is still shown only on the virtual
+  patient.
+- **The normal-rise curve beyond young healthy adults.** It comes from 5 expert
+  performers. Older adults and people with shoulder pathology may differ, which needs
+  clinical review.
 - **Angle accuracy.** There is no motion capture. The EAAQ physiotherapist score is a
   session-level quality rating, **not angle ground truth**. Angle accuracy is covered by
   the Clemente benchmark.
@@ -163,8 +241,8 @@ Darkness mainly makes the app withhold measurement, which is the safe way to fai
 
 ## Protocol notes
 
-- **The test group** was run only in this frozen baseline. Any fix is designed on the
-  inspection group, checked on the validation group, and then run on the test group once.
+- **The test group** was run twice: in the frozen baseline and once after both fixes. The
+  fixes were designed on the inspection group and checked on the validation group only.
 - **Disclosure:** while the harness was being checked, one diagnostic printout of
   shoulder and hip width ratios included the front clips of three participants outside
   the inspection group (P03, P07, P10). Those numbers are not used for any calibration.

@@ -207,7 +207,7 @@ export const COMPENSATION_SCENARIOS: CompensationScenario[] = [
   ),
   scenario(
     'raise-front-hike-warn',
-    'Arm raise, shoulder hikes 12 px (10% width)',
+    'Arm raise, shoulder hikes 12 px (10% width) beyond the normal rise',
     FRONT,
     SHOULDER,
     raiseFront({ shoulderHike: 12 }),
@@ -215,19 +215,27 @@ export const COMPENSATION_SCENARIOS: CompensationScenario[] = [
   ),
   scenario(
     'raise-front-hike-flag',
-    'Arm raise, shoulder hikes 18 px (15% width)',
+    'Arm raise, shoulder hikes 18 px (15% width) beyond the normal rise',
     FRONT,
     SHOULDER,
     raiseFront({ shoulderHike: 18 }),
     [{ id: 'shoulder_hike', severity: 'flag' }]
   ),
   scenario(
-    'raise-front-overhead-elevation',
-    'Arm raise to 150° with 12 px of normal shoulder elevation',
+    'raise-front-overhead-normal-rise',
+    'Arm raise to 150°, shoulder rises only as much as a healthy one does',
     FRONT,
     SHOULDER,
-    raiseFront({ shoulderHike: 12 }, 150),
+    raiseFront({}, 150),
     []
+  ),
+  scenario(
+    'raise-front-overhead-hike-flag',
+    'Arm raise to 150°, shoulder hikes 18 px (15% width) beyond the normal rise',
+    FRONT,
+    SHOULDER,
+    raiseFront({ shoulderHike: 18 }, 150),
+    [{ id: 'shoulder_hike', severity: 'flag' }]
   ),
   scenario(
     'raise-front-side-lean-warn',
@@ -247,18 +255,18 @@ export const COMPENSATION_SCENARIOS: CompensationScenario[] = [
   ),
   scenario(
     'raise-front-rotation-warn',
-    'Arm raise, trunk turns 35°',
+    'Arm raise to shoulder height, trunk turns 35°',
     FRONT,
     SHOULDER,
-    raiseFront({ trunkRotation: 35 }),
+    raiseFront({ trunkRotation: 35 }, 90),
     [{ id: 'trunk_rotation', severity: 'warn' }]
   ),
   scenario(
     'raise-front-rotation-flag',
-    'Arm raise, trunk turns 45°',
+    'Arm raise to shoulder height, trunk turns 45°',
     FRONT,
     SHOULDER,
-    raiseFront({ trunkRotation: 45 }),
+    raiseFront({ trunkRotation: 45 }, 90),
     [{ id: 'trunk_rotation', severity: 'flag' }]
   ),
   scenario(
