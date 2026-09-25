@@ -82,7 +82,6 @@ module.exports = (_env, argv = {}) => ({
     extensions: ['.web.js', '.web.ts', '.web.tsx', '.js', '.ts', '.tsx'],
     alias: {
       'react-native$': 'react-native-web',
-      'react-native-svg': 'react-native-svg-web',
       'react-native-sound': path.resolve(appDirectory, 'web/shims/react-native-sound.js'),
       'react-native-linear-gradient': path.resolve(
         appDirectory,

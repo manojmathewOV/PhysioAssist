@@ -1,6 +1,9 @@
 /**
- * Home: a greeting, one obvious primary action, and a few large tiles.
- * Designed so a first-time or older user always knows what to do next.
+ * Home: a calm daily summary with one obvious action.
+ *
+ * Fitness-style: one goal ring for today's repetitions and a week of day dots.
+ * Health-style: flat summary cards with a coloured category header, one big
+ * number and a plain-language sentence.
  */
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -9,74 +12,151 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
 
 import type { RootState } from '../store';
-import { ActionTile, AppText, Card, Screen } from '../components/ui';
+import { ActionTile, AppText, BigButton, Screen } from '../components/ui';
+import {
+  Highlight,
+  ProgressRing,
+  SummaryCard,
+  WeekStrip,
+} from '../components/ui/summary';
 import { colors, spacing } from '../theme';
 import type { MainTabParamList } from '../navigation/types';
-import { summarizeWeek } from '../utils/progressSummary';
+import {
+  currentStreak,
+  currentWeek,
+  repsToday,
+  weeklyHighlight,
+} from '../utils/progressSummary';
 
 const greeting = (hour: number) =>
   hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+
+const shortDate = (iso: string) =>
+  new Date(iso).toLocaleDateString(undefined, { weekday: 'long' });
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const name = useSelector((s: RootState) => s.user.currentUser?.name);
   const history = useSelector((s: RootState) => s.exercise.history);
-  const week = summarizeWeek(history);
+  const goal = useSelector((s: RootState) => s.settings.dailyRepGoal ?? 30);
+
   const firstName = name?.split(' ')[0];
+  const today = repsToday(history);
+  const remaining = Math.max(0, goal - today);
+  const week = currentWeek(history);
+  const activeDays = week.filter((d) => d.active).length;
+  const streak = currentStreak(history);
+  const highlight = weeklyHighlight(history);
+  const last = history[0];
+  const startExercises = () => navigation.navigate('Exercise');
 
   return (
     <Screen
       testID="home-screen"
       title={`${greeting(new Date().getHours())}${firstName ? `, ${firstName}` : ''}`}
-      subtitle="Ready for today's exercises?"
+      subtitle={new Date().toLocaleDateString(undefined, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      })}
     >
-      <ActionTile
-        tone="primary"
-        icon="play-circle-filled"
-        title="Start exercises"
-        description="The camera will guide you step by step"
-        onPress={() => navigation.navigate('Exercise')}
-        testID="home-start-exercises"
-      />
-
-      <Card testID="home-week-summary">
-        <AppText variant="label" color={colors.textSecondary}>
-          THIS WEEK
-        </AppText>
-        <View style={styles.weekRow}>
-          <View style={styles.weekStat}>
-            <AppText variant="title">{week.sessions}</AppText>
+      {/* Today: one ring, one sentence, one button */}
+      <SummaryCard
+        icon="directions-run"
+        category="Exercise"
+        tint={colors.category.exercise}
+        when="Today"
+        testID="home-today"
+      >
+        <View style={styles.todayRow}>
+          <ProgressRing
+            progress={today / goal}
+            size={132}
+            thickness={16}
+            testID="home-goal-ring"
+            accessibilityLabel={`${today} of ${goal} repetitions today`}
+          >
+            <AppText variant="value">{today}</AppText>
             <AppText variant="caption" color={colors.textSecondary}>
-              {week.sessions === 1 ? 'session' : 'sessions'}
+              of {goal}
             </AppText>
-          </View>
-          <View style={styles.weekStat}>
-            <AppText variant="title">{week.reps}</AppText>
-            <AppText variant="caption" color={colors.textSecondary}>
-              repetitions
+          </ProgressRing>
+          <View style={styles.flex}>
+            <AppText variant="heading">
+              {remaining === 0 ? 'Goal reached' : `${remaining} to go`}
             </AppText>
-          </View>
-          <View style={styles.weekStat}>
-            <AppText variant="title">{week.activeDays}</AppText>
-            <AppText variant="caption" color={colors.textSecondary}>
-              active {week.activeDays === 1 ? 'day' : 'days'}
+            <AppText variant="body" color={colors.textSecondary}>
+              {remaining === 0
+                ? 'Lovely work today. Rest is part of getting better.'
+                : 'repetitions to reach today’s goal'}
             </AppText>
           </View>
         </View>
-        <AppText variant="body" color={colors.textSecondary}>
-          {week.sessions === 0
-            ? 'Your first session will show up here.'
-            : 'Well done. Keep going at your own pace.'}
-        </AppText>
-      </Card>
+        <BigButton
+          label={today === 0 ? 'Start exercises' : 'Continue exercises'}
+          icon="play-arrow"
+          onPress={startExercises}
+          testID="home-start-exercises"
+        />
+      </SummaryCard>
 
-      <ActionTile
-        icon="insights"
-        title="My progress"
-        description="See how you are improving"
+      {/* This week: day dots, like an activity history */}
+      <SummaryCard
+        icon="event-available"
+        category="This week"
+        tint={colors.category.time}
+        when={`${activeDays} of 7 days`}
         onPress={() => navigation.navigate('Progress')}
-        testID="home-progress"
-      />
+        testID="home-week-summary"
+      >
+        <WeekStrip days={week} testID="home-week-strip" />
+        {highlight ? (
+          <Highlight
+            icon="auto-awesome"
+            tint={colors.category.time}
+            text={highlight}
+            testID="home-highlight"
+          />
+        ) : (
+          <AppText variant="body" color={colors.textSecondary}>
+            Each day you exercise gets a tick.
+          </AppText>
+        )}
+      </SummaryCard>
+
+      {streak > 1 ? (
+        <SummaryCard
+          icon="local-fire-department"
+          category="Streak"
+          tint={colors.category.pain}
+          value={`${streak}`}
+          unit="days in a row"
+          testID="home-streak"
+        />
+      ) : null}
+
+      {last ? (
+        <SummaryCard
+          icon="fitness-center"
+          category="Last session"
+          tint={colors.category.progress}
+          when={shortDate(last.date)}
+          value={`${last.reps}`}
+          unit={`reps · ${last.exerciseName}`}
+          onPress={() => navigation.navigate('Progress')}
+          testID="home-progress"
+        />
+      ) : (
+        <SummaryCard
+          icon="insights"
+          category="My progress"
+          tint={colors.category.progress}
+          description="See how you are improving, week by week."
+          onPress={() => navigation.navigate('Progress')}
+          testID="home-progress"
+        />
+      )}
+
       <ActionTile
         tone="accent"
         icon="help-outline"
@@ -90,12 +170,13 @@ const HomeScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  weekRow: {
+  flex: { flex: 1 },
+  todayRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: spacing.md,
+    alignItems: 'center',
+    gap: spacing.lg,
+    marginVertical: spacing.sm,
   },
-  weekStat: { alignItems: 'center', flex: 1 },
 });
 
 export default HomeScreen;

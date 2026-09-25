@@ -18,6 +18,8 @@ interface SettingsState {
 
   // Performance Settings
   frameSkip: number;
+  /** Repetitions per day the Home ring fills towards. */
+  dailyRepGoal: number;
   highPerformanceMode: boolean;
 
   // Accessibility Settings
@@ -48,6 +50,7 @@ const initialState: SettingsState = {
 
   // Performance Settings
   frameSkip: 3,
+  dailyRepGoal: 30,
   highPerformanceMode: false,
 
   // Accessibility Settings
@@ -64,6 +67,9 @@ const settingsSlice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
+    setDailyRepGoal: (state, action: PayloadAction<number>) => {
+      state.dailyRepGoal = Math.max(5, Math.min(200, Math.round(action.payload)));
+    },
     // Audio toggles
     toggleSound: (state) => {
       state.enableSound = !state.enableSound;
@@ -139,6 +145,7 @@ const settingsSlice = createSlice({
 });
 
 export const {
+  setDailyRepGoal,
   toggleSound,
   toggleHaptics,
   toggleSpeech,

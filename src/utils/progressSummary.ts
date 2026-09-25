@@ -70,3 +70,68 @@ export function currentStreak(
   }
   return streak;
 }
+
+/** Repetitions done today (local day). */
+export function repsToday(history: ExerciseHistory[], now: number = Date.now()): number {
+  const today = localDay(now);
+  return history
+    .filter((h) => dayKey(h.date) === today)
+    .reduce((sum, h) => sum + h.reps, 0);
+}
+
+const WEEKDAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const WEEKDAY_NAMES = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
+/** The current Monday-to-Sunday week with active days marked. */
+export function currentWeek(
+  history: ExerciseHistory[],
+  now: number = Date.now()
+): { label: string; name: string; active: boolean; isToday: boolean }[] {
+  const active = new Set(history.map((h) => dayKey(h.date)));
+  const mondayOffset = (new Date(now).getDay() + 6) % 7; // 0 = Monday
+  return WEEKDAY_LABELS.map((label, i) => {
+    const key = localDay(now + (i - mondayOffset) * DAY_MS);
+    return {
+      label,
+      name: WEEKDAY_NAMES[i],
+      active: active.has(key),
+      isToday: i === mondayOffset,
+    };
+  });
+}
+
+/**
+ * One plain-language observation comparing the last 7 days with the 7 before,
+ * or null when there isn't enough history to say anything useful.
+ */
+export function weeklyHighlight(
+  history: ExerciseHistory[],
+  now: number = Date.now()
+): string | null {
+  const inWindow = (from: number, to: number) =>
+    history
+      .filter((h) => {
+        const t = new Date(h.date).getTime();
+        return now - t >= from && now - t < to;
+      })
+      .reduce((sum, h) => sum + h.reps, 0);
+  const thisWeek = inWindow(0, 7 * DAY_MS);
+  const lastWeek = inWindow(7 * DAY_MS, 14 * DAY_MS);
+  if (thisWeek === 0 && lastWeek === 0) return null;
+  if (lastWeek === 0) return `You did ${thisWeek} repetitions this week. A great start.`;
+  const change = Math.round(((thisWeek - lastWeek) / lastWeek) * 100);
+  if (change >= 5)
+    return `You did ${change}% more repetitions than last week. Well done.`;
+  if (change <= -5) {
+    return `You did fewer repetitions than last week. Little and often is what helps most.`;
+  }
+  return 'You kept the same pace as last week. Nice and steady.';
+}

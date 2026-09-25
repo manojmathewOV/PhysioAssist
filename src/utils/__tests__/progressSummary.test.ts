@@ -1,4 +1,11 @@
-import { currentStreak, dailyReps, summarizeWeek } from '../progressSummary';
+import {
+  currentStreak,
+  currentWeek,
+  dailyReps,
+  repsToday,
+  summarizeWeek,
+  weeklyHighlight,
+} from '../progressSummary';
 import exerciseReducer, {
   startExercise,
   stopExercise,
@@ -42,6 +49,27 @@ describe('progress summaries', () => {
     expect(currentStreak(history, NOW)).toBe(2);
     expect(currentStreak([session(1, 5), session(2, 5)], NOW)).toBe(2);
     expect(currentStreak([session(3, 5)], NOW)).toBe(0);
+  });
+});
+
+describe('home summaries', () => {
+  it("totals today's reps", () => {
+    expect(repsToday([session(0, 10), session(0, 5), session(1, 8)], NOW)).toBe(15);
+  });
+
+  it('lays out the Monday-Sunday week with active days and today', () => {
+    // NOW is Friday 25 Sep 2026
+    const week = currentWeek([session(0, 5), session(4, 5), session(9, 5)], NOW);
+    expect(week.map((d) => d.label).join('')).toBe('MTWTFSS');
+    expect(week.filter((d) => d.active).map((d) => d.name)).toEqual(['Monday', 'Friday']);
+    expect(week.find((d) => d.isToday)?.name).toBe('Friday');
+  });
+
+  it('writes a plain-language week-over-week highlight', () => {
+    expect(weeklyHighlight([], NOW)).toBeNull();
+    expect(weeklyHighlight([session(1, 20), session(8, 10)], NOW)).toMatch(/100% more/);
+    expect(weeklyHighlight([session(1, 5), session(8, 20)], NOW)).toMatch(/fewer/);
+    expect(weeklyHighlight([session(1, 10)], NOW)).toMatch(/great start/);
   });
 });
 

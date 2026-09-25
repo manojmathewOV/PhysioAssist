@@ -21,9 +21,9 @@ export const colors = {
   accentSoft: '#FDF0E4',
 
   // Surfaces
-  background: '#F6F7F9',
+  background: '#F2F2F7', // calm grouped background (as in health apps)
   surface: '#FFFFFF',
-  surfaceMuted: '#EEF1F4',
+  surfaceMuted: '#E9E9EF',
   border: '#D9DEE4',
 
   // Text (all AA+ on background and surface)
@@ -39,6 +39,14 @@ export const colors = {
   warningSoft: '#FFF3DC',
   danger: '#B42318',
   dangerSoft: '#FDECEA',
+
+  // Category accents for card headers and icons (each >= 4.5:1 on white)
+  category: {
+    exercise: '#15803D',
+    progress: '#0B6E8F',
+    pain: '#C2410C',
+    time: '#6D28D9',
+  },
 
   // Camera screens (drawn over live video, so bright and with a soft shadow)
   cameraOverlay: 'rgba(12, 20, 28, 0.72)',
@@ -80,7 +88,7 @@ const fontFamily = Platform.select({
 
 export const typography = {
   display: { fontFamily, fontSize: 34, lineHeight: 41, fontWeight: '700' },
-  title: { fontFamily, fontSize: 28, lineHeight: 34, fontWeight: '700' },
+  title: { fontFamily, fontSize: 34, lineHeight: 41, fontWeight: '700' },
   heading: { fontFamily, fontSize: 22, lineHeight: 28, fontWeight: '600' },
   body: { fontFamily, fontSize: 18, lineHeight: 26, fontWeight: '400' },
   bodyStrong: { fontFamily, fontSize: 18, lineHeight: 26, fontWeight: '600' },
@@ -88,6 +96,9 @@ export const typography = {
   caption: { fontFamily, fontSize: 15, lineHeight: 20, fontWeight: '400' },
   button: { fontFamily, fontSize: 20, lineHeight: 24, fontWeight: '600' },
   metric: { fontFamily, fontSize: 56, lineHeight: 64, fontWeight: '700' },
+  /** Big value in a summary card, paired with `unit`. */
+  value: { fontFamily, fontSize: 40, lineHeight: 46, fontWeight: '700' },
+  unit: { fontFamily, fontSize: 18, lineHeight: 24, fontWeight: '600' },
 } satisfies Record<string, TextStyle>;
 
 export type TypographyVariant = keyof typeof typography;
@@ -96,12 +107,12 @@ export const shadows = {
   card: Platform.select<ViewStyle>({
     ios: {
       shadowColor: '#0B1F33',
-      shadowOpacity: 0.08,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.04,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 2 },
     },
-    android: { elevation: 3 },
-    default: { boxShadow: '0 4px 12px rgba(11, 31, 51, 0.08)' } as ViewStyle,
+    android: { elevation: 1 },
+    default: { boxShadow: '0 1px 3px rgba(11, 31, 51, 0.06)' } as ViewStyle,
   }),
 } as const;
 
