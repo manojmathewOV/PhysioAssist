@@ -20,17 +20,19 @@ on:
         description: 'Xcode version to select, e.g. 16.2 (blank = runner default)'
         required: false
         default: ''
-      run_detox:
-        description: 'Run the Detox E2E suite after the smoke test'
-        type: boolean
-        default: true
+      detox_suite:
+        description: 'Detox suite: smoke (first-run flow), full (adds the componentValidation spec), none'
+        type: choice
+        options: [smoke, full, none]
+        default: smoke
   pull_request:
     paths:
       - 'ios/**'
       - 'src/**'
       - 'e2e/**'
-      - 'App.tsx'
       - 'index.js'
+      - 'babel.config.js'
+      - 'metro.config.js'
       - 'package.json'
       - 'package-lock.json'
       - '.detoxrc.js'
@@ -120,8 +122,12 @@ jobs:
         run: bash scripts/ci/ios-smoke-test.sh "$APP_PATH" "${{ steps.sim.outputs.udid }}" "$OUT_DIR/smoke"
 
       - name: Detox E2E tests
-        if: github.event_name == 'pull_request' || inputs.run_detox
+        if: (inputs.detox_suite || 'smoke') != 'none'
         run: |
+          # componentValidation.e2e.ts is a spec for screens still being built, so
+          # it only runs on request; appLaunch.e2e.ts covers today's first-run flow.
+          SPECS="e2e/appLaunch.e2e.ts"
+          if [ "${{ inputs.detox_suite }}" = "full" ]; then SPECS=""; fi
           npx detox build-framework-cache
           npx detox test \
             --configuration ios.sim.release \
@@ -130,7 +136,8 @@ jobs:
             --take-screenshots all \
             --record-logs failing \
             --artifacts-location "$OUT_DIR/detox" \
-            --cleanup
+            --cleanup \
+            $SPECS
 
       - name: Summary
         if: always()

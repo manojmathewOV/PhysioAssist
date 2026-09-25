@@ -1,0 +1,50 @@
+# TEMPLATE: copy this file to .github/workflows/checks.yml to enable it.
+# (The Claude GitHub App can't push into .github/workflows without the
+# "workflows" permission, so it lives here until it's copied into place.)
+
+name: Checks
+
+# Fast Linux checks (types, lint, unit tests, iOS/Android/web bundles).
+# Runs on every push/PR; far cheaper than the macOS simulator workflow.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies (also downloads MoveNet models)
+        run: npm ci --legacy-peer-deps
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx
+
+      - name: Unit tests
+        run: npx jest --ci
+
+      - name: iOS JS bundle
+        run: mkdir -p /tmp/ios && npx react-native bundle --platform ios --dev false --entry-file index.js --bundle-output /tmp/ios/main.jsbundle --assets-dest /tmp/ios
+
+      - name: Android JS bundle
+        run: mkdir -p /tmp/android && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output /tmp/android/index.android.bundle --assets-dest /tmp/android
+
+      - name: Web build
+        run: npx webpack --mode production --config webpack.config.js

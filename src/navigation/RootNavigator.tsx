@@ -41,10 +41,18 @@ const MainTabs = () => {
       <Tab.Screen
         name="PoseDetection"
         component={PoseScreen}
-        options={{ title: 'Exercises' }}
+        options={{ title: 'Exercises', tabBarTestID: 'tab-exercises' }}
       />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ tabBarTestID: 'tab-profile' }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ tabBarTestID: 'tab-settings' }}
+      />
     </Tab.Navigator>
   );
 };
