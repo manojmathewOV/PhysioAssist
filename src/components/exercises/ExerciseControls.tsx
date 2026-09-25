@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, TouchableOpacity, Text, StyleSheet, Vibration } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   startExercise,
@@ -8,6 +8,12 @@ import {
 } from '../../store/slices/exerciseSlice';
 import { RootState } from '../../store';
 import { AccessibilityIds } from '../../constants/accessibility';
+import { EXERCISES } from '../../constants/exercises';
+import { exerciseValidationService } from '../../services/exerciseValidationService';
+
+/** Form scores below this threshold are shown as "Poor" and trigger a haptic cue. */
+const POOR_FORM_THRESHOLD = 0.6;
+const FORM_FEEDBACK_VIBRATION_MS = 150;
 
 interface ExerciseControlsProps {
   isActive?: boolean;
@@ -25,17 +31,31 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
   onReset: propOnReset,
 }) => {
   const dispatch = useDispatch();
-  const {
-    isExercising,
-    currentExercise,
-    repetitionCount,
-    formScore,
-    currentPhase,
-    feedback,
-  } = useSelector((state: RootState) => state.exercise);
+  const { isExercising, repetitionCount, formScore, currentPhase, feedback } =
+    useSelector((state: RootState) => state.exercise);
+  const enableHaptics = useSelector(
+    (state: RootState) => state.settings.enableHaptics !== false
+  );
 
   // Use props if provided, otherwise use Redux state
   const isActive = propIsActive !== undefined ? propIsActive : isExercising;
+
+  // Haptic cue when a new form correction arrives while form is poor, so the
+  // user notices it without having to look at the screen mid-exercise.
+  const lastFeedbackRef = useRef(feedback);
+  useEffect(() => {
+    const isNewFeedback = !!feedback && feedback !== lastFeedbackRef.current;
+    lastFeedbackRef.current = feedback;
+    if (isActive && isNewFeedback && formScore < POOR_FORM_THRESHOLD && enableHaptics) {
+      Vibration.vibrate(FORM_FEEDBACK_VIBRATION_MS);
+    }
+  }, [feedback, formScore, isActive, enableHaptics]);
+
+  const handleSelectBicepCurl = () => {
+    const exercise = EXERCISES.bicepCurl;
+    dispatch(startExercise(exercise));
+    exerciseValidationService.startExercise(exercise);
+  };
 
   const handleStart = () => {
     if (propOnStart) {
@@ -81,9 +101,7 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
       >
         <TouchableOpacity
           style={[styles.exerciseButton, styles.bicepCurlButton]}
-          onPress={() =>
-            dispatch(startExercise({ id: 'bicep_curl', name: 'Bicep Curl' } as any))
-          }
+          onPress={handleSelectBicepCurl}
           testID={AccessibilityIds.exercise.bicepCurlOption}
           accessible={true}
           accessibilityLabel="Bicep Curl Exercise"
@@ -118,7 +136,11 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
                 style={[styles.statValue, styles.formQuality]}
                 testID={AccessibilityIds.exercise.formQuality}
               >
-                {formScore >= 0.8 ? 'Excellent' : formScore >= 0.6 ? 'Good' : 'Poor'}
+                {formScore >= 0.8
+                  ? 'Excellent'
+                  : formScore >= POOR_FORM_THRESHOLD
+                    ? 'Good'
+                    : 'Poor'}
               </Text>
             </View>
           </View>

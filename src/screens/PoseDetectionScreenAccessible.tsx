@@ -1,44 +1,54 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
   Alert,
-  Dimensions,
   ActivityIndicator,
   AccessibilityInfo,
   Platform,
+  Linking,
 } from 'react-native';
 import {
   Camera,
-  useCameraDevices,
+  useCameraDevice,
   useFrameProcessor,
   Frame,
 } from 'react-native-vision-camera';
+import { Worklets } from 'react-native-worklets-core';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { runOnJS } from 'react-native-reanimated';
 
 import { RootState } from '../store';
 import { setPoseData, setDetecting } from '../store/slices/poseSlice';
+import { updateValidation } from '../store/slices/exerciseSlice';
 import { poseDetectionService } from '../services/poseDetectionService';
+import { exerciseValidationService } from '../services/exerciseValidationService';
+import { audioFeedbackService } from '../services/audioFeedbackService';
 import PoseOverlay from '../components/pose/PoseOverlay';
 import ExerciseControls from '../components/exercises/ExerciseControls';
 import { AccessibilityIds } from '../constants/accessibility';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+import { ProcessedPoseData } from '../types/pose';
 
 const PoseDetectionScreenAccessible: React.FC = () => {
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
-  const devices = useCameraDevices();
-  const device = devices.front;
+  const device = useCameraDevice('front');
 
-  const { isDetecting, confidence } = useSelector((state: RootState) => state.pose);
+  const { isDetecting, confidence, currentPose } = useSelector(
+    (state: RootState) => state.pose
+  );
+  const isExercising = useSelector((state: RootState) => state.exercise.isExercising);
+  const frameSkip = useSelector((state: RootState) => state.settings.frameSkip);
   const [hasPermission, setHasPermission] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const isDetectingRef = useRef(isDetecting);
+  const frameCountRef = useRef(0);
+  const lastSpokenFeedbackRef = useRef<string | null>(null);
+
+  isDetectingRef.current = isDetecting;
 
   useEffect(() => {
     requestCameraPermission();
@@ -46,10 +56,11 @@ const PoseDetectionScreenAccessible: React.FC = () => {
     announceScreen();
 
     return () => {
-      if (isDetecting) {
-        stopPoseDetection();
+      if (isDetectingRef.current) {
+        dispatch(setDetecting(false));
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const announceScreen = () => {
@@ -62,15 +73,15 @@ const PoseDetectionScreenAccessible: React.FC = () => {
 
   const requestCameraPermission = async () => {
     const permission = await Camera.requestCameraPermission();
-    setHasPermission(permission === 'authorized');
+    setHasPermission(permission === 'granted');
 
-    if (permission !== 'authorized') {
+    if (permission !== 'granted') {
       Alert.alert(
         'Camera Permission Required',
         'PhysioAssist needs camera access to detect your pose and provide exercise guidance.',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Open Settings', onPress: () => Camera.openSettings() },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
         ],
         { cancelable: false }
       );
@@ -90,18 +101,27 @@ const PoseDetectionScreenAccessible: React.FC = () => {
     }
   };
 
+  const handlePoseData = useCallback(
+    (poseData: ProcessedPoseData) => {
+      dispatch(setPoseData(poseData));
+    },
+    [dispatch]
+  );
+
   const startPoseDetection = async () => {
-    if (!hasPermission || !isInitialized) {
-      Alert.alert(
-        'Not Ready',
-        'Please grant camera permission and wait for initialization.'
-      );
+    if (!hasPermission) {
+      Alert.alert('Not Ready', 'Please grant camera permission to start pose detection.');
       return;
     }
 
     setIsLoading(true);
     try {
-      await poseDetectionService.startDetection();
+      // Retry initialization if it failed on mount, so the user can recover
+      if (!isInitialized) {
+        await poseDetectionService.initialize();
+        setIsInitialized(true);
+      }
+      poseDetectionService.setPoseDataCallback(handlePoseData);
       dispatch(setDetecting(true));
 
       // Announce start for accessibility
@@ -110,49 +130,67 @@ const PoseDetectionScreenAccessible: React.FC = () => {
       );
     } catch (error) {
       console.error('Failed to start pose detection:', error);
-      Alert.alert('Error', 'Failed to start pose detection. Please try again.');
+      Alert.alert('Error', 'Failed to start pose detection. Please try again.', [
+        { text: 'OK' },
+      ]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const stopPoseDetection = async () => {
-    setIsLoading(true);
+  const stopPoseDetection = () => {
+    dispatch(setDetecting(false));
+
+    // Announce stop for accessibility
+    AccessibilityInfo.announceForAccessibility('Pose detection stopped.');
+  };
+
+  // Validate each new pose during an active exercise and speak form corrections
+  useEffect(() => {
+    if (!isExercising || !currentPose) {
+      return;
+    }
     try {
-      await poseDetectionService.stopDetection();
-      dispatch(setDetecting(false));
+      const result = exerciseValidationService.validatePose(currentPose);
+      dispatch(updateValidation(result));
 
-      // Announce stop for accessibility
-      AccessibilityInfo.announceForAccessibility('Pose detection stopped.');
+      const message = result.feedback[0];
+      if (message && message !== lastSpokenFeedbackRef.current) {
+        lastSpokenFeedbackRef.current = message;
+        audioFeedbackService.speak(message);
+      }
     } catch (error) {
-      console.error('Failed to stop pose detection:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('Failed to validate pose:', error);
     }
-  };
+  }, [currentPose, isExercising, dispatch]);
 
+  // Runs on the JS thread, called from the frame processor worklet. Frame skipping
+  // lives here because refs and React state can't be mutated inside worklets.
+  const processFrameData = useCallback(
+    (_width: number, _height: number) => {
+      frameCountRef.current++;
+      if (frameCountRef.current % frameSkip !== 0) {
+        return;
+      }
+      // Frame-to-tensor conversion needs a native resize plugin; until it's wired up,
+      // pose data arrives through the callback registered in startPoseDetection.
+    },
+    [frameSkip]
+  );
+
+  const processFrameOnJS = useMemo(
+    () => Worklets.createRunOnJS(processFrameData),
+    [processFrameData]
+  );
+
+  // Frame processor for pose detection (VisionCamera v4 + react-native-worklets-core)
   const frameProcessor = useFrameProcessor(
     (frame: Frame) => {
       'worklet';
-      if (isDetecting) {
-        const landmarks = poseDetectionService.processFrame(frame);
-        if (landmarks) {
-          runOnJS(updatePoseData)(landmarks);
-        }
-      }
+      processFrameOnJS(frame.width, frame.height);
     },
-    [isDetecting]
+    [processFrameOnJS]
   );
-
-  const updatePoseData = (landmarks: any) => {
-    dispatch(
-      setPoseData({
-        landmarks,
-        timestamp: Date.now(),
-        confidence: landmarks.confidence || 0,
-      })
-    );
-  };
 
   if (!device) {
     return (
@@ -176,7 +214,7 @@ const PoseDetectionScreenAccessible: React.FC = () => {
             style={styles.camera}
             device={device}
             isActive={isFocused}
-            frameProcessor={frameProcessor}
+            frameProcessor={isDetecting ? frameProcessor : undefined}
             fps={30}
             accessible={true}
             accessibilityLabel="Camera view for pose detection"

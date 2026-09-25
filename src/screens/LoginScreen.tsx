@@ -14,24 +14,49 @@ import { useDispatch, useSelector } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '@store/slices/userSlice';
 import { RootState } from '@store/index';
 
-const LoginScreen: React.FC = () => {
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+interface LoginScreenProps {
+  /**
+   * Optional authentication handler. When provided, validated credentials are
+   * handed to it instead of the built-in mock authentication.
+   */
+  onLogin?: (credentials: LoginCredentials) => void | Promise<void>;
+}
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector((state: RootState) => state.user);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Inline validation errors take precedence over the last auth error
+  const displayedError = validationError ?? error;
 
   const handleLogin = async () => {
     // Basic validation
     if (!email || !password) {
-      Alert.alert('Validation Error', 'Please enter both email and password.');
+      setValidationError('Please enter both email and password.');
       return;
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Validation Error', 'Please enter a valid email address.');
+    if (!EMAIL_REGEX.test(email)) {
+      setValidationError('Please enter a valid email address.');
+      return;
+    }
+
+    setValidationError(null);
+
+    if (onLogin) {
+      await onLogin({ email, password });
       return;
     }
 
@@ -142,9 +167,14 @@ const LoginScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {error && (
-            <Text style={styles.errorText} testID="auth-error-message">
-              {error}
+          {displayedError && (
+            <Text
+              style={styles.errorText}
+              testID="auth-error-message"
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+            >
+              {displayedError}
             </Text>
           )}
 

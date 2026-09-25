@@ -232,8 +232,9 @@ export class AudioFeedbackService {
     if (newConfig.speechPitch !== undefined) {
       Tts.setDefaultPitch(newConfig.speechPitch);
     }
-    if (newConfig.volume !== undefined) {
-      this.soundCache.forEach((sound) => sound.setVolume(newConfig.volume));
+    const { volume } = newConfig;
+    if (volume !== undefined) {
+      this.soundCache.forEach((sound) => sound.setVolume(volume));
     }
   }
 

@@ -13,18 +13,24 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-interface OnboardingStep {
+export interface OnboardingStep {
   title: string;
   description: string;
   icon?: string;
   tips?: string[];
+  /**
+   * When set, the user must tick this consent checkbox before continuing past
+   * the step, and "Skip" cannot bypass it.
+   */
+  consent?: {
+    label: string;
+    requiredMessage: string;
+  };
 }
 
 interface OnboardingFlowProps {
@@ -33,7 +39,22 @@ interface OnboardingFlowProps {
   steps?: OnboardingStep[];
 }
 
-const defaultSteps: OnboardingStep[] = [
+export const PRIVACY_CONSENT_STEP: OnboardingStep = {
+  title: '🔒 Your Privacy',
+  description:
+    'PhysioAssist uses your camera to track your movement during exercises and stores your exercise results so you can follow your progress.',
+  tips: [
+    'The camera is used to detect your pose on the exercise screen',
+    'Your profile and settings are kept in encrypted storage on this device',
+    'Please review the Privacy Policy before continuing',
+  ],
+  consent: {
+    label: 'I have read and accept the Privacy Policy',
+    requiredMessage: 'Please accept the Privacy Policy to continue.',
+  },
+};
+
+export const defaultSteps: OnboardingStep[] = [
   {
     title: '👋 Welcome to PhysioAssist',
     description:
@@ -102,9 +123,24 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   steps = defaultSteps,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [acceptedConsents, setAcceptedConsents] = useState<Record<number, boolean>>({});
+
+  const isConsentPending = (index: number) =>
+    !!steps[index]?.consent && !acceptedConsents[index];
+
+  const toggleConsent = () => {
+    ReactNativeHapticFeedback.trigger('impactLight');
+    setAcceptedConsents((prev) => ({ ...prev, [currentStep]: !prev[currentStep] }));
+  };
 
   const handleNext = () => {
     ReactNativeHapticFeedback.trigger('impactLight');
+
+    const consent = steps[currentStep].consent;
+    if (consent && isConsentPending(currentStep)) {
+      Alert.alert('Consent Required', consent.requiredMessage);
+      return;
+    }
 
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -124,12 +160,21 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   const handleSkip = () => {
     ReactNativeHapticFeedback.trigger('impactLight');
+
+    // Skipping the tour must never bypass a required consent step
+    const pendingConsentIndex = steps.findIndex((_, index) => isConsentPending(index));
+    if (pendingConsentIndex !== -1) {
+      setCurrentStep(pendingConsentIndex);
+      return;
+    }
     onComplete();
   };
 
   const progress = ((currentStep + 1) / steps.length) * 100;
   const step = steps[currentStep];
   const isLastStep = currentStep === steps.length - 1;
+  const isFirstStep = currentStep === 0;
+  const consentAccepted = !!acceptedConsents[currentStep];
 
   return (
     <Modal
@@ -141,7 +186,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     >
       <LinearGradient colors={['#1a1a1a', '#0d0d0d']} style={styles.container}>
         {/* Skip Button */}
-        {!isLastStep && (
+        {!isLastStep && !step.consent && (
           <TouchableOpacity
             style={styles.skipButton}
             onPress={handleSkip}
@@ -187,6 +232,24 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               ))}
             </View>
           )}
+
+          {/* Consent checkbox */}
+          {step.consent && (
+            <TouchableOpacity
+              style={styles.consentRow}
+              onPress={toggleConsent}
+              testID="onboarding-privacy-checkbox"
+              accessible={true}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: consentAccepted }}
+              accessibilityLabel={step.consent.label}
+            >
+              <View style={[styles.checkbox, consentAccepted && styles.checkboxChecked]}>
+                {consentAccepted && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.consentText}>{step.consent.label}</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
 
         {/* Navigation */}
@@ -200,12 +263,16 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
           {/* Next/Get Started Button */}
           <TouchableOpacity
-            style={[styles.nextButton, currentStep === 0 && styles.nextButtonFull]}
+            style={[styles.nextButton, isFirstStep && styles.nextButtonFull]}
             onPress={handleNext}
-            testID="onboarding-get-started"
+            testID={isFirstStep ? 'onboarding-get-started' : 'onboarding-next'}
             accessible={true}
             accessibilityLabel={
-              isLastStep ? 'Get started with PhysioAssist' : 'Next step'
+              isLastStep
+                ? 'Finish onboarding and start using PhysioAssist'
+                : isFirstStep
+                  ? 'Get started'
+                  : 'Next step'
             }
             accessibilityRole="button"
           >
@@ -214,7 +281,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
               style={styles.nextButtonGradient}
             >
               <Text style={styles.nextText}>
-                {isLastStep ? '🚀 Get Started' : 'Next →'}
+                {isLastStep ? '🚀 Let’s Go' : isFirstStep ? 'Get Started →' : 'Next →'}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -311,6 +378,36 @@ const styles = StyleSheet.create({
     color: '#DDD',
     fontSize: 15,
     lineHeight: 24,
+  },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 24,
+    paddingVertical: 12,
+  },
+  checkbox: {
+    width: 26,
+    height: 26,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  checkboxChecked: {
+    backgroundColor: '#4CAF50',
+  },
+  checkmark: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  consentText: {
+    flex: 1,
+    color: '#DDD',
+    fontSize: 15,
+    lineHeight: 22,
   },
   navigation: {
     flexDirection: 'row',

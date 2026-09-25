@@ -19,14 +19,24 @@ jest.mock('react-native-reanimated', () => {
 // Mock react-native-vision-camera
 jest.mock('react-native-vision-camera', () => ({
   Camera: {
-    requestCameraPermission: jest.fn(() => Promise.resolve('authorized')),
+    requestCameraPermission: jest.fn(() => Promise.resolve('granted')),
     getCameraDevice: jest.fn(),
   },
-  useCameraDevices: jest.fn(() => ({
-    back: { id: 'back', position: 'back' },
-    front: { id: 'front', position: 'front' },
-  })),
+  useCameraDevices: jest.fn(() => [
+    { id: 'back', position: 'back' },
+    { id: 'front', position: 'front' },
+  ]),
+  useCameraDevice: jest.fn((position: string) => ({ id: position, position })),
   useFrameProcessor: jest.fn(),
+}));
+
+// Mock react-native-worklets-core (VisionCamera frame processor runtime)
+jest.mock('react-native-worklets-core', () => ({
+  Worklets: {
+    createRunOnJS: (fn: (...args: unknown[]) => unknown) => fn,
+    createRunOnJSFunction: (fn: (...args: unknown[]) => unknown) => fn,
+  },
+  useSharedValue: (value: unknown) => ({ value }),
 }));
 
 // Mock TensorFlow.js - using __mocks__/@tensorflow/tfjs.js
@@ -43,6 +53,7 @@ jest.mock('@mediapipe/camera_utils', () => ({
 
 // Mock React Native TTS
 jest.mock('react-native-tts', () => ({
+  __esModule: true,
   default: {
     speak: jest.fn(() => Promise.resolve()),
     stop: jest.fn(() => Promise.resolve()),

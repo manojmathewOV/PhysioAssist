@@ -12,6 +12,19 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@store/index';
 import { updateSettings, resetSettings } from '@store/slices/settingsSlice';
 import { AccessibilityIds } from '../constants/accessibility';
+import StepSlider from '@components/common/StepSlider';
+import { audioFeedbackService, FeedbackConfig } from '@services/audioFeedbackService';
+import { poseDetectionService } from '@services/poseDetectionService';
+
+type SettingsState = RootState['settings'];
+
+/** Settings toggles that map onto the live audio/haptic feedback service config. */
+const AUDIO_CONFIG_KEYS: Partial<Record<keyof SettingsState, keyof FeedbackConfig>> = {
+  enableSound: 'enableSound',
+  enableHaptics: 'enableHaptics',
+  enableSpeech: 'enableSpeech',
+  voiceInstructionsEnabled: 'enableSpeech',
+};
 
 const SettingsScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -20,8 +33,21 @@ const SettingsScreen: React.FC = () => {
   const [speechRate, setSpeechRate] = useState(settings.speechRate || 1.0);
   const [frameSkip, setFrameSkip] = useState(settings.frameSkip || 3);
 
-  const handleToggleSetting = (key: keyof typeof settings, value: boolean) => {
+  const handleToggleSetting = (key: keyof SettingsState, value: boolean) => {
     dispatch(updateSettings({ [key]: value }));
+
+    // Apply feedback settings to the running service immediately
+    const audioKey = AUDIO_CONFIG_KEYS[key];
+    if (audioKey) {
+      audioFeedbackService.updateConfig({ [audioKey]: value });
+    }
+  };
+
+  const handleFrameSkipComplete = (value: number) => {
+    setFrameSkip(value);
+    // Performance settings take effect immediately, without waiting for Save
+    dispatch(updateSettings({ frameSkip: value }));
+    poseDetectionService.updateConfig({ frameSkipRate: value });
   };
 
   const handleSave = () => {
@@ -48,6 +74,13 @@ const SettingsScreen: React.FC = () => {
             dispatch(resetSettings());
             setSpeechRate(1.0);
             setFrameSkip(3);
+            // Keep running services in sync with the restored defaults
+            audioFeedbackService.updateConfig({
+              enableSound: true,
+              enableHaptics: true,
+              enableSpeech: true,
+            });
+            poseDetectionService.updateConfig({ frameSkipRate: 3 });
           },
         },
       ]
@@ -125,15 +158,17 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.settingLabel}>Speech Rate: {speechRate.toFixed(1)}x</Text>
           <View style={styles.sliderContainer}>
             <Text style={styles.sliderLabel}>0.5x</Text>
-            <View
+            <StepSlider
               testID={AccessibilityIds.settings.speechRateSlider}
-              accessible={true}
               accessibilityLabel="Speech rate"
-              accessibilityRole="adjustable"
               style={styles.slider}
-            >
-              <Text>{speechRate.toFixed(1)}x</Text>
-            </View>
+              value={speechRate}
+              minimumValue={0.5}
+              maximumValue={2.0}
+              step={0.1}
+              formatValue={(v) => `${v.toFixed(1)}x`}
+              onValueChange={setSpeechRate}
+            />
             <Text style={styles.sliderLabel}>2.0x</Text>
           </View>
         </View>
@@ -191,15 +226,16 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.settingLabel}>Frame Skip: {frameSkip}</Text>
           <View style={styles.sliderContainer}>
             <Text style={styles.sliderLabel}>1</Text>
-            <View
+            <StepSlider
               testID={AccessibilityIds.settings.frameSkipSlider}
-              accessible={true}
               accessibilityLabel="Frame skip"
-              accessibilityRole="adjustable"
               style={styles.slider}
-            >
-              <Text>{frameSkip}</Text>
-            </View>
+              value={frameSkip}
+              minimumValue={1}
+              maximumValue={10}
+              step={1}
+              onSlidingComplete={handleFrameSkipComplete}
+            />
             <Text style={styles.sliderLabel}>10</Text>
           </View>
         </View>

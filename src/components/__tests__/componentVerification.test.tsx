@@ -18,14 +18,17 @@ import ProfileScreen from '../../screens/ProfileScreen';
 import OnboardingScreen from '../../screens/OnboardingScreen';
 import LoginScreen from '../../screens/LoginScreen';
 // import ExerciseSelector from '../exercises/ExerciseSelector';
-import ProgressChart from '../progress/ProgressChart';
+import ProgressChart, { ProgressDataPoint } from '../progress/ProgressChart';
 // import ExerciseSummary from '../exercises/ExerciseSummary';
 import App from '../../App';
 import ErrorBoundary from '../common/ErrorBoundary';
 import NetworkStatusBar from '../common/NetworkStatusBar';
 
 // Services and utilities
-import { createTestStore } from '../../utils/testHelpers';
+import {
+  createTestStore as createBaseTestStore,
+  TestRootState,
+} from '../../utils/testHelpers';
 import * as testData from '../../__tests__/fixtures/testData';
 
 // Mock all native modules
@@ -37,33 +40,64 @@ jest.mock('react-native-vision-camera', () => {
   );
 
   const Camera = Object.assign(MockCamera, {
-    requestCameraPermission: jest.fn().mockResolvedValue('authorized'),
+    requestCameraPermission: jest.fn().mockResolvedValue('granted'),
     getCameraDevice: jest.fn().mockReturnValue({ id: 'back', position: 'back' }),
     openSettings: jest.fn(),
   });
 
   return {
     Camera,
-    useCameraDevices: () => ({ front: { id: 'front' }, back: { id: 'back' } }),
+    useCameraDevices: () => [
+      { id: 'front', position: 'front' },
+      { id: 'back', position: 'back' },
+    ],
+    useCameraDevice: (position: string) => ({ id: position, position }),
     useFrameProcessor: (callback: any) => callback,
   };
 });
-jest.mock('react-native-tts');
+// react-native-tts is imported as a default export, so the mock must be an ES module
+jest.mock('react-native-tts', () => ({
+  __esModule: true,
+  default: {
+    speak: jest.fn(() => Promise.resolve()),
+    stop: jest.fn(() => Promise.resolve()),
+    setDefaultRate: jest.fn(() => Promise.resolve()),
+    setDefaultPitch: jest.fn(() => Promise.resolve()),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    removeAllListeners: jest.fn(),
+  },
+}));
 jest.mock('react-native-sound');
 jest.mock('react-native-haptic-feedback');
 jest.mock('@react-native-async-storage/async-storage');
 
-// Mock services
+// Mock services (shape mirrors the real PoseDetectionService API)
 jest.mock('../../services/poseDetectionService', () => ({
   poseDetectionService: {
-    initialize: jest.fn().mockResolvedValue(true),
-    startDetection: jest.fn().mockResolvedValue(true),
-    stopDetection: jest.fn().mockResolvedValue(undefined),
+    initialize: jest.fn().mockResolvedValue(undefined),
     processFrame: jest.fn().mockReturnValue({ landmarks: [], confidence: 0.9 }),
+    setPoseDataCallback: jest.fn(),
+    isReady: jest.fn().mockReturnValue(true),
     cleanup: jest.fn(),
     updateConfig: jest.fn(),
   },
 }));
+
+type PartialTestState = { [K in keyof TestRootState]?: Partial<TestRootState[K]> };
+
+// Tests only specify the slice fields they care about; merge them over each
+// slice's initial state so components see a complete, realistic store.
+const createTestStore = (partialState: PartialTestState = {}) => {
+  const defaults = createBaseTestStore().getState();
+  const merged = Object.fromEntries(
+    Object.entries(defaults).map(([key, value]) => [
+      key,
+      { ...value, ...(partialState[key as keyof TestRootState] ?? {}) },
+    ])
+  ) as TestRootState;
+  return createBaseTestStore(merged);
+};
 
 describe('Component Verification Tests - Complete System Check', () => {
   beforeEach(() => {
@@ -118,9 +152,13 @@ describe('Component Verification Tests - Complete System Check', () => {
         expect.stringContaining('accept')
       );
 
-      // Accept privacy and continue
+      // Accept privacy and continue; setup tips follow consent, so page through to the end
       fireEvent.press(getByTestId('onboarding-privacy-checkbox'));
       fireEvent.press(getByTestId('onboarding-next'));
+      expect(onComplete).not.toHaveBeenCalled();
+      for (let i = 0; i < 10 && !onComplete.mock.calls.length; i++) {
+        fireEvent.press(getByTestId('onboarding-next'));
+      }
 
       await waitFor(() => {
         expect(onComplete).toHaveBeenCalled();
@@ -226,7 +264,6 @@ describe('Component Verification Tests - Complete System Check', () => {
         pose: {
           isDetecting: true,
           confidence: 0.5,
-          landmarks: [],
         },
       });
 
@@ -407,7 +444,12 @@ describe('Component Verification Tests - Complete System Check', () => {
 
   describe('6. Progress Tracking Components', () => {
     it('should display progress charts correctly', () => {
-      const progressData = testData.generateTimeSeriesData(7);
+      const progressData: ProgressDataPoint[] = testData
+        .generateTimeSeriesData(7)
+        .map((session) => ({
+          date: session.date,
+          value: Math.round(session.formScore * 100),
+        }));
 
       const { getByTestId } = render(<ProgressChart data={progressData} />);
 
@@ -438,8 +480,9 @@ describe('Component Verification Tests - Complete System Check', () => {
         </Provider>
       );
 
-      // Start detection
-      fireEvent.press(getByTestId('pose-start-detection'));
+      // Start detection once camera permission has been granted
+      const startButton = await waitFor(() => getByTestId('pose-start-detection'));
+      fireEvent.press(startButton);
 
       await waitFor(() => {
         expect(AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith(
