@@ -12,10 +12,33 @@ import {
   getOutOfPlaneJoints,
 } from './pose/measurementLandmarks';
 
+/**
+ * A phase counts as reached only after its joint requirements hold continuously
+ * for this long (or the phase's holdDuration, if longer). Debounces angle jitter
+ * around range edges, which otherwise flips phases and double-counts reps.
+ */
+export const MIN_PHASE_DWELL_MS = 200;
+/** Two reps can't complete closer together than this. */
+export const MIN_REP_INTERVAL_MS = 500;
+
+/**
+ * Rep counting is a phase state machine (the approach used by open-source
+ * trainers such as LearnOpenCV's squat analyser and Good-GYM): the patient must
+ * reach every phase in order, each for its dwell time, and a rep completes on
+ * returning to the first phase. Poses where a required joint can't be seen don't
+ * advance or reset the machine, so briefly leaving the frame loses nothing.
+ */
 export class ExerciseValidationService {
   private currentExercise: Exercise | null = null;
   private currentPhase: ExercisePhase | null = null;
   private phaseStartTime: number = 0;
+  /** When the current phase's requirements started holding (null = not holding). */
+  private phaseValidSince: number | null = null;
+  /** True once every later phase has been reached and we're heading back to the start. */
+  private returningToStart: boolean = false;
+  /** When the current repetition left the start position. */
+  private repStartTime: number = 0;
+  private lastRepTime: number = -Infinity;
   private repetitionCount: number = 0;
   private repetitionData: RepetitionData[] = [];
   private isInRestPosition: boolean = true;
@@ -29,6 +52,10 @@ export class ExerciseValidationService {
     this.currentExercise = exercise;
     this.currentPhase = exercise.phases[0];
     this.phaseStartTime = Date.now();
+    this.phaseValidSince = null;
+    this.returningToStart = false;
+    this.repStartTime = 0;
+    this.lastRepTime = -Infinity;
     this.repetitionCount = 0;
     this.repetitionData = [];
     this.isInRestPosition = true;
@@ -50,13 +77,16 @@ export class ExerciseValidationService {
       };
     }
 
+    // Frame time (real frames carry their capture time; fall back to now)
+    const now = poseData.timestamp || Date.now();
+
     // Calculate all joint angles
     const jointAngles = goniometerService.calculateAllJointAngles(
       getMeasurementLandmarks(poseData)
     );
 
     // Validate against current phase requirements
-    const validation = this.validatePhaseRequirements(jointAngles);
+    const validation = this.validatePhaseRequirements(jointAngles, now);
 
     // Flag required joints whose limb is out of the image plane (from world landmarks)
     const outOfPlane = getOutOfPlaneJoints(poseData);
@@ -68,15 +98,7 @@ export class ExerciseValidationService {
       validation.feedback.push('Turn side-on to the camera for an accurate reading');
     }
 
-    // Check for phase transition
-    if (validation.isValid && this.shouldTransitionPhase()) {
-      this.transitionToNextPhase();
-    }
-
-    // Track repetition completion
-    if (this.detectRepetitionComplete(validation)) {
-      this.completeRepetition(validation);
-    }
+    this.advanceStateMachine(validation, jointAngles, now);
 
     this.lastValidationResult = validation;
     return validation;
@@ -86,7 +108,8 @@ export class ExerciseValidationService {
    * Validate joint angles against phase requirements
    */
   private validatePhaseRequirements(
-    jointAngles: Map<string, JointAngle>
+    jointAngles: Map<string, JointAngle>,
+    now: number = Date.now()
   ): ValidationResult {
     if (!this.currentPhase) {
       return {
@@ -132,9 +155,9 @@ export class ExerciseValidationService {
       }
     }
 
-    // Check hold duration if required
+    // Check hold duration if required (measured from when the position was reached)
     if (this.currentPhase.holdDuration && isValid) {
-      const heldDuration = Date.now() - this.phaseStartTime;
+      const heldDuration = now - (this.phaseValidSince ?? now);
       const remainingTime = this.currentPhase.holdDuration - heldDuration;
 
       if (remainingTime > 0) {
@@ -148,85 +171,86 @@ export class ExerciseValidationService {
       phase: this.currentPhase.name,
       feedback,
       jointAngles: Object.fromEntries(jointAngles),
-      phaseProgress: this.calculatePhaseProgress(),
+      phaseProgress: this.calculatePhaseProgress(now, isValid),
     };
   }
 
-  /**
-   * Check if we should transition to the next phase
-   */
-  private shouldTransitionPhase(): boolean {
-    if (!this.currentPhase) return false;
-
-    const timeInPhase = Date.now() - this.phaseStartTime;
-
-    // Check minimum hold duration
-    if (this.currentPhase.holdDuration) {
-      return timeInPhase >= this.currentPhase.holdDuration;
-    }
-
-    // For dynamic movements, transition immediately when valid
-    return true;
+  /** True when every joint the current phase needs was detected this frame. */
+  private requiredJointsVisible(jointAngles: Map<string, JointAngle>): boolean {
+    return (this.currentPhase?.jointRequirements ?? []).every(
+      (r) => jointAngles.get(r.joint)?.isValid
+    );
   }
 
   /**
-   * Transition to the next phase of the exercise
+   * Advance the phase state machine for one frame and count completed reps.
    */
-  private transitionToNextPhase(): void {
-    if (!this.currentExercise || !this.currentPhase) return;
+  private advanceStateMachine(
+    validation: ValidationResult,
+    jointAngles: Map<string, JointAngle>,
+    now: number
+  ): void {
+    const exercise = this.currentExercise;
+    const phase = this.currentPhase;
+    if (!exercise || !phase) return;
 
-    const currentIndex = this.currentExercise.phases.findIndex(
-      (p) => p.name === this.currentPhase!.name
-    );
-
-    const nextIndex = (currentIndex + 1) % this.currentExercise.phases.length;
-    this.currentPhase = this.currentExercise.phases[nextIndex];
-    this.phaseStartTime = Date.now();
-
-    // console.log(`Transitioned to phase: ${this.currentPhase.name}`);
-  }
-
-  /**
-   * Detect if a repetition has been completed
-   */
-  private detectRepetitionComplete(validation: ValidationResult): boolean {
-    if (!this.currentExercise || !this.currentPhase) return false;
-    const currentPhaseName = this.currentPhase.name;
-
-    // For bicep curl: rest -> flexion -> extension (completes one rep)
-    // We complete a rep when we've gone through all phases and returned to rest/extension
-    const currentPhaseIndex = this.currentExercise.phases.findIndex(
-      (p) => p.name === currentPhaseName
-    );
-
-    // If we're at the last phase (extension for bicep curl) and it's valid, complete a rep
-    if (
-      currentPhaseIndex === this.currentExercise.phases.length - 1 &&
-      validation.isValid
-    ) {
-      return true;
+    // Out of view: freeze (keep progress, don't count this frame towards dwell)
+    if (!this.requiredJointsVisible(jointAngles)) {
+      this.phaseValidSince = null;
+      return;
     }
 
-    return false;
+    if (!validation.isValid) {
+      this.phaseValidSince = null;
+      return;
+    }
+    this.phaseValidSince ??= now;
+    const dwell = Math.max(MIN_PHASE_DWELL_MS, phase.holdDuration ?? 0);
+    if (now - this.phaseValidSince < dwell) {
+      return;
+    }
+
+    const index = exercise.phases.findIndex((p) => p.name === phase.name);
+    const isStart = index === 0;
+
+    // Back at the start after reaching every phase: that's one repetition
+    if (isStart && this.returningToStart) {
+      this.returningToStart = false;
+      if (now - this.lastRepTime >= MIN_REP_INTERVAL_MS) {
+        this.completeRepetition(validation, now);
+      }
+    }
+
+    if (exercise.phases.length < 2) {
+      return;
+    }
+    if (isStart) {
+      this.repStartTime = now;
+    }
+    if (index === exercise.phases.length - 1) {
+      this.returningToStart = true;
+    }
+    this.currentPhase = exercise.phases[(index + 1) % exercise.phases.length];
+    this.phaseStartTime = now;
+    this.phaseValidSince = null;
   }
 
   /**
    * Record a completed repetition
    */
-  private completeRepetition(validation: ValidationResult): void {
+  private completeRepetition(validation: ValidationResult, now: number): void {
     this.repetitionCount++;
+    this.lastRepTime = now;
 
     const repData: RepetitionData = {
       number: this.repetitionCount,
-      timestamp: Date.now(),
+      timestamp: now,
       quality: this.calculateRepetitionQuality(validation),
       peakAngles: validation.jointAngles || {},
-      duration: Date.now() - this.phaseStartTime,
+      duration: now - this.repStartTime,
     };
 
     this.repetitionData.push(repData);
-
-    // console.log(`Completed repetition ${this.repetitionCount}`);
   }
 
   /**
@@ -265,15 +289,15 @@ export class ExerciseValidationService {
   /**
    * Calculate progress through current phase (0-1)
    */
-  private calculatePhaseProgress(): number {
-    if (!this.currentPhase) return 0;
+  private calculatePhaseProgress(now: number, isValid: boolean): number {
+    if (!this.currentPhase || !isValid) return 0;
 
     if (this.currentPhase.holdDuration) {
-      const elapsed = Date.now() - this.phaseStartTime;
+      const elapsed = now - (this.phaseValidSince ?? now);
       return Math.min(1, elapsed / this.currentPhase.holdDuration);
     }
 
-    return this.lastValidationResult?.isValid ? 1 : 0;
+    return 1;
   }
 
   /**
@@ -333,6 +357,10 @@ export class ExerciseValidationService {
     this.currentExercise = null;
     this.currentPhase = null;
     this.phaseStartTime = 0;
+    this.phaseValidSince = null;
+    this.returningToStart = false;
+    this.repStartTime = 0;
+    this.lastRepTime = -Infinity;
     this.repetitionCount = 0;
     this.repetitionData = [];
     this.isInRestPosition = true;

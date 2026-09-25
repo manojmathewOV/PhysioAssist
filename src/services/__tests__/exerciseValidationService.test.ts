@@ -28,6 +28,114 @@ const mockPoseLandmarks: PoseLandmark[] = rawMockPoseLandmarks.map((landmark, in
   index,
 }));
 
+/** Landmarks with both elbows straight (~170°) and bent (~45°). */
+function buildCurlPoses() {
+  // Create proper rest position (elbows at ~170 degrees)
+  const restLandmarks = [...mockPoseLandmarks];
+  restLandmarks[11] = {
+    index: 11,
+    x: 0.45,
+    y: 0.3,
+    z: 0,
+    visibility: 0.9,
+    name: 'left_shoulder',
+  }; // left shoulder
+  restLandmarks[12] = {
+    index: 12,
+    x: 0.55,
+    y: 0.3,
+    z: 0,
+    visibility: 0.9,
+    name: 'right_shoulder',
+  }; // right shoulder
+  restLandmarks[13] = {
+    index: 13,
+    x: 0.43,
+    y: 0.4,
+    z: 0,
+    visibility: 0.9,
+    name: 'left_elbow',
+  }; // left elbow
+  restLandmarks[14] = {
+    index: 14,
+    x: 0.57,
+    y: 0.4,
+    z: 0,
+    visibility: 0.9,
+    name: 'right_elbow',
+  }; // right elbow
+  restLandmarks[15] = {
+    index: 15,
+    x: 0.42,
+    y: 0.48,
+    z: 0,
+    visibility: 0.9,
+    name: 'left_wrist',
+  }; // left wrist (down)
+  restLandmarks[16] = {
+    index: 16,
+    x: 0.58,
+    y: 0.48,
+    z: 0,
+    visibility: 0.9,
+    name: 'right_wrist',
+  }; // right wrist (down)
+
+  // Create flexed position (elbows at ~45 degrees)
+  const flexedLandmarks = [...mockPoseLandmarks];
+  flexedLandmarks[11] = {
+    index: 11,
+    x: 0.45,
+    y: 0.3,
+    z: 0,
+    visibility: 0.9,
+    name: 'left_shoulder',
+  }; // left shoulder (same)
+  flexedLandmarks[12] = {
+    index: 12,
+    x: 0.55,
+    y: 0.3,
+    z: 0,
+    visibility: 0.9,
+    name: 'right_shoulder',
+  }; // right shoulder (same)
+  flexedLandmarks[13] = {
+    index: 13,
+    x: 0.43,
+    y: 0.4,
+    z: 0,
+    visibility: 0.9,
+    name: 'left_elbow',
+  }; // left elbow (same)
+  flexedLandmarks[14] = {
+    index: 14,
+    x: 0.57,
+    y: 0.4,
+    z: 0,
+    visibility: 0.9,
+    name: 'right_elbow',
+  }; // right elbow (same)
+  flexedLandmarks[15] = {
+    index: 15,
+    x: 0.35,
+    y: 0.32,
+    z: 0,
+    visibility: 0.9,
+    name: 'left_wrist',
+  }; // left wrist (up and in)
+  flexedLandmarks[16] = {
+    index: 16,
+    x: 0.65,
+    y: 0.32,
+    z: 0,
+    visibility: 0.9,
+    name: 'right_wrist',
+  }; // right wrist (up and in)
+  return { restLandmarks, flexedLandmarks };
+}
+const restPose = () => buildCurlPoses().restLandmarks;
+const flexedPose = () => buildCurlPoses().flexedLandmarks;
+
 describe('ExerciseValidationService', () => {
   const createMockPoseData = (
     overrides?: Partial<ProcessedPoseData>
@@ -93,140 +201,92 @@ describe('ExerciseValidationService', () => {
     it('should count repetitions correctly', () => {
       exerciseValidationService.startExercise(mockExercise);
 
-      // Create proper rest position (elbows at ~170 degrees)
-      const restLandmarks = [...mockPoseLandmarks];
-      restLandmarks[11] = {
-        index: 11,
-        x: 0.45,
-        y: 0.3,
-        z: 0,
-        visibility: 0.9,
-        name: 'left_shoulder',
-      }; // left shoulder
-      restLandmarks[12] = {
-        index: 12,
-        x: 0.55,
-        y: 0.3,
-        z: 0,
-        visibility: 0.9,
-        name: 'right_shoulder',
-      }; // right shoulder
-      restLandmarks[13] = {
-        index: 13,
-        x: 0.43,
-        y: 0.4,
-        z: 0,
-        visibility: 0.9,
-        name: 'left_elbow',
-      }; // left elbow
-      restLandmarks[14] = {
-        index: 14,
-        x: 0.57,
-        y: 0.4,
-        z: 0,
-        visibility: 0.9,
-        name: 'right_elbow',
-      }; // right elbow
-      restLandmarks[15] = {
-        index: 15,
-        x: 0.42,
-        y: 0.48,
-        z: 0,
-        visibility: 0.9,
-        name: 'left_wrist',
-      }; // left wrist (down)
-      restLandmarks[16] = {
-        index: 16,
-        x: 0.58,
-        y: 0.48,
-        z: 0,
-        visibility: 0.9,
-        name: 'right_wrist',
-      }; // right wrist (down)
+      const restLandmarks = restPose();
+      const flexedLandmarks = flexedPose();
 
-      // Create flexed position (elbows at ~45 degrees)
-      const flexedLandmarks = [...mockPoseLandmarks];
-      flexedLandmarks[11] = {
-        index: 11,
-        x: 0.45,
-        y: 0.3,
-        z: 0,
-        visibility: 0.9,
-        name: 'left_shoulder',
-      }; // left shoulder (same)
-      flexedLandmarks[12] = {
-        index: 12,
-        x: 0.55,
-        y: 0.3,
-        z: 0,
-        visibility: 0.9,
-        name: 'right_shoulder',
-      }; // right shoulder (same)
-      flexedLandmarks[13] = {
-        index: 13,
-        x: 0.43,
-        y: 0.4,
-        z: 0,
-        visibility: 0.9,
-        name: 'left_elbow',
-      }; // left elbow (same)
-      flexedLandmarks[14] = {
-        index: 14,
-        x: 0.57,
-        y: 0.4,
-        z: 0,
-        visibility: 0.9,
-        name: 'right_elbow',
-      }; // right elbow (same)
-      flexedLandmarks[15] = {
-        index: 15,
-        x: 0.35,
-        y: 0.32,
-        z: 0,
-        visibility: 0.9,
-        name: 'left_wrist',
-      }; // left wrist (up and in)
-      flexedLandmarks[16] = {
-        index: 16,
-        x: 0.65,
-        y: 0.32,
-        z: 0,
-        visibility: 0.9,
-        name: 'right_wrist',
-      }; // right wrist (up and in)
+      // Simulated 30 FPS camera: each frame carries its capture time
+      let clock = 1_000_000;
+      const hold = (landmarks: PoseLandmark[], ms: number) => {
+        for (let t = 0; t <= ms; t += 33) {
+          clock += 33;
+          exerciseValidationService.validatePose(
+            createMockPoseData({ landmarks, timestamp: clock })
+          );
+        }
+      };
 
-      // Complete full repetition cycles through all three phases: rest -> flexion -> extension
+      // Standing in the start position doesn't count as a rep
+      hold(restLandmarks, 400);
+      expect(exerciseValidationService.getCurrentState().repetitionCount).toBe(0);
+
+      // Two full cycles: rest -> flexion (held 500ms) -> extension -> back to rest
       for (let rep = 0; rep < 2; rep++) {
-        // Phase 1: Rest position (elbow angle ~170°) - hold until phase transition
-        for (let i = 0; i < 10; i++) {
-          exerciseValidationService.validatePose(
-            createMockPoseData({ landmarks: restLandmarks })
-          );
-        }
-
-        // Phase 2: Flexion position (elbow angle ~45°) - hold for 500ms + extra to ensure transition
-        const flexionStart = Date.now();
-        while (Date.now() - flexionStart < 600) {
-          exerciseValidationService.validatePose(
-            createMockPoseData({ landmarks: flexedLandmarks })
-          );
-          // Small delay to simulate real-time validation
-          const now = Date.now();
-          while (Date.now() - now < 10) {
-            // Small delay
-          }
-        }
-
-        // Phase 3: Extension/back to rest (elbow angle ~170°) - completes the rep
-        for (let i = 0; i < 10; i++) {
-          exerciseValidationService.validatePose(
-            createMockPoseData({ landmarks: restLandmarks })
-          );
-        }
+        hold(flexedLandmarks, 700);
+        hold(restLandmarks, 700);
       }
 
       const state = exerciseValidationService.getCurrentState();
-      expect(state.repetitionCount).toBeGreaterThan(0);
+      expect(state.repetitionCount).toBe(2);
+      const metrics = exerciseValidationService.getExerciseMetrics();
+      expect(metrics.repetitionData[0].duration).toBeGreaterThan(500);
+    });
+
+    it('needs the flexion to be held, not just touched', () => {
+      exerciseValidationService.startExercise(mockExercise);
+      let clock = 2_000_000;
+      const frame = (landmarks: PoseLandmark[]) => {
+        clock += 33;
+        exerciseValidationService.validatePose(
+          createMockPoseData({ landmarks, timestamp: clock })
+        );
+      };
+      const rest = restPose();
+      const flexed = flexedPose();
+      for (let i = 0; i < 12; i++) frame(rest);
+      // Brief flexion (~130ms) then back: phase requirements never held long enough
+      for (let i = 0; i < 4; i++) frame(flexed);
+      for (let i = 0; i < 30; i++) frame(rest);
+      expect(exerciseValidationService.getCurrentState().repetitionCount).toBe(0);
+    });
+
+    it('does not double count when the angle jitters around a range edge', () => {
+      exerciseValidationService.startExercise(mockExercise);
+      let clock = 3_000_000;
+      const frame = (landmarks: PoseLandmark[]) => {
+        clock += 33;
+        exerciseValidationService.validatePose(
+          createMockPoseData({ landmarks, timestamp: clock })
+        );
+      };
+      const rest = restPose();
+      const flexed = flexedPose();
+      for (let i = 0; i < 12; i++) frame(rest);
+      for (let i = 0; i < 25; i++) frame(flexed);
+      // Alternate frames in/out of range for a second: at most one completion
+      for (let i = 0; i < 30; i++) frame(i % 2 ? rest : flexed);
+      for (let i = 0; i < 20; i++) frame(rest);
+      expect(
+        exerciseValidationService.getCurrentState().repetitionCount
+      ).toBeLessThanOrEqual(1);
+    });
+
+    it('keeps progress when the patient briefly leaves the frame', () => {
+      exerciseValidationService.startExercise(mockExercise);
+      let clock = 4_000_000;
+      const frame = (landmarks: PoseLandmark[]) => {
+        clock += 33;
+        exerciseValidationService.validatePose(
+          createMockPoseData({ landmarks, timestamp: clock })
+        );
+      };
+      const rest = restPose();
+      const flexed = flexedPose();
+      const hidden = rest.map((lm) => ({ ...lm, visibility: 0.1 }));
+      for (let i = 0; i < 12; i++) frame(rest);
+      for (let i = 0; i < 25; i++) frame(flexed);
+      for (let i = 0; i < 20; i++) frame(hidden); // out of view
+      for (let i = 0; i < 25; i++) frame(rest);
+      expect(exerciseValidationService.getCurrentState().repetitionCount).toBe(1);
     });
 
     it('should provide feedback for poor form', () => {

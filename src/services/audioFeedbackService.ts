@@ -2,6 +2,15 @@ import Tts from 'react-native-tts';
 import Sound from 'react-native-sound';
 import HapticFeedback from 'react-native-haptic-feedback';
 
+/**
+ * Pacing for spoken form corrections. Coaching products (e.g. Kaia) give one
+ * correction at a time, and motor-learning research (the guidance hypothesis)
+ * warns against constant feedback, so corrections are rate-limited and never
+ * queued up to be read out after they stopped being true.
+ */
+export const CORRECTION_MIN_GAP_MS = 4000;
+export const CORRECTION_REPEAT_GAP_MS = 10000;
+
 export interface FeedbackConfig {
   enableSpeech: boolean;
   enableSound: boolean;
@@ -18,6 +27,8 @@ export class AudioFeedbackService {
   private lastSpokenTime: number = 0;
   private speakingQueue: string[] = [];
   private isSpeaking: boolean = false;
+  private lastCorrectionTime = -Infinity;
+  private lastCorrectionByText = new Map<string, number>();
 
   // Fixed: Store listener references for proper cleanup
   private ttsStartListener: (() => void) | null = null;
@@ -117,6 +128,40 @@ export class AudioFeedbackService {
     if (!this.isSpeaking) {
       this.processQueue();
     }
+  }
+
+  /**
+   * Speak a form correction, paced for older users: dropped (not queued) while
+   * something else is being said, at most one every CORRECTION_MIN_GAP_MS, and
+   * the same correction at most every CORRECTION_REPEAT_GAP_MS.
+   * Returns whether it was spoken.
+   */
+  speakCorrection(message: string, now: number = Date.now()): boolean {
+    if (!this.config.enableSpeech || !message) return false;
+    if (this.isSpeaking || this.speakingQueue.length > 0) return false;
+    if (now - this.lastCorrectionTime < CORRECTION_MIN_GAP_MS) return false;
+    if (
+      now - (this.lastCorrectionByText.get(message) ?? -Infinity) <
+      CORRECTION_REPEAT_GAP_MS
+    ) {
+      return false;
+    }
+    this.lastCorrectionTime = now;
+    this.lastCorrectionByText.set(message, now);
+    this.speakingQueue.push(message);
+    this.processQueue();
+    return true;
+  }
+
+  /**
+   * Announce a completed repetition ("3"), interrupting any correction, since the
+   * count is the most useful thing to hear.
+   */
+  async announceRep(count: number, target?: number): Promise<void> {
+    const text =
+      target && count >= target ? `${count}. Well done, that's all of them` : `${count}`;
+    this.speakingQueue = this.speakingQueue.filter((m) => !/^\d+$/.test(m));
+    await this.speak(text, 'high');
   }
 
   private async processQueue(): Promise<void> {
