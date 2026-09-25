@@ -12,6 +12,9 @@ import { colors, radii, spacing } from '../../theme';
 import { formatDuration } from './exerciseCatalog';
 import PainScale from './PainScale';
 import RangeResult, { RangeResultProps } from './RangeResult';
+import { DemonstrationSaved, MovementFeedback } from './MovementFeedback';
+import type { Finding } from '../../services/movement/types';
+import type { MovementProfile } from '../../services/movement/analysis';
 
 /** Pain at or above this (0-10) asks the patient to tell their physio. */
 export const HIGH_PAIN = 7;
@@ -42,6 +45,13 @@ export interface ExerciseSummaryProps {
   painScore?: number | null;
   /** Best range for the joint of interest vs the goal they were given. */
   range?: RangeResultProps | null;
+  /** Things to work on, from the session analysis (null = not analysed). */
+  findings?: Finding[] | null;
+  comparedWithDemo?: boolean;
+  /** Set when this session was the physio's demonstration. */
+  demoSaved?: MovementProfile | null;
+  /** A message to show at the top (e.g. the demonstration couldn't be saved). */
+  notice?: string;
 }
 
 const formWords = (percent: number, reps: number) => {
@@ -86,6 +96,10 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   onPainSelect,
   painScore = null,
   range,
+  findings,
+  comparedWithDemo,
+  demoSaved,
+  notice,
 }) => {
   const [pain, setPain] = useState<number | null>(painScore);
   const choosePain = (value: number) => {
@@ -189,7 +203,12 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
         ) : null}
       </Card>
 
+      {notice ? <Banner tone="warning" message={notice} testID="summary-notice" /> : null}
+      {demoSaved ? <DemonstrationSaved profile={demoSaved} /> : null}
       {range ? <RangeResult {...range} /> : null}
+      {findings ? (
+        <MovementFeedback findings={findings} comparedWithDemo={comparedWithDemo} />
+      ) : null}
 
       {onPainSelect ? (
         <Card style={styles.card} testID="pain-check">

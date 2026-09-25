@@ -15,6 +15,7 @@ import {
   ExercisePlan,
   JOINT_KINDS,
   JointKind,
+  hasExtendedSupport,
 } from '../../services/pose/exercisePlan';
 
 const JOINT_ICONS: Record<JointKind, string> = {
@@ -112,7 +113,9 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ value, onSave, onCancel }) => {
               testID={`plan-joint-${j.kind}`}
               accessibilityRole="radio"
               accessibilityState={{ checked: selected }}
-              accessibilityLabel={`${j.label}. ${j.movement}`}
+              accessibilityLabel={`${j.label}. ${j.movement}${
+                hasExtendedSupport(j.kind) ? '. Full movement guidance' : ''
+              }`}
               style={({ pressed }) => [
                 styles.tile,
                 selected && styles.tileSelected,
@@ -282,6 +285,14 @@ const styles = StyleSheet.create({
   tileSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   tilePressed: { backgroundColor: colors.primarySoft },
   tick: { position: 'absolute', top: spacing.sm, right: spacing.sm },
+  badge: {
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radii.pill,
+    backgroundColor: colors.successSoft,
+  },
+  badgeSelected: { backgroundColor: colors.onPrimary },
   card: { paddingVertical: 0, gap: 0 },
   stepper: {
     flexDirection: 'row',

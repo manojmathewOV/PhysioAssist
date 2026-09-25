@@ -40,6 +40,11 @@ import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
 import WebPoseOverlay from '../../components/web/WebPoseOverlay';
 import { focusFromExercise } from '../../components/pose/overlayGeometry';
 import ExerciseChooser from '../../components/exercises/ExerciseChooser';
+import {
+  sessionOutcome,
+  useMovementAnalysis,
+} from '../../components/exercises/useMovementAnalysis';
+import { referenceFromVideoFile } from '../../services/web/videoReference';
 import ExerciseControls from '../../components/exercises/ExerciseControls';
 import ExerciseSummary, {
   ExerciseSummaryProps,
@@ -136,12 +141,20 @@ const WebPoseDetectionScreen: React.FC = () => {
 
   // Get into position -> 3-2-1 countdown -> count. Validation (and the timer)
   // starts at "Go".
+  // Records the joint of interest for the end-of-session comparison
+  const movement = useMovementAnalysis(plan, plannedExercise);
+  const movementRef = useRef(movement);
+  movementRef.current = movement;
+  const [recordingDemo, setRecordingDemo] = useState(false);
+  const [demoStatus, setDemoStatus] = useState<string | undefined>();
+
   const gate = useSessionGate({
     landmarks: currentLandmarks,
     onGo: () => {
       lastRepsRef.current = 0;
       dispatch(startExercise(plannedExercise));
       exerciseValidationService.startExercise(plannedExercise);
+      movementRef.current.start();
     },
   });
   const { start: startGate, reset: resetGate } = gate;
@@ -195,6 +208,7 @@ const WebPoseDetectionScreen: React.FC = () => {
       // Validate the exercise and show/speak the next instruction
       if (exerciseValidationService.getCurrentState().isActive && !pausedRef.current) {
         const validation = exerciseValidationService.validatePose(poseData);
+        movementRef.current.add(poseData);
         const metrics = exerciseValidationService.getExerciseMetrics();
         const raw = validation.feedback[0] ?? validation.errors[0] ?? '';
         dispatch(updateValidation(validation));
@@ -342,6 +356,7 @@ const WebPoseDetectionScreen: React.FC = () => {
   );
 
   const handleStart = () => {
+    setRecordingDemo(false);
     setPractice(false);
     setCameraState('starting');
     setStage('exercise');
@@ -358,11 +373,26 @@ const WebPoseDetectionScreen: React.FC = () => {
     const sessionRange = exerciseValidationService.getSessionRange();
     exerciseValidationService.stopExercise();
     stopEverything();
-    // Practice sessions use a pretend body, so they are not saved to history
-    dispatch(practice ? clearExercise() : stopExercise(sessionRange ?? undefined));
-    audioFeedbackService.speak('Well done');
+    const outcome = sessionOutcome(movement.finish(), {
+      plan,
+      exercise: plannedExercise,
+      recordingDemo,
+      sessionRange,
+    });
+    if (outcome.planUpdate) {
+      dispatch(setExercisePlan(outcome.planUpdate));
+    }
+    // Practice sessions and demonstrations are not the patient's own history
+    dispatch(
+      practice || recordingDemo
+        ? clearExercise()
+        : stopExercise(sessionRange ?? undefined)
+    );
+    audioFeedbackService.speak(
+      outcome.spokenCue ? `Well done. ${outcome.spokenCue}` : 'Well done'
+    );
     setSummary({
-      range: sessionRange,
+      ...outcome.summary,
       exercise: option.title,
       reps: repetitionCount,
       duration: startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0,
@@ -370,9 +400,10 @@ const WebPoseDetectionScreen: React.FC = () => {
       targetReps: currentExercise?.targetRepetitions,
       practice,
       // stopExercise only records sessions with at least one rep
-      saved: !practice && repetitionCount > 0,
+      saved: !practice && !recordingDemo && repetitionCount > 0,
     });
     setIsPaused(false);
+    setRecordingDemo(false);
     setStage('summary');
   };
 
@@ -382,7 +413,51 @@ const WebPoseDetectionScreen: React.FC = () => {
     stopEverything();
     dispatch(clearExercise());
     setPractice(false);
+    setRecordingDemo(false);
     setStage('choose');
+  };
+
+  /** The physio's standard from a video file: analysed here, never uploaded. */
+  const uploadVideo = () => {
+    const kind = plannedExercise.primaryJoint;
+    if (!plan || !kind || typeof document === 'undefined') return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/*';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      setDemoStatus('Watching the video… 0%');
+      try {
+        const profile = await referenceFromVideoFile(
+          file,
+          { joint: kind, side: plan.side, exerciseId: plannedExercise.id },
+          (f) => setDemoStatus(`Watching the video… ${Math.round(f * 100)}%`)
+        );
+        if (profile) {
+          dispatch(
+            setExercisePlan({
+              ...plan,
+              reference: {
+                ...profile,
+                exerciseId: plannedExercise.id,
+                source: 'video',
+                savedAt: new Date().toISOString(),
+                label: file.name,
+              },
+            })
+          );
+          setDemoStatus(undefined);
+        } else {
+          setDemoStatus(
+            'No clear repetitions were found in that video. Try a video showing the whole body, side-on.'
+          );
+        }
+      } catch {
+        setDemoStatus('That video could not be opened. Please try another file.');
+      }
+    };
+    input.click();
   };
 
   const onArea = (e: LayoutChangeEvent) => {
@@ -401,6 +476,12 @@ const WebPoseDetectionScreen: React.FC = () => {
           onSelect={setSelectedKey}
           plan={plan}
           onPlanChange={changePlan}
+          onRecordDemo={() => {
+            handleStart();
+            setRecordingDemo(true);
+          }}
+          onUploadVideo={uploadVideo}
+          demoStatus={demoStatus}
           onStart={handleStart}
         />
       </View>

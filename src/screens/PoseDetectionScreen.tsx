@@ -43,6 +43,10 @@ const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
 import PoseOverlay from '@components/pose/PoseOverlay';
 import ExerciseControls from '@components/exercises/ExerciseControls';
 import ExerciseChooser from '@components/exercises/ExerciseChooser';
+import {
+  sessionOutcome,
+  useMovementAnalysis,
+} from '@components/exercises/useMovementAnalysis';
 import ExerciseSummary, {
   ExerciseSummaryProps,
 } from '@components/exercises/ExerciseSummary';
@@ -101,6 +105,9 @@ const PoseDetectionScreen: React.FC = () => {
     [dispatch]
   );
   const cameraReady = !!device && permission === 'granted';
+  // Records the joint of interest for the end-of-session comparison
+  const movement = useMovementAnalysis(plan, plannedExercise);
+  const [recordingDemo, setRecordingDemo] = useState(false);
 
   // Get into position -> 3-2-1 countdown -> count. Counting (and the timer)
   // starts at "Go".
@@ -110,6 +117,7 @@ const PoseDetectionScreen: React.FC = () => {
       lastRepsRef.current = 0;
       dispatch(startExercise(plannedExercise));
       exerciseValidationService.startExercise(plannedExercise);
+      movement.start();
     },
   });
   const { start: startGate, reset: resetGate } = gate;
@@ -145,6 +153,7 @@ const PoseDetectionScreen: React.FC = () => {
     }
     try {
       const result = exerciseValidationService.validatePose(currentPose);
+      movement.add(currentPose);
       dispatch(updateValidation(result));
       const raw = result.feedback[0] ?? result.errors[0] ?? '';
       if (!result.feedback.length && raw) {
@@ -176,7 +185,16 @@ const PoseDetectionScreen: React.FC = () => {
     } catch (error) {
       console.error('Failed to validate pose:', error);
     }
-  }, [currentPose, counting, isExercising, isPaused, stage, plannedExercise, dispatch]);
+  }, [
+    currentPose,
+    counting,
+    isExercising,
+    isPaused,
+    stage,
+    plannedExercise,
+    dispatch,
+    movement,
+  ]);
 
   const beginSession = useCallback(
     (practiceMode: boolean) => {
@@ -217,6 +235,7 @@ const PoseDetectionScreen: React.FC = () => {
   }, [stage, cameraReady, gatePhase, practice, beginSession]);
 
   const handleStart = () => {
+    setRecordingDemo(false);
     if (cameraReady) {
       beginSession(false);
     } else {
@@ -232,6 +251,7 @@ const PoseDetectionScreen: React.FC = () => {
     mockPoseDataSimulator?.stop();
     dispatch(setDetecting(false));
     setPractice(false);
+    setRecordingDemo(false);
     setStage('choose');
   }, [dispatch, resetGate]);
 
@@ -247,12 +267,27 @@ const PoseDetectionScreen: React.FC = () => {
     exerciseValidationService.stopExercise();
     mockPoseDataSimulator?.stop();
     dispatch(setDetecting(false));
-    // Practice sessions use a pretend body, so they are not saved to history
-    dispatch(practice ? clearExercise() : stopExercise(sessionRange ?? undefined));
-    audioFeedbackService.speak('Well done');
+    const outcome = sessionOutcome(movement.finish(), {
+      plan,
+      exercise: plannedExercise,
+      recordingDemo,
+      sessionRange,
+    });
+    if (outcome.planUpdate) {
+      dispatch(setExercisePlan(outcome.planUpdate));
+    }
+    // Practice sessions and demonstrations are not the patient's own history
+    dispatch(
+      practice || recordingDemo
+        ? clearExercise()
+        : stopExercise(sessionRange ?? undefined)
+    );
+    audioFeedbackService.speak(
+      outcome.spokenCue ? `Well done. ${outcome.spokenCue}` : 'Well done'
+    );
 
     setSummary({
-      range: sessionRange,
+      ...outcome.summary,
       exercise: option.title,
       reps: repetitionCount,
       duration: startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0,
@@ -260,11 +295,24 @@ const PoseDetectionScreen: React.FC = () => {
       targetReps: currentExercise?.targetRepetitions,
       practice,
       // stopExercise only records sessions with at least one rep
-      saved: !practice && repetitionCount > 0,
+      saved: !practice && !recordingDemo && repetitionCount > 0,
     });
     setIsPaused(false);
+    setRecordingDemo(false);
     setStage('summary');
-  }, [backToChooser, counting, dispatch, exerciseState, resetGate, option, practice]);
+  }, [
+    backToChooser,
+    counting,
+    dispatch,
+    exerciseState,
+    resetGate,
+    option,
+    practice,
+    movement,
+    plan,
+    plannedExercise,
+    recordingDemo,
+  ]);
 
   // -------------------------------------------------------------------------
   // 1. Choose
@@ -277,6 +325,10 @@ const PoseDetectionScreen: React.FC = () => {
           onSelect={setSelectedKey}
           plan={plan}
           onPlanChange={changePlan}
+          onRecordDemo={() => {
+            handleStart();
+            setRecordingDemo(true);
+          }}
           onStart={handleStart}
         />
       </View>

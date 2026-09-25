@@ -21,7 +21,20 @@ import type {
   JointRequirement,
 } from '../../types/exercise';
 
+import type { MovementProfile } from '../movement/analysis';
+
 export type { BodySide, JointKind };
+
+/** The standard to compare against: a recorded demonstration's movement profile. */
+export interface PlanReference extends MovementProfile {
+  exerciseId: string;
+  /** Recorded in the app, or taken from a video file. */
+  source: 'demonstration' | 'video';
+  /** ISO date. */
+  savedAt: string;
+  /** e.g. the video's file name. */
+  label?: string;
+}
 
 export interface ExercisePlan {
   joint: JointKind;
@@ -32,6 +45,8 @@ export interface ExercisePlan {
   limitDegrees?: number;
   reps?: number;
   holdSeconds?: number;
+  /** The physio's demonstration to compare each session with. */
+  reference?: PlanReference;
 }
 
 export const JOINT_KINDS: { kind: JointKind; label: string; movement: string }[] = [
@@ -40,6 +55,16 @@ export const JOINT_KINDS: { kind: JointKind; label: string; movement: string }[]
   { kind: 'hip', label: 'Hip', movement: 'Bending at the hip' },
   { kind: 'knee', label: 'Knee', movement: 'Bending the knee' },
 ];
+
+/**
+ * Joints with extended support in this version: compensation checks (e.g.
+ * shoulder hiking, knee moving inward) on top of the counting, range and goal
+ * tracking every joint gets.
+ */
+export const EXTENDED_SUPPORT_JOINTS: JointKind[] = ['shoulder', 'knee'];
+
+export const hasExtendedSupport = (kind: JointKind) =>
+  EXTENDED_SUPPORT_JOINTS.includes(kind);
 
 export const jointKey = (side: BodySide, kind: JointKind) => `${side}_${kind}`;
 

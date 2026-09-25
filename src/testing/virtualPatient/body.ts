@@ -31,6 +31,29 @@ export interface BodyPose {
   rightHip: number;
   leftKnee: number;
   rightKnee: number;
+  // Compensations (0 = none). Required so timeline interpolation stays typed;
+  // STANDING sets them to 0, so keyframes may leave them out.
+  // They move landmarks only; the requested joint angles stay exact.
+  /** Front: px the left shoulder rises (shrug towards the ear). */
+  shoulderHike: number;
+  /** Front: degrees the trunk leans sideways (+ = towards the patient's right). */
+  trunkSideLean: number;
+  /** Front: degrees the trunk turns; shoulder width narrows by cos. */
+  trunkRotation: number;
+  /** Side: degrees the trunk leans backward (arching the back); negative = forward. */
+  trunkLeanBack: number;
+  /** Front: px the left knee moves towards the midline (negative = outward). */
+  kneeValgus: number;
+  /** Front: px the left hip rises (negative = drops). */
+  hipHitch: number;
+  /** Front: px the pelvis shifts sideways over the feet (+ = towards the patient's left). */
+  pelvicShift: number;
+  /** Side: px the left heel rises off the floor. */
+  heelLift: number;
+  /** Side: px the head pokes forward. */
+  forwardHead: number;
+  /** Front: degrees the head tilts (ear towards shoulder), about the nose. */
+  headTilt: number;
 }
 
 export const STANDING: BodyPose = {
@@ -43,6 +66,16 @@ export const STANDING: BodyPose = {
   rightHip: 178,
   leftKnee: 178,
   rightKnee: 178,
+  shoulderHike: 0,
+  trunkSideLean: 0,
+  trunkRotation: 0,
+  trunkLeanBack: 0,
+  kneeValgus: 0,
+  hipHitch: 0,
+  pelvicShift: 0,
+  heelLift: 0,
+  forwardHead: 0,
+  headTilt: 0,
 };
 
 type P = { x: number; y: number; z?: number };
@@ -71,7 +104,9 @@ function sidePose(pose: BodyPose): Record<string, P> {
   };
   const left = sideOf('left', 6); // far side, slightly offset
   const right = sideOf('right', 0);
-  const lean = (left.lean + right.lean) / 2;
+  // Arching back tilts the trunk; the arm is placed relative to it, so the
+  // shoulder angle is unchanged (the hip angle opens by the same amount)
+  const lean = (left.lean + right.lean) / 2 - pose.trunkLeanBack;
   for (const [side, s] of [
     ['left', left],
     ['right', right],
@@ -79,7 +114,8 @@ function sidePose(pose: BodyPose): Record<string, P> {
     pts[`${side}_ankle`] = s.ankle;
     pts[`${side}_knee`] = s.knee;
     pts[`${side}_hip`] = s.hip;
-    pts[`${side}_heel`] = { x: s.ankle.x - 14, y: s.ankle.y + 12 };
+    const heelLift = side === 'left' ? pose.heelLift : 0;
+    pts[`${side}_heel`] = { x: s.ankle.x - 14, y: s.ankle.y + 12 - heelLift };
     pts[`${side}_foot_index`] = { x: s.ankle.x + 42, y: s.ankle.y + 14 };
     const shoulder = add(s.hip, dir(180 - lean), L.torso);
     pts[`${side}_shoulder`] = shoulder;
@@ -97,26 +133,68 @@ function sidePose(pose: BodyPose): Record<string, P> {
     y: (pts.left_shoulder.y + pts.right_shoulder.y) / 2,
   };
   const head = add(midShoulder, dir(180 - lean), L.neck);
+  head.x += pose.forwardHead; // facing +x
   pts.nose = { x: head.x + 22, y: head.y };
   return pts;
 }
 
+/** Vertical drop (px) of the knee and hip when the legs bend, seen from the front. */
+function legDrop(knee: number) {
+  const bend = 180 - knee;
+  const shankTilt = bend * 0.45; // same split as the side view
+  const thighTilt = bend - shankTilt;
+  const kneeRise = L.shank * Math.cos(rad(shankTilt));
+  const hipRise = kneeRise + L.thigh * Math.cos(rad(thighTilt));
+  return { knee: L.shank - kneeRise, hip: L.shank + L.thigh - hipRise };
+}
+
 function frontPose(pose: BodyPose): Record<string, P> {
   const pts: Record<string, P> = {};
+  // Legs: bending lowers knee and hip (foreshortened towards the camera);
+  // measured from STANDING so the standing figure is unchanged
+  const stand = legDrop(STANDING.leftKnee);
   // Facing the camera: the person's left appears on the image's right (+x)
   for (const [side, sign] of [
     ['left', 1],
     ['right', -1],
   ] as const) {
-    const hip = { x: 240 + sign * 32, y: 330 };
-    const knee = { x: hip.x, y: hip.y + L.thigh };
-    const ankle = { x: hip.x, y: knee.y + L.shank };
+    const isLeft = side === 'left';
+    const drop = legDrop(isLeft ? pose.leftKnee : pose.rightKnee);
+    const ankle = { x: 240 + sign * 32, y: 330 + L.thigh + L.shank };
+    const hip = {
+      x: ankle.x + pose.pelvicShift,
+      y: 330 + drop.hip - stand.hip - (isLeft ? pose.hipHitch : 0),
+    };
+    // The knee sits on the hip-ankle line, then valgus moves it towards the midline
+    const kneeY = 330 + L.thigh + drop.knee - stand.knee;
+    const onLine = hip.x + ((ankle.x - hip.x) * (kneeY - hip.y)) / (ankle.y - hip.y);
+    const knee = { x: onLine - (isLeft ? pose.kneeValgus : 0) * sign, y: kneeY };
     pts[`${side}_hip`] = hip;
     pts[`${side}_knee`] = knee;
     pts[`${side}_ankle`] = ankle;
     pts[`${side}_heel`] = { x: ankle.x, y: ankle.y + 12 };
     pts[`${side}_foot_index`] = { x: ankle.x + sign * 18, y: ankle.y + 20 };
-    const shoulder = { x: 240 + sign * 62, y: hip.y - L.torso };
+  }
+  // Trunk: shoulders and head above the mid-hip, narrowed by rotation, then
+  // tilted sideways about the mid-hip
+  const hipMid = {
+    x: (pts.left_hip.x + pts.right_hip.x) / 2,
+    y: (pts.left_hip.y + pts.right_hip.y) / 2,
+  };
+  const tilt = rad(pose.trunkSideLean);
+  const place = (dx: number, dy: number): P => ({
+    x: hipMid.x + dx * Math.cos(tilt) + dy * Math.sin(tilt),
+    y: hipMid.y - dx * Math.sin(tilt) + dy * Math.cos(tilt),
+  });
+  const halfWidth = 62 * Math.cos(rad(pose.trunkRotation));
+  pts.nose = place(0, -L.torso - L.neck);
+  for (const [side, sign] of [
+    ['left', 1],
+    ['right', -1],
+  ] as const) {
+    const hike = side === 'left' ? pose.shoulderHike : 0;
+    const shoulder = place(sign * halfWidth, -L.torso - hike);
+    const hip = pts[`${side}_hip`];
     pts[`${side}_shoulder`] = shoulder;
     const shoulderAngle = side === 'left' ? pose.leftShoulder : pose.rightShoulder;
     const elbowAngle = side === 'left' ? pose.leftElbow : pose.rightElbow;
@@ -129,7 +207,6 @@ function frontPose(pose: BodyPose): Record<string, P> {
     pts[`${side}_elbow`] = elbow;
     pts[`${side}_wrist`] = wrist;
   }
-  pts.nose = { x: 240, y: 330 - L.torso - L.neck };
   return pts;
 }
 
@@ -151,6 +228,23 @@ function addDetail(pts: Record<string, P>): void {
     pts[`${side}_pinky`] = { x: w.x + 4, y: w.y + 10 };
     pts[`${side}_index`] = { x: w.x + 8, y: w.y + 8 };
     pts[`${side}_thumb`] = { x: w.x + 6, y: w.y + 4 };
+  }
+}
+
+const FACE = ['eye_inner', 'eye', 'eye_outer', 'ear'].flatMap((p) => [
+  `left_${p}`,
+  `right_${p}`,
+]);
+
+/** Rotate the face points about the nose (front view head tilt). */
+function tiltHead(pts: Record<string, P>, deg: number): void {
+  const n = pts.nose;
+  const c = Math.cos(rad(deg));
+  const s = Math.sin(rad(deg));
+  for (const name of [...FACE, 'mouth_left', 'mouth_right']) {
+    const dx = pts[name].x - n.x;
+    const dy = pts[name].y - n.y;
+    pts[name] = { x: n.x + dx * c - dy * s, y: n.y + dx * s + dy * c };
   }
 }
 
@@ -207,6 +301,7 @@ export function renderBody(
 ): MediaPipePoseResultBundle {
   const pts = pose.view === 'front' ? frontPose(pose) : sidePose(pose);
   addDetail(pts);
+  if (pose.view === 'front' && pose.headTilt) tiltHead(pts, pose.headTilt);
   const hipMid = {
     x: (pts.left_hip.x + pts.right_hip.x) / 2,
     y: (pts.left_hip.y + pts.right_hip.y) / 2,

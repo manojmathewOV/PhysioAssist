@@ -64,7 +64,10 @@ export type FindingId =
   | 'knee_valgus'
   | 'hip_hitch'
   | 'heel_lift'
-  | 'forward_head';
+  | 'forward_head'
+  | 'head_tilt'
+  | 'trunk_forward_lean'
+  | 'pelvic_shift';
 
 export type Severity = 'ok' | 'warn' | 'flag';
 

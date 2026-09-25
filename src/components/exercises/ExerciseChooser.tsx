@@ -27,6 +27,12 @@ interface ExerciseChooserProps {
   /** The patient's plan: joint of interest and their physio's goal. */
   plan?: ExercisePlan | null;
   onPlanChange?: (plan: ExercisePlan) => void;
+  /** Record the physio's demonstration of the selected exercise. */
+  onRecordDemo?: () => void;
+  /** Build the demonstration from a video file (web). */
+  onUploadVideo?: () => void;
+  /** Shown while a video is being analysed, e.g. "Watching the video… 40%". */
+  demoStatus?: string;
 }
 
 /** "Goal 120° · limit 140° · 10 times". */
@@ -52,6 +58,9 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
   notice,
   plan,
   onPlanChange,
+  onRecordDemo,
+  onUploadVideo,
+  demoStatus,
 }) => {
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const [editingPlan, setEditingPlan] = useState(false);
@@ -64,6 +73,13 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
     ? EXERCISE_OPTIONS.filter((o) => o.exercise.primaryJoint !== plan.joint).map(toItem)
     : [];
   const selectedItem = [...forPlan, ...others].find((i) => i.key === selectedKey);
+  const reference =
+    plan?.reference && plan.reference.exerciseId === selected?.exercise.id
+      ? plan.reference
+      : undefined;
+  const removeDemo = () => {
+    if (plan && onPlanChange) onPlanChange({ ...plan, reference: undefined });
+  };
 
   // First visit (or "Change"): choose the joint we're working on
   if (onPlanChange && (!plan || editingPlan)) {
@@ -129,6 +145,73 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
           />
         </Card>
       ) : null}
+      {plan && selected && (onRecordDemo || onUploadVideo) ? (
+        <Card style={styles.plan} testID="exercise-demo">
+          <View style={styles.tip}>
+            <View style={styles.tipIcon}>
+              <Icon
+                name={reference ? 'verified' : 'videocam'}
+                size={24}
+                color={reference ? colors.success : colors.primary}
+              />
+            </View>
+            <View style={styles.flex}>
+              <AppText variant="label" color={colors.textSecondary}>
+                {`COMPARE ${selected.title.toUpperCase()} WITH`}
+              </AppText>
+              <AppText variant="bodyStrong">
+                {reference
+                  ? `Your physio’s ${reference.source === 'video' ? 'video' : 'demonstration'}`
+                  : 'Your physio’s demonstration'}
+              </AppText>
+              <AppText variant="body" color={colors.textSecondary}>
+                {demoStatus ??
+                  (reference
+                    ? `Reaches about ${reference.peakDegrees}°, ${(
+                        reference.repDurationMs / 1000
+                      ).toFixed(1)} s per repetition`
+                    : 'Not recorded yet. Your physio can do the exercise once while the camera watches.')}
+              </AppText>
+            </View>
+          </View>
+          {reference ? (
+            <BigButton
+              variant="ghost"
+              compact
+              icon="delete-outline"
+              label="Remove demonstration"
+              onPress={removeDemo}
+              testID="exercise-demo-remove"
+              style={styles.helpLink}
+            />
+          ) : (
+            <View style={styles.demoActions}>
+              {onRecordDemo ? (
+                <BigButton
+                  variant="secondary"
+                  compact
+                  icon="fiber-manual-record"
+                  label="Record demonstration"
+                  onPress={onRecordDemo}
+                  disabled={Boolean(demoStatus)}
+                  testID="exercise-demo-record"
+                />
+              ) : null}
+              {onUploadVideo ? (
+                <BigButton
+                  variant="ghost"
+                  compact
+                  icon="upload-file"
+                  label="Use a video file"
+                  onPress={onUploadVideo}
+                  disabled={Boolean(demoStatus)}
+                  testID="exercise-demo-upload"
+                />
+              ) : null}
+            </View>
+          )}
+        </Card>
+      ) : null}
       <ExerciseSelector
         exercises={forPlan}
         selectedExercise={selectedItem}
@@ -179,6 +262,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   setup: { gap: spacing.md, marginTop: spacing.sm },
   plan: { gap: spacing.sm },
+  demoActions: { gap: spacing.sm },
   others: { marginTop: spacing.md, marginLeft: spacing.xs },
   tip: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   tipIcon: {
