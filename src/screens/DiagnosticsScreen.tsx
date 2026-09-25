@@ -21,7 +21,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { Camera, useCameraDevices } from 'react-native-vision-camera';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { useSelector } from 'react-redux';
 import { RootState } from '@store/index';
 import { poseDetectionService } from '@services/poseDetectionService';
@@ -36,7 +36,8 @@ interface DiagnosticCheck {
 const DiagnosticsScreen: React.FC = () => {
   const [checks, setChecks] = useState<DiagnosticCheck[]>([]);
   const [isRunning, setIsRunning] = useState(false);
-  const devices = useCameraDevices();
+  const frontDevice = useCameraDevice('front');
+  const backDevice = useCameraDevice('back');
   const settings = useSelector((state: RootState) => state.settings);
   const user = useSelector((state: RootState) => state.user);
 
@@ -46,12 +47,13 @@ const DiagnosticsScreen: React.FC = () => {
 
     // 1. Check Camera Permission
     try {
-      const permission = await Camera.getCameraPermissionStatus();
+      // VisionCamera v4: synchronous, returns 'granted' | 'not-determined' | 'denied' | 'restricted'
+      const permission = Camera.getCameraPermissionStatus();
       results.push({
         name: 'Camera Permission',
-        status: permission === 'authorized' ? 'success' : 'error',
+        status: permission === 'granted' ? 'success' : 'error',
         message:
-          permission === 'authorized'
+          permission === 'granted'
             ? 'Camera permission granted'
             : `Camera permission ${permission}`,
         details: `Status: ${permission}`,
@@ -66,13 +68,13 @@ const DiagnosticsScreen: React.FC = () => {
     }
 
     // 2. Check Camera Device Availability
-    if (devices.front || devices.back) {
+    if (frontDevice || backDevice) {
       results.push({
         name: 'Camera Device',
         status: 'success',
         message: 'Camera device available',
-        details: `Front: ${devices.front ? 'Yes' : 'No'}, Back: ${
-          devices.back ? 'Yes' : 'No'
+        details: `Front: ${frontDevice ? 'Yes' : 'No'}, Back: ${
+          backDevice ? 'Yes' : 'No'
         }`,
       });
     } else {
@@ -111,9 +113,7 @@ const DiagnosticsScreen: React.FC = () => {
       name: 'Platform',
       status: 'success',
       message: `Running on ${Platform.OS}`,
-      details: `Version: ${Platform.Version}, Select: ${
-        Platform.select ? 'Available' : 'N/A'
-      }`,
+      details: `Version: ${Platform.Version}`,
     });
 
     // 5. Check User Authentication State

@@ -5,7 +5,7 @@
  * Reduces setup failure from 60% → 10%
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,12 +14,7 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import {
-  Frame,
-  Camera,
-  useCameraDevice,
-  useFrameProcessor,
-} from 'react-native-vision-camera';
+import { Camera, useCameraDevice, useFrameProcessor } from 'react-native-vision-camera';
 import { Worklets } from 'react-native-worklets-core';
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
@@ -32,6 +27,7 @@ import {
   LightingAssessment,
   DistanceAssessment,
 } from '../../utils/compensatoryMechanisms';
+import { FrameInfo } from '../../utils/realFrameAnalysis';
 import { PoseLandmark } from '../../types/pose';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -54,10 +50,12 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
 
   // VisionCamera setup (Gate 1: Real frame capture)
   const device = useCameraDevice('front');
-  const latestFrameRef = useRef<Frame | null>(null);
+  // Snapshot of the latest frame's properties. The Frame object itself is only
+  // valid inside the frame processor call, so it must not be kept or used later.
+  const latestFrameRef = useRef<FrameInfo | null>(null);
 
   // Get pose landmarks from Redux (populated by PoseDetectionScreen)
-  const { landmarks } = useSelector((state: RootState) => state.pose.poseData || {});
+  const landmarks = useSelector((state: RootState) => state.pose.currentPose?.landmarks);
 
   useEffect(() => {
     if (visible) {
@@ -73,15 +71,22 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
    * Frame Processor - Captures latest frame for analysis
    * Gate 1: Real frame capture (no more mocks!)
    */
-  const frameProcessor = useFrameProcessor((frame) => {
-    'worklet';
-    // Store latest frame in ref for analysis
-    Worklets.runOnJS(updateLatestFrame)(frame);
-  }, []);
+  const updateLatestFrameOnJS = useMemo(
+    () =>
+      Worklets.createRunOnJS((width: number, height: number) => {
+        latestFrameRef.current = { width, height };
+      }),
+    []
+  );
 
-  const updateLatestFrame = (frame: Frame) => {
-    latestFrameRef.current = frame;
-  };
+  const frameProcessor = useFrameProcessor(
+    (frame) => {
+      'worklet';
+      // Send a plain snapshot to the JS thread (never the Frame itself)
+      updateLatestFrameOnJS(frame.width, frame.height);
+    },
+    [updateLatestFrameOnJS]
+  );
 
   const handleLightingCheck = async () => {
     const frame = latestFrameRef.current;
@@ -331,7 +336,7 @@ const DistanceCheckStep: React.FC<DistanceCheckStepProps> = ({ status, onCheck }
 
 interface PracticeStepProps {
   currentAngle: number;
-  onAngleChange: (angle: number) => void;
+  onAngleChange: React.Dispatch<React.SetStateAction<number>>;
   onComplete: () => void;
 }
 

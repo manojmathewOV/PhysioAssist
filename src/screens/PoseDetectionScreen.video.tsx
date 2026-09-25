@@ -11,7 +11,7 @@
  * Use TEST_MODE=camera (or undefined) for real camera
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -23,19 +23,20 @@ import {
 } from 'react-native';
 import {
   Camera,
-  useCameraDevices,
+  useCameraDevice,
   useFrameProcessor,
   Frame,
 } from 'react-native-vision-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { runOnJS } from 'react-native-reanimated';
+import { Worklets } from 'react-native-worklets-core';
 
 import { RootState } from '@store/index';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
 import { poseDetectionService } from '@services/poseDetectionService';
+import type { MockPoseDataSimulator } from '@services/mockPoseDataSimulator';
 // Conditional import: Only include mock simulator in development builds
-const mockPoseDataSimulator = __DEV__
+const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
   ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator // eslint-disable-line @typescript-eslint/no-var-requires
   : null;
 import { VideoFrameFeeder, createPoseVideoFeeder } from '@utils/videoFrameFeeder';
@@ -61,8 +62,7 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
 }) => {
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
-  const devices = useCameraDevices();
-  const device = devices.front;
+  const device = useCameraDevice('front');
 
   const { isDetecting, confidence } = useSelector((state: RootState) => state.pose);
   const { frameSkip } = useSelector((state: RootState) => state.settings);
@@ -110,8 +110,8 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
 
   const requestCameraPermission = async () => {
     const permission = await Camera.requestCameraPermission();
-    setHasPermission(permission === 'authorized');
-    if (permission !== 'authorized') {
+    setHasPermission(permission === 'granted');
+    if (permission !== 'granted') {
       Alert.alert(
         'Camera Permission Required',
         'Please grant camera permission to use pose detection.',
@@ -253,32 +253,40 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
     }
   }, [useVideoFeed]);
 
-  const processFrameData = useCallback(async (_width: number, _height: number) => {
-    try {
-      // Real frame processing would happen here in production
-      // await poseDetectionService.processFrame(imageData);
-    } catch (error) {
-      console.error('Error processing frame:', error);
-    }
-  }, []);
+  // Runs on the JS thread, called from the frame processor worklet. Frame
+  // skipping lives here because refs can't be mutated inside worklets.
+  const processFrameData = useCallback(
+    async (_width: number, _height: number) => {
+      frameCountRef.current++;
+      if (frameCountRef.current % frameSkip !== 0) {
+        return;
+      }
+      try {
+        // Real frame processing would happen here in production
+        // await poseDetectionService.processFrame(imageData);
+      } catch (error) {
+        console.error('Error processing frame:', error);
+      }
+    },
+    [frameSkip]
+  );
 
+  const processFrameOnJS = useMemo(
+    () => Worklets.createRunOnJS(processFrameData),
+    [processFrameData]
+  );
+
+  // VisionCamera v4 frame processors run on react-native-worklets-core, so
+  // JS callbacks must go through Worklets.createRunOnJS (not reanimated's runOnJS)
   const frameProcessor = useFrameProcessor(
     (frame: Frame) => {
       'worklet';
 
       if (!isDetecting || isPaused || useVideoFeed || useMockData) return;
 
-      frameCountRef.current++;
-      if (frameCountRef.current % frameSkip !== 0) {
-        return;
-      }
-
-      const frameWidth = frame.width;
-      const frameHeight = frame.height;
-
-      runOnJS(processFrameData)(frameWidth, frameHeight);
+      processFrameOnJS(frame.width, frame.height);
     },
-    [isDetecting, isPaused, frameSkip, processFrameData, useVideoFeed, useMockData]
+    [isDetecting, isPaused, processFrameOnJS, useVideoFeed, useMockData]
   );
 
   // Render camera or video/mock background

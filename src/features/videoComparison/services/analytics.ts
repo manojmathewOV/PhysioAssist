@@ -144,7 +144,7 @@ export class AnalyticsService {
   // ========== Error Detection Events ==========
 
   trackErrorDetected(data: ErrorAnalyticsData): void {
-    telemetryService.trackErrorDetected(data);
+    telemetryService.trackErrorDetected({ ...data, timestamp: Date.now() });
 
     if (data.severity === 'critical') {
       this.trackEvent(VideoComparisonEvents.CRITICAL_ERROR_DETECTED, data);

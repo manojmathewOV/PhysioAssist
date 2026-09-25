@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,19 +9,20 @@ import {
 } from 'react-native';
 import {
   Camera,
-  useCameraDevices,
+  useCameraDevice,
   useFrameProcessor,
   Frame,
 } from 'react-native-vision-camera';
+import { Worklets } from 'react-native-worklets-core';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { runOnJS } from 'react-native-reanimated';
 
 import { RootState } from '@store/index';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
 import { poseDetectionService } from '@services/poseDetectionService';
+import type { MockPoseDataSimulator } from '@services/mockPoseDataSimulator';
 // Conditional import: Only include mock simulator in development builds
-const mockPoseDataSimulator = __DEV__
+const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
   ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator // eslint-disable-line @typescript-eslint/no-var-requires
   : null;
 import PoseOverlay from '@components/pose/PoseOverlay';
@@ -32,8 +33,7 @@ import ExerciseControls from '@components/exercises/ExerciseControls';
 const PoseDetectionScreen: React.FC = () => {
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
-  const devices = useCameraDevices();
-  const device = devices.front;
+  const device = useCameraDevice('front');
 
   const { isDetecting, confidence } = useSelector((state: RootState) => state.pose);
   const { frameSkip } = useSelector((state: RootState) => state.settings);
@@ -58,8 +58,8 @@ const PoseDetectionScreen: React.FC = () => {
 
   const requestCameraPermission = async () => {
     const permission = await Camera.requestCameraPermission();
-    setHasPermission(permission === 'authorized');
-    if (permission !== 'authorized') {
+    setHasPermission(permission === 'granted');
+    if (permission !== 'granted') {
       Alert.alert(
         'Camera Permission Required',
         'Please grant camera permission to use pose detection.'
@@ -145,47 +145,36 @@ const PoseDetectionScreen: React.FC = () => {
     frameCountRef.current = 0;
   }, []);
 
-  // Process frame callback (must be non-worklet function)
-  const processFrameData = useCallback(async (_width: number, _height: number) => {
-    try {
-      // In a real implementation, you would:
-      // 1. Convert the Frame buffer to ImageData
-      // 2. Call poseDetectionService.processFrame(imageData)
-      // 3. The service will call the callback we set up in initializePoseDetection
-      //
-      // For now, we'll simulate this with a mock implementation
-      // since frame-to-ImageData conversion requires native modules or plugins
-      // Mock pose data for testing (replace with actual frame processing)
-      // The actual pose data will come through the callback set in initializePoseDetection
-      // Note: Actual frame processing would happen here
-      // await poseDetectionService.processFrame(imageData);
-    } catch (error) {
-      console.error('Error processing frame:', error);
-    }
-  }, []);
-
-  // Frame processor for pose detection
-  const frameProcessor = useFrameProcessor(
-    (frame: Frame) => {
-      'worklet';
-
-      if (!isDetecting || isPaused) return;
-
-      // Apply frame skipping for performance
+  // Process frame callback (runs on the JS thread, called from the frame processor worklet).
+  // Frame skipping lives here because refs and React state can't be mutated inside worklets.
+  const processFrameData = useCallback(
+    async (_width: number, _height: number) => {
       frameCountRef.current++;
       if (frameCountRef.current % frameSkip !== 0) {
         return;
       }
-
-      // Convert frame to processable format and send to JS thread
-      // Note: Frame-to-ImageData conversion requires native implementation
-      // For now, we'll pass frame dimensions to trigger processing
-      const frameWidth = frame.width;
-      const frameHeight = frame.height;
-
-      runOnJS(processFrameData)(frameWidth, frameHeight);
+      try {
+        // Frame-to-tensor conversion needs a native resize plugin; until it's wired up,
+        // pose data comes through the callback set in initializePoseDetection.
+      } catch (error) {
+        console.error('Error processing frame:', error);
+      }
     },
-    [isDetecting, isPaused, frameSkip, processFrameData]
+    [frameSkip]
+  );
+
+  const processFrameOnJS = useMemo(
+    () => Worklets.createRunOnJS(processFrameData),
+    [processFrameData]
+  );
+
+  // Frame processor for pose detection (VisionCamera v4 + react-native-worklets-core)
+  const frameProcessor = useFrameProcessor(
+    (frame: Frame) => {
+      'worklet';
+      processFrameOnJS(frame.width, frame.height);
+    },
+    [processFrameOnJS]
   );
 
   // Render fallback UI when camera is not available but mock data is enabled
@@ -220,7 +209,7 @@ const PoseDetectionScreen: React.FC = () => {
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={isFocused}
-          frameProcessor={frameProcessor}
+          frameProcessor={isDetecting && !isPaused ? frameProcessor : undefined}
           fps={30}
         />
       ) : (

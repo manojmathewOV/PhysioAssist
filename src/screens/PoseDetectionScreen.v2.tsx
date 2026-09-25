@@ -13,30 +13,48 @@
  * - Overlay rendering: 30-40 FPS → 60+ FPS (50% smoother)
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  Dimensions,
-} from 'react-native';
-import { Camera, useCameraDevice, useFrameProcessor } from 'react-native-vision-camera';
+  Camera,
+  useCameraDevice,
+  useFrameProcessor,
+  VisionCameraProxy,
+} from 'react-native-vision-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Worklets } from 'react-native-worklets-core';
 
 import { RootState } from '@store/index';
-import { setPoseData, setDetecting, setConfidence } from '@store/slices/poseSlice';
+import { setPoseData, setDetecting } from '@store/slices/poseSlice';
 import { poseDetectionService } from '@services/PoseDetectionService.v2';
-import PoseOverlaySkia from '@components/pose/PoseOverlay.skia';
+// NOTE: PoseOverlay.skia needs @shopify/react-native-skia, which is not installed;
+// use the standard overlay so this screen can be bundled.
+import PoseOverlay from '@components/pose/PoseOverlay';
 import ExerciseControls from '@components/exercises/ExerciseControls';
 import LoadingOverlay from '@components/common/LoadingOverlay';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import { batchDispatch, useThrottle } from '@utils/performanceUtils';
+import { PoseLandmark, ProcessedPoseData } from '../types/pose';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+/** Keypoint as returned by the native `detectPose` plugin (ios/PoseDetectionPlugin.swift). */
+interface NativeKeypoint {
+  x: number;
+  y: number;
+  score: number;
+  name: string;
+}
+
+/** Result dictionary returned by the native `detectPose` plugin. */
+interface NativePoseResult {
+  keypoints: NativeKeypoint[];
+  inferenceTime?: number;
+  /** Seconds since epoch (Swift `Date().timeIntervalSince1970`) */
+  timestamp?: number;
+}
+
+// Native frame processor plugin (undefined if the native module isn't linked)
+const detectPosePlugin = VisionCameraProxy.initFrameProcessorPlugin('detectPose', {});
 
 // Haptic feedback configuration
 const hapticOptions = {
@@ -101,8 +119,8 @@ const PoseDetectionScreenV2: React.FC = () => {
 
       await poseDetectionService.initialize();
       poseDetectionService.setPoseDataCallback((poseData) => {
+        // setPoseData also updates state.confidence
         dispatch(setPoseData(poseData));
-        dispatch(setConfidence(poseData.confidence));
       });
 
       setIsInitialized(true);
@@ -144,52 +162,33 @@ const PoseDetectionScreenV2: React.FC = () => {
     await poseDetectionService.cleanup();
   };
 
-  /**
-   * Native Frame Processor
-   * Runs on dedicated camera thread with native performance (1ms overhead)
-   */
-  const frameProcessor = useFrameProcessor(
-    (frame) => {
-      'worklet';
-
-      if (!isDetecting) return;
-
-      // Call native plugin (Swift/Kotlin)
-      // This runs at 60 FPS with GPU acceleration
-      const result = detectPose(frame, {
-        minConfidence: 0.3,
-      });
-
-      if (result && result.keypoints && result.keypoints.length > 0) {
-        // Update FPS counter
-        Worklets.runOnJS(updateFps)();
-
-        // Update Redux state (on JS thread)
-        Worklets.runOnJS(handlePoseDetected)(result);
-      }
-    },
-    [isDetecting]
-  );
-
   // Throttle pose updates to 10 times per second (instead of 60)
   // Reduces Redux overhead and unnecessary re-renders
-  const handlePoseDetected = useThrottle((result: any) => {
+  const handlePoseDetected = useThrottle((result: NativePoseResult) => {
     // Process pose data on JavaScript thread
-    const processedData = {
-      landmarks: result.keypoints,
-      timestamp: result.timestamp || Date.now(),
+    const landmarks: PoseLandmark[] = result.keypoints.map((kp, index) => ({
+      x: kp.x,
+      y: kp.y,
+      z: 0, // MoveNet doesn't provide depth
+      visibility: kp.score || 0,
+      index,
+      name: kp.name,
+    }));
+    const processedData: ProcessedPoseData = {
+      landmarks,
+      timestamp: result.timestamp ? result.timestamp * 1000 : Date.now(),
       confidence: calculateAverageConfidence(result.keypoints),
       inferenceTime: result.inferenceTime,
+      schemaId: 'movenet-17',
     };
 
     // Batch multiple dispatches into single render cycle
     batchDispatch(() => {
-      dispatch(setPoseData(processedData));
-      dispatch(setConfidence(processedData.confidence));
+      dispatch(setPoseData(processedData)); // also sets confidence
     });
   }, 100); // Update at most 10 times per second
 
-  const calculateAverageConfidence = (keypoints: any[]) => {
+  const calculateAverageConfidence = (keypoints: NativeKeypoint[]) => {
     if (!keypoints || keypoints.length === 0) return 0;
     const sum = keypoints.reduce((acc, kp) => acc + (kp.score || 0), 0);
     return sum / keypoints.length;
@@ -208,6 +207,45 @@ const PoseDetectionScreenV2: React.FC = () => {
       lastFpsUpdate.current = now;
     }
   };
+
+  // Latest JS-side handler; the worklet bridge below is created once and
+  // always calls the current version.
+  const onPoseResultRef = useRef<(result: NativePoseResult) => void>(() => {});
+  onPoseResultRef.current = (result: NativePoseResult) => {
+    updateFps();
+    handlePoseDetected(result);
+  };
+  const onPoseResultJS = useMemo(
+    () =>
+      Worklets.createRunOnJS((result: NativePoseResult) => {
+        onPoseResultRef.current(result);
+      }),
+    []
+  );
+
+  /**
+   * Native Frame Processor
+   * Runs on the camera thread (react-native-worklets-core runtime); results
+   * are sent to the JS thread via Worklets.createRunOnJS.
+   */
+  const frameProcessor = useFrameProcessor(
+    (frame) => {
+      'worklet';
+
+      if (!isDetecting || detectPosePlugin == null) return;
+
+      // Call native plugin (Swift/Kotlin); the plugin returns a
+      // { keypoints, inferenceTime, timestamp } dictionary
+      const result = detectPosePlugin.call(frame, {
+        minConfidence: 0.3,
+      }) as unknown as NativePoseResult | undefined;
+
+      if (result && result.keypoints && result.keypoints.length > 0) {
+        onPoseResultJS(result);
+      }
+    },
+    [isDetecting, onPoseResultJS]
+  );
 
   // Show loading state
   if (!device || !hasPermission) {
@@ -238,12 +276,11 @@ const PoseDetectionScreenV2: React.FC = () => {
         frameProcessor={frameProcessor}
         pixelFormat="rgb" // ✅ Critical: TFLite requires RGB format
         fps={30} // Optimal balance of performance and battery
-        enableGpuBuffers // ✅ Enable GPU optimization
         lowLightBoost={false} // Disable for better performance
       />
 
-      {/* Skia overlay (60+ FPS) */}
-      <PoseOverlaySkia showConfidence showSkeleton keypointRadius={8} lineWidth={3} />
+      {/* Pose overlay */}
+      <PoseOverlay />
 
       {/* Performance overlay */}
       <View style={styles.performanceOverlay}>
@@ -356,13 +393,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 });
-
-// Mock native plugin call (would be implemented in native module)
-const detectPose = (frame: any, options: any) => {
-  // This would call the native Frame Processor Plugin
-  // Placeholder for demonstration
-  return null;
-};
 
 export default PoseDetectionScreenV2;
 

@@ -7,17 +7,28 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { webPoseDetectionService } from '../../services/web/WebPoseDetectionService';
 import { goniometerService } from '../../services/goniometerService';
 import { exerciseValidationService } from '../../services/exerciseValidationService';
 import { audioFeedbackService } from '../../services/audioFeedbackService';
 import { setPoseData } from '../../store/slices/poseSlice';
 import { updateExerciseProgress } from '../../store/slices/exerciseSlice';
-import { RootState } from '../../store/store';
-import { PoseLandmark } from '../../types/pose';
-import { ExerciseType } from '../../types/exercise';
+import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
+import { EXERCISES } from '../../constants/exercises';
 import WebPoseOverlay from '../../components/web/WebPoseOverlay';
+
+type ExerciseKey = keyof typeof EXERCISES;
+
+// MediaPipe 33-landmark indices: [proximal, joint, distal]
+const WEB_JOINTS: Record<string, [number, number, number]> = {
+  leftElbow: [11, 13, 15], // left shoulder, elbow, wrist
+  rightElbow: [12, 14, 16], // right shoulder, elbow, wrist
+  leftKnee: [23, 25, 27], // left hip, knee, ankle
+  rightKnee: [24, 26, 28], // right hip, knee, ankle
+  leftShoulder: [23, 11, 13], // left hip, shoulder, elbow
+  rightShoulder: [24, 12, 14], // right hip, shoulder, elbow
+};
 
 const WebPoseDetectionScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -26,15 +37,13 @@ const WebPoseDetectionScreen: React.FC = () => {
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [isDetecting, setIsDetecting] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<ExerciseType>('bicep_curl');
+  const [selectedExercise, setSelectedExercise] = useState<ExerciseKey>('bicepCurl');
   const [angleData, setAngleData] = useState<{ [key: string]: number }>({});
   const [exerciseMetrics, setExerciseMetrics] = useState({
     reps: 0,
     quality: 0,
     feedback: '',
   });
-
-  const currentUser = useSelector((state: RootState) => state.user.currentUser);
 
   useEffect(() => {
     // Request camera permissions on mount
@@ -70,76 +79,58 @@ const WebPoseDetectionScreen: React.FC = () => {
 
   const handlePoseResults = useCallback(
     (landmarks: PoseLandmark[]) => {
-      // Calculate angles for relevant joints
-      const angles = {
-        leftElbow: goniometerService.calculateAngle(
-          landmarks[11], // left shoulder
-          landmarks[13], // left elbow
-          landmarks[15] // left wrist
-        ),
-        rightElbow: goniometerService.calculateAngle(
-          landmarks[12], // right shoulder
-          landmarks[14], // right elbow
-          landmarks[16] // right wrist
-        ),
-        leftKnee: goniometerService.calculateAngle(
-          landmarks[23], // left hip
-          landmarks[25], // left knee
-          landmarks[27] // left ankle
-        ),
-        rightKnee: goniometerService.calculateAngle(
-          landmarks[24], // right hip
-          landmarks[26], // right knee
-          landmarks[28] // right ankle
-        ),
-        leftShoulder: goniometerService.calculateAngle(
-          landmarks[23], // left hip
-          landmarks[11], // left shoulder
-          landmarks[13] // left elbow
-        ),
-        rightShoulder: goniometerService.calculateAngle(
-          landmarks[24], // right hip
-          landmarks[12], // right shoulder
-          landmarks[14] // right elbow
-        ),
-      };
+      if (landmarks.length === 0) {
+        return;
+      }
+
+      // Calculate angles (degrees) for relevant joints
+      const angles: { [key: string]: number } = {};
+      for (const [joint, [a, b, c]] of Object.entries(WEB_JOINTS)) {
+        if (landmarks[a] && landmarks[b] && landmarks[c]) {
+          angles[joint] = goniometerService.calculateAngle(
+            landmarks[a],
+            landmarks[b],
+            landmarks[c],
+            joint
+          ).angle;
+        }
+      }
 
       setAngleData(angles);
 
+      const poseData: ProcessedPoseData = {
+        landmarks,
+        timestamp: Date.now(),
+        confidence:
+          landmarks.reduce((acc, l) => acc + l.visibility, 0) / landmarks.length,
+        schemaId: 'mediapipe-33',
+      };
+
       // Update pose data in Redux
-      dispatch(
-        setPoseData({
-          landmarks,
-          timestamp: Date.now(),
-          confidence:
-            landmarks.reduce((acc, l) => acc + l.visibility, 0) / landmarks.length,
-        })
-      );
+      dispatch(setPoseData(poseData));
 
-      // Validate exercise if one is selected
-      if (selectedExercise) {
-        const validation = exerciseValidationService.validateExercise(
-          selectedExercise,
-          landmarks,
-          angles
-        );
+      // Validate exercise (startDetection starts the exercise session)
+      if (exerciseValidationService.getCurrentState().isActive) {
+        const validation = exerciseValidationService.validatePose(poseData);
+        const metrics = exerciseValidationService.getExerciseMetrics();
+        const feedbackMessage = validation.feedback[0] ?? validation.errors[0] ?? '';
 
-        if (validation.feedbackMessage) {
-          audioFeedbackService.speak(validation.feedbackMessage);
+        if (feedbackMessage) {
+          audioFeedbackService.speak(feedbackMessage);
         }
 
         setExerciseMetrics({
-          reps: validation.repetitions,
-          quality: validation.formScore * 100,
-          feedback: validation.feedbackMessage || '',
+          reps: metrics.repetitionCount,
+          quality: metrics.averageQuality, // already 0-100
+          feedback: feedbackMessage,
         });
 
         // Update exercise progress in Redux
         dispatch(
           updateExerciseProgress({
-            exerciseId: selectedExercise,
-            repetitions: validation.repetitions,
-            quality: validation.formScore,
+            reps: metrics.repetitionCount,
+            formScore: metrics.averageQuality,
+            phase: validation.phase,
           })
         );
       }
@@ -155,7 +146,7 @@ const WebPoseDetectionScreen: React.FC = () => {
         );
       }
     },
-    [selectedExercise, dispatch]
+    [dispatch]
   );
 
   const startDetection = async () => {
@@ -168,20 +159,17 @@ const WebPoseDetectionScreen: React.FC = () => {
       setIsDetecting(true);
       audioFeedbackService.speak('Starting pose detection');
 
+      // Start exercise session before frames start arriving
+      exerciseValidationService.startExercise(EXERCISES[selectedExercise]);
+
       await webPoseDetectionService.startDetection(
         videoRef.current,
         canvasRef.current,
         handlePoseResults
       );
-
-      // Start exercise session
-      exerciseValidationService.startExercise(selectedExercise, {
-        userId: currentUser?.id || 'guest',
-        targetReps: 10,
-        targetSets: 3,
-      });
     } catch (error) {
       console.error('Failed to start pose detection:', error);
+      exerciseValidationService.stopExercise();
       setIsDetecting(false);
       audioFeedbackService.speak('Failed to start pose detection');
     }
@@ -189,16 +177,16 @@ const WebPoseDetectionScreen: React.FC = () => {
 
   const stopDetection = () => {
     webPoseDetectionService.stopDetection();
-    exerciseValidationService.endExercise();
+    exerciseValidationService.stopExercise();
     setIsDetecting(false);
     audioFeedbackService.speak('Pose detection stopped');
   };
 
-  const exercises: { value: ExerciseType; label: string }[] = [
-    { value: 'bicep_curl', label: 'Bicep Curl' },
-    { value: 'shoulder_press', label: 'Shoulder Press' },
+  const exercises: { value: ExerciseKey; label: string }[] = [
+    { value: 'bicepCurl', label: 'Bicep Curl' },
+    { value: 'shoulderPress', label: 'Shoulder Press' },
     { value: 'squat', label: 'Squat' },
-    { value: 'hamstring_stretch', label: 'Hamstring Stretch' },
+    { value: 'hamstringStretch', label: 'Hamstring Stretch' },
   ];
 
   return (
@@ -211,9 +199,9 @@ const WebPoseDetectionScreen: React.FC = () => {
       </View>
 
       <View style={styles.videoContainer}>
-        <video ref={videoRef} style={styles.video} autoPlay playsInline muted />
-        <canvas ref={canvasRef} style={styles.canvas} />
-        <canvas ref={overlayCanvasRef} style={styles.overlayCanvas} />
+        <video ref={videoRef} style={domStyles.video} autoPlay playsInline muted />
+        <canvas ref={canvasRef} style={domStyles.canvas} />
+        <canvas ref={overlayCanvasRef} style={domStyles.overlayCanvas} />
       </View>
 
       <View style={styles.controls}>
@@ -279,6 +267,34 @@ const WebPoseDetectionScreen: React.FC = () => {
   );
 };
 
+// Raw DOM elements (<video>, <canvas>) take CSS styles, not React Native styles
+const domStyles: Record<'video' | 'canvas' | 'overlayCanvas', React.CSSProperties> = {
+  video: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  canvas: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none',
+  },
+  overlayCanvas: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none',
+  },
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -304,34 +320,10 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     maxWidth: 800,
-    margin: '0 auto',
+    marginHorizontal: 'auto',
     aspectRatio: 16 / 9,
     backgroundColor: 'black',
     marginVertical: 20,
-  },
-  video: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-  canvas: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'none',
-  },
-  overlayCanvas: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'none',
   },
   controls: {
     padding: 20,

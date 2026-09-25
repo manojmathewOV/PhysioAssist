@@ -175,11 +175,12 @@ export class ExerciseValidationService {
    */
   private detectRepetitionComplete(validation: ValidationResult): boolean {
     if (!this.currentExercise || !this.currentPhase) return false;
+    const currentPhaseName = this.currentPhase.name;
 
     // For bicep curl: rest -> flexion -> extension (completes one rep)
     // We complete a rep when we've gone through all phases and returned to rest/extension
     const currentPhaseIndex = this.currentExercise.phases.findIndex(
-      (p) => p.name === this.currentPhase.name
+      (p) => p.name === currentPhaseName
     );
 
     // If we're at the last phase (extension for bicep curl) and it's valid, complete a rep

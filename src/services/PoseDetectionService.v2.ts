@@ -12,7 +12,12 @@
  * - 60+ FPS capable
  */
 
-import { TFLiteModel } from 'react-native-fast-tflite';
+import { Platform } from 'react-native';
+import {
+  loadTensorflowModel,
+  TensorflowModel,
+  TensorflowModelDelegate,
+} from 'react-native-fast-tflite';
 import { ProcessedPoseData, PoseLandmark, PoseDetectionConfig } from '../types/pose';
 import {
   getPatientFriendlyError,
@@ -70,10 +75,23 @@ export const POSE_CONNECTIONS: [number, number][] = [
   [14, 16],
 ];
 
+// Bundled MoveNet Lightning model (metro.config.js registers .tflite as an asset)
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const MOVENET_MODEL = require('../../assets/models/movenet_lightning_int8.tflite');
+
+/** GPU delegate for the current platform (CoreML on iOS, GPU on Android). */
+const GPU_DELEGATE: TensorflowModelDelegate =
+  Platform.OS === 'ios' ? 'core-ml' : 'android-gpu';
+
+/** Load the MoveNet model with the given delegate. */
+function loadMoveNet(delegate: TensorflowModelDelegate): Promise<TensorflowModel> {
+  return loadTensorflowModel(MOVENET_MODEL, delegate);
+}
+
 export class PoseDetectionServiceV2 {
-  private model: TFLiteModel | null = null;
+  private model: TensorflowModel | null = null;
   private isInitialized: boolean = false;
-  private readonly config: PoseDetectionConfig;
+  private readonly config: Required<PoseDetectionConfig>;
   private poseDataCallback?: (data: ProcessedPoseData) => void;
 
   // Performance tracking
@@ -144,20 +162,14 @@ export class PoseDetectionServiceV2 {
         // Try GPU delegates first for maximum performance
         try {
           console.log('🎮 Attempting GPU/CoreML acceleration...');
-          this.model = await TFLiteModel.load({
-            model: require('../../assets/models/movenet_lightning_int8.tflite'),
-            delegates: ['gpu', 'core-ml'], // iOS: CoreML, Android: GPU/NNAPI
-          });
+          this.model = await loadMoveNet(GPU_DELEGATE); // iOS: CoreML, Android: GPU
           this.isUsingGPU = true;
           this.delegateMode = 'gpu';
           console.log('✅ GPU acceleration enabled');
         } catch (gpuError) {
           // GPU failed - fallback to CPU
           console.warn('⚠️ GPU acceleration unavailable, falling back to CPU:', gpuError);
-          this.model = await TFLiteModel.load({
-            model: require('../../assets/models/movenet_lightning_int8.tflite'),
-            delegates: [], // No delegates = CPU mode
-          });
+          this.model = await loadMoveNet('default'); // Default delegate = CPU mode
           this.isUsingGPU = false;
           this.delegateMode = 'cpu';
           console.warn(
@@ -216,11 +228,9 @@ export class PoseDetectionServiceV2 {
       // Store delegate mode to reuse same configuration
       const currentDelegateMode = this.delegateMode;
 
-      // Dispose of current model
-      if (this.model) {
-        this.model.dispose();
-        this.model = null;
-      }
+      // Release current model (fast-tflite frees native memory when the JS
+      // object is garbage-collected; there is no explicit dispose API)
+      this.model = null;
 
       // Reset counters
       this.totalInferences = 0;
@@ -228,25 +238,16 @@ export class PoseDetectionServiceV2 {
       // Reload with same delegate mode
       if (currentDelegateMode === 'gpu') {
         try {
-          this.model = await TFLiteModel.load({
-            model: require('../../assets/models/movenet_lightning_int8.tflite'),
-            delegates: ['gpu', 'core-ml'],
-          });
+          this.model = await loadMoveNet(GPU_DELEGATE);
           console.log('✅ Model reloaded with GPU acceleration');
         } catch (gpuError) {
           console.warn('⚠️ GPU reload failed, falling back to CPU');
-          this.model = await TFLiteModel.load({
-            model: require('../../assets/models/movenet_lightning_int8.tflite'),
-            delegates: [],
-          });
+          this.model = await loadMoveNet('default');
           this.isUsingGPU = false;
           this.delegateMode = 'cpu';
         }
       } else {
-        this.model = await TFLiteModel.load({
-          model: require('../../assets/models/movenet_lightning_int8.tflite'),
-          delegates: [],
-        });
+        this.model = await loadMoveNet('default');
         console.log('✅ Model reloaded in CPU mode');
       }
 
@@ -299,11 +300,22 @@ export class PoseDetectionServiceV2 {
     try {
       const startTime = performance.now();
 
-      // Convert to Float32Array and normalize (0-255 → 0-1)
-      const inputTensor = this.preprocessFrame(frameData);
+      // The TF Hub MoveNet .tflite models take a uint8 [1,H,W,3] input tensor.
+      // Only normalise to float32 (0-1) if the loaded model declares a float input.
+      const inputType = this.model.inputs[0]?.dataType;
+      const inputTensor =
+        inputType === 'uint8'
+          ? frameData instanceof Uint8Array
+            ? frameData
+            : Uint8Array.from(frameData)
+          : this.preprocessFrame(frameData);
 
-      // Run inference (GPU-accelerated, zero-copy with JSI)
-      const output = this.model.run(inputTensor);
+      // Run inference synchronously (GPU-accelerated, zero-copy with JSI)
+      const [output] = this.model.runSync([inputTensor]);
+      if (!(output instanceof Float32Array)) {
+        console.warn('⚠️ Unexpected MoveNet output tensor type');
+        return null;
+      }
 
       // Parse MoveNet output: [1, 1, 17, 3] → [{x, y, score}...]
       let landmarks = this.parseMoveNetOutput(output);
@@ -326,16 +338,19 @@ export class PoseDetectionServiceV2 {
           x: lm.x,
           y: lm.y,
           z: 0, // MoveNet doesn't have Z, use 0
-          visibility: lm.score, // Use MoveNet score as visibility
+          visibility: lm.visibility, // MoveNet score is stored as visibility
         }));
 
         const smoothed = this.landmarkFilter.filterPose(landmarksWithZ, timestamp);
 
-        // Convert back to MoveNet format
-        landmarks = smoothed.map((lm) => ({
+        // Convert back, keeping each landmark's index/name so downstream
+        // consumers (orientation, anatomical frames) can still look them up
+        const raw = landmarks;
+        landmarks = smoothed.map((lm, i) => ({
+          ...raw[i],
           x: lm.x,
           y: lm.y,
-          score: lm.visibility || 0,
+          visibility: lm.visibility ?? 0,
         }));
       }
 
@@ -532,7 +547,7 @@ export class PoseDetectionServiceV2 {
 
     // Left humerus: Requires left shoulder + elbow with sufficient visibility
     const left_humerus =
-      leftShoulder?.visibility > 0.5 && leftElbow?.visibility > 0.5
+      (leftShoulder?.visibility ?? 0) > 0.5 && (leftElbow?.visibility ?? 0) > 0.5
         ? this.frameCache.get('left_humerus', landmarks, (lm) =>
             this.anatomicalService.calculateHumerusFrame(lm, 'left', thorax)
           )
@@ -540,7 +555,7 @@ export class PoseDetectionServiceV2 {
 
     // Right humerus: Requires right shoulder + elbow with sufficient visibility
     const right_humerus =
-      rightShoulder?.visibility > 0.5 && rightElbow?.visibility > 0.5
+      (rightShoulder?.visibility ?? 0) > 0.5 && (rightElbow?.visibility ?? 0) > 0.5
         ? this.frameCache.get('right_humerus', landmarks, (lm) =>
             this.anatomicalService.calculateHumerusFrame(lm, 'right', thorax)
           )
@@ -678,10 +693,7 @@ export class PoseDetectionServiceV2 {
    * Gate 9B.5: Also clears anatomical frame cache
    */
   async cleanup(): Promise<void> {
-    if (this.model) {
-      this.model.dispose();
-      this.model = null;
-    }
+    this.model = null;
     this.isInitialized = false;
     this.poseDataCallback = undefined;
 

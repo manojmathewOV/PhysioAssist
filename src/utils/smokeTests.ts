@@ -15,8 +15,9 @@
 
 import { Camera } from 'react-native-vision-camera';
 import { poseDetectionService } from '@services/poseDetectionService';
+import type { MockPoseDataSimulator } from '@services/mockPoseDataSimulator';
 // Conditional import: Only include mock simulator in development builds
-const mockPoseDataSimulator = __DEV__
+const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
   ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator // eslint-disable-line @typescript-eslint/no-var-requires
   : null;
 import { Platform } from 'react-native';
@@ -92,9 +93,10 @@ async function testCameraPermissions(): Promise<SmokeTestResult> {
   const name = 'Camera Permissions';
 
   try {
-    const permission = await Camera.getCameraPermissionStatus();
+    // VisionCamera v4: synchronous, returns 'granted' | 'not-determined' | 'denied' | 'restricted'
+    const permission = Camera.getCameraPermissionStatus();
 
-    if (permission === 'authorized' || permission === 'not-determined') {
+    if (permission === 'granted' || permission === 'not-determined') {
       return {
         name,
         passed: true,

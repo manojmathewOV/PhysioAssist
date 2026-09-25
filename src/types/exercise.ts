@@ -1,3 +1,5 @@
+import { JointAngle } from './pose';
+
 export interface Exercise {
   id: string;
   name: string;

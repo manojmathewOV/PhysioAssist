@@ -69,7 +69,7 @@ export interface ShoulderEulerAngles {
 type RotationMatrix = number[][];
 
 export class GoniometerServiceV2 {
-  private readonly config: AngleCalculationConfig;
+  private readonly config: Required<AngleCalculationConfig>;
   private angleHistory: Map<string, number[]> = new Map();
   private schemaRegistry: PoseSchemaRegistry;
   private anatomicalService: AnatomicalReferenceService;
@@ -365,6 +365,9 @@ export class GoniometerServiceV2 {
     schemaId: string
   ): { point1: number; joint: number; point2: number } {
     const schema = this.schemaRegistry.get(schemaId);
+    if (!schema) {
+      throw new Error(`Unknown pose schema: ${schemaId}`);
+    }
 
     // Define joint-to-landmark mapping (schema-agnostic anatomical names)
     const jointDefinitions: Record<string, [string, string, string]> = {

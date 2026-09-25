@@ -18,24 +18,15 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  Animated,
-  Alert,
-} from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import {
   Camera,
-  useCameraDevices,
+  useCameraDevice,
   useFrameProcessor,
   Frame,
 } from 'react-native-vision-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { runOnJS } from 'react-native-reanimated';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -48,10 +39,8 @@ import { ClinicalJointMeasurement } from '../types/clinicalMeasurement';
 
 // V2 Components
 import JointSelectionPanelV2 from '@components/clinical/JointSelectionPanelV2';
-import MovementSelectionPanelV2, {
-  JointType,
-  MovementType,
-} from '@components/clinical/MovementSelectionPanelV2';
+import MovementSelectionPanelV2 from '@components/clinical/MovementSelectionPanelV2';
+import { JointType, MovementType } from '@config/movements.config';
 import MovementDemoScreen from '@components/clinical/MovementDemoScreen';
 import ClinicalAngleDisplayV2 from '@components/clinical/ClinicalAngleDisplayV2';
 import ProgressIndicator from '@components/clinical/ProgressIndicator';
@@ -62,8 +51,7 @@ type AssessmentStep = 'joint' | 'movement' | 'demo' | 'measure' | 'complete';
 const ClinicalAssessmentScreenV2: React.FC = () => {
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
-  const devices = useCameraDevices();
-  const device = devices.front;
+  const device = useCameraDevice('front');
 
   const { isDetecting, currentPose } = useSelector((state: RootState) => state.pose);
   const [hasPermission, setHasPermission] = useState(false);
@@ -80,7 +68,7 @@ const ClinicalAssessmentScreenV2: React.FC = () => {
     ClinicalJointMeasurement | undefined
   >();
   const [maxAngleAchieved, setMaxAngleAchieved] = useState<number>(0);
-  const [sessionStartTime, setSessionStartTime] = useState<number>(0);
+  const [, setSessionStartTime] = useState<number>(0);
 
   // Services
   const clinicalServiceRef = useRef(new ClinicalMeasurementService());
@@ -105,8 +93,8 @@ const ClinicalAssessmentScreenV2: React.FC = () => {
 
   const requestCameraPermission = async () => {
     const permission = await Camera.requestCameraPermission();
-    setHasPermission(permission === 'authorized');
-    if (permission !== 'authorized') {
+    setHasPermission(permission === 'granted');
+    if (permission !== 'granted') {
       Alert.alert(
         'Camera Permission Required',
         'Please grant camera permission to use clinical assessment.'
@@ -224,31 +212,16 @@ const ClinicalAssessmentScreenV2: React.FC = () => {
   };
 
   // Frame processor
+  // NOTE: runs on the VisionCamera (react-native-worklets-core) runtime, where
+  // reanimated's runOnJS is unavailable. Frame -> pose conversion is not wired
+  // up yet; pose data arrives via poseDetectionService's callback.
   const frameProcessor = useFrameProcessor(
-    (frame: Frame) => {
+    (_frame: Frame) => {
       'worklet';
       if (!isDetecting) return;
-      runOnJS(() => {
-        // Process frame
-      })();
     },
     [isDetecting]
   );
-
-  const getCurrentStepNumber = (): number => {
-    switch (step) {
-      case 'joint':
-        return 1;
-      case 'movement':
-        return 2;
-      case 'demo':
-        return 3;
-      case 'measure':
-        return 4;
-      case 'complete':
-        return 5;
-    }
-  };
 
   if (!device || !hasPermission) {
     return (
@@ -359,7 +332,7 @@ const ClinicalAssessmentScreenV2: React.FC = () => {
               </Text>
             </View>
 
-            <View style={styles.message}>
+            <View style={styles.messageBox}>
               <Text style={styles.messageText}>
                 You're doing great! Keep practicing and you'll improve even more!
               </Text>
@@ -502,7 +475,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     textTransform: 'capitalize',
   },
-  message: {
+  messageBox: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 20,
     padding: 24,

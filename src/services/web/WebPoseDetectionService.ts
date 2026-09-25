@@ -1,6 +1,14 @@
-import { Pose } from '@mediapipe/pose';
 import { Camera } from '@mediapipe/camera_utils';
-import { PoseLandmark, DetectionConfig, Keypoint } from '../../types/pose';
+import { Pose, Results } from '@mediapipe/pose';
+import { PoseLandmark } from '../../types/pose';
+
+/** A landmark in pixel coordinates (see denormalizeCoordinates). */
+export interface Keypoint {
+  x: number;
+  y: number;
+  score: number;
+  name: string;
+}
 
 export class WebPoseDetectionService {
   private pose: Pose | null = null;
@@ -10,18 +18,26 @@ export class WebPoseDetectionService {
   private isRunning = false;
   private onResultsCallback: ((landmarks: PoseLandmark[]) => void) | null = null;
 
-  constructor() {
-    this.initializePose();
+  /**
+   * MediaPipe is created lazily: this module is also bundled on iOS/Android
+   * (RootNavigator imports the web screen), where there is no DOM/WebGL, so
+   * constructing Pose at import time must be avoided.
+   */
+  private ensurePose(): Pose {
+    if (!this.pose) {
+      this.pose = this.createPose();
+    }
+    return this.pose;
   }
 
-  private initializePose() {
-    this.pose = new Pose({
+  private createPose(): Pose {
+    const pose = new Pose({
       locateFile: (file: string) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
       },
     });
 
-    this.pose.setOptions({
+    pose.setOptions({
       modelComplexity: 1,
       smoothLandmarks: true,
       enableSegmentation: false,
@@ -29,44 +45,49 @@ export class WebPoseDetectionService {
       minTrackingConfidence: 0.5,
     });
 
-    this.pose.onResults(this.onResults.bind(this));
+    pose.onResults(this.onResults.bind(this));
+    return pose;
   }
 
-  private onResults(results: any) {
-    if (!this.canvasElement || !this.videoElement) return;
+  private onResults(results: Results) {
+    // Draw the video frame when a live canvas is attached. Still images
+    // (detectFromImage) have no canvas but must still receive landmarks.
+    const canvasCtx =
+      this.canvasElement && this.videoElement
+        ? this.canvasElement.getContext('2d')
+        : null;
 
-    const canvasCtx = this.canvasElement.getContext('2d');
-    if (!canvasCtx) return;
-
-    // Clear canvas
-    canvasCtx.save();
-    canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
-
-    // Draw video frame
-    canvasCtx.drawImage(
-      results.image,
-      0,
-      0,
-      this.canvasElement.width,
-      this.canvasElement.height
-    );
+    if (canvasCtx && this.canvasElement) {
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
+      canvasCtx.drawImage(
+        results.image,
+        0,
+        0,
+        this.canvasElement.width,
+        this.canvasElement.height
+      );
+    }
 
     // Process landmarks
-    if (results.poseLandmarks && this.onResultsCallback) {
-      const landmarks: PoseLandmark[] = results.poseLandmarks.map(
-        (landmark: any, index: number) => ({
+    if (this.onResultsCallback) {
+      const landmarks: PoseLandmark[] = (results.poseLandmarks ?? []).map(
+        (landmark, index) => ({
           x: landmark.x,
           y: landmark.y,
           z: landmark.z || 0,
-          visibility: landmark.visibility || 1,
+          visibility: landmark.visibility ?? 1,
+          index,
           name: this.getLandmarkName(index),
         })
       );
 
-      this.onResultsCallback(landmarks);
+      if (landmarks.length > 0 || !canvasCtx) {
+        this.onResultsCallback(landmarks);
+      }
     }
 
-    canvasCtx.restore();
+    canvasCtx?.restore();
   }
 
   private getLandmarkName(index: number): string {
@@ -113,13 +134,10 @@ export class WebPoseDetectionService {
     canvasElement: HTMLCanvasElement,
     onResults: (landmarks: PoseLandmark[]) => void
   ) {
+    this.ensurePose();
     this.videoElement = videoElement;
     this.canvasElement = canvasElement;
     this.onResultsCallback = onResults;
-
-    if (!this.pose) {
-      throw new Error('Pose detection not initialized');
-    }
 
     // Set canvas size to match video
     const resizeCanvas = () => {
@@ -158,11 +176,9 @@ export class WebPoseDetectionService {
   }
 
   async detectFromImage(imageElement: HTMLImageElement): Promise<PoseLandmark[]> {
-    if (!this.pose) {
-      throw new Error('Pose detection not initialized');
-    }
+    const pose = this.ensurePose();
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const originalCallback = this.onResultsCallback;
 
       this.onResultsCallback = (landmarks) => {
@@ -170,7 +186,10 @@ export class WebPoseDetectionService {
         resolve(landmarks);
       };
 
-      this.pose.send({ image: imageElement });
+      pose.send({ image: imageElement }).catch((error: unknown) => {
+        this.onResultsCallback = originalCallback;
+        reject(error);
+      });
     });
   }
 

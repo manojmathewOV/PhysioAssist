@@ -22,19 +22,17 @@ import {
   Text,
   TouchableOpacity,
   Alert,
-  Dimensions,
   Modal,
   Animated,
 } from 'react-native';
 import {
   Camera,
-  useCameraDevices,
+  useCameraDevice,
   useFrameProcessor,
   Frame,
 } from 'react-native-vision-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { runOnJS } from 'react-native-reanimated';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 import { RootState } from '@store/index';
@@ -50,15 +48,12 @@ import JointSelectionPanel, {
 } from '@components/clinical/JointSelectionPanel';
 import ClinicalAngleDisplay from '@components/clinical/ClinicalAngleDisplay';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
 type AssessmentPhase = 'setup' | 'ready' | 'assessing' | 'complete';
 
 const ClinicalAssessmentScreen: React.FC = () => {
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
-  const devices = useCameraDevices();
-  const device = devices.front;
+  const device = useCameraDevice('front');
 
   const { isDetecting, currentPose } = useSelector((state: RootState) => state.pose);
   const [hasPermission, setHasPermission] = useState(false);
@@ -76,7 +71,7 @@ const ClinicalAssessmentScreen: React.FC = () => {
     ClinicalJointMeasurement | undefined
   >();
   const [maxAngleAchieved, setMaxAngleAchieved] = useState<number>(0);
-  const [sessionStartTime, setSessionStartTime] = useState<number>(0);
+  const [, setSessionStartTime] = useState<number>(0);
 
   // Services
   const clinicalServiceRef = useRef(new ClinicalMeasurementService());
@@ -113,8 +108,8 @@ const ClinicalAssessmentScreen: React.FC = () => {
 
   const requestCameraPermission = async () => {
     const permission = await Camera.requestCameraPermission();
-    setHasPermission(permission === 'authorized');
-    if (permission !== 'authorized') {
+    setHasPermission(permission === 'granted');
+    if (permission !== 'granted') {
       Alert.alert(
         'Camera Permission Required',
         'Please grant camera permission to use clinical assessment.'
@@ -216,16 +211,13 @@ const ClinicalAssessmentScreen: React.FC = () => {
   };
 
   // Frame processor for pose detection
+  // NOTE: runs on the VisionCamera (react-native-worklets-core) runtime, where
+  // reanimated's runOnJS is unavailable. Frame -> pose conversion is not wired
+  // up yet; pose data arrives via poseDetectionService's callback.
   const frameProcessor = useFrameProcessor(
-    (frame: Frame) => {
+    (_frame: Frame) => {
       'worklet';
       if (!isDetecting) return;
-
-      runOnJS(() => {
-        // Process frame with pose detection service
-        // This would involve converting the frame to ImageData
-        // and passing it to poseDetectionService.processFrame()
-      })();
     },
     [isDetecting]
   );

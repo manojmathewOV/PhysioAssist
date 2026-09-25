@@ -4,7 +4,7 @@ import { AnatomicalPlane } from '../types/biomechanics';
 import { angleBetweenVectors, projectVectorOntoPlane } from '@utils/vectorMath';
 
 export class GoniometerService {
-  private readonly config: AngleCalculationConfig;
+  private readonly config: Required<AngleCalculationConfig>;
   private angleHistory: Map<string, number[]> = new Map();
 
   constructor(config: AngleCalculationConfig = {}) {
