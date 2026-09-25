@@ -40,9 +40,14 @@ export const colors = {
   danger: '#B42318',
   dangerSoft: '#FDECEA',
 
-  // Camera screens
+  // Camera screens (drawn over live video, so bright and with a soft shadow)
   cameraOverlay: 'rgba(12, 20, 28, 0.72)',
-  skeleton: '#5CE1E6',
+  skeleton: '#5CE1E6', // limbs the exercise measures
+  poseLimb: 'rgba(255, 255, 255, 0.92)', // the rest of the body
+  poseShadow: 'rgba(8, 16, 24, 0.45)', // under every line, for contrast on any background
+  poseGood: '#4ADE80', // angle inside the goal range
+  poseAdjust: '#FBBF24', // angle outside the goal range
+  poseTarget: 'rgba(255, 255, 255, 0.34)', // goal-range gauge track
 } as const;
 
 export const spacing = {

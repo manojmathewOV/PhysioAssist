@@ -1,64 +1,50 @@
-import React, { useMemo, useEffect } from 'react';
+/**
+ * Camera-screen skeleton and angle guidance (native, react-native-svg).
+ *
+ * Draws a calm, simplified body with a soft shadow so it reads on any background,
+ * highlights the limbs the current exercise measures, and for each measured joint
+ * shows a gauge: the goal range as a translucent track and the current angle as an
+ * arc with a knob, green inside the range, amber outside. Numbers appear only when `showAngles` is on;
+ * otherwise an in-range joint just gets a tick. Geometry is shared with the web
+ * overlay (overlayGeometry.ts).
+ */
+import React, { useMemo } from 'react';
 import { StyleSheet, Dimensions } from 'react-native';
-import Svg, { Circle, Line, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { useSelector } from 'react-redux';
 
 import { RootState } from '@store/index';
 import { PoseLandmark } from '../../types/pose';
+import { colors } from '../../theme';
+import {
+  AngleStatus,
+  JointFocus,
+  buildOverlayModel,
+  focusFromExercise,
+} from './overlayGeometry';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
-// Define pose connections (skeleton)
-const POSE_CONNECTIONS = [
-  // Face
-  [0, 1],
-  [1, 2],
-  [2, 3],
-  [3, 7],
-  [0, 4],
-  [4, 5],
-  [5, 6],
-  [6, 8],
-  [9, 10],
-  // Arms
-  [11, 12],
-  [11, 13],
-  [13, 15],
-  [12, 14],
-  [14, 16],
-  [15, 17],
-  [16, 18],
-  [15, 19],
-  [16, 20],
-  [17, 19],
-  [18, 20],
-  [15, 21],
-  [16, 22],
-  // Body
-  [11, 23],
-  [12, 24],
-  [23, 24],
-  // Legs
-  [23, 25],
-  [24, 26],
-  [25, 27],
-  [26, 28],
-  [27, 29],
-  [28, 30],
-  [29, 31],
-  [30, 32],
-  [27, 31],
-  [28, 32],
-];
 
 interface PoseOverlayProps {
   landmarks?: PoseLandmark[];
   width?: number;
   height?: number;
-  angles?: Record<string, number>;
+  /** Angle values to display (camelCase or snake_case joint names). */
+  angles?: Record<string, number | { angle: number }>;
+  /** Show angle numbers (otherwise only arcs and a tick when in range). */
   showAngles?: boolean;
   highlightJoints?: string[];
+  /** Joints and goal ranges to guide; defaults to the current exercise phase. */
+  focusJoints?: JointFocus[];
 }
+
+const statusColor: Record<AngleStatus, string> = {
+  good: colors.poseGood,
+  adjust: colors.poseAdjust,
+  neutral: colors.skeleton,
+};
+
+const LABEL_HEIGHT = 30;
 
 const PoseOverlay: React.FC<PoseOverlayProps> = ({
   landmarks: propLandmarks,
@@ -67,151 +53,58 @@ const PoseOverlay: React.FC<PoseOverlayProps> = ({
   angles: propAngles,
   showAngles = true,
   highlightJoints = [],
+  focusJoints,
 }) => {
-  const { currentPose, jointAngles } = useSelector((state: RootState) => state.pose);
+  const currentPose = useSelector((state: RootState) => state.pose.currentPose);
+  const exercise = useSelector((state: RootState) => state.exercise.currentExercise);
+  const phase = useSelector((state: RootState) => state.exercise.currentPhase);
 
-  // Cleanup on unmount (memory leak prevention)
-  useEffect(() => {
-    return () => {
-      // Cleanup any subscriptions or timers if needed
-      // Currently no cleanup needed for this display-only component
-    };
-  }, []);
-
-  // Use props if provided, otherwise use Redux state
-  const landmarks = propLandmarks || currentPose?.landmarks || [];
-  const angles = propAngles || jointAngles;
+  const landmarks = propLandmarks ?? currentPose?.landmarks ?? [];
   const overlayWidth = width || screenWidth;
   const overlayHeight = height || screenHeight;
 
-  // Convert normalized coordinates to screen coordinates
-  const toScreenCoords = (landmark: PoseLandmark) => ({
-    x: landmark.x * overlayWidth,
-    y: landmark.y * overlayHeight,
-  });
+  const focus = useMemo(
+    () => focusJoints ?? focusFromExercise(exercise, phase),
+    [focusJoints, exercise, phase]
+  );
 
-  // Determine color based on confidence
-  const getColor = (visibility: number, isHighlighted: boolean = false) => {
-    if (isHighlighted) return '#FFD700';
-    if (visibility > 0.8) return '#00FF00';
-    if (visibility > 0.5) return '#FFFF00';
-    return '#FF0000';
-  };
+  const angleValues = useMemo(() => {
+    if (!propAngles) {
+      return undefined;
+    }
+    const values: Record<string, number> = {};
+    for (const [joint, value] of Object.entries(propAngles)) {
+      const deg = typeof value === 'number' ? value : value?.angle;
+      if (typeof deg === 'number') {
+        values[joint] = deg;
+      }
+    }
+    return values;
+  }, [propAngles]);
 
-  const renderedConnections = useMemo(() => {
-    return POSE_CONNECTIONS.map((connection, index) => {
-      const [startIdx, endIdx] = connection;
-      const startLandmark = landmarks[startIdx];
-      const endLandmark = landmarks[endIdx];
+  const model = useMemo(
+    () =>
+      buildOverlayModel(landmarks, {
+        width: overlayWidth,
+        height: overlayHeight,
+        focus,
+        angleValues: showAngles ? angleValues : undefined,
+        highlightJoints,
+      }),
+    [
+      landmarks,
+      overlayWidth,
+      overlayHeight,
+      focus,
+      angleValues,
+      showAngles,
+      highlightJoints,
+    ]
+  );
 
-      if (!startLandmark || !endLandmark) return null;
-
-      const start = toScreenCoords(startLandmark);
-      const end = toScreenCoords(endLandmark);
-      const visibility = Math.min(startLandmark.visibility, endLandmark.visibility);
-
-      if (visibility < 0.3) return null;
-
-      return (
-        <Line
-          key={`connection-${index}`}
-          x1={start.x}
-          y1={start.y}
-          x2={end.x}
-          y2={end.y}
-          stroke={getColor(visibility)}
-          strokeWidth="2"
-          opacity={visibility}
-        />
-      );
-    });
-  }, [landmarks]);
-
-  const renderedLandmarks = useMemo(() => {
-    return landmarks.map((landmark, index) => {
-      if (landmark.visibility < 0.3) return null;
-
-      const coords = toScreenCoords(landmark);
-      const isHighlighted = highlightJoints.includes(landmark.name);
-
-      return (
-        <Circle
-          key={`landmark-${index}`}
-          cx={coords.x}
-          cy={coords.y}
-          r={isHighlighted ? 8 : 5}
-          fill={getColor(landmark.visibility, isHighlighted)}
-          opacity={landmark.visibility}
-        />
-      );
-    });
-  }, [landmarks, highlightJoints]);
-
-  // Helper function to map joint names to landmark indices
-  const getJointIndex = (jointName: string): number => {
-    const jointMap: Record<string, number> = {
-      left_shoulder: 11,
-      right_shoulder: 12,
-      left_elbow: 13,
-      right_elbow: 14,
-      left_wrist: 15,
-      right_wrist: 16,
-      left_hip: 23,
-      right_hip: 24,
-      left_knee: 25,
-      right_knee: 26,
-      left_ankle: 27,
-      right_ankle: 28,
-    };
-    return jointMap[jointName] || 0;
-  };
-
-  const renderedAngles = useMemo(() => {
-    if (!showAngles || !angles) return null;
-
-    return Object.entries(angles).map(([jointName, angleValue]) => {
-      // Handle both number and JointAngle object formats
-      const angle = typeof angleValue === 'number' ? angleValue : angleValue?.angle;
-      if (angle === undefined || angle === null) return null;
-
-      // Find the joint landmark position
-      const jointIndex = getJointIndex(jointName);
-      const jointLandmark = landmarks[jointIndex];
-      if (!jointLandmark) return null;
-
-      const coords = toScreenCoords(jointLandmark);
-
-      return (
-        <SvgText
-          key={`angle-${jointName}`}
-          x={coords.x + 15}
-          y={coords.y - 10}
-          fill="#FFFFFF"
-          fontSize="14"
-          fontWeight="bold"
-          stroke="#000000"
-          strokeWidth="1"
-        >
-          {`${angle.toFixed(0)}°`}
-        </SvgText>
-      );
-    });
-  }, [angles, landmarks, showAngles]);
-
-  // Skip rendering if no landmarks when props are provided
-  if (propLandmarks !== undefined && landmarks.length === 0) {
-    return (
-      <Svg
-        testID="pose-overlay-svg"
-        style={StyleSheet.absoluteFill}
-        width={overlayWidth}
-        height={overlayHeight}
-      />
-    );
+  if (!propLandmarks && !currentPose) {
+    return null;
   }
-
-  // Skip if no pose data from Redux and no props
-  if (!propLandmarks && !currentPose) return null;
 
   return (
     <Svg
@@ -219,10 +112,131 @@ const PoseOverlay: React.FC<PoseOverlayProps> = ({
       style={StyleSheet.absoluteFill}
       width={overlayWidth}
       height={overlayHeight}
+      pointerEvents="none"
     >
-      {renderedConnections}
-      {renderedLandmarks}
-      {renderedAngles}
+      {/* Shadow pass, then limbs */}
+      {model.segments.map((s, i) => (
+        <Line
+          key={`shadow-${i}`}
+          x1={s.from.x}
+          y1={s.from.y}
+          x2={s.to.x}
+          y2={s.to.y}
+          stroke={colors.poseShadow}
+          strokeWidth={s.focus ? 11 : 8}
+          strokeLinecap="round"
+          opacity={s.opacity}
+        />
+      ))}
+      {model.segments.map((s, i) => (
+        <Line
+          key={`limb-${i}`}
+          x1={s.from.x}
+          y1={s.from.y}
+          x2={s.to.x}
+          y2={s.to.y}
+          stroke={s.focus ? colors.skeleton : colors.poseLimb}
+          strokeWidth={s.focus ? 6 : 4}
+          strokeLinecap="round"
+          opacity={s.opacity}
+        />
+      ))}
+
+      {model.head ? (
+        <Circle
+          cx={model.head.at.x}
+          cy={model.head.at.y}
+          r={model.head.radius}
+          fill="none"
+          stroke={colors.poseLimb}
+          strokeWidth={3}
+          opacity={model.head.opacity}
+        />
+      ) : null}
+
+      {/* Joints: white dots with a coloured ring */}
+      {model.joints.map((j) => (
+        <Circle
+          key={`joint-${j.name}`}
+          cx={j.at.x}
+          cy={j.at.y}
+          r={j.focus ? 8 : 5}
+          fill="#FFFFFF"
+          stroke={j.focus ? colors.skeleton : colors.poseShadow}
+          strokeWidth={j.focus ? 3 : 2}
+          opacity={j.opacity}
+        />
+      ))}
+
+      {/* Current angle arcs and labels */}
+      {model.angles.map((a) => {
+        const color = statusColor[a.status];
+        const text = showAngles
+          ? `${Math.round(a.degrees)}°`
+          : a.status === 'good'
+            ? '✓'
+            : null;
+        const labelWidth = text && text.length > 2 ? 58 : 36;
+        return (
+          <G key={`angle-${a.joint}`}>
+            {a.targetPath ? (
+              <Path
+                d={a.targetPath}
+                fill="none"
+                stroke={colors.poseTarget}
+                strokeWidth={14}
+                strokeLinecap="round"
+              />
+            ) : null}
+            <Path
+              d={a.arcPath}
+              fill="none"
+              stroke={colors.poseShadow}
+              strokeWidth={8}
+              strokeLinecap="round"
+            />
+            <Path
+              d={a.arcPath}
+              fill="none"
+              stroke={color}
+              strokeWidth={5}
+              strokeLinecap="round"
+            />
+            <Circle
+              cx={a.knobAt.x}
+              cy={a.knobAt.y}
+              r={6}
+              fill={color}
+              stroke="#FFFFFF"
+              strokeWidth={2}
+            />
+            {text ? (
+              <G>
+                <Rect
+                  x={a.labelAt.x - labelWidth / 2}
+                  y={a.labelAt.y - LABEL_HEIGHT / 2}
+                  width={labelWidth}
+                  height={LABEL_HEIGHT}
+                  rx={LABEL_HEIGHT / 2}
+                  fill={colors.cameraOverlay}
+                  stroke={color}
+                  strokeWidth={2}
+                />
+                <SvgText
+                  x={a.labelAt.x}
+                  y={a.labelAt.y + 6}
+                  fill="#FFFFFF"
+                  fontSize={17}
+                  fontWeight="700"
+                  textAnchor="middle"
+                >
+                  {text}
+                </SvgText>
+              </G>
+            ) : null}
+          </G>
+        );
+      })}
     </Svg>
   );
 };

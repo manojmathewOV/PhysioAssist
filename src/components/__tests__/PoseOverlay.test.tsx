@@ -1,249 +1,186 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
 import PoseOverlay from '../pose/PoseOverlay';
 import { PoseLandmark } from '../../types/pose';
 import { renderWithProviders } from '../../utils/testHelpers';
+import {
+  angleStatus,
+  buildOverlayModel,
+  focusFromExercise,
+  toJointKey,
+} from '../pose/overlayGeometry';
+import { EXERCISES } from '../../constants/exercises';
+
+const NAMES: Record<number, string> = {
+  0: 'nose',
+  11: 'left_shoulder',
+  12: 'right_shoulder',
+  13: 'left_elbow',
+  14: 'right_elbow',
+  15: 'left_wrist',
+  16: 'right_wrist',
+  23: 'left_hip',
+  24: 'right_hip',
+  25: 'left_knee',
+  26: 'right_knee',
+  27: 'left_ankle',
+  28: 'right_ankle',
+};
+
+/** A standing person with the left elbow bent to 90°. */
+const standing = (visibility = 0.95): PoseLandmark[] => {
+  const at: Record<number, [number, number]> = {
+    0: [0.5, 0.15],
+    11: [0.4, 0.3],
+    12: [0.6, 0.3],
+    13: [0.4, 0.45],
+    14: [0.6, 0.45],
+    15: [0.3, 0.45], // left forearm horizontal: 90° elbow
+    16: [0.6, 0.6],
+    23: [0.42, 0.6],
+    24: [0.58, 0.6],
+    25: [0.42, 0.75],
+    26: [0.58, 0.75],
+    27: [0.42, 0.9],
+    28: [0.58, 0.9],
+  };
+  return Array.from({ length: 33 }, (_, index) => ({
+    x: at[index]?.[0] ?? 0.5,
+    y: at[index]?.[1] ?? 0.5,
+    z: 0,
+    visibility: at[index] ? visibility : 0.1,
+    index,
+    name: NAMES[index] ?? `landmark_${index}`,
+  }));
+};
+
+type Node = { type: string; props: Record<string, unknown>; children?: Node[] | null };
+const find = (node: Node | Node[] | null, type: string, out: Node[] = []): Node[] => {
+  if (!node) return out;
+  if (Array.isArray(node)) {
+    node.forEach((n) => find(n, type, out));
+    return out;
+  }
+  if (typeof node === 'object') {
+    if (node.type === type) out.push(node);
+    node.children?.forEach((c) => find(c, type, out));
+  }
+  return out;
+};
+const texts = (tree: Node | Node[] | null) =>
+  find(tree, 'RNSVGTSpan').map((n) => String(n.props.content));
 
 describe('PoseOverlay', () => {
-  const mockLandmarks: PoseLandmark[] = [
-    { x: 0.5, y: 0.5, z: 0, visibility: 0.9, name: 'nose', index: 0 },
-    { x: 0.4, y: 0.4, z: 0, visibility: 0.9, name: 'left_eye', index: 1 },
-    { x: 0.6, y: 0.4, z: 0, visibility: 0.9, name: 'right_eye', index: 2 },
-  ];
-
-  const mockAngles = {
-    leftElbow: 90,
-    rightElbow: 90,
-    leftKnee: 180,
-    rightKnee: 180,
-  };
-
-  it('should render without crashing', () => {
-    const { getByTestId } = renderWithProviders(
-      <PoseOverlay
-        landmarks={mockLandmarks}
-        width={320}
-        height={480}
-        angles={mockAngles}
-      />
+  it('renders the simplified body: limbs with a shadow pass, joints and a head ring', () => {
+    const { getByTestId, toJSON } = renderWithProviders(
+      <PoseOverlay landmarks={standing()} width={400} height={800} />
     );
-
-    // The SVG should be rendered
     expect(getByTestId('pose-overlay-svg')).toBeTruthy();
+    const tree = toJSON() as Node;
+    // 12 body bones drawn twice (shadow + colour)
+    expect(find(tree, 'RNSVGLine').length).toBe(24);
+    // 12 body joints + head ring; no face or finger dots
+    expect(find(tree, 'RNSVGCircle').length).toBe(13);
   });
 
-  it('should render landmarks as circles', () => {
+  it('hides landmarks the model is unsure about', () => {
+    const { toJSON } = renderWithProviders(
+      <PoseOverlay landmarks={standing(0.2)} width={400} height={800} />
+    );
+    expect(find(toJSON() as Node, 'RNSVGLine').length).toBe(0);
+  });
+
+  it('shows the angle number for a focused joint when numbers are on', () => {
     const { toJSON } = renderWithProviders(
       <PoseOverlay
-        landmarks={mockLandmarks}
-        width={320}
-        height={480}
-        angles={mockAngles}
+        landmarks={standing()}
+        width={400}
+        height={800}
+        showAngles
+        focusJoints={[{ joint: 'left_elbow', min: 80, max: 100 }]}
       />
     );
-
-    const tree = toJSON();
-    const circles = findElements(tree, 'Circle');
-
-    // We have 3 visible landmarks
-    expect(circles.length).toBeGreaterThanOrEqual(3);
+    expect(texts(toJSON() as Node)).toContain('90°');
   });
 
-  it('should calculate correct positions for landmarks', () => {
+  it('shows only a tick (no number) for an in-range joint when numbers are off', () => {
     const { toJSON } = renderWithProviders(
       <PoseOverlay
-        landmarks={mockLandmarks}
-        width={320}
-        height={480}
-        angles={mockAngles}
+        landmarks={standing()}
+        width={400}
+        height={800}
+        showAngles={false}
+        focusJoints={[{ joint: 'left_elbow', min: 80, max: 100 }]}
       />
     );
-
-    const tree = toJSON();
-    const circles = findElements(tree, 'Circle');
-
-    // Check if circles have positions
-    expect(circles.length).toBeGreaterThan(0);
-    if (circles.length > 0) {
-      expect(circles[0].props.cx).toBeDefined();
-      expect(circles[0].props.cy).toBeDefined();
-    }
+    const labels = texts(toJSON() as Node);
+    expect(labels).toContain('✓');
+    expect(labels.some((t) => t.includes('°'))).toBe(false);
   });
 
-  it('should display joint angles when provided', () => {
+  it('uses provided angle values when given', () => {
     const { toJSON } = renderWithProviders(
       <PoseOverlay
-        landmarks={mockLandmarks}
-        width={320}
-        height={480}
-        angles={mockAngles}
-        showAngles={true}
+        landmarks={standing()}
+        width={400}
+        height={800}
+        showAngles
+        angles={{ leftKnee: 123 }}
       />
     );
-
-    const tree = toJSON();
-    const texts = findElements(tree, 'Text');
-
-    // Should have angle text elements - check for RNSVGTSpan children with degree symbols
-    const angleTexts = texts.filter(
-      (text) =>
-        text.children &&
-        text.children.some(
-          (child: any) =>
-            child &&
-            child.type === 'RNSVGTSpan' &&
-            child.props &&
-            child.props.content &&
-            typeof child.props.content === 'string' &&
-            child.props.content.includes('°')
-        )
-    );
-
-    expect(angleTexts.length).toBeGreaterThan(0);
+    expect(texts(toJSON() as Node)).toContain('123°');
   });
 
-  it('should highlight specific joints when requested', () => {
-    const highlightedJoints = ['left_eye']; // Use a joint name that's in our mockLandmarks
-
+  it('uses the given size', () => {
     const { toJSON } = renderWithProviders(
-      <PoseOverlay
-        landmarks={mockLandmarks}
-        width={320}
-        height={480}
-        angles={mockAngles}
-        highlightJoints={highlightedJoints}
-      />
+      <PoseOverlay landmarks={standing()} width={640} height={960} />
     );
-
-    const tree = toJSON();
-    const circles = findElements(tree, 'Circle');
-
-    // Check if highlighted joints have different radius (rendered as string)
-    const highlightedCircle = circles.find((circle) => circle.props.r === '8');
-    expect(highlightedCircle).toBeTruthy();
+    const svg = find(toJSON() as Node, 'RNSVGSvgView')[0] ?? (toJSON() as Node);
+    expect(JSON.stringify(svg.props)).toContain('640');
   });
 
-  it('should scale landmarks to screen dimensions', () => {
-    const customWidth = 640;
-    const customHeight = 960;
-
-    const { toJSON } = renderWithProviders(
-      <PoseOverlay
-        landmarks={mockLandmarks}
-        width={customWidth}
-        height={customHeight}
-        angles={mockAngles}
-      />
-    );
-
-    const tree = toJSON();
-    const svg = findElement(tree, 'Svg');
-
-    expect(svg?.props.width).toBe(customWidth);
-    expect(svg?.props.height).toBe(customHeight);
-  });
-
-  it('should handle empty landmarks array', () => {
+  it('renders an empty overlay for no landmarks', () => {
     const { getByTestId } = renderWithProviders(
-      <PoseOverlay landmarks={[]} width={320} height={480} angles={mockAngles} />
+      <PoseOverlay landmarks={[]} width={320} height={480} />
     );
-
-    // Should still render SVG element
     expect(getByTestId('pose-overlay-svg')).toBeTruthy();
-  });
-
-  it('should handle missing angles gracefully', () => {
-    const { getByTestId } = renderWithProviders(
-      <PoseOverlay landmarks={mockLandmarks} width={320} height={480} />
-    );
-
-    // Should render without angles
-    expect(getByTestId('pose-overlay-svg')).toBeTruthy();
-  });
-
-  it('should not render landmarks with low visibility', () => {
-    const landmarksWithLowVisibility: PoseLandmark[] = [
-      { x: 0.5, y: 0.5, z: 0, visibility: 0.3, name: 'at_threshold', index: 0 },
-      { x: 0.5, y: 0.5, z: 0, visibility: 0.1, name: 'invisible_2', index: 1 },
-      { x: 0.5, y: 0.5, z: 0, visibility: 0.8, name: 'visible', index: 2 },
-    ];
-
-    const { toJSON } = renderWithProviders(
-      <PoseOverlay
-        landmarks={landmarksWithLowVisibility}
-        width={320}
-        height={480}
-        angles={mockAngles}
-      />
-    );
-
-    const tree = toJSON();
-    const circles = findElements(tree, 'Circle');
-
-    // Should filter out landmarks with visibility < 0.3, so 0.3 and 0.8 should be rendered
-    expect(circles.length).toBe(2);
-  });
-
-  it('should render connections between landmarks', () => {
-    const connectedLandmarks: PoseLandmark[] = Array(33)
-      .fill(null)
-      .map((_, i) => ({
-        x: 0.5 + (i % 2) * 0.1,
-        y: 0.3 + Math.floor(i / 10) * 0.1,
-        z: 0,
-        visibility: 0.9,
-        name: `landmark_${i}`,
-        index: i,
-      }));
-
-    const { toJSON } = renderWithProviders(
-      <PoseOverlay
-        landmarks={connectedLandmarks}
-        width={320}
-        height={480}
-        angles={mockAngles}
-      />
-    );
-
-    const tree = toJSON();
-    const lines = findElements(tree, 'Line');
-
-    // Should render connection lines
-    expect(lines.length).toBeGreaterThan(0);
   });
 });
 
-// Helper functions to traverse the component tree
-function findElements(tree: any, type: string): any[] {
-  const elements: any[] = [];
+describe('overlay geometry', () => {
+  it('measures angles in pixel space and classifies them against the goal range', () => {
+    const model = buildOverlayModel(standing(), {
+      width: 400,
+      height: 800,
+      focus: [{ joint: 'left_elbow', min: 80, max: 100 }],
+    });
+    const elbow = model.angles.find((a) => a.joint === 'left_elbow')!;
+    // 0.1 of width (40px) vs 0.15 of height (120px) legs of the bend: still a right angle
+    expect(elbow.degrees).toBeCloseTo(90, 0);
+    expect(elbow.status).toBe('good');
+    expect(elbow.targetPath).toMatch(/^M /);
+    expect(model.segments.filter((s) => s.focus).length).toBe(2);
+  });
 
-  // Map React Native SVG types
-  const typeMap: Record<string, string> = {
-    Circle: 'RNSVGCircle',
-    Line: 'RNSVGLine',
-    Text: 'RNSVGText',
-    Svg: 'RNSVGSvgView',
-  };
+  it('keeps labels on screen', () => {
+    const edge = standing().map((lm) => ({ ...lm, x: lm.x - 0.28 }));
+    const model = buildOverlayModel(edge, {
+      width: 400,
+      height: 800,
+      focus: [{ joint: 'left_elbow', min: 80, max: 100 }],
+    });
+    model.angles.forEach((a) => expect(a.labelAt.x).toBeGreaterThanOrEqual(33));
+  });
 
-  const targetType = typeMap[type] || type;
+  it('classifies angle status', () => {
+    expect(angleStatus(95, { joint: 'x', min: 80, max: 100 })).toBe('good');
+    expect(angleStatus(120, { joint: 'x', min: 80, max: 100 })).toBe('adjust');
+    expect(angleStatus(120)).toBe('neutral');
+  });
 
-  function traverse(node: any) {
-    if (!node) return;
-
-    if (node.type === targetType) {
-      elements.push(node);
-    }
-
-    if (node.children && Array.isArray(node.children)) {
-      node.children.forEach(traverse);
-    }
-  }
-
-  traverse(tree);
-  return elements;
-}
-
-function findElement(tree: any, type: string): any {
-  const elements = findElements(tree, type);
-  return elements[0] || null;
-}
+  it('derives goal ranges from the current exercise phase', () => {
+    const focus = focusFromExercise(EXERCISES.bicepCurl, 'curl');
+    expect(focus.length).toBeGreaterThan(0);
+    expect(focus[0].joint).toBe(toJointKey(focus[0].joint));
+    expect(focus[0].min).toBeLessThan(focus[0].max!);
+  });
+});
