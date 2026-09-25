@@ -80,11 +80,6 @@ jobs:
       - name: Install JS dependencies (also downloads MoveNet models)
         run: npm ci --legacy-peer-deps
 
-      - name: Install applesimutils (Detox)
-        run: |
-          brew tap wix/brew
-          brew install applesimutils
-
       - name: Point Xcode at the CI node binary
         run: echo "export NODE_BINARY=$(command -v node)" > ios/.xcode.env.local
 
@@ -130,6 +125,14 @@ jobs:
 
       - name: Smoke test (launch, screenshots, crash check)
         run: bash scripts/ci/ios-smoke-test.sh "$APP_PATH" "${{ steps.sim.outputs.udid }}" "$OUT_DIR/smoke"
+
+      - name: Install applesimutils (Detox)
+        if: (inputs.detox_suite || 'smoke') != 'none'
+        run: |
+          brew tap wix/brew
+          # Homebrew refuses formulas from third-party taps until they're trusted
+          brew trust wix/brew || true
+          brew install applesimutils
 
       - name: Detox E2E tests
         if: (inputs.detox_suite || 'smoke') != 'none'
