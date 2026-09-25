@@ -16,15 +16,8 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  Modal,
-  Animated,
-} from 'react-native';
+import { StyleSheet, View, ScrollView, Alert, Modal, Animated } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -42,6 +35,17 @@ import JointSelectionPanel, {
   MovementType,
 } from '@components/clinical/JointSelectionPanel';
 import ClinicalAngleDisplay from '@components/clinical/ClinicalAngleDisplay';
+import {
+  AppText,
+  Banner,
+  BigButton,
+  Card,
+  ListRow,
+  Metric,
+  Screen,
+} from '@components/ui';
+import { CameraPanel } from '@components/ui/CameraPanel';
+import { colors, spacing } from '../theme';
 
 type AssessmentPhase = 'setup' | 'ready' | 'assessing' | 'complete';
 
@@ -233,16 +237,34 @@ const ClinicalAssessmentScreen: React.FC = () => {
 
   if (!device || !hasPermission) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>
-          {!device ? 'No camera device found' : 'Camera permission required'}
-        </Text>
-      </View>
+      <Screen
+        title="Clinical assessment"
+        subtitle="Measures joint range of motion with the camera."
+        testID="clinical-assessment"
+      >
+        <Banner
+          tone="warning"
+          message={!device ? 'No camera device found' : 'Camera permission required'}
+        />
+        {device ? (
+          <BigButton
+            label="Allow camera"
+            icon="videocam"
+            onPress={requestCameraPermission}
+            accessibilityHint="Asks for permission to use the camera"
+          />
+        ) : null}
+      </Screen>
     );
   }
 
+  const selectionLabel =
+    selectedJoint && selectedMovement
+      ? `${selectedSide} ${selectedJoint} · ${selectedMovement.replace(/_/g, ' ')}`
+      : undefined;
+
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="clinical-assessment">
       {/* Camera View */}
       <Camera
         style={StyleSheet.absoluteFill}
@@ -272,116 +294,128 @@ const ClinicalAssessmentScreen: React.FC = () => {
         />
       </Modal>
 
-      {/* Top Bar - Instructions */}
-      {!showSelectionPanel && (
-        <Animated.View
-          style={[styles.topBar, { opacity: instructionFadeAnim }]}
-          accessible={true}
-          accessibilityLabel={getCurrentInstruction()}
-          accessibilityRole="text"
-          accessibilityLiveRegion="polite"
-        >
-          <Text style={styles.instructionText}>{getCurrentInstruction()}</Text>
-        </Animated.View>
-      )}
+      {!showSelectionPanel && phase !== 'complete' && (
+        <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={styles.topArea}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Top Bar - Instructions */}
+            <Animated.View style={{ opacity: instructionFadeAnim }}>
+              <CameraPanel>
+                {selectionLabel ? (
+                  <AppText
+                    variant="label"
+                    color={colors.skeleton}
+                    style={styles.capitalize}
+                  >
+                    {selectionLabel}
+                  </AppText>
+                ) : null}
+                <View
+                  accessible={true}
+                  accessibilityLabel={getCurrentInstruction()}
+                  accessibilityRole="text"
+                  accessibilityLiveRegion="polite"
+                >
+                  <AppText variant="heading" color={colors.textInverse}>
+                    {getCurrentInstruction()}
+                  </AppText>
+                </View>
+              </CameraPanel>
+            </Animated.View>
 
-      {/* Angle Display (during assessment) */}
-      {phase === 'assessing' && currentMeasurement && (
-        <View style={styles.angleDisplayContainer}>
-          <ClinicalAngleDisplay
-            measurement={currentMeasurement}
-            showMultiPlane={true}
-            showTarget={true}
-            showQuality={true}
-            showCompensations={true}
-          />
-        </View>
+            {/* Angle Display (during assessment) */}
+            {phase === 'assessing' && currentMeasurement && (
+              <ClinicalAngleDisplay
+                measurement={currentMeasurement}
+                showMultiPlane={true}
+                showTarget={true}
+                showQuality={true}
+                showCompensations={true}
+              />
+            )}
+          </ScrollView>
+
+          {/* Control Buttons */}
+          <CameraPanel style={styles.controls}>
+            {/* Main Action Button */}
+            {phase === 'ready' && (
+              <BigButton
+                label="Start assessment"
+                icon="play-arrow"
+                onPress={startAssessment}
+                accessibilityHint="Starts measuring the selected movement"
+              />
+            )}
+            {phase === 'assessing' && (
+              <BigButton
+                label="Stop"
+                icon="stop"
+                variant="danger"
+                onPress={stopAssessment}
+                accessibilityHint="Stop assessment and see the results"
+              />
+            )}
+
+            {/* Change Selection Button */}
+            <BigButton
+              label="Change selection"
+              icon="tune"
+              variant="secondary"
+              compact
+              onPress={changeSelection}
+              accessibilityHint="Change joint or movement selection"
+            />
+          </CameraPanel>
+        </SafeAreaView>
       )}
 
       {/* Complete Screen */}
       {phase === 'complete' && currentMeasurement && (
-        <View style={styles.completeContainer}>
-          <View style={styles.completeCard}>
-            <Text style={styles.completeTitle}>Assessment Complete!</Text>
-            <View style={styles.completeSummary}>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Max Angle Achieved:</Text>
-                <Text style={styles.summaryValue}>{Math.round(maxAngleAchieved)}°</Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Clinical Grade:</Text>
-                <Text style={styles.summaryValue}>
-                  {currentMeasurement.primaryJoint.clinicalGrade || 'N/A'}
-                </Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Target Achievement:</Text>
-                <Text style={styles.summaryValue}>
-                  {Math.round(currentMeasurement.primaryJoint.percentOfTarget || 0)}%
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.completeActions}>
-              <TouchableOpacity
-                style={styles.completeButton}
+        <View style={StyleSheet.absoluteFill}>
+          <Screen
+            title="Assessment complete"
+            subtitle={selectionLabel}
+            footer={
+              <BigButton
+                label="New assessment"
+                icon="replay"
                 onPress={resetAssessment}
-                accessibilityLabel="Start new assessment"
-                accessibilityRole="button"
-              >
-                <Text style={styles.completeButtonText}>New Assessment</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* Control Buttons */}
-      {!showSelectionPanel && phase !== 'complete' && (
-        <View style={styles.controlsContainer}>
-          {/* Change Selection Button */}
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={changeSelection}
-            accessibilityLabel="Change joint or movement selection"
-            accessibilityRole="button"
+                accessibilityHint="Start new assessment"
+              />
+            }
           >
-            <Text style={styles.secondaryButtonText}>Change Selection</Text>
-          </TouchableOpacity>
-
-          {/* Main Action Button */}
-          {phase === 'ready' && (
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={startAssessment}
-              accessibilityLabel="Start assessment"
-              accessibilityRole="button"
-            >
-              <Text style={styles.primaryButtonText}>Start Assessment</Text>
-            </TouchableOpacity>
-          )}
-
-          {phase === 'assessing' && (
-            <TouchableOpacity
-              style={[styles.primaryButton, styles.stopButton]}
-              onPress={stopAssessment}
-              accessibilityLabel="Stop assessment"
-              accessibilityRole="button"
-            >
-              <Text style={styles.primaryButtonText}>Stop</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-
-      {/* Selection Badge (top right) */}
-      {!showSelectionPanel && selectedJoint && selectedMovement && (
-        <View style={styles.selectionBadge}>
-          <Text style={styles.selectionBadgeText}>
-            {selectedSide.charAt(0).toUpperCase() + selectedSide.slice(1)}{' '}
-            {selectedJoint.charAt(0).toUpperCase() + selectedJoint.slice(1)} -{' '}
-            {selectedMovement.replace(/_/g, ' ')}
-          </Text>
+            <Card>
+              <Metric
+                value={`${Math.round(maxAngleAchieved)}°`}
+                label="Max angle achieved"
+                color={colors.primary}
+              />
+            </Card>
+            <Card>
+              <ListRow
+                icon="grade"
+                title="Clinical grade"
+                right={
+                  <AppText variant="bodyStrong" style={styles.capitalize}>
+                    {currentMeasurement.primaryJoint.clinicalGrade || 'N/A'}
+                  </AppText>
+                }
+              />
+              <ListRow
+                icon="flag"
+                title="Target achievement"
+                last
+                right={
+                  <AppText variant="bodyStrong">
+                    {Math.round(currentMeasurement.primaryJoint.percentOfTarget || 0)}%
+                  </AppText>
+                }
+              />
+            </Card>
+          </Screen>
         </View>
       )}
     </View>
@@ -389,148 +423,22 @@ const ClinicalAssessmentScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  capitalize: { textTransform: 'capitalize' },
   container: {
     flex: 1,
     backgroundColor: '#000',
   },
-  message: {
-    color: '#FFF',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 100,
-    paddingHorizontal: 40,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    padding: spacing.md,
+    gap: spacing.md,
   },
-  topBar: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    borderRadius: 20,
-    padding: 16,
-    alignItems: 'center',
+  topArea: {
+    gap: spacing.md,
   },
-  instructionText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFF',
-    textAlign: 'center',
-  },
-  angleDisplayContainer: {
-    position: 'absolute',
-    top: 140,
-    left: 0,
-    right: 0,
-  },
-  controlsContainer: {
-    position: 'absolute',
-    bottom: 40,
-    left: 20,
-    right: 20,
-    gap: 12,
-  },
-  primaryButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 18,
-    borderRadius: 30,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  stopButton: {
-    backgroundColor: '#F44336',
-  },
-  primaryButtonText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  secondaryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingVertical: 14,
-    borderRadius: 25,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFF',
-  },
-  selectionBadge: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
-    backgroundColor: 'rgba(33, 150, 243, 0.9)',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  selectionBadgeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFF',
-    textTransform: 'capitalize',
-  },
-  completeContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    paddingHorizontal: 20,
-  },
-  completeCard: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 24,
-    padding: 32,
-    borderWidth: 2,
-    borderColor: 'rgba(76, 175, 80, 0.5)',
-  },
-  completeTitle: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#4CAF50',
-    textAlign: 'center',
-    marginBottom: 32,
-  },
-  completeSummary: {
-    gap: 16,
-    marginBottom: 32,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontSize: 16,
-    color: '#AAA',
-  },
-  summaryValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFF',
-    textTransform: 'capitalize',
-  },
-  completeActions: {
-    gap: 12,
-  },
-  completeButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 16,
-    borderRadius: 25,
-    alignItems: 'center',
-  },
-  completeButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFF',
+  controls: {
+    padding: spacing.md,
   },
 });
 

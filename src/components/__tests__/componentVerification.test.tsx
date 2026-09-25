@@ -128,7 +128,7 @@ describe('Component Verification Tests - Complete System Check', () => {
     it('should handle privacy consent correctly', async () => {
       const store = createTestStore();
       const onComplete = jest.fn();
-      const { getByTestId } = render(
+      const { getByTestId, getByText, queryByTestId } = render(
         <Provider store={store}>
           <NavigationContainer>
             <OnboardingScreen onComplete={onComplete} />
@@ -146,11 +146,12 @@ describe('Component Verification Tests - Complete System Check', () => {
       // Try to continue without accepting
       fireEvent.press(getByTestId('onboarding-next'));
 
-      // Should show alert
-      expect(Alert.alert).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining('accept')
-      );
+      // Should explain inline (next to the checkbox) that consent is required
+      expect(getByTestId('onboarding-consent-error')).toBeTruthy();
+      expect(getByText(/Please accept the Privacy Policy/i)).toBeTruthy();
+
+      // Skip is not offered on the consent step, so it cannot bypass it
+      expect(queryByTestId('onboarding-skip')).toBeNull();
 
       // Accept privacy and continue; setup tips follow consent, so page through to the end
       fireEvent.press(getByTestId('onboarding-privacy-checkbox'));
@@ -163,6 +164,22 @@ describe('Component Verification Tests - Complete System Check', () => {
       await waitFor(() => {
         expect(onComplete).toHaveBeenCalled();
       });
+    });
+
+    it('should not let Skip bypass the privacy consent', () => {
+      const store = createTestStore();
+      const onComplete = jest.fn();
+      const { getByTestId } = render(
+        <Provider store={store}>
+          <NavigationContainer>
+            <OnboardingScreen onComplete={onComplete} />
+          </NavigationContainer>
+        </Provider>
+      );
+
+      fireEvent.press(getByTestId('onboarding-skip'));
+      expect(onComplete).not.toHaveBeenCalled();
+      expect(getByTestId('onboarding-privacy-checkbox')).toBeTruthy();
     });
   });
 
@@ -366,7 +383,8 @@ describe('Component Verification Tests - Complete System Check', () => {
       });
 
       await waitFor(() => {
-        expect(getByTestId('exercise-form-quality')).toHaveTextContent('Poor');
+        // Poor form is described gently to patients
+        expect(getByTestId('exercise-form-quality')).toHaveTextContent('Check your form');
         expect(getByTestId('exercise-feedback')).toHaveTextContent(
           'Keep your elbow closer'
         );
@@ -382,7 +400,9 @@ describe('Component Verification Tests - Complete System Check', () => {
       const store = createTestStore();
       const { getByTestId } = render(
         <Provider store={store}>
-          <SettingsScreen />
+          <NavigationContainer>
+            <SettingsScreen />
+          </NavigationContainer>
         </Provider>
       );
 
@@ -390,18 +410,15 @@ describe('Component Verification Tests - Complete System Check', () => {
       fireEvent(getByTestId('settings-sound-toggle'), 'onValueChange', false);
       fireEvent(getByTestId('settings-haptic-toggle'), 'onValueChange', false);
 
-      // Note: Speech rate and frame skip are set via local state, then saved on button press
-      // So we verify they can be changed in the component (tested via save button)
-
-      // Save settings
-      fireEvent.press(getByTestId('settings-save'));
+      // Speaking speed is a three-way choice, saved straight away
+      fireEvent.press(getByTestId('settings-speech-rate-faster'));
 
       // Verify store updated for toggle settings
       await waitFor(() => {
         const state = store.getState().settings;
         expect(state.enableSound).toBe(false);
         expect(state.enableHaptics).toBe(false);
-        // Speech rate and frame skip come from local component state during save
+        expect(state.speechRate).toBe(1.25);
       });
 
       // Verify toast message
@@ -420,11 +437,14 @@ describe('Component Verification Tests - Complete System Check', () => {
 
       const { getByTestId } = render(
         <Provider store={store}>
-          <SettingsScreen />
+          <NavigationContainer>
+            <SettingsScreen />
+          </NavigationContainer>
         </Provider>
       );
 
-      // Reset settings
+      // Reset lives in the collapsed "Advanced" section
+      fireEvent.press(getByTestId('settings-advanced-toggle'));
       fireEvent.press(getByTestId('settings-reset'));
 
       // Confirm reset - Alert.alert(title, message, buttons)

@@ -1,0 +1,97 @@
+/**
+ * Patient-facing exercise list and plain-language helpers shared by the native
+ * and web Exercise screens (chooser, in-camera controls and summary).
+ */
+import { EXERCISES } from '../../constants/exercises';
+import type { Exercise } from '../../types/exercise';
+
+export type ExerciseKey = keyof typeof EXERCISES;
+
+export interface ExerciseOption {
+  key: ExerciseKey;
+  exercise: Exercise;
+  /** Short, friendly name. */
+  title: string;
+  /** One line explaining the movement in everyday words. */
+  description: string;
+  /** Goal shown on the card, e.g. "12 repetitions". */
+  goal: string;
+  /** MaterialIcons name. */
+  icon: string;
+}
+
+export const EXERCISE_OPTIONS: ExerciseOption[] = [
+  {
+    key: 'bicepCurl',
+    exercise: EXERCISES.bicepCurl,
+    title: 'Bicep curl',
+    description: 'Bend your elbows to bring your hands up to your shoulders',
+    goal: `${EXERCISES.bicepCurl.targetRepetitions} repetitions`,
+    icon: 'fitness-center',
+  },
+  {
+    key: 'shoulderPress',
+    exercise: EXERCISES.shoulderPress,
+    title: 'Shoulder press',
+    description: 'Push your hands up above your head, then lower them',
+    goal: `${EXERCISES.shoulderPress.targetRepetitions} repetitions`,
+    icon: 'accessibility-new',
+  },
+  {
+    key: 'squat',
+    exercise: EXERCISES.squat,
+    title: 'Squat',
+    description: 'Bend your knees as if sitting down on a chair',
+    goal: `${EXERCISES.squat.targetRepetitions} repetitions`,
+    icon: 'event-seat',
+  },
+  {
+    key: 'hamstringStretch',
+    exercise: EXERCISES.hamstringStretch,
+    title: 'Hamstring stretch',
+    description: 'Gently stretch the back of your leg',
+    goal: 'Hold for 30 seconds',
+    icon: 'self-improvement',
+  },
+];
+
+export const findExerciseOption = (idOrKey?: string | null): ExerciseOption | undefined =>
+  EXERCISE_OPTIONS.find((o) => o.key === idOrKey || o.exercise.id === idOrKey);
+
+/** The friendly tip shown before starting and when a reading is only an estimate. */
+export const SIDE_ON_HINT = 'Turn side-on to the camera';
+
+/**
+ * Turns raw validation messages ("Bend left_elbow more", "Cannot detect
+ * right_knee") into short instructions a patient can act on.
+ */
+export const friendlyInstruction = (message?: string | null): string => {
+  if (!message) {
+    return '';
+  }
+  if (/no exercise selected|no phase data/i.test(message)) {
+    return '';
+  }
+  if (/^cannot detect/i.test(message)) {
+    return 'Step back so your whole body is in view';
+  }
+  if (/turn side-on/i.test(message)) {
+    return SIDE_ON_HINT;
+  }
+  return message.replace(/_/g, ' ');
+};
+
+/** Form score (0–1) in words. Never harsh: this is read by patients. */
+export const formInWords = (score: number): string =>
+  score >= 0.8 ? 'Excellent form' : score >= 0.6 ? 'Good form' : 'Check your form';
+
+/** "45 seconds", "2 min 5 s". */
+export const formatDuration = (seconds: number): string => {
+  const s = Math.max(0, Math.round(seconds));
+  if (s < 60) {
+    return `${s} sec`;
+  }
+  const m = Math.floor(s / 60);
+  const rest = s % 60;
+  return rest ? `${m} min ${rest} s` : `${m} min`;
+};

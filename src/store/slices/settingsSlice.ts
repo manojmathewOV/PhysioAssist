@@ -43,7 +43,7 @@ const initialState: SettingsState = {
   // Visual Settings
   showAngleOverlay: true,
   showFormFeedback: true,
-  showJointAngles: true,
+  showJointAngles: false, // technical numbers are opt-in for patients (see docs/design)
   showPoseOverlay: true,
 
   // Performance Settings

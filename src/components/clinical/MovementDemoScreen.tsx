@@ -13,13 +13,16 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, Animated } from 'react-native';
 import Svg, { Circle, Line, Path, G } from 'react-native-svg';
-import LinearGradient from 'react-native-linear-gradient';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 // Import from centralized registry
 import { MovementRegistry, JointType, MovementType } from '@config/movements.config';
+import { AppText, BigButton, Card, Screen, SectionTitle } from '../ui';
+import { colors, radii, spacing } from '../../theme';
+import StepHeader from './StepHeader';
 
 interface MovementDemoScreenProps {
   movementType: MovementType;
@@ -123,74 +126,68 @@ const MovementDemoScreen: React.FC<MovementDemoScreenProps> = ({
   }
 
   return (
-    <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
-      {/* Progress dots */}
-      <View style={styles.progressDots}>
-        <Text style={[styles.dot, styles.dotActive]}>●</Text>
-        <Text style={[styles.dot, styles.dotActive]}>●</Text>
-        <Text style={[styles.dot, styles.dotActive]}>●</Text>
-        <Text style={styles.dot}>○</Text>
-      </View>
-
-      {/* Back button */}
-      {onBack && (
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Watch the Demo</Text>
-        <Text style={styles.subtitle}>{movementDef.description.simple}</Text>
-      </View>
-
-      {/* Demo counter */}
-      <View style={styles.counterBadge}>
-        <Text style={styles.counterText}>Demo {demoCount} of 3</Text>
-      </View>
+    <Screen
+      testID="movement-demo"
+      footer={
+        <>
+          <Animated.View
+            style={{ transform: [{ scale: showReadyButton ? buttonPulse : 1 }] }}
+          >
+            <BigButton
+              label="I'm ready to try"
+              icon="play-arrow"
+              onPress={handleReady}
+              accessibilityHint="Starts the camera so you can do the movement"
+            />
+          </Animated.View>
+          <BigButton
+            label="Watch again"
+            icon="replay"
+            variant="secondary"
+            onPress={handleWatchAgain}
+            accessibilityHint="Plays the demonstration again"
+          />
+        </>
+      }
+    >
+      <StepHeader
+        step={3}
+        totalSteps={4}
+        title="Watch the demo"
+        subtitle={movementDef.description.simple}
+        onBack={onBack}
+      />
 
       {/* Stick figure animation */}
-      <View style={styles.demoArea}>
-        <StickFigureAnimation movementType={movementType} armRotation={armRotation} />
-      </View>
+      <Card style={styles.demoCard}>
+        <View style={styles.counterBadge} accessibilityLiveRegion="polite">
+          <Icon name="ondemand-video" size={22} color={colors.primary} />
+          <AppText variant="label" color={colors.primary}>
+            Demo {demoCount} of 3
+          </AppText>
+        </View>
+        <View
+          style={styles.demoArea}
+          accessible
+          accessibilityLabel={`Animated figure showing ${movementDef.description.simple}`}
+        >
+          <StickFigureAnimation movementType={movementType} armRotation={armRotation} />
+        </View>
+      </Card>
 
       {/* Tips */}
-      <View style={styles.tipsBox}>
-        <Text style={styles.tipsTitle}>💡 Tips for Best Results</Text>
+      <SectionTitle>Tips for best results</SectionTitle>
+      <Card>
         {movementDef.tips.simple.map((tip, index) => (
           <View key={index} style={styles.tipItem}>
-            <Text style={styles.tipCheck}>✓</Text>
-            <Text style={styles.tipText}>{tip}</Text>
+            <Icon name="check-circle" size={24} color={colors.success} />
+            <AppText variant="body" style={styles.flex}>
+              {tip}
+            </AppText>
           </View>
         ))}
-      </View>
-
-      {/* Action buttons */}
-      <View style={styles.actions}>
-        <Animated.View
-          style={{ transform: [{ scale: showReadyButton ? buttonPulse : 1 }] }}
-        >
-          <TouchableOpacity
-            style={[styles.button, styles.primaryButton]}
-            onPress={handleReady}
-            accessibilityLabel="I'm ready to try the movement"
-            accessibilityRole="button"
-          >
-            <Text style={styles.primaryButtonText}>I'm Ready to Try</Text>
-          </TouchableOpacity>
-        </Animated.View>
-
-        <TouchableOpacity
-          style={[styles.button, styles.secondaryButton]}
-          onPress={handleWatchAgain}
-          accessibilityLabel="Watch the demonstration again"
-          accessibilityRole="button"
-        >
-          <Text style={styles.secondaryButtonText}>↻ Watch Again</Text>
-        </TouchableOpacity>
-      </View>
-    </LinearGradient>
+      </Card>
+    </Screen>
   );
 };
 
@@ -217,9 +214,9 @@ const StickFigureAnimation: React.FC<StickFigureAnimationProps> = ({
   });
 
   return (
-    <Svg width={300} height={400} viewBox="0 0 300 400">
+    <Svg width={240} height={256} viewBox="0 0 300 320">
       {/* Head */}
-      <Circle cx={150} cy={60} r={30} fill="#4CAF50" stroke="#fff" strokeWidth={3} />
+      <Circle cx={150} cy={60} r={30} fill={colors.primary} />
 
       {/* Body */}
       <Line
@@ -227,7 +224,7 @@ const StickFigureAnimation: React.FC<StickFigureAnimationProps> = ({
         y1={90}
         x2={150}
         y2={200}
-        stroke="#fff"
+        stroke={colors.text}
         strokeWidth={6}
         strokeLinecap="round"
       />
@@ -238,7 +235,7 @@ const StickFigureAnimation: React.FC<StickFigureAnimationProps> = ({
         y1={200}
         x2={120}
         y2={300}
-        stroke="#fff"
+        stroke={colors.text}
         strokeWidth={6}
         strokeLinecap="round"
       />
@@ -247,14 +244,14 @@ const StickFigureAnimation: React.FC<StickFigureAnimationProps> = ({
         y1={200}
         x2={180}
         y2={300}
-        stroke="#fff"
+        stroke={colors.text}
         strokeWidth={6}
         strokeLinecap="round"
       />
 
       {/* Feet */}
-      <Circle cx={120} cy={300} r={8} fill="#4CAF50" />
-      <Circle cx={180} cy={300} r={8} fill="#4CAF50" />
+      <Circle cx={120} cy={300} r={8} fill={colors.primary} />
+      <Circle cx={180} cy={300} r={8} fill={colors.primary} />
 
       {/* Animated arm (left) */}
       <AnimatedG origin="150, 120" rotation={rotation}>
@@ -263,11 +260,11 @@ const StickFigureAnimation: React.FC<StickFigureAnimationProps> = ({
           y1={120}
           x2={150}
           y2={220}
-          stroke="#FFC107"
+          stroke={colors.accent}
           strokeWidth={8}
           strokeLinecap="round"
         />
-        <Circle cx={150} cy={220} r={10} fill="#FFC107" />
+        <Circle cx={150} cy={220} r={10} fill={colors.accent} />
       </AnimatedG>
 
       {/* Stationary arm (right) */}
@@ -276,16 +273,16 @@ const StickFigureAnimation: React.FC<StickFigureAnimationProps> = ({
         y1={120}
         x2={200}
         y2={180}
-        stroke="#fff"
+        stroke={colors.text}
         strokeWidth={6}
         strokeLinecap="round"
       />
-      <Circle cx={200} cy={180} r={8} fill="#fff" />
+      <Circle cx={200} cy={180} r={8} fill={colors.text} />
 
       {/* Movement arrow */}
       <Path
         d="M 140 240 Q 120 180 110 120"
-        stroke="#4CAF50"
+        stroke={colors.primary}
         strokeWidth={3}
         fill="none"
         strokeDasharray="5,5"
@@ -295,148 +292,29 @@ const StickFigureAnimation: React.FC<StickFigureAnimationProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  progressDots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    paddingTop: 20,
-    paddingBottom: 10,
-    gap: 12,
-  },
-  dot: {
-    fontSize: 24,
-    color: '#fff',
-    opacity: 0.3,
-  },
-  dotActive: {
-    opacity: 1,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+  flex: { flex: 1 },
+  demoCard: {
     alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  backButtonText: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  header: {
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 20,
-    color: '#fff',
-    opacity: 0.9,
-    textAlign: 'center',
+    gap: spacing.md,
   },
   counterBadge: {
-    alignSelf: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
-    borderWidth: 2,
-    borderColor: '#4CAF50',
-    borderRadius: 50,
-    marginBottom: 20,
-  },
-  counterText: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.primarySoft,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   demoArea: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 20,
-  },
-  tipsBox: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 193, 7, 0.3)',
-    borderRadius: 20,
-    padding: 20,
-  },
-  tipsTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFC107',
-    marginBottom: 12,
   },
   tipItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  tipCheck: {
-    fontSize: 16,
-    color: '#4CAF50',
-    fontWeight: '700',
-    marginRight: 8,
-    marginTop: 2,
-  },
-  tipText: {
-    flex: 1,
-    fontSize: 16,
-    color: '#fff',
-    lineHeight: 24,
-  },
-  actions: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-    gap: 12,
-  },
-  button: {
-    paddingVertical: 20,
-    borderRadius: 30,
-    alignItems: 'center',
-  },
-  primaryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  primaryButtonText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#667eea',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-  },
-  secondaryButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
   },
 });
 

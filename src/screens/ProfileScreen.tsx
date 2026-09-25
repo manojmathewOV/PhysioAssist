@@ -1,105 +1,147 @@
+/**
+ * My details: the name the app uses to greet you. One large field and one
+ * clear Save button. When offline, the change is queued and a banner says so.
+ */
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store';
+import { StyleSheet, TextInput, View } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+
+import type { RootState } from '../store';
 import { queueAction } from '../store/slices/networkSlice';
+import { loginSuccess } from '../store/slices/userSlice';
+import { AppText, Banner, BigButton, Card, Screen } from '../components/ui';
+import { colors, radii, spacing, touch, typography } from '../theme';
+
+type SaveStatus = 'idle' | 'saved' | 'queued' | 'empty';
 
 const ProfileScreen: React.FC = () => {
-  const [name, setName] = useState('');
-  const [showOfflineMessage, setShowOfflineMessage] = useState(false);
   const dispatch = useDispatch();
   const isConnected = useSelector((state: RootState) => state.network.isConnected);
+  const currentUser = useSelector((state: RootState) => state.user.currentUser);
+  const [name, setName] = useState(currentUser?.name ?? '');
+  const [focused, setFocused] = useState(false);
+  const [status, setStatus] = useState<SaveStatus>('idle');
 
   const handleSave = () => {
-    if (!isConnected) {
-      setShowOfflineMessage(true);
-      // Queue the save action for when back online
-      dispatch(
-        queueAction({
-          type: 'profile/save',
-          payload: { name },
-        })
-      );
-      setTimeout(() => setShowOfflineMessage(false), 3000);
-    } else {
-      setShowOfflineMessage(false);
-      // Save profile logic here
+    const trimmed = name.trim();
+    if (!trimmed && currentUser) {
+      setStatus('empty');
+      return;
     }
+    if (!isConnected) {
+      // Queue the save action for when back online
+      dispatch(queueAction({ type: 'profile/save', payload: { name: trimmed } }));
+      setStatus('queued');
+      return;
+    }
+    if (currentUser) {
+      dispatch(loginSuccess({ ...currentUser, name: trimmed }));
+    }
+    setStatus('saved');
   };
 
   return (
-    <View style={styles.container} testID="profile-screen">
-      <Text style={styles.title}>Profile</Text>
+    <Screen
+      testID="profile-screen"
+      footer={
+        <BigButton
+          label="Save"
+          icon="check"
+          onPress={handleSave}
+          testID="profile-save"
+          accessibilityHint="Saves your name"
+        />
+      }
+    >
+      <AppText variant="body" color={colors.textSecondary}>
+        This is the name the app uses to greet you.
+      </AppText>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-        testID="profile-name-input"
-      />
+      <Card style={styles.card}>
+        <AppText variant="label" nativeID="profile-name-label">
+          Your name
+        </AppText>
+        <TextInput
+          style={[styles.input, focused && styles.inputFocused]}
+          value={name}
+          onChangeText={(text) => {
+            setName(text);
+            if (status !== 'idle') {
+              setStatus('idle');
+            }
+          }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder="For example, Margaret"
+          placeholderTextColor={colors.textMuted}
+          autoCapitalize="words"
+          autoComplete="name"
+          textContentType="name"
+          returnKeyType="done"
+          onSubmitEditing={handleSave}
+          maxFontSizeMultiplier={1.6}
+          accessibilityLabel="Your name"
+          accessibilityLabelledBy="profile-name-label"
+          testID="profile-name-input"
+        />
+        {status === 'empty' ? (
+          <AppText variant="caption" color={colors.danger}>
+            Please type your name before saving.
+          </AppText>
+        ) : null}
 
-      {showOfflineMessage && (
-        <View style={styles.offlineMessage} testID="offline-queue-message">
-          <Text style={styles.offlineText}>
-            No internet connection. Changes will be saved when you're back online.
-          </Text>
-        </View>
-      )}
+        {currentUser?.email ? (
+          <View style={styles.readOnly}>
+            <AppText variant="label">Email</AppText>
+            <AppText variant="body" color={colors.textSecondary}>
+              {currentUser.email}
+            </AppText>
+          </View>
+        ) : null}
+      </Card>
 
-      <TouchableOpacity
-        style={styles.saveButton}
-        onPress={handleSave}
-        testID="profile-save"
-      >
-        <Text style={styles.saveButtonText}>Save Profile</Text>
-      </TouchableOpacity>
-    </View>
+      {status === 'queued' ? (
+        <Banner
+          tone="warning"
+          message="No internet connection. Your change will be saved when you are back online."
+          testID="offline-queue-message"
+        />
+      ) : null}
+      {status === 'saved' ? (
+        <Banner
+          tone="success"
+          message={
+            name.trim()
+              ? `Saved. The app will call you ${name.trim().split(' ')[0]}.`
+              : 'Saved.'
+          }
+          testID="profile-saved-message"
+        />
+      ) : null}
+    </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
+  card: { gap: spacing.sm },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 16,
+    ...typography.body,
+    fontSize: 20,
+    color: colors.text,
+    minHeight: touch.primary,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.surface,
   },
-  saveButton: {
-    backgroundColor: '#2196F3',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  offlineMessage: {
-    backgroundColor: '#FFF3CD',
-    borderColor: '#FFE69C',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  offlineText: {
-    color: '#856404',
-    fontSize: 14,
+  inputFocused: { borderColor: colors.primary },
+  readOnly: {
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    gap: spacing.xs,
   },
 });
 

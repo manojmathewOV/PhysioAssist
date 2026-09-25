@@ -11,19 +11,20 @@
  * Key improvements:
  * - Progressive disclosure (one thing per screen)
  * - Visual demonstration before attempting
- * - 160px angle display (67% larger)
+ * - Very large angle display on a calm camera panel
  * - Voice support throughout
  * - Progress indicators
  * - Help always accessible
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import LinearGradient from 'react-native-linear-gradient';
 
 import { RootState } from '@store/index';
 import { setDetecting } from '@store/slices/poseSlice';
@@ -40,6 +41,9 @@ import MovementDemoScreen from '@components/clinical/MovementDemoScreen';
 import ClinicalAngleDisplayV2 from '@components/clinical/ClinicalAngleDisplayV2';
 import ProgressIndicator from '@components/clinical/ProgressIndicator';
 import PoseOverlay from '@components/pose/PoseOverlay';
+import { AppText, Banner, BigButton, Card, Metric, Screen } from '@components/ui';
+import { CameraPanel } from '@components/ui/CameraPanel';
+import { colors, radii, spacing } from '../theme';
 
 type AssessmentStep = 'joint' | 'movement' | 'demo' | 'measure' | 'complete';
 
@@ -214,16 +218,32 @@ const ClinicalAssessmentScreenV2: React.FC = () => {
 
   if (!device || !hasPermission) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>
-          {!device ? 'No camera device found' : 'Camera permission required'}
-        </Text>
-      </View>
+      <Screen
+        title="Clinical assessment"
+        subtitle="Measures how far a joint moves, using the camera."
+        testID="clinical-assessment-v2"
+      >
+        <Banner
+          tone="warning"
+          message={!device ? 'No camera device found' : 'Camera permission required'}
+        />
+        {device ? (
+          <BigButton
+            label="Allow camera"
+            icon="videocam"
+            onPress={requestCameraPermission}
+            accessibilityHint="Asks for permission to use the camera"
+          />
+        ) : null}
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, step === 'measure' && styles.cameraContainer]}
+      testID="clinical-assessment-v2"
+    >
       {/* Camera (only visible during measurement) */}
       {step === 'measure' && (
         <>
@@ -273,70 +293,99 @@ const ClinicalAssessmentScreenV2: React.FC = () => {
 
       {/* Step 4: Measurement */}
       {step === 'measure' && (
-        <>
-          <View style={styles.measurementOverlay}>
-            {/* Progress dots */}
-            <ProgressIndicator currentStep={4} totalSteps={4} />
+        <SafeAreaView style={styles.measurementOverlay} edges={['top', 'bottom']}>
+          <View style={styles.topArea}>
+            <CameraPanel style={styles.statusPanel}>
+              {/* Progress dots */}
+              <ProgressIndicator currentStep={4} totalSteps={4} tone="dark" />
 
-            {/* Camera status */}
-            <View style={styles.cameraStatus}>
-              <View style={styles.pulseDot} />
-              <Text style={styles.cameraStatusText}>Tracking You</Text>
-            </View>
+              {/* Camera status */}
+              <View
+                style={styles.cameraStatus}
+                accessible
+                accessibilityLabel="Camera is tracking you"
+              >
+                <Icon name="videocam" size={22} color={colors.skeleton} />
+                <AppText variant="label" color={colors.textInverse}>
+                  Tracking you
+                </AppText>
+              </View>
+            </CameraPanel>
 
             {/* Angle display */}
-            {currentMeasurement && (
+            {currentMeasurement ? (
               <ClinicalAngleDisplayV2 measurement={currentMeasurement} mode="simple" />
+            ) : (
+              <CameraPanel style={styles.waitingPanel}>
+                <AppText variant="heading" color={colors.textInverse} center>
+                  Stand where the camera can see you
+                </AppText>
+              </CameraPanel>
             )}
           </View>
 
           {/* Done button */}
-          <TouchableOpacity
-            style={styles.doneButton}
-            onPress={stopMeasurement}
-            accessibilityLabel="Finish measurement"
-            accessibilityRole="button"
-          >
-            <Text style={styles.doneButtonText}>Done</Text>
-          </TouchableOpacity>
-        </>
+          <CameraPanel style={styles.bottomPanel}>
+            <BigButton
+              label="Done"
+              icon="stop"
+              variant="danger"
+              onPress={stopMeasurement}
+              accessibilityHint="Finish measurement and see your result"
+            />
+          </CameraPanel>
+        </SafeAreaView>
       )}
 
       {/* Step 5: Complete */}
       {step === 'complete' && currentMeasurement && (
-        <LinearGradient colors={['#4CAF50', '#45a049']} style={styles.completeContainer}>
-          <View style={styles.completeCard}>
-            <Text style={styles.completeIcon}>🎉</Text>
-            <Text style={styles.completeTitle}>Excellent Work!</Text>
-            <Text style={styles.completeSubtitle}>You completed the assessment</Text>
-
-            <View style={styles.resultBox}>
-              <Text style={styles.yourResult}>Your Result:</Text>
-              <Text style={styles.bigAngle}>{Math.round(maxAngleAchieved)}°</Text>
-              <Text style={styles.comparison}>
-                Target was {currentMeasurement.primaryJoint.targetAngle}°
-              </Text>
-              <Text style={styles.grade}>
-                ✨ {currentMeasurement.primaryJoint.clinicalGrade || 'Good'} ✨
-              </Text>
-            </View>
-
-            <View style={styles.messageBox}>
-              <Text style={styles.messageText}>
-                You're doing great! Keep practicing and you'll improve even more!
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.newAssessmentButton}
+        <Screen
+          title="Excellent work!"
+          subtitle="You completed the assessment."
+          footer={
+            <BigButton
+              label="Measure another"
+              icon="replay"
               onPress={resetAssessment}
-            >
-              <Text style={styles.newAssessmentText}>Measure Another</Text>
-            </TouchableOpacity>
+              accessibilityHint="Start a new measurement"
+            />
+          }
+        >
+          <Card style={styles.resultCard}>
+            <View style={styles.trophy}>
+              <Icon name="emoji-events" size={40} color={colors.warning} />
+            </View>
+            <Metric
+              value={`${Math.round(maxAngleAchieved)}°`}
+              label="Your result"
+              color={colors.primary}
+            />
+            <View style={styles.resultRow}>
+              <AppText variant="body" color={colors.textSecondary}>
+                Target
+              </AppText>
+              <AppText variant="bodyStrong">
+                {currentMeasurement.primaryJoint.targetAngle}°
+              </AppText>
+            </View>
+            <View style={styles.resultRow}>
+              <AppText variant="body" color={colors.textSecondary}>
+                Grade
+              </AppText>
+              <AppText variant="bodyStrong" style={styles.capitalize}>
+                {currentMeasurement.primaryJoint.clinicalGrade || 'Good'}
+              </AppText>
+            </View>
+          </Card>
 
-            <Text style={styles.savedText}>💾 Your result has been saved</Text>
-          </View>
-        </LinearGradient>
+          <Card>
+            <AppText variant="body">
+              You&apos;re doing great! Keep practising and you&apos;ll improve even more.
+            </AppText>
+          </Card>
+
+          <Banner tone="success" message="Your result has been saved" />
+        </Screen>
       )}
     </View>
   );
@@ -345,158 +394,59 @@ const ClinicalAssessmentScreenV2: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
   },
-  message: {
-    color: '#FFF',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 100,
-    paddingHorizontal: 40,
+  cameraContainer: {
+    backgroundColor: '#000',
   },
   measurementOverlay: {
     flex: 1,
-    paddingTop: 20,
+    justifyContent: 'space-between',
+    padding: spacing.md,
   },
-  cameraStatus: {
-    position: 'absolute',
-    top: 80,
-    left: '50%',
-    transform: [{ translateX: -75 }],
-    backgroundColor: 'rgba(76, 175, 80, 0.9)',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 50,
+  topArea: {
+    gap: spacing.md,
+  },
+  statusPanel: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
   },
-  pulseDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#fff',
+  cameraStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
-  cameraStatusText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+  waitingPanel: {
+    padding: spacing.lg,
   },
-  doneButton: {
-    position: 'absolute',
-    bottom: 40,
-    left: '50%',
-    transform: [{ translateX: -75 }],
-    backgroundColor: 'rgba(244, 67, 54, 0.9)',
-    paddingHorizontal: 48,
-    paddingVertical: 24,
-    borderRadius: 50,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+  bottomPanel: {
+    padding: spacing.md,
   },
-  doneButtonText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#fff',
+  resultCard: {
+    alignItems: 'stretch',
+    gap: spacing.sm,
   },
-  completeContainer: {
-    flex: 1,
+  trophy: {
+    alignSelf: 'center',
+    width: 72,
+    height: 72,
+    borderRadius: radii.pill,
+    backgroundColor: colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
   },
-  completeCard: {
+  resultRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    maxWidth: 500,
+    minHeight: 56,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
   },
-  completeIcon: {
-    fontSize: 120,
-    marginBottom: 32,
-  },
-  completeTitle: {
-    fontSize: 48,
-    fontWeight: '800',
-    color: '#fff',
-    marginBottom: 16,
-  },
-  completeSubtitle: {
-    fontSize: 24,
-    color: '#fff',
-    opacity: 0.9,
-    marginBottom: 48,
-  },
-  resultBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 24,
-    padding: 40,
-    marginBottom: 40,
-    alignItems: 'center',
-    width: '100%',
-  },
-  yourResult: {
-    fontSize: 20,
-    color: '#fff',
-    opacity: 0.9,
-    marginBottom: 16,
-  },
-  bigAngle: {
-    fontSize: 120,
-    fontWeight: '800',
-    color: '#fff',
-    lineHeight: 120,
-  },
-  comparison: {
-    fontSize: 20,
-    color: '#fff',
-    marginTop: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: 16,
-  },
-  grade: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#fff',
-    marginTop: 16,
+  capitalize: {
     textTransform: 'capitalize',
-  },
-  messageBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 40,
-  },
-  messageText: {
-    fontSize: 20,
-    color: '#fff',
-    lineHeight: 30,
-    textAlign: 'center',
-  },
-  newAssessmentButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    paddingHorizontal: 48,
-    paddingVertical: 24,
-    borderRadius: 50,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
-    marginBottom: 24,
-  },
-  newAssessmentText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#4CAF50',
-  },
-  savedText: {
-    fontSize: 16,
-    color: '#fff',
-    opacity: 0.8,
   },
 });
 

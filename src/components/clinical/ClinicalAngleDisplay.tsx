@@ -11,15 +11,47 @@
  *
  * Design Philosophy:
  * - Patient-facing: Easy to understand at a glance
- * - Color-coded feedback (green = good, yellow = caution, red = poor)
+ * - Status badges pair an icon and a word with the colour (never colour alone)
  * - Large text for visibility during exercise
  * - Smooth animations for engaging experience
  */
 
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, StyleSheet, Animated } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { ClinicalJointMeasurement } from '../../types/clinicalMeasurement';
+import { AppText } from '../ui';
+import { colors, radii, spacing } from '../../theme';
+
+type Tone = 'success' | 'info' | 'warning' | 'danger' | 'neutral';
+
+/** Light badge colours that stay readable on the dark camera panel. */
+const TONES: Record<Tone, { bg: string; fg: string; icon: string }> = {
+  success: { bg: colors.successSoft, fg: colors.success, icon: 'check-circle' },
+  info: { bg: colors.primarySoft, fg: colors.primary, icon: 'info-outline' },
+  warning: { bg: colors.warningSoft, fg: colors.warning, icon: 'warning-amber' },
+  danger: { bg: colors.dangerSoft, fg: colors.danger, icon: 'error-outline' },
+  neutral: { bg: colors.surfaceMuted, fg: colors.textSecondary, icon: 'help-outline' },
+};
+
+const Badge: React.FC<{ tone: Tone; label: string; icon?: string }> = ({
+  tone,
+  label,
+  icon,
+}) => {
+  const t = TONES[tone];
+  return (
+    <View style={[styles.badge, { backgroundColor: t.bg }]}>
+      <Icon name={icon ?? t.icon} size={20} color={t.fg} />
+      <AppText variant="label" color={t.fg} style={styles.capitalize}>
+        {label}
+      </AppText>
+    </View>
+  );
+};
+
+const ON_DARK_SECONDARY = 'rgba(255, 255, 255, 0.8)';
+const ON_DARK_DIVIDER = 'rgba(255, 255, 255, 0.2)';
 
 interface ClinicalAngleDisplayProps {
   measurement: ClinicalJointMeasurement;
@@ -80,43 +112,17 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
     }
   }, [percentOfTarget]);
 
-  // Get color based on progress and quality
-  const getProgressColor = (): string => {
-    if (percentOfTarget >= 95) return '#4CAF50'; // Green - Excellent
-    if (percentOfTarget >= 75) return '#8BC34A'; // Light Green - Good
-    if (percentOfTarget >= 50) return '#FFC107'; // Yellow - Fair
-    if (percentOfTarget >= 25) return '#FF9800'; // Orange - Poor
-    return '#2196F3'; // Blue - Just started
+  const gradeTone: Record<string, Tone> = {
+    excellent: 'success',
+    good: 'success',
+    fair: 'warning',
+    limited: 'danger',
   };
-
-  const getQualityColor = (): string => {
-    switch (quality) {
-      case 'excellent':
-        return '#4CAF50';
-      case 'good':
-        return '#8BC34A';
-      case 'fair':
-        return '#FFC107';
-      case 'poor':
-        return '#F44336';
-      default:
-        return '#888';
-    }
-  };
-
-  const getGradeLabel = (): string => {
-    switch (clinicalGrade) {
-      case 'excellent':
-        return '✓ Excellent';
-      case 'good':
-        return '✓ Good';
-      case 'fair':
-        return '○ Fair';
-      case 'limited':
-        return '⚠ Limited';
-      default:
-        return '';
-    }
+  const qualityTone: Record<string, Tone> = {
+    excellent: 'success',
+    good: 'success',
+    fair: 'warning',
+    poor: 'danger',
   };
 
   const getAngleTypeLabel = (): string => {
@@ -131,9 +137,6 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
     return labels[angleType] || angleType;
   };
 
-  const progressColor = getProgressColor();
-  const qualityColor = getQualityColor();
-
   return (
     <View style={[styles.container, compact && styles.containerCompact]}>
       {/* Main Angle Display */}
@@ -143,36 +146,43 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
         accessibilityRole="text"
         accessibilityLiveRegion="polite"
       >
-        <Text style={styles.angleTypeLabel}>{getAngleTypeLabel()}</Text>
-        <View style={styles.angleValueContainer}>
-          <Text style={[styles.angleValue, { color: progressColor }]}>
-            {Math.round(primaryAngle)}
-          </Text>
-          <Text style={styles.angleUnit}>°</Text>
-        </View>
+        <AppText variant="label" color={ON_DARK_SECONDARY} style={styles.upper}>
+          {getAngleTypeLabel()}
+        </AppText>
+        <AppText
+          style={[styles.angleValue, compact && styles.angleValueCompact]}
+          color={colors.textInverse}
+          maxFontSizeMultiplier={1.2}
+        >
+          {Math.round(primaryAngle)}°
+        </AppText>
 
         {/* Clinical Grade Badge */}
         {clinicalGrade && !compact && (
-          <View style={[styles.gradeBadge, { backgroundColor: progressColor + '30' }]}>
-            <Text style={[styles.gradeText, { color: progressColor }]}>
-              {getGradeLabel()}
-            </Text>
-          </View>
+          <Badge tone={gradeTone[clinicalGrade] ?? 'neutral'} label={clinicalGrade} />
         )}
       </Animated.View>
 
       {/* Target & Progress */}
       {showTarget && targetAngle > 0 && (
-        <View style={styles.targetSection}>
-          <View style={styles.targetHeader}>
-            <Text style={styles.targetLabel}>Target: {targetAngle}°</Text>
-            <Text style={[styles.percentText, { color: progressColor }]}>
+        <View style={styles.section}>
+          <View style={styles.rowBetween}>
+            <AppText variant="bodyStrong" color={colors.textInverse}>
+              Target {targetAngle}°
+            </AppText>
+            <AppText variant="heading" color={colors.textInverse}>
               {Math.round(percentOfTarget)}%
-            </Text>
+            </AppText>
           </View>
 
           {/* Progress Bar */}
-          <View style={styles.progressBarContainer}>
+          <View
+            style={styles.progressBarContainer}
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel="Progress towards target"
+            accessibilityValue={{ min: 0, max: 100, now: Math.round(percentOfTarget) }}
+          >
             <Animated.View
               style={[
                 styles.progressBar,
@@ -180,23 +190,17 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
                   width: progressAnim.interpolate({
                     inputRange: [0, 1],
                     outputRange: ['0%', '100%'],
+                    extrapolate: 'clamp',
                   }),
                 },
               ]}
-            >
-              <LinearGradient
-                colors={[progressColor, progressColor + 'AA']}
-                style={styles.progressBarGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            </Animated.View>
+            />
           </View>
 
           {/* Target Achieved Message */}
           {percentOfTarget >= 100 && (
-            <View style={styles.achievedBadge}>
-              <Text style={styles.achievedText}>🎯 Target Achieved!</Text>
+            <View style={styles.center}>
+              <Badge tone="success" label="Target achieved" icon="flag" />
             </View>
           )}
         </View>
@@ -206,60 +210,73 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
       {showMultiPlane &&
         measurement.primaryJoint.type === 'shoulder' &&
         measurement.primaryJoint.components && (
-          <View style={styles.multiPlaneSection}>
-            <Text style={styles.multiPlaneTitle}>Scapulohumeral Rhythm</Text>
-            <View style={styles.multiPlaneRow}>
-              <View style={styles.multiPlaneItem}>
-                <Text style={styles.multiPlaneLabel}>Glenohumeral</Text>
-                <Text style={styles.multiPlaneValue}>
-                  {Math.round(measurement.primaryJoint.components.glenohumeral)}°
-                </Text>
+          <View style={[styles.section, styles.divided]}>
+            <AppText variant="label" color={ON_DARK_SECONDARY} style={styles.upper}>
+              Scapulohumeral rhythm
+            </AppText>
+            {[
+              {
+                label: 'Glenohumeral',
+                value: `${Math.round(measurement.primaryJoint.components.glenohumeral)}°`,
+              },
+              {
+                label: 'Scapulothoracic',
+                value: `${Math.round(measurement.primaryJoint.components.scapulothoracic)}°`,
+              },
+              {
+                label: 'Ratio',
+                value: `${measurement.primaryJoint.components.rhythm.toFixed(1)}:1`,
+                warn: !measurement.primaryJoint.components.rhythmNormal,
+              },
+            ].map((item) => (
+              <View
+                key={item.label}
+                style={styles.rowBetween}
+                accessible
+                accessibilityLabel={`${item.label}: ${item.value}${
+                  item.warn ? ', outside normal range' : ''
+                }`}
+              >
+                <AppText variant="body" color={colors.textInverse}>
+                  {item.label}
+                </AppText>
+                <View style={styles.inline}>
+                  <AppText variant="bodyStrong" color={colors.textInverse}>
+                    {item.value}
+                  </AppText>
+                  {item.warn ? (
+                    <Icon name="warning-amber" size={20} color={colors.accent} />
+                  ) : null}
+                </View>
               </View>
-              <View style={styles.multiPlaneDivider} />
-              <View style={styles.multiPlaneItem}>
-                <Text style={styles.multiPlaneLabel}>Scapulothoracic</Text>
-                <Text style={styles.multiPlaneValue}>
-                  {Math.round(measurement.primaryJoint.components.scapulothoracic)}°
-                </Text>
-              </View>
-              <View style={styles.multiPlaneDivider} />
-              <View style={styles.multiPlaneItem}>
-                <Text style={styles.multiPlaneLabel}>Ratio</Text>
-                <Text
-                  style={[
-                    styles.multiPlaneValue,
-                    measurement.primaryJoint.components.rhythmNormal
-                      ? styles.rhythmNormal
-                      : styles.rhythmAbnormal,
-                  ]}
-                >
-                  {measurement.primaryJoint.components.rhythm.toFixed(1)}:1
-                </Text>
-              </View>
-            </View>
+            ))}
           </View>
         )}
 
       {/* Quality Indicator */}
       {showQuality && !compact && (
-        <View style={styles.qualitySection}>
-          <View style={styles.qualityRow}>
-            <Text style={styles.qualityLabel}>Tracking Quality:</Text>
-            <View style={[styles.qualityBadge, { backgroundColor: qualityColor + '30' }]}>
-              <View style={[styles.qualityDot, { backgroundColor: qualityColor }]} />
-              <Text style={[styles.qualityText, { color: qualityColor }]}>
-                {quality.charAt(0).toUpperCase() + quality.slice(1)}
-              </Text>
-            </View>
+        <View style={[styles.section, styles.divided]}>
+          <View style={styles.rowBetween}>
+            <AppText variant="bodyStrong" color={colors.textInverse}>
+              Tracking quality
+            </AppText>
+            <Badge tone={qualityTone[quality] ?? 'neutral'} label={quality} />
           </View>
 
           {/* Quality Recommendations */}
           {measurement.quality.recommendations.length > 0 && (
-            <View style={styles.recommendationsContainer}>
+            <View style={styles.list}>
               {measurement.quality.recommendations.slice(0, 2).map((rec, idx) => (
-                <Text key={idx} style={styles.recommendationText}>
-                  • {rec}
-                </Text>
+                <View key={idx} style={styles.listItem}>
+                  <Icon name="lightbulb-outline" size={20} color={ON_DARK_SECONDARY} />
+                  <AppText
+                    variant="caption"
+                    color={ON_DARK_SECONDARY}
+                    style={styles.flex}
+                  >
+                    {rec}
+                  </AppText>
+                </View>
               ))}
             </View>
           )}
@@ -268,32 +285,28 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
 
       {/* Compensation Alerts */}
       {showCompensations && measurement.compensations.length > 0 && !compact && (
-        <View style={styles.compensationSection}>
-          <Text style={styles.compensationTitle}>⚠ Compensations Detected</Text>
+        <View
+          style={[styles.section, styles.compensationSection]}
+          accessibilityRole="alert"
+        >
+          <View style={styles.inline}>
+            <Icon name="warning-amber" size={24} color={colors.warning} />
+            <AppText variant="bodyStrong" color={colors.warning}>
+              Compensations detected
+            </AppText>
+          </View>
           {measurement.compensations.map((comp, idx) => (
             <View key={idx} style={styles.compensationItem}>
-              <View style={styles.compensationHeader}>
-                <Text style={styles.compensationType}>
+              <View style={styles.rowBetween}>
+                <AppText variant="bodyStrong" style={[styles.capitalize, styles.flex]}>
                   {comp.type.replace(/_/g, ' ')}
-                </Text>
-                <View
-                  style={[
-                    styles.severityBadge,
-                    { backgroundColor: getSeverityColor(comp.severity) + '30' },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.severityText,
-                      { color: getSeverityColor(comp.severity) },
-                    ]}
-                  >
-                    {comp.severity}
-                  </Text>
-                </View>
+                </AppText>
+                <Badge tone={getSeverityTone(comp.severity)} label={comp.severity} />
               </View>
               {comp.clinicalNote && (
-                <Text style={styles.compensationNote}>{comp.clinicalNote}</Text>
+                <AppText variant="caption" color={colors.textSecondary}>
+                  {comp.clinicalNote}
+                </AppText>
               )}
             </View>
           ))}
@@ -302,23 +315,36 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
 
       {/* Secondary Joints */}
       {!compact && Object.keys(measurement.secondaryJoints).length > 0 && (
-        <View style={styles.secondarySection}>
-          <Text style={styles.secondaryTitle}>Secondary Joints</Text>
+        <View style={[styles.section, styles.divided]}>
+          <AppText variant="label" color={ON_DARK_SECONDARY} style={styles.upper}>
+            Secondary joints
+          </AppText>
           {Object.entries(measurement.secondaryJoints).map(([jointName, jointData]) => (
-            <View key={jointName} style={styles.secondaryItem}>
-              <Text style={styles.secondaryJointName}>
-                {jointName.replace(/_/g, ' ')}:
-              </Text>
-              <Text
-                style={[
-                  styles.secondaryJointValue,
-                  {
-                    color: jointData.withinTolerance ? '#4CAF50' : '#FFC107',
-                  },
-                ]}
+            <View
+              key={jointName}
+              style={styles.rowBetween}
+              accessible
+              accessibilityLabel={`${jointName.replace(/_/g, ' ')}: ${Math.round(
+                jointData.angle
+              )} degrees${jointData.withinTolerance ? '' : ', outside tolerance'}`}
+            >
+              <AppText
+                variant="body"
+                color={colors.textInverse}
+                style={styles.capitalize}
               >
-                {Math.round(jointData.angle)}°{!jointData.withinTolerance && ' ⚠'}
-              </Text>
+                {jointName.replace(/_/g, ' ')}
+              </AppText>
+              <View style={styles.inline}>
+                <AppText variant="bodyStrong" color={colors.textInverse}>
+                  {Math.round(jointData.angle)}°
+                </AppText>
+                <Icon
+                  name={jointData.withinTolerance ? 'check-circle' : 'warning-amber'}
+                  size={20}
+                  color={jointData.withinTolerance ? colors.skeleton : colors.accent}
+                />
+              </View>
             </View>
           ))}
         </View>
@@ -327,272 +353,106 @@ const ClinicalAngleDisplay: React.FC<ClinicalAngleDisplayProps> = ({
   );
 };
 
-// Helper function to get severity color
-const getSeverityColor = (severity: string): string => {
+// Helper function to get the badge tone for a compensation severity
+const getSeverityTone = (severity: string): Tone => {
   switch (severity) {
     case 'minimal':
-      return '#8BC34A';
+      return 'success';
     case 'mild':
-      return '#FFC107';
     case 'moderate':
-      return '#FF9800';
+      return 'warning';
     case 'severe':
-      return '#F44336';
+      return 'danger';
     default:
-      return '#888';
+      return 'neutral';
   }
 };
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  center: { alignItems: 'center' },
+  capitalize: { textTransform: 'capitalize' },
+  upper: { textTransform: 'uppercase', letterSpacing: 0.5 },
   container: {
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    borderRadius: 24,
-    padding: 24,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    backgroundColor: colors.cameraOverlay,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    marginHorizontal: spacing.md,
+    gap: spacing.md,
   },
   containerCompact: {
-    padding: 16,
-    borderRadius: 16,
+    padding: spacing.md,
   },
   angleContainer: {
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  angleTypeLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#AAA',
-    marginBottom: 8,
-    textTransform: 'capitalize',
-  },
-  angleValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    gap: spacing.xs,
   },
   angleValue: {
-    fontSize: 96,
-    fontWeight: '700',
-    lineHeight: 100,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
-  },
-  angleUnit: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: '#AAA',
-    marginLeft: 4,
-  },
-  gradeBadge: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: 12,
-  },
-  gradeText: {
-    fontSize: 16,
+    fontSize: 88,
+    lineHeight: 96,
     fontWeight: '700',
   },
-  targetSection: {
-    marginBottom: 20,
+  angleValueCompact: {
+    fontSize: 56,
+    lineHeight: 64,
   },
-  targetHeader: {
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.pill,
+  },
+  section: {
+    gap: spacing.sm,
+  },
+  divided: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: ON_DARK_DIVIDER,
+    paddingTop: spacing.md,
+  },
+  rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: spacing.sm,
   },
-  targetLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#AAA',
-  },
-  percentText: {
-    fontSize: 20,
-    fontWeight: '700',
+  inline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   progressBarContainer: {
     height: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: radii.pill,
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
-    borderRadius: 8,
+    borderRadius: radii.pill,
+    backgroundColor: colors.skeleton,
   },
-  progressBarGradient: {
-    flex: 1,
+  list: {
+    gap: spacing.xs,
   },
-  achievedBadge: {
-    marginTop: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#4CAF50',
-    alignItems: 'center',
-  },
-  achievedText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#4CAF50',
-  },
-  multiPlaneSection: {
-    marginBottom: 20,
-    padding: 16,
-    backgroundColor: 'rgba(33, 150, 243, 0.1)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(33, 150, 243, 0.3)',
-  },
-  multiPlaneTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2196F3',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  multiPlaneRow: {
+  listItem: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  multiPlaneItem: {
-    alignItems: 'center',
-  },
-  multiPlaneLabel: {
-    fontSize: 12,
-    color: '#AAA',
-    marginBottom: 4,
-  },
-  multiPlaneValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#2196F3',
-  },
-  rhythmNormal: {
-    color: '#4CAF50',
-  },
-  rhythmAbnormal: {
-    color: '#FFC107',
-  },
-  multiPlaneDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  qualitySection: {
-    marginBottom: 16,
-  },
-  qualityRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  qualityLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#AAA',
-  },
-  qualityBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  qualityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  qualityText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  recommendationsContainer: {
-    marginTop: 8,
-  },
-  recommendationText: {
-    fontSize: 12,
-    color: '#FFC107',
-    marginTop: 4,
+    alignItems: 'flex-start',
+    gap: spacing.sm,
   },
   compensationSection: {
-    marginBottom: 16,
-    padding: 16,
-    backgroundColor: 'rgba(255, 152, 0, 0.1)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 152, 0, 0.3)',
-  },
-  compensationTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FF9800',
-    marginBottom: 12,
+    backgroundColor: colors.warningSoft,
+    borderRadius: radii.md,
+    padding: spacing.md,
   },
   compensationItem: {
-    marginBottom: 8,
-  },
-  compensationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  compensationType: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFF',
-    textTransform: 'capitalize',
-  },
-  severityBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  severityText: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  compensationNote: {
-    fontSize: 12,
-    color: '#CCC',
-    fontStyle: 'italic',
-  },
-  secondarySection: {
-    padding: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
-  },
-  secondaryTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#AAA',
-    marginBottom: 8,
-  },
-  secondaryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  secondaryJointName: {
-    fontSize: 13,
-    color: '#CCC',
-    textTransform: 'capitalize',
-  },
-  secondaryJointValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    backgroundColor: colors.surface,
+    borderRadius: radii.sm,
+    padding: spacing.sm,
+    gap: spacing.xs,
   },
 });
 

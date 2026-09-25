@@ -6,6 +6,7 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from '@store/index';
@@ -19,6 +20,9 @@ import JointSelectionPanel, {
   MovementType,
 } from '@components/clinical/JointSelectionPanel';
 import ClinicalAngleDisplay from '@components/clinical/ClinicalAngleDisplay';
+import { AppText, BigButton, Card, ListRow, Metric, Screen } from '@components/ui';
+import { CameraPanel } from '@components/ui/CameraPanel';
+import { colors, spacing } from '../../theme';
 
 type AssessmentPhase = 'setup' | 'ready' | 'assessing' | 'complete';
 
@@ -255,6 +259,11 @@ const WebClinicalAssessmentScreen: React.FC = () => {
     }
   };
 
+  const selectionLabel =
+    selectedJoint && selectedMovement
+      ? `${selectedSide} ${selectedJoint} · ${selectedMovement.replace(/_/g, ' ')}`
+      : undefined;
+
   return (
     <div style={webStyles.container}>
       {/* Video Feed */}
@@ -265,7 +274,7 @@ const WebClinicalAssessmentScreen: React.FC = () => {
 
       {/* Selection Panel */}
       {showSelectionPanel && (
-        <div style={webStyles.selectionOverlay}>
+        <View style={[StyleSheet.absoluteFill, styles.lightLayer]}>
           <JointSelectionPanel
             selectedJoint={selectedJoint}
             selectedMovement={selectedMovement}
@@ -275,96 +284,133 @@ const WebClinicalAssessmentScreen: React.FC = () => {
             side={selectedSide}
             onSelectSide={setSelectedSide}
           />
-        </div>
+        </View>
       )}
 
-      {/* Instructions */}
-      {!showSelectionPanel && (
-        <div style={webStyles.instructionBar}>
-          <p style={webStyles.instructionText}>{getCurrentInstruction()}</p>
-        </div>
-      )}
+      {!showSelectionPanel && phase !== 'complete' && (
+        <View
+          style={[StyleSheet.absoluteFill, styles.overlayLayer]}
+          pointerEvents="box-none"
+        >
+          <View style={styles.overlay} pointerEvents="box-none">
+            <ScrollView
+              style={styles.flex}
+              contentContainerStyle={styles.topArea}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Instructions and selection */}
+              <CameraPanel>
+                {selectionLabel ? (
+                  <AppText
+                    variant="label"
+                    color={colors.skeleton}
+                    style={styles.capitalize}
+                  >
+                    {selectionLabel}
+                  </AppText>
+                ) : null}
+                <View accessibilityLiveRegion="polite">
+                  <AppText variant="heading" color={colors.textInverse}>
+                    {getCurrentInstruction()}
+                  </AppText>
+                </View>
+              </CameraPanel>
 
-      {/* Angle Display */}
-      {phase === 'assessing' && currentMeasurement && (
-        <div style={webStyles.angleDisplayContainer}>
-          <ClinicalAngleDisplay
-            measurement={currentMeasurement}
-            showMultiPlane={true}
-            showTarget={true}
-            showQuality={true}
-            showCompensations={true}
-          />
-        </div>
+              {/* Angle Display */}
+              {phase === 'assessing' && currentMeasurement && (
+                <ClinicalAngleDisplay
+                  measurement={currentMeasurement}
+                  showMultiPlane={true}
+                  showTarget={true}
+                  showQuality={true}
+                  showCompensations={true}
+                />
+              )}
+            </ScrollView>
+
+            {/* Controls */}
+            <CameraPanel style={styles.controls}>
+              {phase === 'ready' && (
+                <BigButton
+                  label="Start assessment"
+                  icon="play-arrow"
+                  onPress={startAssessment}
+                  accessibilityHint="Starts measuring the selected movement"
+                />
+              )}
+              {phase === 'assessing' && (
+                <BigButton
+                  label="Stop"
+                  icon="stop"
+                  variant="danger"
+                  onPress={stopAssessment}
+                  accessibilityHint="Stop assessment and see the results"
+                />
+              )}
+              <BigButton
+                label="Change selection"
+                icon="tune"
+                variant="secondary"
+                compact
+                onPress={changeSelection}
+                accessibilityHint="Change joint or movement selection"
+              />
+            </CameraPanel>
+          </View>
+        </View>
       )}
 
       {/* Complete Screen */}
       {phase === 'complete' && currentMeasurement && (
-        <div style={webStyles.completeOverlay}>
-          <div style={webStyles.completeCard}>
-            <h1 style={webStyles.completeTitle}>Assessment Complete!</h1>
-            <div style={webStyles.completeSummary}>
-              <div style={webStyles.summaryRow}>
-                <span style={webStyles.summaryLabel}>Max Angle Achieved:</span>
-                <span style={webStyles.summaryValue}>
-                  {Math.round(maxAngleAchieved)}°
-                </span>
-              </div>
-              <div style={webStyles.summaryRow}>
-                <span style={webStyles.summaryLabel}>Clinical Grade:</span>
-                <span style={webStyles.summaryValue}>
-                  {currentMeasurement.primaryJoint.clinicalGrade || 'N/A'}
-                </span>
-              </div>
-              <div style={webStyles.summaryRow}>
-                <span style={webStyles.summaryLabel}>Target Achievement:</span>
-                <span style={webStyles.summaryValue}>
-                  {Math.round(currentMeasurement.primaryJoint.percentOfTarget || 0)}%
-                </span>
-              </div>
-            </div>
-            <button style={webStyles.completeButton} onClick={resetAssessment}>
-              New Assessment
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Controls */}
-      {!showSelectionPanel && phase !== 'complete' && (
-        <div style={webStyles.controlsContainer}>
-          <button style={webStyles.secondaryButton} onClick={changeSelection}>
-            Change Selection
-          </button>
-          {phase === 'ready' && (
-            <button style={webStyles.primaryButton} onClick={startAssessment}>
-              Start Assessment
-            </button>
-          )}
-          {phase === 'assessing' && (
-            <button
-              style={{ ...webStyles.primaryButton, ...webStyles.stopButton }}
-              onClick={stopAssessment}
-            >
-              Stop
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Selection Badge */}
-      {!showSelectionPanel && selectedJoint && selectedMovement && (
-        <div style={webStyles.selectionBadge}>
-          {selectedSide.charAt(0).toUpperCase() + selectedSide.slice(1)}{' '}
-          {selectedJoint.charAt(0).toUpperCase() + selectedJoint.slice(1)} -{' '}
-          {selectedMovement.replace(/_/g, ' ')}
-        </div>
+        <View style={[StyleSheet.absoluteFill, styles.lightLayer]}>
+          <Screen
+            title="Assessment complete"
+            subtitle={selectionLabel}
+            footer={
+              <BigButton
+                label="New assessment"
+                icon="replay"
+                onPress={resetAssessment}
+                accessibilityHint="Start new assessment"
+              />
+            }
+          >
+            <Card>
+              <Metric
+                value={`${Math.round(maxAngleAchieved)}°`}
+                label="Max angle achieved"
+                color={colors.primary}
+              />
+            </Card>
+            <Card>
+              <ListRow
+                icon="grade"
+                title="Clinical grade"
+                right={
+                  <AppText variant="bodyStrong" style={styles.capitalize}>
+                    {currentMeasurement.primaryJoint.clinicalGrade || 'N/A'}
+                  </AppText>
+                }
+              />
+              <ListRow
+                icon="flag"
+                title="Target achievement"
+                last
+                right={
+                  <AppText variant="bodyStrong">
+                    {Math.round(currentMeasurement.primaryJoint.percentOfTarget || 0)}%
+                  </AppText>
+                }
+              />
+            </Card>
+          </Screen>
+        </View>
       )}
     </div>
   );
 };
 
-// Web-specific styles using inline CSS
+// Layout for the DOM video element (inline CSS)
 const webStyles: { [key: string]: React.CSSProperties } = {
   container: {
     width: '100%',
@@ -389,146 +435,32 @@ const webStyles: { [key: string]: React.CSSProperties } = {
   hiddenCanvas: {
     display: 'none',
   },
-  selectionOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    zIndex: 100,
-  },
-  instructionBar: {
-    position: 'absolute',
-    top: '60px',
-    left: '20px',
-    right: '20px',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    borderRadius: '20px',
-    padding: '16px',
-    textAlign: 'center',
-    zIndex: 10,
-  },
-  instructionText: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#FFF',
-    margin: 0,
-  },
-  angleDisplayContainer: {
-    position: 'absolute',
-    top: '140px',
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  controlsContainer: {
-    position: 'absolute',
-    bottom: '40px',
-    left: '20px',
-    right: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    zIndex: 10,
-  },
-  primaryButton: {
-    backgroundColor: '#4CAF50',
-    color: '#FFF',
-    fontSize: '20px',
-    fontWeight: '700',
-    padding: '18px',
-    borderRadius: '30px',
-    border: 'none',
-    cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-  },
-  stopButton: {
-    backgroundColor: '#F44336',
-  },
-  secondaryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    color: '#FFF',
-    fontSize: '16px',
-    fontWeight: '600',
-    padding: '14px',
-    borderRadius: '25px',
-    border: '1px solid rgba(255, 255, 255, 0.3)',
-    cursor: 'pointer',
-  },
-  selectionBadge: {
-    position: 'absolute',
-    top: '60px',
-    right: '20px',
-    backgroundColor: 'rgba(33, 150, 243, 0.9)',
-    padding: '10px 16px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#FFF',
-    textTransform: 'capitalize',
-    zIndex: 10,
-  },
-  completeOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '20px',
-    zIndex: 100,
-  },
-  completeCard: {
-    width: '100%',
-    maxWidth: '400px',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: '24px',
-    padding: '32px',
-    border: '2px solid rgba(76, 175, 80, 0.5)',
-  },
-  completeTitle: {
-    fontSize: '32px',
-    fontWeight: '700',
-    color: '#4CAF50',
-    textAlign: 'center',
-    marginBottom: '32px',
-  },
-  completeSummary: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-    marginBottom: '32px',
-  },
-  summaryRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontSize: '16px',
-    color: '#AAA',
-  },
-  summaryValue: {
-    fontSize: '20px',
-    fontWeight: '700',
-    color: '#FFF',
-    textTransform: 'capitalize',
-  },
-  completeButton: {
-    backgroundColor: '#4CAF50',
-    color: '#FFF',
-    fontSize: '18px',
-    fontWeight: '700',
-    padding: '16px',
-    borderRadius: '25px',
-    border: 'none',
-    cursor: 'pointer',
-    width: '100%',
-  },
 };
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  capitalize: { textTransform: 'capitalize' },
+  lightLayer: {
+    zIndex: 100,
+    backgroundColor: colors.background,
+  },
+  overlayLayer: {
+    zIndex: 10,
+    alignItems: 'center',
+  },
+  overlay: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 640,
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  topArea: {
+    gap: spacing.md,
+  },
+  controls: {
+    padding: spacing.md,
+  },
+});
 
 export default WebClinicalAssessmentScreen;

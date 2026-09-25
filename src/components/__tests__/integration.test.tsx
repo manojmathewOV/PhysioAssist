@@ -18,10 +18,8 @@ import ExerciseControls from '../exercises/ExerciseControls';
 import PoseOverlay from '../pose/PoseOverlay';
 import SettingsScreen from '../../screens/SettingsScreen';
 
-// Services (the web/legacy service is only used by SettingsScreen now; camera
-// screens run BlazePose through useBlazePose -> react-native-mediapipe, mocked
-// in __tests__/setup.ts)
-import { poseDetectionService } from '../../services/poseDetectionService';
+// Services (camera screens run BlazePose through useBlazePose ->
+// react-native-mediapipe, mocked in __tests__/setup.ts)
 import { goniometerService } from '../../services/goniometerService';
 import { exerciseValidationService } from '../../services/exerciseValidationService';
 import { audioFeedbackService } from '../../services/audioFeedbackService';
@@ -33,21 +31,7 @@ import { updateExerciseProgress } from '../../store/slices/exerciseSlice';
 import { EXERCISES } from '../../constants/exercises';
 import { PoseLandmark } from '../../types/pose';
 
-// Mock services (shape mirrors the real PoseDetectionService API)
-jest.mock('../../services/poseDetectionService', () => ({
-  poseDetectionService: {
-    initialize: jest.fn().mockResolvedValue(undefined),
-    processFrame: jest.fn().mockReturnValue({
-      landmarks: [],
-      confidence: 0.9,
-    }),
-    setPoseDataCallback: jest.fn(),
-    isReady: jest.fn().mockReturnValue(true),
-    cleanup: jest.fn(),
-    updateConfig: jest.fn(),
-  },
-}));
-
+// Mock services
 jest.mock('../../services/audioFeedbackService', () => ({
   audioFeedbackService: {
     speak: jest.fn().mockResolvedValue(undefined),
@@ -300,11 +284,7 @@ describe('Component Integration Tests', () => {
         enableSound: !initialSoundState,
       });
 
-      // Save settings
-      const saveButton = getByTestId('settings-save');
-      fireEvent.press(saveButton);
-
-      // Verify settings persisted
+      // Changes save straight away (no Save button); a "Saved" toast confirms it
       await waitFor(() => {
         expect(getByTestId('toast-message')).toBeTruthy();
       });
@@ -315,19 +295,15 @@ describe('Component Integration Tests', () => {
 
       const { getByTestId } = renderWithProviders(<SettingsScreen />, { store });
 
-      // Adjust frame skip setting
+      // Frame skip lives in the collapsed "Advanced" section
+      fireEvent.press(getByTestId('settings-advanced-toggle'));
       const frameSkipSlider = getByTestId('settings-frame-skip');
       fireEvent(frameSkipSlider, 'onSlidingComplete', 5);
 
-      // Verify pose detection service updated
+      // Redux settings update immediately; useBlazePose reads settings.frameSkip
       await waitFor(() => {
-        expect(poseDetectionService.updateConfig).toHaveBeenCalledWith({
-          frameSkipRate: 5,
-        });
+        expect(store.getState().settings.frameSkip).toBe(5);
       });
-
-      // Redux settings updated without needing to press Save
-      expect(store.getState().settings.frameSkip).toBe(5);
     });
   });
 

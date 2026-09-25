@@ -1,12 +1,17 @@
 /**
  * ProgressChart Component
- * Displays user progress over time with basic visualization
+ * Displays progress over time as a simple bar chart with a short summary.
  *
- * Version: 1.0 (SVG-based) - Advanced charting library (Victory Native) deferred to v1.1
+ * Bars are coloured by score band, and every band is also named in the legend
+ * and in each bar's accessibility label (never colour alone).
  */
 
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+import { AppText } from '../ui';
+import { colors, radii, shadows, spacing, touch } from '../../theme';
 
 export interface ProgressDataPoint {
   date: string | Date;
@@ -22,9 +27,24 @@ export interface ProgressChartProps {
   onDateRangeChange?: (range: '7d' | '30d' | 'all') => void;
 }
 
+const CHART_HEIGHT = 180;
+
+const band = (value: number) =>
+  value >= 80
+    ? { color: colors.success, name: 'Excellent' }
+    : value >= 60
+      ? { color: colors.accent, name: 'Good' }
+      : { color: colors.danger, name: 'Needs work' };
+
+const RANGE_LABELS: Record<'7d' | '30d' | 'all', string> = {
+  '7d': '7 days',
+  '30d': '30 days',
+  all: 'All time',
+};
+
 const ProgressChart: React.FC<ProgressChartProps> = ({
   data = [],
-  title = 'Progress Over Time',
+  title = 'Progress over time',
   // yAxisLabel = 'Score', // Currently not used in rendering
   dateRange = 'all',
   onDateRangeChange,
@@ -69,79 +89,93 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
     return { average: Math.round(average), trend, improvement: Math.round(improvement) };
   }, [chartData]);
 
-  // Render simple bar chart
+  const formatLabel = (point: ProgressDataPoint) => {
+    if (point.label) {
+      return point.label;
+    }
+    const date = new Date(point.date);
+    return `${date.toLocaleDateString('en-US', { month: 'short' })}\n${date.getDate()}`;
+  };
+
   const renderBarChart = () => {
     if (!chartData.hasData) {
       return (
         <View style={styles.placeholderContainer} testID="empty-progress-message">
-          <Text style={styles.placeholder}>📊 No data yet</Text>
-          <Text style={styles.placeholderSubtext}>
-            No data available - Complete exercises to track your progress
-          </Text>
+          <Icon name="insert-chart-outlined" size={48} color={colors.textMuted} />
+          <AppText variant="heading" center>
+            No data yet
+          </AppText>
+          <AppText variant="body" color={colors.textSecondary} center>
+            No data available - complete exercises to track your progress
+          </AppText>
         </View>
       );
     }
 
     const { points, maxValue } = chartData;
-    const chartHeight = 200;
-    const barWidth = Math.min(40, 300 / points.length);
-    // const barGap = 8; // Reserved for future use
+    const barWidth = Math.max(20, Math.min(28, 200 / points.length));
 
     return (
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={true}
-        style={styles.chartScroll}
-      >
+      <ScrollView horizontal showsHorizontalScrollIndicator style={styles.chartScroll}>
         <View style={styles.chartContainer}>
           {/* Y-axis labels */}
-          <View style={styles.yAxisLabels}>
-            <Text style={styles.yAxisLabel}>{maxValue}</Text>
-            <Text style={styles.yAxisLabel}>{Math.round(maxValue / 2)}</Text>
-            <Text style={styles.yAxisLabel}>0</Text>
+          <View
+            style={styles.yAxisLabels}
+            importantForAccessibility="no-hide-descendants"
+          >
+            {[maxValue, Math.round(maxValue / 2), 0].map((tick, i) => (
+              <AppText
+                key={i}
+                variant="caption"
+                color={colors.textMuted}
+                style={[styles.yAxisLabel, { top: (i * CHART_HEIGHT) / 2 - 10 }]}
+              >
+                {tick}
+              </AppText>
+            ))}
           </View>
 
           {/* Bars */}
           <View style={styles.barsContainer}>
-            <View style={[styles.gridLine, { top: 0 }]} />
-            <View style={[styles.gridLine, { top: '50%' }]} />
-            <View style={[styles.gridLine, { bottom: 0 }]} />
+            <View style={[styles.gridLine, styles.gridTop]} />
+            <View style={[styles.gridLine, styles.gridMid]} />
+            <View style={[styles.gridLine, styles.gridBottom]} />
 
             <View style={styles.bars}>
               {points.map((point, index) => {
                 const heightPercent = (point.value / maxValue) * 100;
-                const barColor =
-                  point.value >= 80
-                    ? '#4CAF50'
-                    : point.value >= 60
-                      ? '#FF9800'
-                      : '#F44336';
+                const b = band(point.value);
+                const label = formatLabel(point);
 
                 return (
                   <View
                     key={index}
-                    style={[styles.barColumn, { width: barWidth }]}
+                    style={[styles.barColumn, { width: barWidth + spacing.sm }]}
                     testID={`data-point-${index}`}
+                    accessible
+                    accessibilityLabel={`${label.replace('\n', ' ')}: ${point.value}, ${b.name}`}
                   >
-                    <View style={[styles.barContainer, { height: chartHeight }]}>
+                    <View style={[styles.barContainer, { height: CHART_HEIGHT }]}>
                       <View
                         style={[
                           styles.bar,
                           {
+                            width: barWidth,
                             height: `${heightPercent}%`,
-                            backgroundColor: barColor,
+                            backgroundColor: b.color,
                           },
                         ]}
                       />
                     </View>
-                    <Text style={styles.barValue}>{point.value}</Text>
-                    <Text style={styles.barLabel} numberOfLines={1}>
-                      {point.label ||
-                        new Date(point.date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                    </Text>
+                    <AppText variant="label">{point.value}</AppText>
+                    <AppText
+                      variant="caption"
+                      color={colors.textSecondary}
+                      numberOfLines={2}
+                      style={styles.barLabel}
+                    >
+                      {label}
+                    </AppText>
                   </View>
                 );
               })}
@@ -152,34 +186,50 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
     );
   };
 
+  const trendIcon =
+    stats.trend === 'improving'
+      ? 'trending-up'
+      : stats.trend === 'declining'
+        ? 'trending-down'
+        : 'trending-flat';
+  const trendColor =
+    stats.trend === 'improving'
+      ? colors.success
+      : stats.trend === 'declining'
+        ? colors.danger
+        : colors.textSecondary;
+
   return (
     <View style={styles.container} testID="progress-chart">
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
+        <AppText variant="heading" accessibilityRole="header">
+          {title}
+        </AppText>
 
         {/* Date Range Selector */}
         {onDateRangeChange && (
-          <View style={styles.dateRangeSelector}>
-            {(['7d', '30d', 'all'] as const).map((range) => (
-              <TouchableOpacity
-                key={range}
-                style={[
-                  styles.dateRangeButton,
-                  dateRange === range && styles.dateRangeButtonActive,
-                ]}
-                onPress={() => onDateRangeChange(range)}
-              >
-                <Text
-                  style={[
-                    styles.dateRangeText,
-                    dateRange === range && styles.dateRangeTextActive,
-                  ]}
+          <View style={styles.dateRangeSelector} accessibilityRole="tablist">
+            {(['7d', '30d', 'all'] as const).map((range) => {
+              const selected = dateRange === range;
+              return (
+                <Pressable
+                  key={range}
+                  style={[styles.dateRangeButton, selected && styles.dateRangeActive]}
+                  onPress={() => onDateRangeChange(range)}
+                  accessibilityRole="tab"
+                  accessibilityLabel={RANGE_LABELS[range]}
+                  accessibilityState={{ selected }}
                 >
-                  {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : 'All Time'}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <AppText
+                    variant="label"
+                    color={selected ? colors.onPrimary : colors.primary}
+                  >
+                    {RANGE_LABELS[range]}
+                  </AppText>
+                </Pressable>
+              );
+            })}
           </View>
         )}
       </View>
@@ -187,42 +237,35 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
       {/* Stats Summary */}
       {chartData.hasData && (
         <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Average</Text>
-            <Text style={styles.statValue}>{stats.average}</Text>
+          <View style={styles.statBox} accessible>
+            <AppText variant="caption" color={colors.textSecondary}>
+              Average
+            </AppText>
+            <AppText variant="heading">{stats.average}</AppText>
           </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Trend</Text>
-            <Text
-              style={[
-                styles.statValue,
-                stats.trend === 'improving'
-                  ? styles.trendImproving
-                  : stats.trend === 'declining'
-                    ? styles.trendDeclining
-                    : styles.trendNeutral,
-              ]}
-            >
-              {stats.trend === 'improving'
-                ? '↗️'
-                : stats.trend === 'declining'
-                  ? '↘️'
-                  : '→'}{' '}
-              {stats.trend}
-            </Text>
+          <View style={styles.statBox} accessible>
+            <AppText variant="caption" color={colors.textSecondary}>
+              Trend
+            </AppText>
+            <View style={styles.trendRow}>
+              <Icon name={trendIcon} size={24} color={trendColor} />
+              <AppText variant="bodyStrong" color={trendColor}>
+                {stats.trend.charAt(0).toUpperCase() + stats.trend.slice(1)}
+              </AppText>
+            </View>
           </View>
           {stats.improvement !== 0 && (
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Change</Text>
-              <Text
-                style={[
-                  styles.statValue,
-                  { color: stats.improvement > 0 ? '#4CAF50' : '#F44336' },
-                ]}
+            <View style={styles.statBox} accessible>
+              <AppText variant="caption" color={colors.textSecondary}>
+                Change
+              </AppText>
+              <AppText
+                variant="heading"
+                color={stats.improvement > 0 ? colors.success : colors.danger}
               >
                 {stats.improvement > 0 ? '+' : ''}
                 {stats.improvement}
-              </Text>
+              </AppText>
             </View>
           )}
         </View>
@@ -234,202 +277,144 @@ const ProgressChart: React.FC<ProgressChartProps> = ({
       {/* Legend */}
       {chartData.hasData && (
         <View style={styles.legend} testID="chart-legend">
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} />
-            <Text style={styles.legendText}>Excellent (80+)</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#FF9800' }]} />
-            <Text style={styles.legendText}>Good (60-79)</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#F44336' }]} />
-            <Text style={styles.legendText}>Needs Work (&lt;60)</Text>
-          </View>
+          {[
+            { color: colors.success, text: 'Excellent (80+)' },
+            { color: colors.accent, text: 'Good (60–79)' },
+            { color: colors.danger, text: 'Needs work (under 60)' },
+          ].map((item) => (
+            <View key={item.text} style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+              <AppText variant="caption" color={colors.textSecondary}>
+                {item.text}
+              </AppText>
+            </View>
+          ))}
         </View>
       )}
-
-      {/* Version Note */}
-      <Text style={styles.versionNote}>
-        Advanced charting (line graphs, multi-metric comparison) coming in v1.1
-      </Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    padding: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    gap: spacing.md,
+    ...shadows.card,
   },
   header: {
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#333',
+    gap: spacing.md,
   },
   dateRangeSelector: {
     flexDirection: 'row',
-    gap: 8,
+    gap: spacing.sm,
   },
   dateRangeButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#F5F5F5',
+    flex: 1,
+    minHeight: touch.min,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
   },
-  dateRangeButtonActive: {
-    backgroundColor: '#2196F3',
-  },
-  dateRangeText: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
-  },
-  dateRangeTextActive: {
-    color: '#fff',
+  dateRangeActive: {
+    backgroundColor: colors.primary,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
+    padding: spacing.md,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radii.md,
   },
   statBox: {
     alignItems: 'center',
+    gap: spacing.xs,
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  trendImproving: {
-    color: '#4CAF50',
-  },
-  trendDeclining: {
-    color: '#F44336',
-  },
-  trendNeutral: {
-    color: '#FF9800',
+  trendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    minHeight: 28,
   },
   chartScroll: {
-    marginBottom: 16,
+    flexGrow: 0,
   },
   chartContainer: {
     flexDirection: 'row',
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
   },
   yAxisLabels: {
-    width: 40,
-    justifyContent: 'space-between',
-    paddingRight: 8,
-    height: 200,
+    width: 36,
+    height: CHART_HEIGHT,
   },
   yAxisLabel: {
-    fontSize: 11,
-    color: '#999',
-    textAlign: 'right',
+    position: 'absolute',
+    right: spacing.sm,
+    lineHeight: 20,
   },
   barsContainer: {
     position: 'relative',
-    flex: 1,
   },
   gridLine: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 1,
-    backgroundColor: '#E0E0E0',
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
   },
+  gridTop: { top: 0 },
+  gridMid: { top: CHART_HEIGHT / 2 },
+  gridBottom: { top: CHART_HEIGHT },
   bars: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
-    paddingHorizontal: 8,
+    alignItems: 'flex-start',
+    paddingHorizontal: spacing.xs,
   },
   barColumn: {
     alignItems: 'center',
   },
   barContainer: {
     width: '100%',
+    alignItems: 'center',
     justifyContent: 'flex-end',
-    marginBottom: 4,
+    marginBottom: spacing.xs,
   },
   bar: {
-    width: '100%',
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
+    borderTopLeftRadius: radii.sm / 2,
+    borderTopRightRadius: radii.sm / 2,
     minHeight: 4,
   },
-  barValue: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 2,
-  },
   barLabel: {
-    fontSize: 10,
-    color: '#999',
-    maxWidth: 50,
+    maxWidth: 64,
     textAlign: 'center',
   },
   placeholderContainer: {
-    paddingVertical: 60,
+    paddingVertical: spacing.xxl,
     alignItems: 'center',
-  },
-  placeholder: {
-    fontSize: 18,
-    color: '#999',
-    marginBottom: 8,
-  },
-  placeholderSubtext: {
-    fontSize: 14,
-    color: '#BBB',
-    textAlign: 'center',
+    gap: spacing.sm,
   },
   legend: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 16,
-    marginTop: 8,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    gap: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: spacing.xs,
   },
   legendColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 2,
-  },
-  legendText: {
-    fontSize: 11,
-    color: '#666',
-  },
-  versionNote: {
-    fontSize: 11,
-    color: '#999',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginTop: 12,
+    width: 14,
+    height: 14,
+    borderRadius: 4,
   },
 });
 

@@ -11,12 +11,15 @@ import React from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   StyleProp,
   ViewStyle,
   AccessibilityActionEvent,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+import { colors, radii, touch, typography } from '../../theme';
 
 export interface StepSliderProps {
   value: number;
@@ -79,23 +82,37 @@ const StepSlider: React.FC<StepSliderProps> = ({
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
       onAccessibilityAction={handleAccessibilityAction}
     >
-      <TouchableOpacity
-        style={styles.stepButton}
+      <Pressable
+        style={({ pressed }) => [
+          styles.stepButton,
+          pressed && styles.stepButtonPressed,
+          value <= minimumValue && styles.stepButtonDisabled,
+        ]}
         onPress={() => commit(value - step)}
         disabled={value <= minimumValue}
         testID={testID ? `${testID}-decrement` : undefined}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ? `Less ${accessibilityLabel}` : 'Less'}
       >
-        <Text style={styles.stepButtonText}>−</Text>
-      </TouchableOpacity>
-      <Text style={styles.valueText}>{formatValue(value)}</Text>
-      <TouchableOpacity
-        style={styles.stepButton}
+        <Icon name="remove" size={30} color={colors.primary} />
+      </Pressable>
+      <Text style={styles.valueText} maxFontSizeMultiplier={1.6}>
+        {formatValue(value)}
+      </Text>
+      <Pressable
+        style={({ pressed }) => [
+          styles.stepButton,
+          pressed && styles.stepButtonPressed,
+          value >= maximumValue && styles.stepButtonDisabled,
+        ]}
         onPress={() => commit(value + step)}
         disabled={value >= maximumValue}
         testID={testID ? `${testID}-increment` : undefined}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ? `More ${accessibilityLabel}` : 'More'}
       >
-        <Text style={styles.stepButtonText}>+</Text>
-      </TouchableOpacity>
+        <Icon name="add" size={30} color={colors.primary} />
+      </Pressable>
     </View>
   );
 };
@@ -105,23 +122,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 12,
   },
   stepButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E3EEFB',
+    width: touch.min,
+    height: touch.min,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepButtonText: {
-    fontSize: 20,
-    color: '#4A90E2',
-    fontWeight: '600',
-  },
+  stepButtonPressed: { backgroundColor: colors.primarySoft },
+  stepButtonDisabled: { opacity: 0.4 },
   valueText: {
-    fontSize: 16,
-    minWidth: 48,
+    ...typography.heading,
+    color: colors.text,
+    flex: 1,
     textAlign: 'center',
   },
 });

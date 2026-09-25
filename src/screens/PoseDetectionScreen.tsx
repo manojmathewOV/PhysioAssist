@@ -1,12 +1,34 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
+/**
+ * Exercise tab (iOS/Android).
+ *
+ * 1. Choose an exercise (large cards, set-up reminder, one big Start button).
+ * 2. Exercise: the camera fills the screen; the instruction, rep counter and
+ *    one big Stop button sit on dark overlay panels (ExerciseControls).
+ * 3. Summary: reps, time and form in words, then "Done" or "Do another".
+ *
+ * Without a camera (simulator) or camera permission, a friendly full-screen
+ * explanation offers one clear way forward (open Settings / practice mode).
+ */
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Linking, StyleSheet, View } from 'react-native';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from '@store/index';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
+import {
+  clearExercise,
+  setFeedback,
+  startExercise,
+  stopExercise,
+  updateExerciseProgress,
+  updateValidation,
+} from '@store/slices/exerciseSlice';
 import { useBlazePose, CAMERA_FPS } from '@hooks/useBlazePose';
+import { exerciseValidationService } from '@services/exerciseValidationService';
+import { audioFeedbackService } from '@services/audioFeedbackService';
 import type { MockPoseDataSimulator } from '@services/mockPoseDataSimulator';
 // Conditional import: Only include mock simulator in development builds
 const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
@@ -14,132 +36,279 @@ const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
   : null;
 import PoseOverlay from '@components/pose/PoseOverlay';
 import ExerciseControls from '@components/exercises/ExerciseControls';
+import ExerciseChooser from '@components/exercises/ExerciseChooser';
+import ExerciseSummary, {
+  ExerciseSummaryProps,
+} from '@components/exercises/ExerciseSummary';
+import CameraUnavailable from '@components/exercises/CameraUnavailable';
+import {
+  EXERCISE_OPTIONS,
+  ExerciseKey,
+  friendlyInstruction,
+} from '@components/exercises/exerciseCatalog';
+import { AccessibilityIds } from '../constants/accessibility';
+import type { MainTabParamList } from '../navigation/types';
+import { colors } from '../theme';
+
+type Stage = 'choose' | 'exercise' | 'summary';
+type Permission = 'unknown' | 'granted' | 'denied';
 
 const PoseDetectionScreen: React.FC = () => {
   const dispatch = useDispatch();
+  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const isFocused = useIsFocused();
   const device = useCameraDevice('front');
 
-  const { isDetecting, confidence } = useSelector((state: RootState) => state.pose);
-  const { frameSkip } = useSelector((state: RootState) => state.settings);
-  const [hasPermission, setHasPermission] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isExerciseActive, setIsExerciseActive] = useState(false);
+  const { isDetecting, currentPose } = useSelector((state: RootState) => state.pose);
+  const { frameSkip, showPoseOverlay, showJointAngles } = useSelector(
+    (state: RootState) => state.settings
+  );
+  const exerciseState = useSelector((state: RootState) => state.exercise);
+  const { isExercising } = exerciseState;
+
+  const [stage, setStage] = useState<Stage>('choose');
+  const [selectedKey, setSelectedKey] = useState<ExerciseKey>('bicepCurl');
+  const [permission, setPermission] = useState<Permission>('unknown');
   const [isPaused, setIsPaused] = useState(false);
-  const [useMockData, setUseMockData] = useState(false);
-  const [initError, setInitError] = useState<string | null>(null);
-  const frameCountRef = useRef(0);
+  const [practice, setPractice] = useState(false);
+  const [summary, setSummary] = useState<ExerciseSummaryProps | null>(null);
+  const lastSpokenRef = useRef('');
+
+  const option = EXERCISE_OPTIONS.find((o) => o.key === selectedKey)!;
+  const cameraReady = !!device && permission === 'granted';
 
   // BlazePose runs only while detecting (and not paused); poses go to the Redux store
   const { cameraProps, error: detectorError } = useBlazePose({
     device,
-    enabled: isDetecting && !isPaused && !useMockData,
+    enabled: isDetecting && !isPaused && !practice,
     frameSkip,
   });
-  useEffect(() => {
-    if (detectorError) {
-      setInitError('Pose detection unavailable');
-    }
-  }, [detectorError]);
+
+  const requestCameraPermission = useCallback(async () => {
+    const result = await Camera.requestCameraPermission();
+    setPermission(result === 'granted' ? 'granted' : 'denied');
+  }, []);
 
   useEffect(() => {
     requestCameraPermission();
-    // The BlazePose detector is created natively by usePoseDetection below
-    setIsInitialized(true);
-
     return () => {
-      if (isDetecting) {
-        stopPoseDetection();
-      }
+      dispatch(setDetecting(false));
+      mockPoseDataSimulator?.stop();
     };
-  }, []);
+  }, [dispatch, requestCameraPermission]);
 
-  const requestCameraPermission = async () => {
-    const permission = await Camera.requestCameraPermission();
-    setHasPermission(permission === 'granted');
-    if (permission !== 'granted') {
-      Alert.alert(
-        'Camera Permission Required',
-        'Please grant camera permission to use pose detection.'
-      );
+  // Validate each new pose during the exercise; show and speak the instruction
+  useEffect(() => {
+    if (stage !== 'exercise' || !isExercising || isPaused || !currentPose) {
+      return;
     }
-  };
+    try {
+      const result = exerciseValidationService.validatePose(currentPose);
+      dispatch(updateValidation(result));
+      const raw = result.feedback[0] ?? result.errors[0] ?? '';
+      if (!result.feedback.length && raw) {
+        dispatch(setFeedback(raw));
+      }
+      const metrics = exerciseValidationService.getExerciseMetrics();
+      dispatch(
+        updateExerciseProgress({
+          reps: metrics.repetitionCount,
+          formScore: metrics.averageQuality / 100,
+        })
+      );
+      const message = friendlyInstruction(raw);
+      if (message && message !== lastSpokenRef.current) {
+        lastSpokenRef.current = message;
+        audioFeedbackService.speak(message);
+      }
+    } catch (error) {
+      console.error('Failed to validate pose:', error);
+    }
+  }, [currentPose, isExercising, isPaused, stage, dispatch]);
 
-  const startPoseDetection = () => {
-    if (isInitialized) {
+  const beginSession = useCallback(
+    (practiceMode: boolean) => {
+      const exercise = option.exercise;
+      lastSpokenRef.current = '';
+      setIsPaused(false);
+      setPractice(practiceMode);
+      dispatch(startExercise(exercise));
+      exerciseValidationService.startExercise(exercise);
       dispatch(setDetecting(true));
+      audioFeedbackService.speak(`Starting ${option.title}. ${exercise.instructions[0]}`);
 
-      // Start mock simulator if using mock data (dev only)
-      if (useMockData && mockPoseDataSimulator) {
+      if (practiceMode && mockPoseDataSimulator) {
         mockPoseDataSimulator.start((poseData) => {
           dispatch(setPoseData(poseData));
         }, 30);
       }
+      setStage('exercise');
+    },
+    [dispatch, option]
+  );
+
+  // Start straight away once the camera becomes available (e.g. permission granted)
+  useEffect(() => {
+    if (stage === 'exercise' && cameraReady && !isExercising && !practice) {
+      beginSession(false);
+    }
+  }, [stage, cameraReady, isExercising, practice, beginSession]);
+
+  const handleStart = () => {
+    if (cameraReady) {
+      beginSession(false);
+    } else {
+      // Shows the friendly "camera unavailable" explanation
+      setStage('exercise');
     }
   };
 
-  const stopPoseDetection = () => {
+  const handleStop = useCallback(() => {
+    const { repetitionCount, formScore, startedAt, currentExercise } = exerciseState;
+    exerciseValidationService.stopExercise();
+    mockPoseDataSimulator?.stop();
     dispatch(setDetecting(false));
+    // Practice sessions use a pretend body, so they are not saved to history
+    dispatch(practice ? clearExercise() : stopExercise());
+    audioFeedbackService.speak('Well done');
 
-    // Stop mock simulator if running (dev only)
-    if (useMockData && mockPoseDataSimulator && mockPoseDataSimulator.isActive()) {
-      mockPoseDataSimulator.stop();
+    setSummary({
+      exercise: option.title,
+      reps: repetitionCount,
+      duration: startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0,
+      formAccuracy: Math.round(formScore * 100),
+      targetReps: currentExercise?.targetRepetitions,
+      practice,
+    });
+    setIsPaused(false);
+    setStage('summary');
+  }, [dispatch, exerciseState, option, practice]);
+
+  const backToChooser = () => {
+    if (isExercising) {
+      exerciseValidationService.stopExercise();
+      dispatch(clearExercise());
     }
+    mockPoseDataSimulator?.stop();
+    dispatch(setDetecting(false));
+    setPractice(false);
+    setStage('choose');
   };
 
-  // Exercise control handlers
-  const handleStartExercise = useCallback(() => {
-    setIsExerciseActive(true);
-    setIsPaused(false);
-    if (!isDetecting) {
-      startPoseDetection();
-    }
-  }, [isDetecting]);
-
-  const handleStopExercise = useCallback(() => {
-    setIsExerciseActive(false);
-    setIsPaused(false);
-    stopPoseDetection();
-  }, []);
-
-  const handlePauseExercise = useCallback(() => {
-    setIsPaused(!isPaused);
-  }, [isPaused]);
-
-  const handleResetExercise = useCallback(() => {
-    setIsExerciseActive(false);
-    setIsPaused(false);
-    frameCountRef.current = 0;
-  }, []);
-
-  // Render fallback UI when camera is not available but mock data is enabled
-  if ((!device || !hasPermission) && !useMockData) {
+  // -------------------------------------------------------------------------
+  // 1. Choose
+  // -------------------------------------------------------------------------
+  if (stage === 'choose') {
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>
-          {!device ? 'No camera device found' : 'Camera permission required'}
-        </Text>
-        {isInitialized && (
-          <TouchableOpacity
-            style={styles.mockButton}
-            onPress={() => {
-              setUseMockData(true);
-              Alert.alert(
-                'Mock Mode Enabled',
-                'Using simulated pose data for testing without camera access.'
-              );
-            }}
-          >
-            <Text style={styles.mockButtonText}>Use Mock Data (Testing Mode)</Text>
-          </TouchableOpacity>
-        )}
+      <View style={styles.flex} testID={AccessibilityIds.poseDetection.screen}>
+        <ExerciseChooser
+          selectedKey={selectedKey}
+          onSelect={setSelectedKey}
+          onStart={handleStart}
+        />
       </View>
     );
   }
 
+  // -------------------------------------------------------------------------
+  // 3. Summary
+  // -------------------------------------------------------------------------
+  if (stage === 'summary' && summary) {
+    return (
+      <View style={styles.flex} testID={AccessibilityIds.poseDetection.screen}>
+        <ExerciseSummary
+          {...summary}
+          onDone={() => {
+            setStage('choose');
+            navigation.navigate('HomeTab', { screen: 'Home' });
+          }}
+          onRepeat={() => setStage('choose')}
+        />
+      </View>
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Camera not available
+  // -------------------------------------------------------------------------
+  if (!practice && (!cameraReady || detectorError)) {
+    const practiceAction = mockPoseDataSimulator
+      ? {
+          label: 'Practice without camera',
+          icon: 'play-arrow',
+          onPress: () => beginSession(true),
+          testID: 'use-practice-mode',
+        }
+      : undefined;
+    const back = {
+      label: 'Back to exercises',
+      onPress: backToChooser,
+      testID: 'camera-help-back',
+    };
+
+    if (detectorError) {
+      return (
+        <CameraUnavailable
+          testID="camera-error"
+          icon="videocam-off"
+          title="The camera couldn't start"
+          message="Please close the app and open it again. If this keeps happening, restart your phone."
+          primary={{ ...back, icon: 'arrow-back' }}
+        />
+      );
+    }
+    if (permission === 'denied') {
+      return (
+        <CameraUnavailable
+          testID={AccessibilityIds.poseDetection.permissionDialog}
+          icon="photo-camera"
+          title="Allow the camera"
+          message="PhysioAssist uses your camera to watch your movements and count your repetitions. Nothing is recorded or sent anywhere. Turn on the camera for PhysioAssist in your phone's Settings."
+          primary={{
+            label: 'Open Settings',
+            icon: 'settings',
+            onPress: () => Linking.openSettings(),
+            testID: AccessibilityIds.poseDetection.permissionGrantButton,
+          }}
+          secondary={practiceAction ?? back}
+        />
+      );
+    }
+    if (!device) {
+      return (
+        <CameraUnavailable
+          testID="no-camera"
+          icon="no-photography"
+          title="No camera found"
+          message="This device doesn't seem to have a front camera. You can still try the exercise screen in practice mode, with a pretend body."
+          primary={practiceAction ?? { ...back, icon: 'arrow-back' }}
+          secondary={practiceAction ? back : undefined}
+        />
+      );
+    }
+    // Permission still being asked
+    return (
+      <CameraUnavailable
+        testID="camera-waiting"
+        icon="photo-camera"
+        title="Getting the camera ready"
+        message="If your phone asks, please allow PhysioAssist to use the camera."
+        primary={{
+          label: 'Try again',
+          icon: 'refresh',
+          onPress: requestCameraPermission,
+        }}
+        secondary={back}
+      />
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // 2. Exercise (camera full screen)
+  // -------------------------------------------------------------------------
   return (
-    <View style={styles.container}>
-      {device && hasPermission && !useMockData ? (
+    <View style={styles.camera} testID={AccessibilityIds.poseDetection.screen}>
+      {cameraReady && !practice && device ? (
         <Camera
           style={StyleSheet.absoluteFill}
           device={device}
@@ -150,161 +319,28 @@ const PoseDetectionScreen: React.FC = () => {
           {...cameraProps}
         />
       ) : (
-        <View style={[StyleSheet.absoluteFill, styles.mockBackground]}>
-          <Text style={styles.mockModeText}>MOCK DATA MODE</Text>
-          <Text style={styles.mockModeSubtext}>Simulated pose detection for testing</Text>
-        </View>
+        <View style={[StyleSheet.absoluteFill, styles.practiceBackground]} />
       )}
 
-      <PoseOverlay />
+      {showPoseOverlay !== false ? <PoseOverlay showAngles={showJointAngles} /> : null}
 
-      <View style={styles.topInfo}>
-        {useMockData && (
-          <View style={styles.mockBadge}>
-            <Text style={styles.mockBadgeText}>MOCK MODE</Text>
-          </View>
-        )}
-        <View style={styles.confidenceBadge}>
-          <Text style={styles.confidenceText}>
-            Confidence: {(confidence * 100).toFixed(0)}%
-          </Text>
-        </View>
-        {initError && (
-          <View style={styles.errorBadge}>
-            <Text style={styles.errorText}>{initError}</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.controls}>
-        {!isDetecting && !isExerciseActive ? (
-          <TouchableOpacity style={styles.startButton} onPress={startPoseDetection}>
-            <Text style={styles.buttonText}>Start Detection</Text>
-          </TouchableOpacity>
-        ) : isDetecting && !isExerciseActive ? (
-          <TouchableOpacity style={styles.stopButton} onPress={stopPoseDetection}>
-            <Text style={styles.buttonText}>Stop Detection</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-
-      {isInitialized && (
-        <ExerciseControls
-          isActive={isExerciseActive}
-          onStart={handleStartExercise}
-          onStop={handleStopExercise}
-          onPause={handlePauseExercise}
-          onReset={handleResetExercise}
-        />
-      )}
+      <ExerciseControls
+        isActive={isExercising}
+        isPaused={isPaused}
+        practice={practice}
+        onStart={() => beginSession(practice)}
+        onStop={handleStop}
+        onPause={() => setIsPaused((p) => !p)}
+        onReset={backToChooser}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  message: {
-    color: '#FFF',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 100,
-    paddingHorizontal: 20,
-  },
-  mockButton: {
-    backgroundColor: '#FF9800',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 30,
-    marginTop: 40,
-    alignSelf: 'center',
-  },
-  mockButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  mockBackground: {
-    backgroundColor: '#1a1a2e',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mockModeText: {
-    color: '#FF9800',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  mockModeSubtext: {
-    color: '#AAA',
-    fontSize: 14,
-  },
-  topInfo: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-  },
-  confidenceBadge: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: 8,
-  },
-  confidenceText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  mockBadge: {
-    backgroundColor: 'rgba(255, 152, 0, 0.9)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  mockBadgeText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  errorBadge: {
-    backgroundColor: 'rgba(244, 67, 54, 0.9)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: 8,
-  },
-  errorText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  controls: {
-    position: 'absolute',
-    bottom: 100,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  startButton: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 30,
-  },
-  stopButton: {
-    backgroundColor: '#F44336',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 30,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '600',
-  },
+  flex: { flex: 1, backgroundColor: colors.background },
+  camera: { flex: 1, backgroundColor: '#000' },
+  practiceBackground: { backgroundColor: colors.text },
 });
 
 export default PoseDetectionScreen;

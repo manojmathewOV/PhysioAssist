@@ -1,279 +1,251 @@
 /**
- * ExerciseSummary Component
- * Displays comprehensive summary of completed exercise session
- *
- * Version: 1.0 (Basic) - Form analysis and historical comparison deferred to v1.1
+ * ExerciseSummary: a calm, celebratory summary shown after the patient stops
+ * an exercise. Reps, time and form (in words), then "Done" and "Do another".
  */
-
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+import { AppText, Banner, BigButton, Card, Metric, Screen } from '../ui';
+import { colors, radii, spacing } from '../../theme';
+import { formatDuration } from './exerciseCatalog';
 
 export interface ExerciseSummaryProps {
   exercise?: string;
   reps?: number;
+  /** Seconds. */
   duration?: number;
+  /** 0–100. */
   score?: number;
+  /** 0–100. */
   formAccuracy?: number;
   calories?: number;
   targetReps?: number;
   previousBestScore?: number;
+  /** Shown as the main action ("Done"). */
+  onDone?: () => void;
+  /** Shown as the secondary action ("Do another"). */
+  onRepeat?: () => void;
+  /** Practice mode: nothing was saved. */
+  practice?: boolean;
 }
+
+const formWords = (percent: number, reps: number) => {
+  if (reps === 0 && percent === 0) {
+    return 'Not measured';
+  }
+  return percent >= 80
+    ? 'Excellent form'
+    : percent >= 60
+      ? 'Good form'
+      : 'Keep practising';
+};
+
+const encouragement = (percent: number, reps: number, reachedGoal: boolean) => {
+  if (reps === 0) {
+    return 'No repetitions were counted this time. Check that your whole body is in view and try again when you are ready.';
+  }
+  if (reachedGoal) {
+    return 'You reached your goal. Rest for a minute before your next exercise.';
+  }
+  if (percent >= 80) {
+    return 'Your movements were smooth and steady. Keep it up.';
+  }
+  if (percent >= 60) {
+    return 'Good effort. Move slowly and keep your posture steady.';
+  }
+  return 'Every session helps. Take it slowly and focus on steady movements.';
+};
 
 const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   exercise = 'Exercise',
   reps = 0,
   duration = 0,
   score = 0,
-  formAccuracy = 0,
+  formAccuracy,
   calories = 0,
   targetReps,
   previousBestScore,
+  onDone,
+  onRepeat,
+  practice,
 }) => {
-  const minutes = Math.floor(duration / 60);
-  const seconds = duration % 60;
-  const durationText = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
-
-  const scoreColor = score >= 80 ? '#4CAF50' : score >= 60 ? '#FF9800' : '#F44336';
-  const formColor =
-    formAccuracy >= 80 ? '#4CAF50' : formAccuracy >= 60 ? '#FF9800' : '#F44336';
-
+  const percent = Math.round(formAccuracy ?? score);
+  const reachedGoal = !!targetReps && reps >= targetReps;
   const isPersonalBest = previousBestScore !== undefined && score > previousBestScore;
+  const didReps = reps > 0;
+
+  const footer =
+    onDone || onRepeat ? (
+      <>
+        {onDone ? (
+          <BigButton label="Done" icon="check" onPress={onDone} testID="done-button" />
+        ) : null}
+        {onRepeat ? (
+          <BigButton
+            label="Do another"
+            icon="replay"
+            variant="secondary"
+            onPress={onRepeat}
+            testID="retry-button"
+          />
+        ) : null}
+      </>
+    ) : undefined;
 
   return (
-    <ScrollView style={styles.scrollView}>
-      <View style={styles.container} testID="exercise-summary">
-        <Text style={styles.title}>{exercise} Complete!</Text>
-
-        {isPersonalBest && (
-          <View style={styles.badgeContainer}>
-            <Text style={styles.badge}>🎉 Personal Best!</Text>
-          </View>
-        )}
-
-        {/* Primary Stats */}
-        <View style={styles.primaryStats}>
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>Reps</Text>
-            <Text style={[styles.statValue, styles.large]}>{reps}</Text>
-            {targetReps && (
-              <Text style={styles.statSubtext}>
-                {reps >= targetReps ? `✓ Goal: ${targetReps}` : `Goal: ${targetReps}`}
-              </Text>
-            )}
-          </View>
-
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>Duration</Text>
-            <Text style={[styles.statValue, styles.large]}>{durationText}</Text>
-          </View>
-
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>Score</Text>
-            <Text style={[styles.statValue, styles.large, { color: scoreColor }]}>
-              {score}
-            </Text>
-            <Text style={styles.statSubtext}>/100</Text>
-          </View>
+    <Screen testID="exercise-summary" footer={footer}>
+      <View style={styles.hero}>
+        <View style={[styles.heroIcon, !didReps && styles.heroIconNeutral]}>
+          <Icon
+            name={didReps ? 'celebration' : 'self-improvement'}
+            size={44}
+            color={didReps ? colors.success : colors.primary}
+          />
         </View>
-
-        {/* Secondary Stats */}
-        <View style={styles.secondaryStats}>
-          <View style={styles.statRow}>
-            <Text style={styles.statRowLabel}>Form Accuracy</Text>
-            <View style={styles.statRowValue}>
-              <View
-                style={[
-                  styles.progressBar,
-                  { width: '100%', backgroundColor: '#E0E0E0' },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.progressFill,
-                    { width: `${formAccuracy}%`, backgroundColor: formColor },
-                  ]}
-                />
-              </View>
-              <Text style={[styles.percentage, { color: formColor }]}>
-                {formAccuracy}%
-              </Text>
-            </View>
-          </View>
-
-          {calories > 0 && (
-            <View style={styles.statRow}>
-              <Text style={styles.statRowLabel}>Calories Burned</Text>
-              <Text style={styles.statRowText}>{calories} kcal</Text>
-            </View>
-          )}
-
-          {previousBestScore !== undefined && (
-            <View style={styles.statRow}>
-              <Text style={styles.statRowLabel}>Previous Best</Text>
-              <Text style={styles.statRowText}>{previousBestScore}/100</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Feedback Section */}
-        <View style={styles.feedbackSection}>
-          <Text style={styles.feedbackTitle}>Performance Feedback</Text>
-          {score >= 80 && (
-            <Text style={styles.feedbackText}>✨ Excellent form and execution!</Text>
-          )}
-          {score >= 60 && score < 80 && (
-            <Text style={styles.feedbackText}>
-              👍 Good effort! Focus on maintaining form.
-            </Text>
-          )}
-          {score < 60 && (
-            <Text style={styles.feedbackText}>
-              💪 Keep practicing! Your form will improve.
-            </Text>
-          )}
-          {targetReps && reps >= targetReps && (
-            <Text style={styles.feedbackText}>🎯 Target reps achieved!</Text>
-          )}
-        </View>
-
-        {/* Note about v1.1 features */}
-        <Text style={styles.versionNote}>
-          Advanced analytics (joint angle analysis, movement quality scoring) coming in
-          v1.1
-        </Text>
+        <AppText variant="display" center accessibilityRole="header">
+          {didReps ? 'Well done!' : 'Good try'}
+        </AppText>
+        <AppText variant="body" color={colors.textSecondary} center>
+          You finished: {exercise}
+        </AppText>
       </View>
-    </ScrollView>
+
+      {isPersonalBest ? <Banner tone="success" message="New personal best!" /> : null}
+
+      <Card style={styles.card}>
+        <View style={styles.statsRow}>
+          <View style={styles.repsCol}>
+            <Metric
+              value={String(reps)}
+              label={reps === 1 ? 'repetition' : 'repetitions'}
+              color={colors.primary}
+              testID="reps-completed"
+            />
+          </View>
+          <View style={styles.statsCol}>
+            <Stat
+              icon="timer"
+              label="Time"
+              value={formatDuration(duration)}
+              testID="exercise-duration"
+            />
+            <Stat
+              icon="thumb-up"
+              label="Form"
+              value={formWords(percent, reps)}
+              testID="form-accuracy"
+            />
+          </View>
+        </View>
+
+        {targetReps ? (
+          <View style={[styles.goal, reachedGoal && styles.goalReached]}>
+            <Icon
+              name={reachedGoal ? 'check-circle' : 'flag'}
+              size={22}
+              color={reachedGoal ? colors.success : colors.textSecondary}
+            />
+            <AppText
+              variant="bodyStrong"
+              color={reachedGoal ? colors.success : colors.textSecondary}
+            >
+              {reachedGoal ? `Goal of ${targetReps} reached` : `Your goal: ${targetReps}`}
+            </AppText>
+          </View>
+        ) : null}
+
+        {calories > 0 ? (
+          <Stat icon="local-fire-department" label="Energy" value={`${calories} kcal`} />
+        ) : null}
+        {previousBestScore !== undefined ? (
+          <Stat
+            icon="emoji-events"
+            label="Previous best"
+            value={`${previousBestScore} / 100`}
+          />
+        ) : null}
+      </Card>
+
+      {practice ? (
+        <Banner tone="info" message="Practice mode: this session was not saved." />
+      ) : null}
+      <View style={styles.note} testID="summary-encouragement">
+        <Icon name="favorite-border" size={24} color={colors.warning} />
+        <AppText variant="body" style={styles.flex}>
+          {encouragement(percent, reps, reachedGoal)}
+        </AppText>
+      </View>
+    </Screen>
   );
 };
 
+const Stat: React.FC<{
+  icon: string;
+  label: string;
+  value: string;
+  testID?: string;
+}> = ({ icon, label, value, testID }) => (
+  <View
+    style={styles.stat}
+    accessible
+    accessibilityLabel={`${label}: ${value}`}
+    testID={testID}
+  >
+    <View style={styles.statIcon}>
+      <Icon name={icon} size={22} color={colors.primary} />
+    </View>
+    <View style={styles.flex}>
+      <AppText variant="caption" color={colors.textSecondary}>
+        {label}
+      </AppText>
+      <AppText variant="bodyStrong">{value}</AppText>
+    </View>
+  </View>
+);
+
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 8,
-    color: '#333',
-  },
-  badgeContainer: {
+  flex: { flex: 1 },
+  hero: { alignItems: 'center', gap: spacing.xs },
+  heroIcon: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: colors.successSoft,
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
-  badge: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#4CAF50',
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  primaryStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 24,
-    paddingVertical: 16,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-  },
-  stat: {
+  heroIconNeutral: { backgroundColor: colors.primarySoft },
+  card: { gap: spacing.md },
+  statsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  repsCol: { minWidth: 110, alignItems: 'center' },
+  statsCol: { flex: 1, gap: spacing.md },
+  stat: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.sm,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  statLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2196F3',
-  },
-  large: {
-    fontSize: 32,
-  },
-  statSubtext: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
-  },
-  secondaryStats: {
-    marginBottom: 24,
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  statRowLabel: {
-    fontSize: 16,
-    color: '#666',
-    flex: 1,
-  },
-  statRowValue: {
+  goal: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceMuted,
   },
-  statRowText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-    marginRight: 12,
-    overflow: 'hidden',
-    flex: 1,
-    maxWidth: 100,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  percentage: {
-    fontSize: 14,
-    fontWeight: '600',
-    minWidth: 40,
-    textAlign: 'right',
-  },
-  feedbackSection: {
-    backgroundColor: '#F0F7FF',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  feedbackTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
-  },
-  feedbackText: {
-    fontSize: 14,
-    color: '#555',
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  versionNote: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginTop: 8,
+  goalReached: { backgroundColor: colors.successSoft },
+  note: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radii.lg,
+    backgroundColor: colors.accentSoft,
   },
 });
 

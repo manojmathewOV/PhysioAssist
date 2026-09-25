@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  TextInputProps,
+  View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '@store/slices/userSlice';
 import { RootState } from '@store/index';
+import { AppText, Banner, BigButton, Card, Screen } from '../components/ui';
+import { colors, radii, spacing, touch, typography } from '../theme';
 
 export interface LoginCredentials {
   email: string;
@@ -29,6 +30,43 @@ interface LoginScreenProps {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** A large text field with a visible label above it. */
+const Field: React.FC<
+  TextInputProps & { label: string; trailing?: React.ReactNode; invalid?: boolean }
+> = ({ label, trailing, invalid, ...inputProps }) => {
+  const [focused, setFocused] = useState(false);
+  return (
+    <View style={styles.field}>
+      <AppText variant="label" color={colors.text}>
+        {label}
+      </AppText>
+      <View
+        style={[
+          styles.inputBox,
+          focused && styles.inputBoxFocused,
+          invalid && !focused && styles.inputBoxInvalid,
+        ]}
+      >
+        <TextInput
+          {...inputProps}
+          style={styles.input}
+          placeholderTextColor={colors.textMuted}
+          maxFontSizeMultiplier={1.6}
+          onFocus={(e) => {
+            setFocused(true);
+            inputProps.onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            inputProps.onBlur?.(e);
+          }}
+        />
+        {trailing}
+      </View>
+    </View>
+  );
+};
+
 const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector((state: RootState) => state.user);
@@ -43,13 +81,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const handleLogin = async () => {
     // Basic validation
     if (!email || !password) {
-      setValidationError('Please enter both email and password.');
+      setValidationError('Please enter your email and password.');
       return;
     }
 
     // Email validation
     if (!EMAIL_REGEX.test(email)) {
-      setValidationError('Please enter a valid email address.');
+      setValidationError('Please enter a valid email address, like name@example.com.');
       return;
     }
 
@@ -64,7 +102,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
     try {
       // Mock authentication - In production, replace with actual API call
-      // For now, accept any valid email format and password length > 6
+      // For now, accept any valid email format and password length >= 6
       if (password.length >= 6) {
         // Simulate network delay
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -83,17 +121,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
         dispatch(loginSuccess(mockUser));
       } else {
-        dispatch(loginFailure('Password must be at least 6 characters long.'));
-        Alert.alert('Login Failed', 'Password must be at least 6 characters long.');
+        dispatch(loginFailure('Your password needs at least 6 characters.'));
       }
     } catch (err) {
-      const errorMessage = 'An error occurred during login. Please try again.';
-      dispatch(loginFailure(errorMessage));
-      Alert.alert('Login Failed', errorMessage);
+      dispatch(loginFailure('Something went wrong. Please try again.'));
     }
   };
 
   const handleDemoLogin = () => {
+    setValidationError(null);
     setEmail('demo@physioassist.com');
     setPassword('demo123');
     setTimeout(() => {
@@ -112,109 +148,132 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     }, 100);
   };
 
+  const updateEmail = (value: string) => {
+    setEmail(value);
+    if (validationError) setValidationError(null);
+  };
+
+  const updatePassword = (value: string) => {
+    setPassword(value);
+    if (validationError) setValidationError(null);
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      testID="login-screen"
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.content}>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to continue</Text>
+      <Screen testID="login-screen">
+        <View style={styles.hero}>
+          <View
+            style={styles.heroIcon}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            <Icon name="self-improvement" size={56} color={colors.primary} />
+          </View>
+          <AppText variant="display" center accessibilityRole="header">
+            Welcome
+          </AppText>
+          <AppText variant="body" color={colors.textSecondary} center>
+            Sign in to see your exercises.
+          </AppText>
+        </View>
 
-        <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#999"
+        <Card style={styles.form}>
+          <Field
+            label="Email address"
+            placeholder="name@example.com"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={updateEmail}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+            returnKeyType="next"
             editable={!isLoading}
+            invalid={!!displayedError}
             testID="auth-email-input"
-            accessible={true}
             accessibilityLabel="Email address"
             accessibilityHint="Enter your email address"
           />
 
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Password"
-              placeholderTextColor="#999"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isLoading}
-              testID="auth-password-input"
-              accessible={true}
-              accessibilityLabel="Password"
-              accessibilityHint="Enter your password"
-            />
-            <TouchableOpacity
-              style={styles.passwordToggle}
-              onPress={() => setShowPassword(!showPassword)}
-              testID="password-toggle"
-              accessible={true}
-              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-              accessibilityRole="button"
-            >
-              <Text style={styles.passwordToggleText}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
-            </TouchableOpacity>
-          </View>
+          <Field
+            label="Password"
+            placeholder="Your password"
+            value={password}
+            onChangeText={updatePassword}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="password"
+            textContentType="password"
+            returnKeyType="go"
+            onSubmitEditing={handleLogin}
+            editable={!isLoading}
+            invalid={!!displayedError}
+            testID="auth-password-input"
+            accessibilityLabel="Password"
+            accessibilityHint="Enter your password"
+            trailing={
+              <Pressable
+                onPress={() => setShowPassword(!showPassword)}
+                testID="password-toggle"
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                style={({ pressed }) => [
+                  styles.toggle,
+                  pressed && { backgroundColor: colors.primarySoft },
+                ]}
+              >
+                <Icon
+                  name={showPassword ? 'visibility-off' : 'visibility'}
+                  size={24}
+                  color={colors.primary}
+                />
+                <AppText variant="label" color={colors.primary}>
+                  {showPassword ? 'Hide' : 'Show'}
+                </AppText>
+              </Pressable>
+            }
+          />
 
-          {displayedError && (
-            <Text
-              style={styles.errorText}
-              testID="auth-error-message"
-              accessibilityRole="alert"
-              accessibilityLiveRegion="polite"
-            >
-              {displayedError}
-            </Text>
-          )}
+          {displayedError ? (
+            <Banner tone="danger" message={displayedError} testID="auth-error-message" />
+          ) : null}
 
-          <TouchableOpacity
-            style={[styles.loginButton, isLoading && styles.disabledButton]}
+          <BigButton
+            label="Sign in"
+            icon="login"
             onPress={handleLogin}
-            disabled={isLoading}
+            loading={isLoading}
             testID="auth-login-button"
-            accessible={true}
-            accessibilityLabel="Sign in"
-            accessibilityRole="button"
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.loginButtonText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
+          />
+        </Card>
 
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <TouchableOpacity
-            style={styles.demoButton}
-            onPress={handleDemoLogin}
-            disabled={isLoading}
-            testID="demo-login-button"
-          >
-            <Text style={styles.demoButtonText}>Continue as Demo User</Text>
-          </TouchableOpacity>
+        <View style={styles.divider} accessibilityElementsHidden>
+          <View style={styles.dividerLine} />
+          <AppText variant="caption" color={colors.textMuted}>
+            or
+          </AppText>
+          <View style={styles.dividerLine} />
         </View>
 
-        <Text style={styles.note}>
-          Note: This is a mock authentication for demo purposes. In production, this would
-          connect to a HIPAA-compliant authentication service.
-        </Text>
-      </View>
+        <BigButton
+          label="Continue as demo user"
+          icon="person-outline"
+          variant="secondary"
+          onPress={handleDemoLogin}
+          disabled={isLoading}
+          testID="demo-login-button"
+          accessibilityHint="Try the app without an account"
+        />
+
+        <AppText variant="caption" color={colors.textMuted} center style={styles.note}>
+          This is a demo. Sign-in is simulated on this phone.
+        </AppText>
+      </Screen>
     </KeyboardAvoidingView>
   );
 };
@@ -222,126 +281,76 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
-  content: {
-    flex: 1,
-    padding: 20,
+  hero: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  heroIcon: {
+    width: 104,
+    height: 104,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
     justifyContent: 'center',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 40,
-    textAlign: 'center',
+    marginBottom: spacing.sm,
   },
   form: {
-    marginBottom: 20,
+    gap: spacing.lg,
+  },
+  field: {
+    gap: spacing.sm,
+  },
+  inputBox: {
+    minHeight: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.xs,
+  },
+  inputBoxFocused: {
+    borderColor: colors.primary,
+  },
+  inputBoxInvalid: {
+    borderColor: colors.danger,
   },
   input: {
-    height: 56,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    fontSize: 16,
-    backgroundColor: '#f9f9f9',
-    color: '#333',
+    ...typography.body,
+    flex: 1,
+    minWidth: 0,
+    minHeight: 56,
+    color: colors.text,
+    paddingVertical: spacing.sm,
   },
-  passwordContainer: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  passwordInput: {
-    height: 56,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingRight: 50,
-    fontSize: 16,
-    backgroundColor: '#f9f9f9',
-    color: '#333',
-  },
-  passwordToggle: {
-    position: 'absolute',
-    right: 16,
-    top: 16,
-    padding: 4,
-  },
-  passwordToggleText: {
-    fontSize: 20,
-  },
-  errorText: {
-    color: '#F44336',
-    fontSize: 14,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  loginButton: {
-    height: 56,
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
-    justifyContent: 'center',
+  toggle: {
+    minHeight: touch.min,
+    minWidth: touch.min,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  disabledButton: {
-    backgroundColor: '#A5D6A7',
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm + spacing.xs,
+    borderRadius: radii.sm,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 24,
+    gap: spacing.md,
+    marginVertical: spacing.xs,
   },
   dividerLine: {
     flex: 1,
-    height: 1,
-    backgroundColor: '#ddd',
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    color: '#999',
-    fontSize: 14,
-  },
-  demoButton: {
-    height: 56,
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: '#4CAF50',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  demoButtonText: {
-    color: '#4CAF50',
-    fontSize: 16,
-    fontWeight: '600',
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
   },
   note: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    marginTop: 20,
-    fontStyle: 'italic',
+    marginTop: spacing.sm,
   },
 });
 

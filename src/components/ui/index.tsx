@@ -415,7 +415,15 @@ export const Metric: React.FC<{
   label: string;
   testID?: string;
   color?: string;
-}> = ({ value, label, testID, color = colors.text }) => (
+  /** Label colour, e.g. a light colour on camera overlay panels. */
+  labelColor?: string;
+}> = ({
+  value,
+  label,
+  testID,
+  color = colors.text,
+  labelColor = colors.textSecondary,
+}) => (
   <View
     style={styles.metric}
     accessible
@@ -425,7 +433,7 @@ export const Metric: React.FC<{
     <AppText variant="metric" color={color}>
       {value}
     </AppText>
-    <AppText variant="label" color={colors.textSecondary}>
+    <AppText variant="label" color={labelColor}>
       {label}
     </AppText>
   </View>

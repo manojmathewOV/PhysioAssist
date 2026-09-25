@@ -3,7 +3,7 @@
  *
  * Shows ONLY 3 things during measurement:
  * 1. Dynamic instruction (e.g., "Keep going!")
- * 2. HUGE angle number (160px font - 67% larger than V1)
+ * 2. HUGE angle number (120pt, white on a dark camera panel)
  * 3. Progress bar
  *
  * Everything else (quality, compensations, secondary joints) hidden
@@ -13,10 +13,12 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, StyleSheet, Animated } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { ClinicalJointMeasurement } from '../../types/clinicalMeasurement';
-import Svg, { Circle, Line } from 'react-native-svg';
+import { AppText } from '../ui';
+import { CameraPanel } from '../ui/CameraPanel';
+import { colors, radii, spacing } from '../../theme';
 
 interface ClinicalAngleDisplayV2Props {
   measurement: ClinicalJointMeasurement;
@@ -66,15 +68,6 @@ const ClinicalAngleDisplayV2: React.FC<ClinicalAngleDisplayV2Props> = ({
     }
   }, [percentOfTarget]);
 
-  // Get color based on progress
-  const getProgressColor = (): string => {
-    if (percentOfTarget >= 95) return '#4CAF50'; // Green - Target achieved
-    if (percentOfTarget >= 75) return '#8BC34A'; // Light Green - Almost there
-    if (percentOfTarget >= 50) return '#FFC107'; // Yellow - Halfway
-    if (percentOfTarget >= 25) return '#FF9800'; // Orange - Keep going
-    return '#2196F3'; // Blue - Just started
-  };
-
   // Get dynamic instruction
   const getInstruction = (): string => {
     if (percentOfTarget < 25) return 'Begin the movement slowly';
@@ -84,40 +77,56 @@ const ClinicalAngleDisplayV2: React.FC<ClinicalAngleDisplayV2Props> = ({
     return 'Perfect! Hold it right there!';
   };
 
-  const progressColor = getProgressColor();
+  const achieved = percentOfTarget >= 95;
 
   if (mode === 'simple') {
     return (
       <View style={styles.simpleContainer}>
         {/* Instruction - Top */}
-        <View style={[styles.instructionBox, { borderColor: progressColor }]}>
-          <Text style={styles.instructionText}>{getInstruction()}</Text>
-        </View>
-
-        {/* GIANT Angle Display - Center */}
-        <Animated.View
-          style={[styles.angleContainer, { transform: [{ scale: pulseAnim }] }]}
-        >
-          <Text
-            style={[styles.angleValueHuge, { color: progressColor }]}
-            accessibilityLabel={`Current angle: ${Math.round(primaryAngle)} degrees`}
-            accessibilityRole="text"
+        <CameraPanel>
+          <AppText
+            variant="title"
+            color={colors.textInverse}
+            center
             accessibilityLiveRegion="polite"
           >
-            {Math.round(primaryAngle)}
-          </Text>
-          <Text style={styles.angleUnitHuge}>°</Text>
-        </Animated.View>
+            {getInstruction()}
+          </AppText>
+        </CameraPanel>
 
-        {/* Progress Bar - Bottom */}
-        <View style={styles.progressSection}>
+        <CameraPanel style={styles.measurePanel}>
+          {/* GIANT Angle Display - Center */}
+          <Animated.View
+            style={[styles.angleContainer, { transform: [{ scale: pulseAnim }] }]}
+          >
+            <AppText
+              style={styles.angleValueHuge}
+              color={colors.textInverse}
+              maxFontSizeMultiplier={1.2}
+              accessibilityLabel={`Current angle: ${Math.round(primaryAngle)} degrees`}
+              accessibilityRole="text"
+              accessibilityLiveRegion="polite"
+            >
+              {Math.round(primaryAngle)}°
+            </AppText>
+          </Animated.View>
+
+          {/* Progress Bar - Bottom */}
           <View style={styles.progressHeader}>
-            <Text style={styles.targetLabel}>Target: {targetAngle}°</Text>
-            <Text style={[styles.percentText, { color: progressColor }]}>
+            <AppText variant="bodyStrong" color={colors.textInverse}>
+              Target {targetAngle}°
+            </AppText>
+            <AppText variant="heading" color={colors.textInverse}>
               {Math.round(percentOfTarget)}%
-            </Text>
+            </AppText>
           </View>
-          <View style={styles.progressBarContainer}>
+          <View
+            style={styles.progressBarContainer}
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel="Progress towards target"
+            accessibilityValue={{ min: 0, max: 100, now: Math.round(percentOfTarget) }}
+          >
             <Animated.View
               style={[
                 styles.progressBar,
@@ -125,37 +134,23 @@ const ClinicalAngleDisplayV2: React.FC<ClinicalAngleDisplayV2Props> = ({
                   width: progressAnim.interpolate({
                     inputRange: [0, 1],
                     outputRange: ['0%', '100%'],
+                    extrapolate: 'clamp',
                   }),
                 },
               ]}
-            >
-              <LinearGradient
-                colors={[progressColor, progressColor + 'AA']}
-                style={styles.progressBarGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-            </Animated.View>
+            />
           </View>
 
           {/* Target Achieved Badge */}
-          {percentOfTarget >= 95 && (
+          {achieved && (
             <View style={styles.achievedBadge}>
-              <Text style={styles.achievedText}>🎯 Target Achieved!</Text>
+              <Icon name="check-circle" size={26} color={colors.success} />
+              <AppText variant="bodyStrong" color={colors.success}>
+                Target achieved
+              </AppText>
             </View>
           )}
-        </View>
-
-        {/* Tiny reference figure in corner */}
-        <View style={styles.referenceFigure}>
-          <Svg width={60} height={80} viewBox="0 0 60 80">
-            <Circle cx={30} cy={12} r={8} fill="#4CAF50" />
-            <Line x1={30} y1={20} x2={30} y2={40} stroke="#fff" strokeWidth={2} />
-            <Line x1={30} y1={40} x2={24} y2={60} stroke="#fff" strokeWidth={2} />
-            <Line x1={30} y1={40} x2={36} y2={60} stroke="#fff" strokeWidth={2} />
-            <Line x1={30} y1={25} x2={30} y2={10} stroke="#FFC107" strokeWidth={3} />
-          </Svg>
-        </View>
+        </CameraPanel>
       </View>
     );
   }
@@ -167,95 +162,46 @@ const ClinicalAngleDisplayV2: React.FC<ClinicalAngleDisplayV2Props> = ({
 
 const styles = StyleSheet.create({
   simpleContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.md,
+    gap: spacing.md,
   },
-  instructionBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 20,
-    borderWidth: 2,
-    padding: 20,
-    marginBottom: 60,
-  },
-  instructionText: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: '#fff',
-    textAlign: 'center',
-    lineHeight: 38,
+  measurePanel: {
+    padding: spacing.lg,
   },
   angleContainer: {
     alignItems: 'center',
-    marginBottom: 40,
   },
   angleValueHuge: {
-    fontSize: 160,
-    fontWeight: '800',
-    lineHeight: 160,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 12,
-  },
-  angleUnitHuge: {
-    fontSize: 60,
+    fontSize: 120,
+    lineHeight: 132,
     fontWeight: '700',
-    color: 'rgba(255, 255, 255, 0.6)',
-    marginLeft: 8,
-    position: 'absolute',
-    right: -40,
-    top: 20,
-  },
-  progressSection: {
-    width: '100%',
   },
   progressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
-  },
-  targetLabel: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#fff',
-    opacity: 0.9,
-  },
-  percentText: {
-    fontSize: 32,
-    fontWeight: '700',
   },
   progressBarContainer: {
-    height: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
+    height: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: radii.pill,
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
-  },
-  progressBarGradient: {
-    flex: 1,
-    borderRadius: 16,
+    borderRadius: radii.pill,
+    backgroundColor: colors.skeleton,
   },
   achievedBadge: {
-    marginTop: 16,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
     alignSelf: 'center',
-  },
-  achievedText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#4CAF50',
-  },
-  referenceFigure: {
-    position: 'absolute',
-    top: 0,
-    right: 20,
-    opacity: 0.4,
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.successSoft,
+    borderRadius: radii.pill,
   },
 });
 
