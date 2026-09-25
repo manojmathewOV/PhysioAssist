@@ -178,9 +178,13 @@ const PoseDetectionScreen: React.FC = () => {
       startGate({ skipFraming: practiceMode });
 
       if (practiceMode && mockPoseDataSimulator) {
-        mockPoseDataSimulator.start((poseData) => {
-          dispatch(setPoseData(poseData));
-        }, 30);
+        mockPoseDataSimulator.start(
+          (poseData) => {
+            dispatch(setPoseData(poseData));
+          },
+          30,
+          option.exercise.id
+        );
       }
       setStage('exercise');
     },

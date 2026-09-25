@@ -16,6 +16,9 @@ import { goniometerService } from '../../services/goniometerService';
 import { exerciseValidationService } from '../../services/exerciseValidationService';
 import { audioFeedbackService } from '../../services/audioFeedbackService';
 import { mockPoseDataSimulator } from '../../services/mockPoseDataSimulator';
+import { FRAME_HEIGHT, FRAME_WIDTH } from '../../testing/virtualPatient/body';
+
+const VIRTUAL_FRAME_ASPECT = FRAME_WIDTH / FRAME_HEIGHT;
 import {
   getMeasurementLandmarks,
   getOutOfPlaneJoints,
@@ -247,7 +250,8 @@ const WebPoseDetectionScreen: React.FC = () => {
         setCameraState('live');
         mockPoseDataSimulator.start(
           (pose) => handlePoseResults(pose.landmarks, pose),
-          30
+          30,
+          exercise.id
         );
       }
     },
@@ -462,9 +466,8 @@ const WebPoseDetectionScreen: React.FC = () => {
   // -------------------------------------------------------------------------
   // Keep video, video canvas and skeleton in one box with the video's aspect
   // ratio, so the skeleton lines up with the body.
-  // Practice mode has no video: a square box keeps the pretend body clear of
-  // the panels on a phone.
-  const aspect = practice ? 1 : videoAspect;
+  // Practice mode has no video: the box takes the virtual patient's 3:4 frame.
+  const aspect = practice ? VIRTUAL_FRAME_ASPECT : videoAspect;
   const boxWidth = Math.min(area.width, area.height * aspect) || 0;
   const boxHeight = boxWidth ? boxWidth / aspect : 0;
 

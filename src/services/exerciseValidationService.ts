@@ -20,6 +20,14 @@ import {
 export const MIN_PHASE_DWELL_MS = 200;
 /** Two reps can't complete closer together than this. */
 export const MIN_REP_INTERVAL_MS = 500;
+/**
+ * Hysteresis: a phase is entered only inside its strict range, but once entered
+ * it keeps holding while every joint stays within this margin of the range.
+ * Without it, a patient resting right at a threshold (tracking wobble of a few
+ * degrees) never completes the dwell and is never counted. Sports2D-style
+ * trackers use 5-10 degrees.
+ */
+export const PHASE_HYSTERESIS_DEG = 8;
 
 /**
  * Rep counting is a phase state machine (the approach used by open-source
@@ -51,6 +59,8 @@ export class ExerciseValidationService {
   startExercise(exercise: Exercise): void {
     this.currentExercise = exercise;
     this.currentPhase = exercise.phases[0];
+    // Angle smoothing must not blend in the previous session's last angles
+    goniometerService.resetHistory();
     this.phaseStartTime = Date.now();
     this.phaseValidSince = null;
     this.returningToStart = false;
@@ -140,7 +150,8 @@ export class ExerciseValidationService {
       // Check if angle is within acceptable range
       if (angle < minAngle || angle > maxAngle) {
         isValid = false;
-        const direction = angle < minAngle ? 'more' : 'less';
+        // Interior angle: above the range means the joint isn't bent enough
+        const direction = angle > maxAngle ? 'more' : 'less';
         errors.push(`Bend ${requirement.joint} ${direction}`);
       }
 
@@ -182,6 +193,21 @@ export class ExerciseValidationService {
     );
   }
 
+  /** True when every required joint is within the phase range widened by `margin`. */
+  private jointsWithinPhase(
+    jointAngles: Map<string, JointAngle>,
+    margin: number
+  ): boolean {
+    return (this.currentPhase?.jointRequirements ?? []).every((r) => {
+      const angle = jointAngles.get(r.joint)?.angle;
+      return (
+        angle !== undefined &&
+        angle >= r.minAngle - margin &&
+        angle <= r.maxAngle + margin
+      );
+    });
+  }
+
   /**
    * Advance the phase state machine for one frame and count completed reps.
    */
@@ -200,7 +226,11 @@ export class ExerciseValidationService {
       return;
     }
 
-    if (!validation.isValid) {
+    const holding =
+      validation.isValid ||
+      (this.phaseValidSince !== null &&
+        this.jointsWithinPhase(jointAngles, PHASE_HYSTERESIS_DEG));
+    if (!holding) {
       this.phaseValidSince = null;
       return;
     }
