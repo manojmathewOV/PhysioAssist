@@ -391,7 +391,7 @@ const WebPoseDetectionScreen: React.FC = () => {
     dispatch(
       practice || recordingDemo
         ? clearExercise()
-        : stopExercise(sessionRange ?? undefined)
+        : stopExercise(outcome.historyResult ?? sessionRange ?? undefined)
     );
     audioFeedbackService.speak(
       outcome.spokenCue ? `Well done. ${outcome.spokenCue}` : 'Well done'
@@ -399,7 +399,7 @@ const WebPoseDetectionScreen: React.FC = () => {
     setSummary({
       ...outcome.summary,
       exercise: option.title,
-      reps: repetitionCount,
+      reps: outcome.summary.reps ?? repetitionCount,
       duration: startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0,
       formAccuracy: Math.round(formScore * 100),
       targetReps: currentExercise?.targetRepetitions,

@@ -3,6 +3,8 @@
  * range, tempo, hold and compensations, compared with the physio's
  * demonstration (if one was saved for this exercise) or the prescribed goal.
  */
+import { movementOf } from '../../services/movement/exerciseMovement';
+import type { SessionResult } from '../../store/slices/exerciseSlice';
 import { useCallback, useRef } from 'react';
 
 import type { Exercise } from '../../types/exercise';
@@ -92,9 +94,16 @@ export interface SessionOutcome {
     comparedWithDemo: boolean;
     demoSaved: MovementProfile | null;
     notice?: string;
+    /** Repetitions from the movement analysis, when the live counter can't count them. */
+    reps?: number;
   };
   /** Said after "Well done" (the most important thing to work on). */
   spokenCue?: string;
+  /**
+   * What to save in the history, when the live counter's result is wrong for
+   * this exercise (rotation, still measurements); otherwise its own is used.
+   */
+  historyResult?: SessionResult;
 }
 
 /** What a finished session means for the summary and the plan. */
@@ -136,6 +145,23 @@ export function sessionOutcome(
     };
   }
   const reference = referenceFor(plan, exercise);
+  // Rotation isn't what the live counter measures (it tracks arm height):
+  // take the repetitions and range from the movement analysis, as an estimate
+  const measure = movementOf(exercise.id).measure;
+  let reps: number | undefined;
+  if (measure && analysis) {
+    reps = analysis.reps.length;
+    sessionRange =
+      sessionRange && analysis.profile
+        ? {
+            ...sessionRange,
+            bestDegrees: analysis.profile.bestDegrees,
+            goalDegrees: undefined,
+            measure: 'rotation',
+            approximate: true,
+          }
+        : null;
+  }
   // A still measurement (heel prop): the steady resting angle, not one frame
   const hold = analysis?.hold;
   if (hold && sessionRange) {
@@ -154,12 +180,26 @@ export function sessionOutcome(
         }
       : sessionRange
     : null;
+  const historyResult: SessionResult | undefined =
+    (measure || hold) && sessionRange
+      ? {
+          joint: sessionRange.joint,
+          bestDegrees: sessionRange.bestDegrees,
+          goalDegrees: sessionRange.goalDegrees,
+          direction: sessionRange.direction,
+          measure: sessionRange.measure,
+          approximate: sessionRange.approximate,
+          reps,
+        }
+      : undefined;
   return {
+    historyResult,
     summary: {
       ...empty,
       range,
       findings: analysis?.findings ?? null,
       comparedWithDemo: Boolean(reference),
+      reps,
     },
     spokenCue: analysis?.cues[0],
   };

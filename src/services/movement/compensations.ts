@@ -105,6 +105,12 @@ export const HEEL_LIFT_WARN = 3;
 export const HEEL_LIFT_FLAG = 5;
 /** Toes must stay within this of their rest height (else it isn't a heel lift). */
 export const HEEL_LIFT_MAX_TOE_MOVE = 2;
+/**
+ * External rotation at the side: the upper arm lifting away from the trunk
+ * (degrees of arm elevation above rest). The elbow should stay by the side.
+ */
+export const ELBOW_FROM_SIDE_WARN_DEG = 15;
+export const ELBOW_FROM_SIDE_FLAG_DEG = 25;
 /** Seated: trunk leaning back from its rest angle (degrees). Heuristic. */
 export const LEAN_BACK_WARN_DEG = 10;
 export const LEAN_BACK_FLAG_DEG = 15;
@@ -135,6 +141,7 @@ export const PATIENT_CUES: Record<FindingId, string> = {
   lean_back: 'Sit tall; try not to lean back as you straighten your knee.',
   thigh_lift: 'Keep the back of your thigh resting down; let your knee do the work.',
   camera_view: 'Turn so your side faces the camera, then we can measure your movement.',
+  elbow_from_side: 'Keep your elbow gently beside your body.',
 };
 
 const LEG_CHECKS: FindingId[] = [
@@ -152,6 +159,7 @@ const LEG_CHECKS: FindingId[] = [
  */
 export const DETECTORS_FOR: Record<JointKind, FindingId[]> = {
   shoulder: [
+    'elbow_from_side',
     'shoulder_hike',
     'trunk_side_lean',
     'trunk_rotation',
@@ -178,6 +186,8 @@ export const NOT_FOR_EXERCISE: Record<string, FindingId[]> = {
   'hamstring-stretch': ['heel_lift'],
   // Bending the elbows is part of a press
   'shoulder-press': ['elbow_bend'],
+  // The elbow is bent to 90° by design
+  'shoulder-external-rotation': ['elbow_bend'],
 };
 
 /**
@@ -197,9 +207,16 @@ const SEATED_ONLY: FindingId[] = ['lean_back'];
 /** Checks for exercises with the thigh supported (on a chair or a roll). */
 const THIGH_SUPPORTED: FindingId[] = ['thigh_lift'];
 
+/** Checks that only mean something in particular exercises. */
+export const ONLY_FOR_EXERCISE: Partial<Record<FindingId, string[]>> = {
+  elbow_from_side: ['shoulder-external-rotation'],
+};
+
 /** Whether a check applies to this exercise. */
 export const appliesTo = (id: FindingId, { joint, exerciseId }: MovementContext) =>
   DETECTORS_FOR[joint].includes(id) &&
+  (!ONLY_FOR_EXERCISE[id] ||
+    (!!exerciseId && ONLY_FOR_EXERCISE[id]!.includes(exerciseId))) &&
   !(exerciseId && NOT_FOR_EXERCISE[exerciseId]?.includes(id)) &&
   !(
     NEEDS_PLANTED_FEET.includes(id) &&
@@ -434,7 +451,14 @@ function makeDetector(check: Check): CompensationDetector {
 
 /** Clinical shoulder angle (elbow-shoulder-hip) of the frame's working arm. */
 function shoulderAngle(frame: MovementFrame, ctx: MovementContext): number | null {
-  if (ctx.joint === 'shoulder' && frame.angle !== null) return frame.angle;
+  // (Rotation exercises measure something else: use the arm's elevation)
+  if (
+    ctx.joint === 'shoulder' &&
+    frame.angle !== null &&
+    !movementOf(ctx.exerciseId).measure
+  )
+    return frame.angle;
+  if (ctx.joint === 'shoulder') return armElevation(frame.landmarks, ctx.side);
   const e = seen(frame.landmarks, `${ctx.side}_elbow`);
   const s = seen(frame.landmarks, `${ctx.side}_shoulder`);
   const h = seen(frame.landmarks, `${ctx.side}_hip`);
@@ -843,6 +867,42 @@ export const detectThighLift = makeDetector({
   level: byThreshold(THIGH_LIFT_WARN_DEG, THIGH_LIFT_FLAG_DEG),
 });
 
+/** How high the upper arm is: its angle from the trunk midline pointing down (degrees). */
+function armElevation(lms: PoseLandmark[], side: BodySide): number | null {
+  const s = seen(lms, `${side}_shoulder`);
+  const e = seen(lms, `${side}_elbow`);
+  const shoulders = centre(lms, 'shoulder');
+  const hips = centre(lms, 'hip');
+  if (!s || !e || !shoulders || !hips) return null;
+  const arm = { x: e.x - s.x, y: e.y - s.y };
+  const down = { x: hips.x - shoulders.x, y: hips.y - shoulders.y };
+  const n = Math.hypot(arm.x, arm.y) * Math.hypot(down.x, down.y);
+  if (!n) return null;
+  return (
+    Math.acos(Math.max(-1, Math.min(1, (arm.x * down.x + arm.y * down.y) / n))) * DEG
+  );
+}
+
+/**
+ * Elbow leaving the side (front, external rotation): the upper arm lifts away
+ * from the trunk, turning the rotation into a sideways raise. Seen face-on,
+ * so it is dependable even though the rotation angle itself is approximate.
+ */
+export const detectElbowFromSide = makeDetector({
+  id: 'elbow_from_side',
+  unit: 'deg',
+  views: ['front'],
+  setup: (rest, { side }) => {
+    const base = armElevation(rest, side);
+    if (base === null) return null;
+    return (f) => {
+      const a = armElevation(f.landmarks, side);
+      return a === null ? null : a - base;
+    };
+  },
+  level: byThreshold(ELBOW_FROM_SIDE_WARN_DEG, ELBOW_FROM_SIDE_FLAG_DEG),
+});
+
 export const COMPENSATION_DETECTORS: Partial<Record<FindingId, CompensationDetector>> = {
   shoulder_hike: detectShoulderHike,
   trunk_side_lean: detectTrunkSideLean,
@@ -858,6 +918,7 @@ export const COMPENSATION_DETECTORS: Partial<Record<FindingId, CompensationDetec
   head_tilt: detectHeadTilt,
   lean_back: detectLeanBack,
   thigh_lift: detectThighLift,
+  elbow_from_side: detectElbowFromSide,
 };
 
 /** Every compensation seen in one repetition. */

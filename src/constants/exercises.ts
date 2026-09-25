@@ -311,6 +311,36 @@ export const EXERCISES: Record<string, Exercise> = {
     ],
   },
 
+  shoulderExternalRotation: {
+    id: 'shoulder-external-rotation',
+    name: 'Shoulder External Rotation',
+    description: 'Elbow bent at the side, turning the forearm outward; facing the camera',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'shoulder',
+    targetMuscles: ['infraspinatus', 'teres minor'],
+    equipment: [],
+    targetRepetitions: 10,
+    targetSets: 2,
+    restDuration: 30000,
+    instructions: [
+      'Face the phone directly, far enough away to see you from head to hips',
+      'Bend your elbow to a right angle and keep it gently against your side',
+      'Turn your forearm outward as far as is comfortable, keeping your elbow at your side',
+      'Return slowly; keep your chest facing the phone throughout',
+    ],
+    warnings: ['Only as far as your surgeon or physiotherapist has allowed'],
+    phases: [
+      {
+        name: 'at side',
+        description: 'Upper arm by the side',
+        jointRequirements: [
+          { joint: 'left_shoulder', minAngle: 0, maxAngle: 40, targetAngle: 10 },
+        ],
+      },
+    ],
+  },
+
   seatedKneeExtension: {
     id: 'seated-knee-extension',
     name: 'Seated Knee Extension',

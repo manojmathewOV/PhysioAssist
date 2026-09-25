@@ -8,7 +8,8 @@ import { getMeasurementLandmarks } from '../pose/measurementLandmarks';
 import { BodySide, clinicalAngle, jointKey, JointKind } from '../pose/exercisePlan';
 import { findLandmark } from '../pose/landmarkLookup';
 import { worldAngle } from '../pose/worldAngle';
-import { rangeViewOf } from './exerciseMovement';
+import { ExerciseMovement, movementOf, rangeViewOf } from './exerciseMovement';
+import { externalRotationDegrees } from '../pose/shoulderRotation';
 import { bodyWidthRatios, bodyYawDegrees } from '../pose/OrientationClassifier';
 import { postureOf } from './posture';
 import type { CameraView, MovementContext, MovementFrame } from './types';
@@ -86,10 +87,12 @@ export class MovementRecorder {
   private readonly key: string;
 
   private readonly requiredView: CameraView | undefined;
+  private readonly measure: ExerciseMovement['measure'];
 
   constructor(readonly context: MovementContext) {
     this.key = jointKey(context.side, context.joint);
     this.requiredView = rangeViewOf(context.exerciseId);
+    this.measure = movementOf(context.exerciseId).measure;
   }
 
   add(pose: ProcessedPoseData): MovementFrame | null {
@@ -100,7 +103,15 @@ export class MovementRecorder {
     const { joint, side } = this.context;
     let angle = interior === null ? null : clinicalAngle(joint, interior);
     let estimated = false;
-    if (angle !== null && view === 'front' && this.requiredView === 'side') {
+    if (this.measure === 'external_rotation') {
+      // Needs the forearm seen, not just the upper arm
+      const wrist = findLandmark(landmarks, `${side}_wrist`);
+      angle =
+        angle !== null && wrist && wrist.visibility >= 0.5
+          ? externalRotationDegrees(pose.worldLandmarks, side)
+          : null;
+      estimated = angle !== null;
+    } else if (angle !== null && view === 'front' && this.requiredView === 'side') {
       // A knee bending towards the camera reads 40-50° too straight: no number
       angle = null;
     } else if (angle !== null && view === 'oblique' && WORLD_AT_OBLIQUE.includes(joint)) {

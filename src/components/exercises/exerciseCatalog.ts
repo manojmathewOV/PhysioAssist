@@ -46,6 +46,14 @@ export const EXERCISE_OPTIONS: ExerciseOption[] = [
     icon: 'accessibility-new',
   },
   {
+    key: 'shoulderExternalRotation',
+    exercise: EXERCISES.shoulderExternalRotation,
+    title: 'Shoulder turn-out',
+    description: 'Face the phone, elbow at your side, and turn your forearm outward',
+    goal: `${EXERCISES.shoulderExternalRotation.targetRepetitions} repetitions`,
+    icon: 'rotate-right',
+  },
+  {
     key: 'squat',
     exercise: EXERCISES.squat,
     title: 'Squat',

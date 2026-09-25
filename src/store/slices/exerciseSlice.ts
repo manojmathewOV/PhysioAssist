@@ -25,6 +25,14 @@ export interface SessionResult {
   joint?: string;
   bestDegrees?: number;
   goalDegrees?: number;
+  /** 'toward' when smaller is better (straightening). */
+  direction?: 'away' | 'toward';
+  /** What was measured, when not the joint's usual range (e.g. 'rotation'). */
+  measure?: string;
+  /** The number is an estimate. */
+  approximate?: boolean;
+  /** Repetitions from the movement analysis, when the live counter can't count them. */
+  reps?: number;
 }
 
 interface ExerciseState {
@@ -72,17 +80,21 @@ const exerciseSlice = createSlice({
     },
     stopExercise: (state, action: PayloadAction<SessionResult | undefined>) => {
       // Record the finished session so patients (and clinicians) can see progress
-      if (state.isExercising && state.currentExercise && state.repetitionCount > 0) {
+      // (Rotation and still measurements are counted by the movement analysis,
+      // so their result carries the reps, or a measurement with no reps at all)
+      const reps = action.payload?.reps ?? state.repetitionCount;
+      const measured = reps > 0 || action.payload?.bestDegrees !== undefined;
+      if (state.isExercising && state.currentExercise && measured) {
         const now = Date.now();
         state.history.unshift({
           id: `${state.currentExercise.id}-${now}`,
           exerciseId: state.currentExercise.id,
           exerciseName: state.currentExercise.name,
           date: new Date(now).toISOString(),
-          reps: state.repetitionCount,
           duration: state.startedAt ? Math.round((now - state.startedAt) / 1000) : 0,
           formScore: state.formScore,
           ...action.payload,
+          reps,
         });
         state.history.splice(MAX_HISTORY);
       }

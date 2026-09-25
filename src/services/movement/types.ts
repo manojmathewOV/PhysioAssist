@@ -91,6 +91,7 @@ export type FindingId =
   | 'pelvic_shift'
   | 'lean_back'
   | 'thigh_lift'
+  | 'elbow_from_side'
   | 'camera_view';
 
 export type Severity = 'ok' | 'warn' | 'flag';

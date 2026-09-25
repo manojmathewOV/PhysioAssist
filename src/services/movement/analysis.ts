@@ -95,6 +95,7 @@ const PRIORITY: FindingId[] = [
   'pelvic_shift',
   'lean_back',
   'thigh_lift',
+  'elbow_from_side',
   'elbow_bend',
   'heel_lift',
   'forward_head',
@@ -125,6 +126,7 @@ const DEFAULT_CUES: Record<FindingId, string> = {
   lean_back: 'Sit tall; try not to lean back as you straighten your knee.',
   thigh_lift: 'Keep the back of your thigh resting down; let your knee do the work.',
   camera_view: 'Turn so your side faces the camera, then we can measure your movement.',
+  elbow_from_side: 'Keep your elbow gently beside your body.',
 };
 
 const median = (values: number[]) => {
@@ -207,15 +209,12 @@ export function analyseSession(
   const cueFor = (id: FindingId) => cues[id] ?? DEFAULT_CUES[id];
   const findings: Finding[] = [];
   findings.push(...setup);
-  if (!profile) return { reps, profile, findings, cues: findings.map((f) => f.cue) };
-
-  const joint = `${context.side} ${context.joint}`;
-  const ref = targets.reference;
-  const all = reps.map((r) => r.index);
-
   // Filmed from the wrong angle, the range can't be judged (a knee bending
-  // towards the camera looks straighter than it is): say how to set up instead
-  const views = reps.map((r) => r.baseline.view).filter((v) => v !== 'unknown');
+  // towards the camera looks straighter than it is): say how to set up
+  // instead. Judged on the repetitions' start, or every frame if none were seen
+  const views = (
+    reps.length ? reps.map((r) => r.baseline.view) : frames.map((f) => f.view)
+  ).filter((v) => v !== 'unknown');
   const inView = (v: string | undefined) =>
     v !== undefined &&
     views.length > 0 &&
@@ -232,13 +231,18 @@ export function analyseSession(
     findings.push({
       id: 'camera_view',
       severity: 'warn',
-      cue: cueFor('camera_view'),
+      cue: viewCue(movement.view, cueFor('camera_view')),
       detail: `This exercise is measured from the ${movement.view}; it was filmed from ${
         views.includes('oblique') ? 'an angle' : `the ${views[0]}`
       }, so the range isn't judged.`,
-      reps: all,
+      reps: reps.map((r) => r.index),
     });
   }
+  if (!profile) return { reps, profile, findings, cues: findings.map((f) => f.cue) };
+
+  const joint = `${context.side} ${context.joint}`;
+  const ref = targets.reference;
+  const all = reps.map((r) => r.index);
 
   // Towards neutral: how far short of straight (or of the goal/demonstration)
   if (direction === 'toward' && !wrongView) {
@@ -398,7 +402,7 @@ function analyseHold(
     findings.push({
       id: 'camera_view',
       severity: 'warn',
-      cue: cueFor('camera_view'),
+      cue: viewCue(movement.view, cueFor('camera_view')),
       detail: `This is measured from the ${movement.view}.`,
       reps: [],
     });
@@ -441,4 +445,11 @@ function analyseHold(
     }
   }
   return { hold, reps: [], profile: null, findings, cues: findings.map((f) => f.cue) };
+}
+
+/** Set-up cue for the view an exercise needs. */
+function viewCue(view: string | undefined, sideCue: string): string {
+  if (view === 'front')
+    return 'Face the phone directly, then we can measure your movement.';
+  return sideCue;
 }

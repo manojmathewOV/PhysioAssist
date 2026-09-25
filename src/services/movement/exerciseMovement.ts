@@ -18,9 +18,22 @@ export interface ExerciseMovement {
   rangeView?: CameraView;
   /** 'hold': a still measurement (no repetitions), e.g. passive knee extension. */
   mode?: 'reps' | 'hold';
+  /**
+   * What is measured, when it isn't the joint's usual angle: for the shoulder,
+   * rotation with the elbow at the side instead of how high the arm is.
+   */
+  measure?: 'external_rotation';
 }
 
 export const EXERCISE_MOVEMENT: Record<string, ExerciseMovement> = {
+  // Facing the phone, elbow bent at the side, the forearm turns outward. The
+  // angle is an approximate 3D estimate; the elbow staying at the side and the
+  // trunk not turning are the dependable checks
+  'shoulder-external-rotation': {
+    direction: 'away',
+    view: 'front',
+    measure: 'external_rotation',
+  },
   // Sitting, the knee straightens from about 90° towards 0°: the number that
   // matters is how close to straight it gets (active extension deficit)
   'seated-knee-extension': { direction: 'toward', posture: 'seated', view: 'side' },

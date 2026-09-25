@@ -63,6 +63,13 @@ export interface BodyPose {
   thighLift: number;
   /** Lying: 1 = a roll under the knees (short-arc quad), 0 = heels propped. */
   kneeOnRoll: number;
+  /**
+   * Front: 1 = the left elbow bent 90° at the side with the forearm level,
+   * pointing at the camera and turned outward by `leftShoulderRotation`.
+   */
+  leftForearmForward: number;
+  /** Front: degrees the left forearm turns outward (external rotation). */
+  leftShoulderRotation: number;
 }
 
 export const STANDING: BodyPose = {
@@ -87,6 +94,8 @@ export const STANDING: BodyPose = {
   headTilt: 0,
   thighLift: 0,
   kneeOnRoll: 0,
+  leftForearmForward: 0,
+  leftShoulderRotation: 0,
 };
 
 type P = { x: number; y: number; z?: number };
@@ -318,7 +327,15 @@ function frontPose(pose: BodyPose): Record<string, P> {
       (180 / Math.PI);
     const upper = trunk + sign * shoulderAngle;
     const elbow = add(shoulder, dir(upper), L.upperArm);
-    const wrist = add(elbow, dir(upper + sign * (180 - elbowAngle)), L.forearm);
+    const wrist =
+      isLeftSide(side) && pose.leftForearmForward
+        ? // Level forearm pointing at the camera, turned outward: only its
+          // sideways part shows in the image (its depth is set in renderBody)
+          {
+            x: elbow.x + sign * Math.sin(rad(pose.leftShoulderRotation)) * L.forearm,
+            y: elbow.y,
+          }
+        : add(elbow, dir(upper + sign * (180 - elbowAngle)), L.forearm);
     pts[`${side}_elbow`] = elbow;
     pts[`${side}_wrist`] = wrist;
   }
@@ -409,6 +426,8 @@ export interface FrameEffects {
   depth?: Record<string, number>;
 }
 
+const isLeftSide = (side: 'left' | 'right') => side === 'left';
+
 /** Half the shoulder and hip widths in metres (front view proportions). */
 const SHOULDER_HALF_M = 54 / PX_PER_M;
 const HIP_HALF_M = 38 / PX_PER_M;
@@ -430,6 +449,19 @@ function sideDepth(name: string, pose: BodyPose): number {
     return -sign * (upper ? SHOULDER_HALF_M : lower ? HIP_HALF_M : 0);
   }
   return upper ? sign * SHOULDER_HALF_M * Math.sin(rad(pose.trunkRotation)) : 0;
+}
+
+/**
+ * Front view: the face is in front of the shoulders (towards the camera =
+ * smaller z), and a forearm pointing forward reaches towards the camera.
+ */
+function faceDepth(name: string, pose: BodyPose): number {
+  if (pose.view !== 'front') return 0;
+  if (/^(nose|mouth|left_eye|right_eye)/.test(name)) return -0.1;
+  if (pose.leftForearmForward && /^left_(wrist|pinky|index|thumb)$/.test(name)) {
+    return -Math.cos(rad(pose.leftShoulderRotation)) * (L.forearm / PX_PER_M);
+  }
+  return 0;
 }
 
 /** Pose a body and return it as a MediaPipe Pose Landmarker result bundle. */
@@ -470,7 +502,7 @@ export function renderBody(
     world.push({
       x: (p.x - hipMid.x) / PX_PER_M,
       y: (p.y - hipMid.y) / PX_PER_M,
-      z: sideDepth(name, pose) + (effects.depth?.[name] ?? 0),
+      z: sideDepth(name, pose) + faceDepth(name, pose) + (effects.depth?.[name] ?? 0),
       visibility,
     });
   }

@@ -18,6 +18,10 @@ export interface RangeResultProps {
   goalLabel?: string;
   /** 'toward' for straightening exercises (smaller is better). */
   direction?: 'away' | 'toward';
+  /** What was measured, when not the joint's usual range (e.g. "rotation"). */
+  measure?: string;
+  /** The number is an estimate (shown with "about"). */
+  approximate?: boolean;
 }
 
 const title = (joint: string) => {
@@ -31,6 +35,8 @@ const RangeResult: React.FC<RangeResultProps> = ({
   goalDegrees,
   goalLabel = 'your goal',
   direction = 'away',
+  measure = 'range',
+  approximate = false,
 }) => {
   const toward = direction === 'toward';
   // Straightening: the aim is a small angle (0° = straight), so a goal of 0 counts
@@ -59,16 +65,23 @@ const RangeResult: React.FC<RangeResultProps> = ({
       <View
         style={styles.header}
         accessible
-        accessibilityLabel={`${title(joint)} range: ${bestDegrees} degrees. ${sentence}`}
+        accessibilityLabel={`${title(joint)} ${measure}: ${
+          approximate ? 'about ' : ''
+        }${bestDegrees} degrees. ${sentence}${approximate ? ' This is an estimate.' : ''}`}
       >
         <Icon name="straighten" size={22} color={tint} />
         <AppText variant="label" color={tint} style={styles.flex}>
-          {`${title(joint).toUpperCase()} RANGE`}
+          {`${title(joint).toUpperCase()} ${measure.toUpperCase()}${
+            approximate ? ' (APPROX.)' : ''
+          }`}
         </AppText>
         {reached ? <Icon name="check-circle" size={22} color={colors.success} /> : null}
       </View>
       <View style={styles.valueRow}>
-        <AppText variant="value" testID="range-best">{`${bestDegrees}°`}</AppText>
+        <AppText
+          variant="value"
+          testID="range-best"
+        >{`${approximate ? '~' : ''}${bestDegrees}°`}</AppText>
         {hasGoal ? (
           <AppText variant="unit" color={colors.textSecondary}>
             {`of ${goalDegrees}°`}
