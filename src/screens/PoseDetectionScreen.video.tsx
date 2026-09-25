@@ -11,7 +11,7 @@
  * Use TEST_MODE=camera (or undefined) for real camera
  */
 
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -21,23 +21,18 @@ import {
   // Dimensions,
   Platform,
 } from 'react-native';
-import {
-  Camera,
-  useCameraDevice,
-  useFrameProcessor,
-  Frame,
-} from 'react-native-vision-camera';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { Worklets } from 'react-native-worklets-core';
 
 import { RootState } from '@store/index';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
-import { poseDetectionService } from '@services/poseDetectionService';
+import { useBlazePose, CAMERA_FPS } from '@hooks/useBlazePose';
+import { webPoseDetectionService } from '@services/web/WebPoseDetectionService';
 import type { MockPoseDataSimulator } from '@services/mockPoseDataSimulator';
 // Conditional import: Only include mock simulator in development builds
 const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
-  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator // eslint-disable-line @typescript-eslint/no-var-requires
+  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator
   : null;
 import { VideoFrameFeeder, createPoseVideoFeeder } from '@utils/videoFrameFeeder';
 import PoseOverlay from '@components/pose/PoseOverlay';
@@ -123,46 +118,53 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
     }
   };
 
-  const initializePoseDetection = async () => {
-    try {
-      await poseDetectionService.initialize();
-      poseDetectionService.setPoseDataCallback((poseData) => {
-        dispatch(setPoseData(poseData));
-      });
-      setIsInitialized(true);
-      setUseMockData(false);
-      console.log('Pose detection initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize pose detection:', error);
-      setInitError('Pose detection unavailable');
+  // Camera mode: BlazePose runs natively while detecting (not paused); poses go
+  // to the Redux store. The detector is created by useBlazePose itself.
+  const { cameraProps, error: detectorError } = useBlazePose({
+    device,
+    enabled: isDetecting && !isPaused && !useVideoFeed && !useMockData,
+    frameSkip,
+  });
 
-      if (testMode === 'video') {
-        setUseVideoFeed(true);
-        setIsInitialized(true);
-      } else {
-        Alert.alert(
-          'Using Mock Data',
-          'Pose detection service unavailable. Using simulated data for testing.',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                setUseMockData(true);
-                setIsInitialized(true);
-              },
-            },
-          ]
-        );
-      }
-    }
+  const initializePoseDetection = () => {
+    setIsInitialized(true);
+    console.log('Pose detection initialized successfully');
   };
+
+  // Detector failure: fall back to the video feed (video mode) or mock data
+  useEffect(() => {
+    if (!detectorError) {
+      return;
+    }
+    console.error('Pose detection error:', detectorError);
+    setInitError('Pose detection unavailable');
+
+    if (testMode === 'video') {
+      setUseVideoFeed(true);
+    } else {
+      Alert.alert(
+        'Using Mock Data',
+        'Pose detection service unavailable. Using simulated data for testing.',
+        [{ text: 'OK', onPress: () => setUseMockData(true) }]
+      );
+    }
+  }, [detectorError, testMode]);
 
   const initializeVideoFeeder = async () => {
     try {
       if (Platform.OS === 'web' && videoFeederRef.current === null) {
         console.log('Initializing video feeder with URL:', testVideoUrl);
 
-        videoFeederRef.current = createPoseVideoFeeder(poseDetectionService, {
+        // Video frames go through MediaPipe's browser build (web only)
+        const videoPoseDetector = {
+          processFrame: async (imageData: ImageData) => {
+            const poseData = await webPoseDetectionService.detectFromFrame(imageData);
+            if (poseData) {
+              dispatch(setPoseData(poseData));
+            }
+          },
+        };
+        videoFeederRef.current = createPoseVideoFeeder(videoPoseDetector, {
           fps: 30,
           frameSkip,
           loop: true,
@@ -253,42 +255,6 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
     }
   }, [useVideoFeed]);
 
-  // Runs on the JS thread, called from the frame processor worklet. Frame
-  // skipping lives here because refs can't be mutated inside worklets.
-  const processFrameData = useCallback(
-    async (_width: number, _height: number) => {
-      frameCountRef.current++;
-      if (frameCountRef.current % frameSkip !== 0) {
-        return;
-      }
-      try {
-        // Real frame processing would happen here in production
-        // await poseDetectionService.processFrame(imageData);
-      } catch (error) {
-        console.error('Error processing frame:', error);
-      }
-    },
-    [frameSkip]
-  );
-
-  const processFrameOnJS = useMemo(
-    () => Worklets.createRunOnJS(processFrameData),
-    [processFrameData]
-  );
-
-  // VisionCamera v4 frame processors run on react-native-worklets-core, so
-  // JS callbacks must go through Worklets.createRunOnJS (not reanimated's runOnJS)
-  const frameProcessor = useFrameProcessor(
-    (frame: Frame) => {
-      'worklet';
-
-      if (!isDetecting || isPaused || useVideoFeed || useMockData) return;
-
-      processFrameOnJS(frame.width, frame.height);
-    },
-    [isDetecting, isPaused, processFrameOnJS, useVideoFeed, useMockData]
-  );
-
   // Render camera or video/mock background
   const renderBackground = () => {
     if (useVideoFeed) {
@@ -325,8 +291,8 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={isFocused}
-          frameProcessor={frameProcessor}
-          fps={30}
+          fps={CAMERA_FPS}
+          {...cameraProps}
         />
       );
     }

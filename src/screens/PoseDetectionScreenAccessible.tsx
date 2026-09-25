@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,26 +10,19 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import {
-  Camera,
-  useCameraDevice,
-  useFrameProcessor,
-  Frame,
-} from 'react-native-vision-camera';
-import { Worklets } from 'react-native-worklets-core';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from '../store';
-import { setPoseData, setDetecting } from '../store/slices/poseSlice';
+import { setDetecting } from '../store/slices/poseSlice';
 import { updateValidation } from '../store/slices/exerciseSlice';
-import { poseDetectionService } from '../services/poseDetectionService';
+import { useBlazePose, CAMERA_FPS } from '../hooks/useBlazePose';
 import { exerciseValidationService } from '../services/exerciseValidationService';
 import { audioFeedbackService } from '../services/audioFeedbackService';
 import PoseOverlay from '../components/pose/PoseOverlay';
 import ExerciseControls from '../components/exercises/ExerciseControls';
 import { AccessibilityIds } from '../constants/accessibility';
-import { ProcessedPoseData } from '../types/pose';
 
 const PoseDetectionScreenAccessible: React.FC = () => {
   const dispatch = useDispatch();
@@ -42,17 +35,35 @@ const PoseDetectionScreenAccessible: React.FC = () => {
   const isExercising = useSelector((state: RootState) => state.exercise.isExercising);
   const frameSkip = useSelector((state: RootState) => state.settings.frameSkip);
   const [hasPermission, setHasPermission] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const isDetectingRef = useRef(isDetecting);
-  const frameCountRef = useRef(0);
   const lastSpokenFeedbackRef = useRef<string | null>(null);
 
   isDetectingRef.current = isDetecting;
 
+  // BlazePose runs only while detecting; poses go to the Redux store
+  const { cameraProps, error: detectorError } = useBlazePose({
+    device,
+    enabled: isDetecting,
+    frameSkip,
+  });
+
+  // The native detector failed: stop and let the user try again
+  useEffect(() => {
+    if (!detectorError) {
+      return;
+    }
+    console.error('Pose detection failed:', detectorError);
+    if (isDetectingRef.current) {
+      dispatch(setDetecting(false));
+    }
+    Alert.alert('Error', 'Failed to start pose detection. Please try again.', [
+      { text: 'OK' },
+    ]);
+  }, [detectorError, dispatch]);
+
   useEffect(() => {
     requestCameraPermission();
-    initializePoseDetection();
     announceScreen();
 
     return () => {
@@ -88,27 +99,7 @@ const PoseDetectionScreenAccessible: React.FC = () => {
     }
   };
 
-  const initializePoseDetection = async () => {
-    try {
-      await poseDetectionService.initialize();
-      setIsInitialized(true);
-    } catch (error) {
-      console.error('Failed to initialize pose detection:', error);
-      Alert.alert(
-        'Initialization Error',
-        'Failed to initialize pose detection. Please restart the app.'
-      );
-    }
-  };
-
-  const handlePoseData = useCallback(
-    (poseData: ProcessedPoseData) => {
-      dispatch(setPoseData(poseData));
-    },
-    [dispatch]
-  );
-
-  const startPoseDetection = async () => {
+  const startPoseDetection = () => {
     if (!hasPermission) {
       Alert.alert('Not Ready', 'Please grant camera permission to start pose detection.');
       return;
@@ -116,12 +107,8 @@ const PoseDetectionScreenAccessible: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // Retry initialization if it failed on mount, so the user can recover
-      if (!isInitialized) {
-        await poseDetectionService.initialize();
-        setIsInitialized(true);
-      }
-      poseDetectionService.setPoseDataCallback(handlePoseData);
+      // The BlazePose detector (created natively by useBlazePose) starts
+      // analysing frames as soon as detection is enabled
       dispatch(setDetecting(true));
 
       // Announce start for accessibility
@@ -164,34 +151,6 @@ const PoseDetectionScreenAccessible: React.FC = () => {
     }
   }, [currentPose, isExercising, dispatch]);
 
-  // Runs on the JS thread, called from the frame processor worklet. Frame skipping
-  // lives here because refs and React state can't be mutated inside worklets.
-  const processFrameData = useCallback(
-    (_width: number, _height: number) => {
-      frameCountRef.current++;
-      if (frameCountRef.current % frameSkip !== 0) {
-        return;
-      }
-      // Frame-to-tensor conversion needs a native resize plugin; until it's wired up,
-      // pose data arrives through the callback registered in startPoseDetection.
-    },
-    [frameSkip]
-  );
-
-  const processFrameOnJS = useMemo(
-    () => Worklets.createRunOnJS(processFrameData),
-    [processFrameData]
-  );
-
-  // Frame processor for pose detection (VisionCamera v4 + react-native-worklets-core)
-  const frameProcessor = useFrameProcessor(
-    (frame: Frame) => {
-      'worklet';
-      processFrameOnJS(frame.width, frame.height);
-    },
-    [processFrameOnJS]
-  );
-
   if (!device) {
     return (
       <View style={styles.container} accessibilityRole="alert">
@@ -214,8 +173,8 @@ const PoseDetectionScreenAccessible: React.FC = () => {
             style={styles.camera}
             device={device}
             isActive={isFocused}
-            frameProcessor={isDetecting ? frameProcessor : undefined}
-            fps={30}
+            fps={CAMERA_FPS}
+            {...cameraProps}
             accessible={true}
             accessibilityLabel="Camera view for pose detection"
             testID={AccessibilityIds.poseDetection.cameraView}

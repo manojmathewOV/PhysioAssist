@@ -14,13 +14,13 @@
  */
 
 import { Camera } from 'react-native-vision-camera';
-import { poseDetectionService } from '@services/poseDetectionService';
+import { BLAZEPOSE_MODEL_FILE } from '@services/pose/mediapipeLandmarks';
 import type { MockPoseDataSimulator } from '@services/mockPoseDataSimulator';
 // Conditional import: Only include mock simulator in development builds
 const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
-  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator // eslint-disable-line @typescript-eslint/no-var-requires
+  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator
   : null;
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
 export interface SmokeTestResult {
   name: string;
@@ -163,13 +163,13 @@ async function testPoseDetectionService(): Promise<SmokeTestResult> {
   const name = 'Pose Detection Service';
 
   try {
-    // Check if service is available (may not be initialized)
-    const isReady = poseDetectionService.isReady();
-
-    // This is OK - service initializes on demand
-    if (!isReady) {
-      console.log('ℹ️ Pose detection not yet initialized (normal for first run)');
+    // Native screens run MediaPipe BlazePose through react-native-mediapipe
+    // (useBlazePose creates the detector on demand), so the native module must
+    // be linked. Web uses MediaPipe's browser build instead.
+    if (Platform.OS !== 'web' && !NativeModules.PoseDetection) {
+      throw new Error('react-native-mediapipe PoseDetection module is not linked');
     }
+    console.log(`ℹ️ Pose detection: MediaPipe BlazePose (${BLAZEPOSE_MODEL_FILE})`);
 
     return {
       name,
@@ -268,7 +268,7 @@ async function testErrorHandling(): Promise<SmokeTestResult> {
 
   try {
     // Verify error boundary exists
-    const ErrorBoundary = require('@components/common/ErrorBoundary').default; // eslint-disable-line @typescript-eslint/no-var-requires
+    const ErrorBoundary = require('@components/common/ErrorBoundary').default;
 
     if (!ErrorBoundary) {
       return {

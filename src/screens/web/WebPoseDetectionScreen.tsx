@@ -12,6 +12,10 @@ import { webPoseDetectionService } from '../../services/web/WebPoseDetectionServ
 import { goniometerService } from '../../services/goniometerService';
 import { exerciseValidationService } from '../../services/exerciseValidationService';
 import { audioFeedbackService } from '../../services/audioFeedbackService';
+import {
+  getMeasurementLandmarks,
+  getOutOfPlaneJoints,
+} from '../../services/pose/measurementLandmarks';
 import { setPoseData } from '../../store/slices/poseSlice';
 import { updateExerciseProgress } from '../../store/slices/exerciseSlice';
 import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
@@ -20,14 +24,14 @@ import WebPoseOverlay from '../../components/web/WebPoseOverlay';
 
 type ExerciseKey = keyof typeof EXERCISES;
 
-// MediaPipe 33-landmark indices: [proximal, joint, distal]
-const WEB_JOINTS: Record<string, [number, number, number]> = {
-  leftElbow: [11, 13, 15], // left shoulder, elbow, wrist
-  rightElbow: [12, 14, 16], // right shoulder, elbow, wrist
-  leftKnee: [23, 25, 27], // left hip, knee, ankle
-  rightKnee: [24, 26, 28], // right hip, knee, ankle
-  leftShoulder: [23, 11, 13], // left hip, shoulder, elbow
-  rightShoulder: [24, 12, 14], // right hip, shoulder, elbow
+// Displayed joints: screen/overlay key -> goniometerService joint name
+const WEB_JOINTS: Record<string, string> = {
+  leftElbow: 'left_elbow',
+  rightElbow: 'right_elbow',
+  leftKnee: 'left_knee',
+  rightKnee: 'right_knee',
+  leftShoulder: 'left_shoulder',
+  rightShoulder: 'right_shoulder',
 };
 
 const WebPoseDetectionScreen: React.FC = () => {
@@ -39,6 +43,8 @@ const WebPoseDetectionScreen: React.FC = () => {
   const [isDetecting, setIsDetecting] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<ExerciseKey>('bicepCurl');
   const [angleData, setAngleData] = useState<{ [key: string]: number }>({});
+  // Joints whose limb points toward/away from the camera: 2D angle is an estimate
+  const [estimatedJoints, setEstimatedJoints] = useState<Set<string>>(new Set());
   const [exerciseMetrics, setExerciseMetrics] = useState({
     reps: 0,
     quality: 0,
@@ -78,33 +84,50 @@ const WebPoseDetectionScreen: React.FC = () => {
   };
 
   const handlePoseResults = useCallback(
-    (landmarks: PoseLandmark[]) => {
+    (landmarks: PoseLandmark[], detected: ProcessedPoseData | null) => {
       if (landmarks.length === 0) {
         return;
       }
 
-      // Calculate angles (degrees) for relevant joints
-      const angles: { [key: string]: number } = {};
-      for (const [joint, [a, b, c]] of Object.entries(WEB_JOINTS)) {
-        if (landmarks[a] && landmarks[b] && landmarks[c]) {
-          angles[joint] = goniometerService.calculateAngle(
-            landmarks[a],
-            landmarks[b],
-            landmarks[c],
-            joint
-          ).angle;
-        }
-      }
-
-      setAngleData(angles);
-
+      // Landmarks are normalized per axis and MediaPipe's z is only a relative
+      // guess, so angles need the frame's aspect ratio and must ignore z
+      const video = videoRef.current;
+      const videoAspect =
+        video && video.videoWidth && video.videoHeight
+          ? video.videoWidth / video.videoHeight
+          : undefined;
       const poseData: ProcessedPoseData = {
         landmarks,
         timestamp: Date.now(),
         confidence:
           landmarks.reduce((acc, l) => acc + l.visibility, 0) / landmarks.length,
         schemaId: 'mediapipe-33',
+        ...detected,
+        aspectRatio: detected?.aspectRatio ?? videoAspect,
+        zIsRelative: true,
       };
+
+      // Calculate angles (degrees) for the displayed joints
+      const allAngles = goniometerService.calculateAllJointAngles(
+        getMeasurementLandmarks(poseData)
+      );
+      const angles: { [key: string]: number } = {};
+      for (const [joint, name] of Object.entries(WEB_JOINTS)) {
+        const angle = allAngles.get(name);
+        if (angle) {
+          angles[joint] = angle.angle;
+        }
+      }
+
+      const outOfPlane = getOutOfPlaneJoints(poseData);
+      setAngleData(angles);
+      setEstimatedJoints(
+        new Set(
+          Object.entries(WEB_JOINTS)
+            .filter(([, name]) => outOfPlane.has(name))
+            .map(([joint]) => joint)
+        )
+      );
 
       // Update pose data in Redux
       dispatch(setPoseData(poseData));
@@ -257,7 +280,10 @@ const WebPoseDetectionScreen: React.FC = () => {
             {Object.entries(angleData).map(([joint, angle]) => (
               <View key={joint} style={styles.angleRow}>
                 <Text style={styles.angleLabel}>{joint}:</Text>
-                <Text style={styles.angleValue}>{angle.toFixed(1)}°</Text>
+                <Text style={styles.angleValue}>
+                  {estimatedJoints.has(joint) ? '~' : ''}
+                  {angle.toFixed(1)}°{estimatedJoints.has(joint) ? ' (est.)' : ''}
+                </Text>
               </View>
             ))}
           </View>

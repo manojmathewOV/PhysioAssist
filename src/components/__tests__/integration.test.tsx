@@ -10,6 +10,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { configureStore } from '@reduxjs/toolkit';
 import { Alert } from 'react-native';
 import { Camera } from 'react-native-vision-camera';
+import { usePoseDetection } from 'react-native-mediapipe';
 
 // Components
 import PoseDetectionScreen from '../../screens/PoseDetectionScreenAccessible';
@@ -17,7 +18,9 @@ import ExerciseControls from '../exercises/ExerciseControls';
 import PoseOverlay from '../pose/PoseOverlay';
 import SettingsScreen from '../../screens/SettingsScreen';
 
-// Services
+// Services (the web/legacy service is only used by SettingsScreen now; camera
+// screens run BlazePose through useBlazePose -> react-native-mediapipe, mocked
+// in __tests__/setup.ts)
 import { poseDetectionService } from '../../services/poseDetectionService';
 import { goniometerService } from '../../services/goniometerService';
 import { exerciseValidationService } from '../../services/exerciseValidationService';
@@ -139,25 +142,24 @@ describe('Component Integration Tests', () => {
     it('should complete full exercise session workflow', async () => {
       const { getByTestId, store } = renderWithProviders(<PoseDetectionScreen />);
 
-      // Wait for initialization
-      await waitFor(() => {
-        expect(poseDetectionService.initialize).toHaveBeenCalled();
-      });
+      // The BlazePose detector is created natively (live-stream mode)
+      expect(usePoseDetection).toHaveBeenCalled();
 
       // Camera permission is granted (mocked), so the start button appears
       const startButton = await waitFor(() => getByTestId('pose-start-detection'));
+
+      // No frames are analysed until detection starts
+      expect(getByTestId('pose-camera-view').props.frameProcessor).toBeUndefined();
 
       // Start detection
       await act(async () => {
         fireEvent.press(startButton);
       });
 
-      // Verify detection started: pose results are routed into the store
+      // Verify detection started: BlazePose's frame processor is attached
       await waitFor(() => {
-        expect(poseDetectionService.setPoseDataCallback).toHaveBeenCalledWith(
-          expect.any(Function)
-        );
         expect(store.getState().pose.isDetecting).toBe(true);
+        expect(getByTestId('pose-camera-view').props.frameProcessor).toBeDefined();
       });
 
       // Verify UI updates
@@ -354,17 +356,21 @@ describe('Component Integration Tests', () => {
     });
 
     it('should recover from pose detection failure', async () => {
-      // Mock model loading failure on mount and on the retry when starting
-      (poseDetectionService.initialize as jest.Mock)
-        .mockRejectedValueOnce(new Error('Model loading failed'))
-        .mockRejectedValueOnce(new Error('Model loading failed'));
-
       const { getByTestId, store } = renderWithProviders(<PoseDetectionScreen />);
 
-      // Try to start detection
+      // Start detection
       const startButton = await waitFor(() => getByTestId('pose-start-detection'));
       await act(async () => {
         fireEvent.press(startButton);
+      });
+      await waitFor(() => {
+        expect(store.getState().pose.isDetecting).toBe(true);
+      });
+
+      // The native detector reports a failure (e.g. model loading failed)
+      const { onError } = (usePoseDetection as jest.Mock).mock.calls.at(-1)[0];
+      await act(async () => {
+        onError({ code: 1, message: 'Model loading failed' });
       });
 
       // Verify error handling
@@ -380,7 +386,7 @@ describe('Component Integration Tests', () => {
       expect(getByTestId('pose-start-detection')).toBeTruthy();
       expect(store.getState().pose.isDetecting).toBe(false);
 
-      // A later attempt succeeds once the model loads
+      // The user can try again
       await act(async () => {
         fireEvent.press(getByTestId('pose-start-detection'));
       });

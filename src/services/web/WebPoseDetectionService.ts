@@ -1,6 +1,24 @@
 import { Camera } from '@mediapipe/camera_utils';
 import { Pose, Results } from '@mediapipe/pose';
-import { PoseLandmark } from '../../types/pose';
+import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
+import { mediapipeResultToPoseData } from '../pose/mediapipeLandmarks';
+
+/** Frames MediaPipe's browser build accepts, plus raw pixels (see detectFromFrame). */
+export type WebPoseInput =
+  | HTMLVideoElement
+  | HTMLImageElement
+  | HTMLCanvasElement
+  | ImageData;
+
+/**
+ * Receives each result: the image landmarks (normalized, MediaPipe-33 names) and
+ * the full ProcessedPoseData (aspect ratio, relative-z flag, world landmarks) that
+ * angle maths needs. `pose` is null when no person was found.
+ */
+export type WebPoseResultsCallback = (
+  landmarks: PoseLandmark[],
+  pose: ProcessedPoseData | null
+) => void;
 
 /** A landmark in pixel coordinates (see denormalizeCoordinates). */
 export interface Keypoint {
@@ -16,7 +34,8 @@ export class WebPoseDetectionService {
   private videoElement: HTMLVideoElement | null = null;
   private canvasElement: HTMLCanvasElement | null = null;
   private isRunning = false;
-  private onResultsCallback: ((landmarks: PoseLandmark[]) => void) | null = null;
+  private onResultsCallback: WebPoseResultsCallback | null = null;
+  private sendStartedAt = 0;
 
   /**
    * MediaPipe is created lazily: this module is also bundled on iOS/Android
@@ -71,68 +90,75 @@ export class WebPoseDetectionService {
 
     // Process landmarks
     if (this.onResultsCallback) {
-      const landmarks: PoseLandmark[] = (results.poseLandmarks ?? []).map(
-        (landmark, index) => ({
-          x: landmark.x,
-          y: landmark.y,
-          z: landmark.z || 0,
-          visibility: landmark.visibility ?? 1,
-          index,
-          name: this.getLandmarkName(index),
-        })
-      );
+      const pose = this.toPoseData(results);
+      const landmarks = pose?.landmarks ?? [];
 
       if (landmarks.length > 0 || !canvasCtx) {
-        this.onResultsCallback(landmarks);
+        this.onResultsCallback(landmarks, pose);
       }
     }
 
     canvasCtx?.restore();
   }
 
-  private getLandmarkName(index: number): string {
-    const landmarkNames = [
-      'nose',
-      'left_eye_inner',
-      'left_eye',
-      'left_eye_outer',
-      'right_eye_inner',
-      'right_eye',
-      'right_eye_outer',
-      'left_ear',
-      'right_ear',
-      'mouth_left',
-      'mouth_right',
-      'left_shoulder',
-      'right_shoulder',
-      'left_elbow',
-      'right_elbow',
-      'left_wrist',
-      'right_wrist',
-      'left_pinky',
-      'right_pinky',
-      'left_index',
-      'right_index',
-      'left_thumb',
-      'right_thumb',
-      'left_hip',
-      'right_hip',
-      'left_knee',
-      'right_knee',
-      'left_ankle',
-      'right_ankle',
-      'left_heel',
-      'right_heel',
-      'left_foot_index',
-      'right_foot_index',
-    ];
-    return landmarkNames[index] || `landmark_${index}`;
+  /**
+   * Convert a result with the same converter the native BlazePose path uses, so
+   * landmarks carry MediaPipe-33 names, world landmarks, zIsRelative and the
+   * frame's aspect ratio (landmarks are normalized per axis).
+   */
+  private toPoseData(results: Results): ProcessedPoseData | null {
+    if (!results.poseLandmarks?.length) {
+      return null;
+    }
+    const size = this.imageSize(results.image) ?? this.imageSize(this.videoElement);
+    return mediapipeResultToPoseData({
+      results: [
+        {
+          landmarks: [results.poseLandmarks],
+          worldLandmarks: [results.poseWorldLandmarks ?? []],
+        },
+      ],
+      inferenceTime: this.sendStartedAt ? Date.now() - this.sendStartedAt : 0,
+      inputImageWidth: size?.width,
+      inputImageHeight: size?.height,
+    });
+  }
+
+  /** Pixel size of a frame source, if known. */
+  private imageSize(image: unknown): { width: number; height: number } | undefined {
+    if (!image) {
+      return undefined;
+    }
+    const el = image as {
+      videoWidth?: number;
+      videoHeight?: number;
+      naturalWidth?: number;
+      naturalHeight?: number;
+      width?: number;
+      height?: number;
+    };
+    const width = el.videoWidth || el.naturalWidth || el.width;
+    const height = el.videoHeight || el.naturalHeight || el.height;
+    return width && height ? { width, height } : undefined;
+  }
+
+  /** Width / height of the live video, once its metadata has loaded. */
+  getVideoDimensions(): { width: number; height: number } | undefined {
+    return this.imageSize(this.videoElement);
+  }
+
+  private async send(
+    pose: Pose,
+    image: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement
+  ) {
+    this.sendStartedAt = Date.now();
+    await pose.send({ image });
   }
 
   async startDetection(
     videoElement: HTMLVideoElement,
     canvasElement: HTMLCanvasElement,
-    onResults: (landmarks: PoseLandmark[]) => void
+    onResults: WebPoseResultsCallback
   ) {
     this.ensurePose();
     this.videoElement = videoElement;
@@ -153,7 +179,7 @@ export class WebPoseDetectionService {
     this.camera = new Camera(this.videoElement, {
       onFrame: async () => {
         if (this.pose && this.videoElement) {
-          await this.pose.send({ image: this.videoElement });
+          await this.send(this.pose, this.videoElement);
         }
       },
       width: 1280,
@@ -176,21 +202,42 @@ export class WebPoseDetectionService {
   }
 
   async detectFromImage(imageElement: HTMLImageElement): Promise<PoseLandmark[]> {
+    const pose = await this.detectFromFrame(imageElement);
+    return pose?.landmarks ?? [];
+  }
+
+  /**
+   * Detect a pose in one still frame (image, canvas, video or raw ImageData, e.g.
+   * from the test video feeder). Resolves to null when no person was found.
+   */
+  async detectFromFrame(input: WebPoseInput): Promise<ProcessedPoseData | null> {
     const pose = this.ensurePose();
+    const image =
+      typeof ImageData !== 'undefined' && input instanceof ImageData
+        ? this.imageDataToCanvas(input)
+        : (input as Exclude<WebPoseInput, ImageData>);
 
     return new Promise((resolve, reject) => {
       const originalCallback = this.onResultsCallback;
 
-      this.onResultsCallback = (landmarks) => {
+      this.onResultsCallback = (_landmarks, poseData) => {
         this.onResultsCallback = originalCallback;
-        resolve(landmarks);
+        resolve(poseData);
       };
 
-      pose.send({ image: imageElement }).catch((error: unknown) => {
+      this.send(pose, image).catch((error: unknown) => {
         this.onResultsCallback = originalCallback;
         reject(error);
       });
     });
+  }
+
+  private imageDataToCanvas(imageData: ImageData): HTMLCanvasElement {
+    const canvas = document.createElement('canvas');
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    canvas.getContext('2d')?.putImageData(imageData, 0, 0);
+    return canvas;
   }
 
   isDetectionRunning(): boolean {

@@ -3,7 +3,7 @@
  *
  * Provides system health checks and troubleshooting for:
  * - Camera permissions and availability
- * - Pose detection initialization
+ * - Pose detection (MediaPipe BlazePose) availability and recent inference
  * - Network connectivity
  * - Device capabilities
  * - Performance metrics
@@ -20,11 +20,12 @@ import {
   StyleSheet,
   Platform,
   Alert,
+  NativeModules,
 } from 'react-native';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { useSelector } from 'react-redux';
 import { RootState } from '@store/index';
-import { poseDetectionService } from '@services/poseDetectionService';
+import { BLAZEPOSE_MODEL_FILE } from '@services/pose/mediapipeLandmarks';
 
 interface DiagnosticCheck {
   name: string;
@@ -40,6 +41,7 @@ const DiagnosticsScreen: React.FC = () => {
   const backDevice = useCameraDevice('back');
   const settings = useSelector((state: RootState) => state.settings);
   const user = useSelector((state: RootState) => state.user);
+  const pose = useSelector((state: RootState) => state.pose);
 
   const runDiagnostics = async () => {
     setIsRunning(true);
@@ -86,25 +88,43 @@ const DiagnosticsScreen: React.FC = () => {
       });
     }
 
-    // 3. Check Pose Detection Service
-    try {
-      const isPoseReady = poseDetectionService.isReady();
+    // 3. Check Pose Detection (MediaPipe BlazePose via react-native-mediapipe).
+    // The detector itself is created by each camera screen (useBlazePose), so
+    // here we check the native module is linked and report the latest poses.
+    const detectorLinked = Platform.OS === 'web' || Boolean(NativeModules.PoseDetection);
+    results.push({
+      name: 'Pose Detection',
+      status: detectorLinked ? 'success' : 'error',
+      message: detectorLinked
+        ? 'BlazePose detector available'
+        : 'BlazePose native module not linked',
+      details: `Model: MediaPipe BlazePose (${BLAZEPOSE_MODEL_FILE}), 33 landmarks`,
+    });
+
+    // 3b. Recent detector output (from the last pose a camera screen produced)
+    const lastPose = pose.currentPose;
+    if (lastPose) {
+      const inferenceMs = lastPose.inferenceTime;
+      const ageSeconds = Math.max(0, (Date.now() - pose.timestamp) / 1000);
       results.push({
-        name: 'Pose Detection',
-        status: isPoseReady ? 'success' : 'warning',
-        message: isPoseReady
-          ? 'Pose detection initialized'
-          : 'Pose detection not initialized',
-        details: isPoseReady
-          ? 'Service ready for frame processing'
-          : 'Will initialize on first use',
+        name: 'Pose Inference',
+        status: inferenceMs === undefined || inferenceMs <= 100 ? 'success' : 'warning',
+        message:
+          inferenceMs !== undefined
+            ? `Last inference ${inferenceMs.toFixed(0)} ms`
+            : 'Pose received (no inference timing)',
+        details: `Schema: ${lastPose.schemaId ?? 'unknown'}, Landmarks: ${
+          lastPose.landmarks.length
+        }, Confidence: ${(lastPose.confidence * 100).toFixed(0)}%, ${ageSeconds.toFixed(
+          0
+        )}s ago`,
       });
-    } catch (error) {
+    } else {
       results.push({
-        name: 'Pose Detection',
-        status: 'error',
-        message: 'Failed to check pose detection service',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        name: 'Pose Inference',
+        status: 'pending',
+        message: 'No poses detected yet',
+        details: 'Start pose detection on a camera screen to measure inference time',
       });
     }
 

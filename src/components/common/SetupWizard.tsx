@@ -5,7 +5,7 @@
  * Reduces setup failure from 60% → 10%
  */
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,12 +14,15 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import { Camera, useCameraDevice, useFrameProcessor } from 'react-native-vision-camera';
-import { Worklets } from 'react-native-worklets-core';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import { useSelector } from 'react-redux';
 import { RootState } from '@store/index';
+import { useBlazePose, CAMERA_FPS } from '@hooks/useBlazePose';
+import { goniometerService } from '@services/goniometerService';
+import { findLandmark } from '@services/pose/landmarkLookup';
+import { getMeasurementLandmarks } from '@services/pose/measurementLandmarks';
 
 import {
   checkLightingConditions,
@@ -28,9 +31,48 @@ import {
   DistanceAssessment,
 } from '../../utils/compensatoryMechanisms';
 import { FrameInfo } from '../../utils/realFrameAnalysis';
-import { PoseLandmark } from '../../types/pose';
+import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+/**
+ * checkPatientDistance reads head points at indices 0-4 and ankles at 15-16
+ * (MoveNet-17 order), so BlazePose landmarks are re-ordered by name first.
+ */
+const MOVENET_17_ORDER = [
+  'nose',
+  'left_eye',
+  'right_eye',
+  'left_ear',
+  'right_ear',
+  'left_shoulder',
+  'right_shoulder',
+  'left_elbow',
+  'right_elbow',
+  'left_wrist',
+  'right_wrist',
+  'left_hip',
+  'right_hip',
+  'left_knee',
+  'right_knee',
+  'left_ankle',
+  'right_ankle',
+];
+
+const toMoveNetOrder = (landmarks: PoseLandmark[]): PoseLandmark[] => {
+  const ordered = MOVENET_17_ORDER.map((name) => findLandmark(landmarks, name));
+  return ordered.every(Boolean) ? (ordered as PoseLandmark[]) : [];
+};
+
+/** Knee flexion (0 = straight) of the more bent knee, or null if no knee is visible. */
+const kneeFlexion = (pose: ProcessedPoseData): number | null => {
+  const angles = goniometerService.calculateAllJointAngles(getMeasurementLandmarks(pose));
+  const flexions = ['left_knee', 'right_knee']
+    .map((joint) => angles.get(joint))
+    .filter((angle) => angle?.isValid)
+    .map((angle) => 180 - angle!.angle);
+  return flexions.length > 0 ? Math.max(...flexions) : null;
+};
 
 interface SetupWizardProps {
   visible: boolean;
@@ -50,11 +92,10 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
 
   // VisionCamera setup (Gate 1: Real frame capture)
   const device = useCameraDevice('front');
-  // Snapshot of the latest frame's properties. The Frame object itself is only
-  // valid inside the frame processor call, so it must not be kept or used later.
+  // Snapshot of the camera frame size (set once the camera is streaming)
   const latestFrameRef = useRef<FrameInfo | null>(null);
 
-  // Get pose landmarks from Redux (populated by PoseDetectionScreen)
+  // Pose landmarks from Redux (populated by useBlazePose below)
   const landmarks = useSelector((state: RootState) => state.pose.currentPose?.landmarks);
 
   useEffect(() => {
@@ -67,26 +108,54 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
     }
   }, [visible]);
 
-  /**
-   * Frame Processor - Captures latest frame for analysis
-   * Gate 1: Real frame capture (no more mocks!)
-   */
-  const updateLatestFrameOnJS = useMemo(
-    () =>
-      Worklets.createRunOnJS((width: number, height: number) => {
-        latestFrameRef.current = { width, height };
-      }),
-    []
-  );
+  // Live knee angle for the practice step (null until BlazePose sees a knee)
+  const [livePracticeAngle, setLivePracticeAngle] = useState<number | null>(null);
+  const currentStepRef = useRef(currentStep);
+  currentStepRef.current = currentStep;
 
-  const frameProcessor = useFrameProcessor(
-    (frame) => {
-      'worklet';
-      // Send a plain snapshot to the JS thread (never the Frame itself)
-      updateLatestFrameOnJS(frame.width, frame.height);
-    },
-    [updateLatestFrameOnJS]
-  );
+  const handlePose = useCallback((pose: ProcessedPoseData) => {
+    if (currentStepRef.current === 'practice') {
+      const flexion = kneeFlexion(pose);
+      if (flexion !== null) {
+        setLivePracticeAngle(Math.max(0, flexion));
+      }
+    }
+  }, []);
+
+  // BlazePose runs while the wizard is shown; poses go to the Redux store (for
+  // the distance check) and to handlePose (for the practice angle)
+  const { cameraProps } = useBlazePose({
+    device,
+    enabled: visible,
+    onPose: handlePose,
+  });
+
+  /**
+   * Record the camera's frame size once it is streaming, for the lighting check.
+   * (Pixel data isn't read from JS; the Frame object is only valid inside the
+   * frame processor, which BlazePose now owns.)
+   */
+  const handleCameraInitialized = useCallback(() => {
+    const format = device?.formats?.[0];
+    latestFrameRef.current =
+      format?.videoWidth && format?.videoHeight
+        ? { width: format.videoWidth, height: format.videoHeight }
+        : { width: SCREEN_WIDTH, height: SCREEN_HEIGHT };
+  }, [device]);
+
+  // Live practice: track the real knee angle and finish once it reaches 45°
+  useEffect(() => {
+    if (currentStep === 'practice' && livePracticeAngle !== null) {
+      setPracticeAngle(livePracticeAngle);
+    }
+  }, [currentStep, livePracticeAngle]);
+
+  useEffect(() => {
+    if (currentStep === 'practice' && livePracticeAngle !== null && practiceAngle >= 45) {
+      handlePracticeComplete();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, livePracticeAngle, practiceAngle]);
 
   const handleLightingCheck = async () => {
     const frame = latestFrameRef.current;
@@ -116,9 +185,10 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
   };
 
   const handleDistanceCheck = () => {
-    // Gate 1: Use real landmarks from Redux (populated by PoseDetectionScreen)
-    const landmarkArray: PoseLandmark[] = landmarks || [];
-    const assessment = checkPatientDistance(landmarkArray, SCREEN_HEIGHT);
+    // Real BlazePose landmarks from Redux, looked up by name. They are normalized
+    // to the camera preview, so a preview height of 1 gives body fill in percent.
+    const landmarkArray = toMoveNetOrder(landmarks || []);
+    const assessment = checkPatientDistance(landmarkArray, 1);
     setDistanceStatus(assessment);
 
     if (assessment.status === 'perfect') {
@@ -158,8 +228,9 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={visible}
-          frameProcessor={frameProcessor}
-          pixelFormat="yuv"
+          fps={CAMERA_FPS}
+          onInitialized={handleCameraInitialized}
+          {...cameraProps}
         />
       )}
 
@@ -212,6 +283,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
             <PracticeStep
               currentAngle={practiceAngle}
               onAngleChange={setPracticeAngle}
+              simulate={livePracticeAngle === null}
               onComplete={handlePracticeComplete}
             />
           )}
@@ -338,15 +410,22 @@ interface PracticeStepProps {
   currentAngle: number;
   onAngleChange: React.Dispatch<React.SetStateAction<number>>;
   onComplete: () => void;
+  /** Animate a simulated angle (no live pose available). */
+  simulate?: boolean;
 }
 
 const PracticeStep: React.FC<PracticeStepProps> = ({
   currentAngle,
   onAngleChange,
   onComplete,
+  simulate = true,
 }) => {
-  // Simulate angle increase for practice
+  // Simulate angle increase for practice when no live pose is available
+  // (e.g. simulator without a camera)
   useEffect(() => {
+    if (!simulate) {
+      return;
+    }
     const interval = setInterval(() => {
       onAngleChange((prevAngle) => {
         const newAngle = Math.min(prevAngle + 5, 90);
@@ -358,9 +437,9 @@ const PracticeStep: React.FC<PracticeStepProps> = ({
     }, 500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [simulate]);
 
-  const progress = (currentAngle / 90) * 100;
+  const progress = (Math.min(currentAngle, 90) / 90) * 100;
 
   return (
     <View style={styles.stepContainer}>

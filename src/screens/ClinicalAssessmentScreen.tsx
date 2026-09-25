@@ -25,19 +25,14 @@ import {
   Modal,
   Animated,
 } from 'react-native';
-import {
-  Camera,
-  useCameraDevice,
-  useFrameProcessor,
-  Frame,
-} from 'react-native-vision-camera';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 import { RootState } from '@store/index';
-import { setPoseData, setDetecting } from '@store/slices/poseSlice';
-import { poseDetectionService } from '@services/poseDetectionService';
+import { setDetecting } from '@store/slices/poseSlice';
+import { useBlazePose, CAMERA_FPS } from '@hooks/useBlazePose';
 import { ClinicalMeasurementService } from '@services/biomechanics/ClinicalMeasurementService';
 import { ProcessedPoseData } from '../types/pose';
 import { ClinicalJointMeasurement } from '../types/clinicalMeasurement';
@@ -56,6 +51,7 @@ const ClinicalAssessmentScreen: React.FC = () => {
   const device = useCameraDevice('front');
 
   const { isDetecting, currentPose } = useSelector((state: RootState) => state.pose);
+  const { frameSkip } = useSelector((state: RootState) => state.settings);
   const [hasPermission, setHasPermission] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -75,6 +71,22 @@ const ClinicalAssessmentScreen: React.FC = () => {
 
   // Services
   const clinicalServiceRef = useRef(new ClinicalMeasurementService());
+
+  // BlazePose runs only while assessing; poses (with anatomical frames) go to the
+  // Redux store and come back as currentPose for the clinical measurements below
+  const { cameraProps, error: detectorError } = useBlazePose({
+    device,
+    enabled: isDetecting && phase === 'assessing',
+    frameSkip,
+  });
+  useEffect(() => {
+    if (detectorError) {
+      Alert.alert(
+        'Pose Detection Error',
+        'Pose detection is unavailable. Please restart the app.'
+      );
+    }
+  }, [detectorError]);
 
   // Animations
   const instructionFadeAnim = useRef(new Animated.Value(0)).current;
@@ -117,20 +129,9 @@ const ClinicalAssessmentScreen: React.FC = () => {
     }
   };
 
-  const initializePoseDetection = async () => {
-    try {
-      await poseDetectionService.initialize();
-      poseDetectionService.setPoseDataCallback((poseData) => {
-        dispatch(setPoseData(poseData));
-      });
-      setIsInitialized(true);
-    } catch (error) {
-      console.error('Failed to initialize pose detection:', error);
-      Alert.alert(
-        'Initialization Error',
-        'Failed to initialize pose detection. Please restart the app.'
-      );
-    }
+  // The BlazePose detector is created natively by useBlazePose
+  const initializePoseDetection = () => {
+    setIsInitialized(true);
   };
 
   const performMeasurement = (poseData: ProcessedPoseData) => {
@@ -210,18 +211,6 @@ const ClinicalAssessmentScreen: React.FC = () => {
     ReactNativeHapticFeedback.trigger('impactLight');
   };
 
-  // Frame processor for pose detection
-  // NOTE: runs on the VisionCamera (react-native-worklets-core) runtime, where
-  // reanimated's runOnJS is unavailable. Frame -> pose conversion is not wired
-  // up yet; pose data arrives via poseDetectionService's callback.
-  const frameProcessor = useFrameProcessor(
-    (_frame: Frame) => {
-      'worklet';
-      if (!isDetecting) return;
-    },
-    [isDetecting]
-  );
-
   const getCurrentInstruction = (): string => {
     switch (phase) {
       case 'setup':
@@ -259,8 +248,8 @@ const ClinicalAssessmentScreen: React.FC = () => {
         style={StyleSheet.absoluteFill}
         device={device}
         isActive={isFocused && !showSelectionPanel}
-        frameProcessor={frameProcessor}
-        fps={30}
+        {...cameraProps}
+        fps={CAMERA_FPS}
       />
 
       {/* Pose Overlay */}
