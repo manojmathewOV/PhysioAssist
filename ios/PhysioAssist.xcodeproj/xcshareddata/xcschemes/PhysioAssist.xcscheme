@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "PhysioAssistTemp.app"
-               BlueprintName = "PhysioAssistTemp"
-               ReferencedContainer = "container:PhysioAssistTemp.xcodeproj">
+               BuildableName = "PhysioAssist.app"
+               BlueprintName = "PhysioAssist"
+               ReferencedContainer = "container:PhysioAssist.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "PhysioAssistTempTests.xctest"
-               BlueprintName = "PhysioAssistTempTests"
-               ReferencedContainer = "container:PhysioAssistTemp.xcodeproj">
+               BuildableName = "PhysioAssistTests.xctest"
+               BlueprintName = "PhysioAssistTests"
+               ReferencedContainer = "container:PhysioAssist.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "PhysioAssistTemp.app"
-            BlueprintName = "PhysioAssistTemp"
-            ReferencedContainer = "container:PhysioAssistTemp.xcodeproj">
+            BuildableName = "PhysioAssist.app"
+            BlueprintName = "PhysioAssist"
+            ReferencedContainer = "container:PhysioAssist.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "PhysioAssistTemp.app"
-            BlueprintName = "PhysioAssistTemp"
-            ReferencedContainer = "container:PhysioAssistTemp.xcodeproj">
+            BuildableName = "PhysioAssist.app"
+            BlueprintName = "PhysioAssist"
+            ReferencedContainer = "container:PhysioAssist.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

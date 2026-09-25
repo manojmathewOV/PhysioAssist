@@ -1,0 +1,157 @@
+# TEMPLATE: copy this file to .github/workflows/ios-simulator.yml to enable it.
+# (The Claude GitHub App can't push into .github/workflows without the
+# "workflows" permission, so it lives here until it's copied into place.)
+
+name: iOS Simulator
+
+# Builds the iOS app on a macOS runner, launches it in the iOS Simulator
+# (screenshots + crash check) and runs the Detox E2E suite.
+# macOS minutes are billed at 10x, so this runs on demand and on PRs that
+# touch app code, not on every push.
+
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: 'Simulator device name (blank = iPhone 15 Pro, else first available iPhone)'
+        required: false
+        default: ''
+      xcode:
+        description: 'Xcode version to select, e.g. 16.2 (blank = runner default)'
+        required: false
+        default: ''
+      run_detox:
+        description: 'Run the Detox E2E suite after the smoke test'
+        type: boolean
+        default: true
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'src/**'
+      - 'e2e/**'
+      - 'App.tsx'
+      - 'index.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.detoxrc.js'
+      - 'scripts/ci/**'
+      - '.github/workflows/ios-simulator.yml'
+
+concurrency:
+  group: ios-simulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios-simulator:
+    runs-on: macos-15
+    timeout-minutes: 90
+    env:
+      NO_FLIPPER: '1'
+      APP_PATH: ios/build/Build/Products/Release-iphonesimulator/PhysioAssist.app
+      OUT_DIR: ${{ github.workspace }}/ci-artifacts
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          if [ -n "${{ inputs.xcode }}" ]; then
+            sudo xcode-select -s "/Applications/Xcode_${{ inputs.xcode }}.app"
+          fi
+          xcodebuild -version
+          ls -d /Applications/Xcode*.app
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install JS dependencies (also downloads MoveNet models)
+        run: npm ci --legacy-peer-deps
+
+      - name: Install applesimutils (Detox)
+        run: |
+          brew tap wix/brew
+          brew install applesimutils
+
+      - name: Point Xcode at the CI node binary
+        run: echo "export NODE_BINARY=$(command -v node)" > ios/.xcode.env.local
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: pods-${{ runner.os }}-${{ hashFiles('ios/Podfile', 'ios/Podfile.lock', 'package-lock.json') }}
+
+      - name: Install pods
+        run: |
+          mkdir -p "$OUT_DIR"
+          cd ios && pod install 2>&1 | tee "$OUT_DIR/pod-install.log"
+
+      - name: Build app for simulator (Release, JS bundled)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace ios/PhysioAssist.xcworkspace \
+            -scheme PhysioAssist \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath ios/build \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            build 2>&1 | tee "$OUT_DIR/xcodebuild.log" | xcbeautify --renderer github-actions
+
+      - name: Pick simulator
+        id: sim
+        run: |
+          WANTED="${{ inputs.device }}"
+          WANTED="${WANTED:-iPhone 15 Pro}"
+          LIST=$(xcrun simctl list devices available -j)
+          UDID=$(echo "$LIST" | jq -r --arg n "$WANTED" '[.devices[][] | select(.name == $n)][0].udid // empty')
+          if [ -z "$UDID" ]; then
+            echo "'$WANTED' not available, falling back to the first iPhone"
+            UDID=$(echo "$LIST" | jq -r '[.devices[][] | select(.name | startswith("iPhone"))][0].udid')
+          fi
+          NAME=$(echo "$LIST" | jq -r --arg u "$UDID" '.devices[][] | select(.udid == $u) | .name')
+          echo "Using $NAME ($UDID)"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test (launch, screenshots, crash check)
+        run: bash scripts/ci/ios-smoke-test.sh "$APP_PATH" "${{ steps.sim.outputs.udid }}" "$OUT_DIR/smoke"
+
+      - name: Detox E2E tests
+        if: github.event_name == 'pull_request' || inputs.run_detox
+        run: |
+          npx detox build-framework-cache
+          npx detox test \
+            --configuration ios.sim.release \
+            --device-name "${{ steps.sim.outputs.name }}" \
+            --headless \
+            --take-screenshots all \
+            --record-logs failing \
+            --artifacts-location "$OUT_DIR/detox" \
+            --cleanup
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## iOS Simulator run"
+            echo "- Xcode: $(xcodebuild -version | head -1)"
+            echo "- Simulator: ${{ steps.sim.outputs.name }}"
+            echo "- Smoke status: $(cat "$OUT_DIR/smoke/status.txt" 2>/dev/null || echo 'not reached')"
+            if [ -f "$OUT_DIR/xcodebuild.log" ]; then
+              echo "### Build errors"
+              echo '```'
+              grep -E "error:|\*\* BUILD FAILED" "$OUT_DIR/xcodebuild.log" | head -40 || echo "none"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator-${{ github.run_number }}
+          path: ci-artifacts/
+          retention-days: 14

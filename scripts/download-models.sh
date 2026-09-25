@@ -16,16 +16,27 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Model URLs
-LIGHTNING_URL="https://tfhub.dev/google/lite-model/movenet/singlepose/lightning/tflite/int8/4?lite-format=tflite"
-THUNDER_URL="https://tfhub.dev/google/lite-model/movenet/singlepose/thunder/tflite/float16/4?lite-format=tflite"
+# Model URLs (TF Hub links now 404; models are hosted on Kaggle as .tar.gz archives)
+LIGHTNING_URL="https://www.kaggle.com/api/v1/models/google/movenet/tfLite/singlepose-lightning-tflite-int8/1/download"
+THUNDER_URL="https://www.kaggle.com/api/v1/models/google/movenet/tfLite/singlepose-thunder-tflite-float16/1/download"
+
+# Download a Kaggle model archive and extract its single .tflite file to $2
+download_model() {
+  local url="$1" dest="$2" tmp
+  tmp="$(mktemp -d)"
+  curl -fsSL "$url" -o "$tmp/model.tar.gz"
+  tar -xzf "$tmp/model.tar.gz" -C "$tmp"
+  mv "$(find "$tmp" -name '*.tflite' | head -n 1)" "$dest"
+  chmod 644 "$dest"
+  rm -rf "$tmp"
+}
 
 # Download MoveNet Lightning INT8
 echo -e "${YELLOW}📥 Downloading MoveNet Lightning INT8 (3MB)...${NC}"
 if [ -f "$MODELS_DIR/movenet_lightning_int8.tflite" ]; then
   echo "   File already exists, skipping..."
 else
-  curl -# -L "$LIGHTNING_URL" -o "$MODELS_DIR/movenet_lightning_int8.tflite"
+  download_model "$LIGHTNING_URL" "$MODELS_DIR/movenet_lightning_int8.tflite"
   echo -e "${GREEN}   ✅ Downloaded successfully!${NC}"
 fi
 echo ""
@@ -35,7 +46,7 @@ echo -e "${YELLOW}📥 Downloading MoveNet Thunder Float16 (12MB)...${NC}"
 if [ -f "$MODELS_DIR/movenet_thunder_fp16.tflite" ]; then
   echo "   File already exists, skipping..."
 else
-  curl -# -L "$THUNDER_URL" -o "$MODELS_DIR/movenet_thunder_fp16.tflite"
+  download_model "$THUNDER_URL" "$MODELS_DIR/movenet_thunder_fp16.tflite"
   echo -e "${GREEN}   ✅ Downloaded successfully!${NC}"
 fi
 echo ""
