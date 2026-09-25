@@ -84,6 +84,14 @@ module.exports = (_env, argv = {}) => ({
       'react-native$': 'react-native-web',
       'react-native-svg': 'react-native-svg-web',
       'react-native-sound': path.resolve(appDirectory, 'web/shims/react-native-sound.js'),
+      'react-native-linear-gradient': path.resolve(
+        appDirectory,
+        'web/shims/react-native-linear-gradient.js'
+      ),
+      'react-native-haptic-feedback': path.resolve(
+        appDirectory,
+        'web/shims/react-native-haptic-feedback.js'
+      ),
       '@': path.resolve(appDirectory, 'src'),
     },
     fallback: {

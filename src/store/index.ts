@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
-import EncryptedStorage from 'react-native-encrypted-storage';
+import EncryptedStorage from './storage';
 import { combineReducers } from 'redux';
 
 import poseReducer from './slices/poseSlice';
