@@ -8,7 +8,11 @@ joints x [x, y, z, 1], metres, y up) and writes, per video, the true joint
 angles at 30 fps in the app's clinical conventions:
 
 - shoulder: angle between the upper arm (Arm -> ForeArm) and the trunk
-  pointing down (Spine1 -> Hips), in 3D (0 = arm by the side)
+  pointing down (Spine1 -> Hips), in 3D (0 = arm by the side); the app's
+  trunk-midline definition
+- shoulder_joint: interior angle Elbow (ForeArm) - Shoulder (Arm) - Hip
+  (UpLeg), in 3D: the other common definition, to show how much the choice
+  of definition alone changes the number
 - knee: 180 - interior angle Hip (UpLeg) - Knee (Leg) - Ankle (Foot), in 3D
   (0 = straight)
 
@@ -41,6 +45,8 @@ def truth(a):
     for side in ("Left", "Right"):
         arm = p[:, J[f"{side}ForeArm"]] - p[:, J[f"{side}Arm"]]
         out[f"{side.lower()}_shoulder"] = angle(arm, down)
+        to_hip = p[:, J[f"{side}UpLeg"]] - p[:, J[f"{side}Arm"]]
+        out[f"{side.lower()}_shoulder_joint"] = angle(arm, to_hip)
         thigh = p[:, J[f"{side}UpLeg"]] - p[:, J[f"{side}Leg"]]
         shank = p[:, J[f"{side}Foot"]] - p[:, J[f"{side}Leg"]]
         out[f"{side.lower()}_knee"] = 180 - angle(thigh, shank)

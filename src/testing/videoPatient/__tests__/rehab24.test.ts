@@ -1,245 +1,102 @@
 /**
- * REHAB24-6 benchmark: shoulder and knee exercises filmed by two cameras, with
- * motion capture and a physiotherapist's correct/incorrect label for every
- * repetition. Measures, per repetition and camera view: repetition counting,
- * angle error against motion capture, and how often the app raises a finding
- * on correct vs incorrect repetitions.
+ * REHAB24-6 benchmark report: shoulder (arm abduction, arm V-W) and knee
+ * (lunge, squat) exercises filmed by two cameras, run through the app's pose
+ * model and session pipeline, against motion capture and the
+ * physiotherapist's correct/incorrect labels. Internal exploratory
+ * benchmarking only (CC BY-NC 4.0; data never committed).
  *
- * The dataset is CC BY-NC 4.0: it stays outside the repository and is used for
- * internal benchmarking only. Needs the local directory prepared by
- * scripts/fixtures/rehab24_pilot.sh:
- *
- *   REHAB24_DIR=<dir> [REHAB24_GROUPS=inspection,validation] [REHAB24_OUT=out.md] \
+ *   scripts/fixtures/rehab24_pilot.sh <dir>
+ *   REHAB24_DIR=<dir> [REHAB24_GROUPS=inspection,validation] \
+ *   [REHAB24_OUT=out.md] [REHAB24_JSON=reps.json] \
  *     npx jest src/testing/videoPatient/__tests__/rehab24.test.ts
  */
 import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
-import { analyseSession } from '../../../services/movement/analysis';
-import { detectCompensations } from '../../../services/movement/compensations';
-import { MovementRecorder } from '../../../services/movement/recorder';
-import type {
-  CameraView,
-  MovementContext,
-  MovementFrame,
-} from '../../../services/movement/types';
-import type { BodySide, JointKind } from '../../../services/pose/exercisePlan';
-import { VideoLandmarks, VideoPatient } from '../VideoPatient';
+import {
+  CameraRecord,
+  FrameRecord,
+  LabelledRep,
+  REHAB24_EXERCISES,
+  RepRecord,
+  Truth,
+  evaluateCamera,
+  groupOf,
+  parseSegmentation,
+} from '../rehab24';
+import type { VideoLandmarks } from '../VideoPatient';
 
 const dir = process.env.REHAB24_DIR;
 const groups = process.env.REHAB24_GROUPS?.split(',');
 
-/** Participant-disjoint groups (persons 1-9 appear in these exercises). */
-export const REHAB24_GROUPS: Record<string, number[]> = {
-  inspection: [1, 2, 3, 4],
-  validation: [5, 6],
-  test: [7, 8, 9],
-};
-const groupOf = (person: number) =>
-  Object.keys(REHAB24_GROUPS).find((g) => REHAB24_GROUPS[g].includes(person)) ?? 'none';
-
-interface Exercise {
-  name: string;
-  joint: JointKind;
-  exerciseId: string;
-  /** Working side from the labelled subtype (default right). */
-  side: (subtype: string) => BodySide;
-}
-const EXERCISES: Record<string, Exercise> = {
-  '1': {
-    name: 'arm abduction',
-    joint: 'shoulder',
-    exerciseId: 'side-arm-raise',
-    side: () => 'right',
-  },
-  '2': {
-    name: 'arm V-W',
-    joint: 'shoulder',
-    exerciseId: 'shoulder-press',
-    side: () => 'right',
-  },
-  '5': {
-    name: 'lunge',
-    joint: 'knee',
-    exerciseId: 'lunge',
-    side: (s) => (s.includes('left') ? 'left' : 'right'),
-  },
-  '6': { name: 'squat', joint: 'knee', exerciseId: 'squat', side: () => 'right' },
-};
-
-interface LabelledRep {
-  video: string;
-  exercise: string;
-  person: number;
-  first: number;
-  last: number;
-  cam17: string;
-  subtype: string;
-  lights: boolean;
-  extra17: number;
-  extra18: number;
-  correct: boolean;
-}
-
-/** The view each camera had, in the app's vocabulary. */
-const viewFor = (cam: 17 | 18, cam17: string): CameraView => {
-  if (cam17 === 'half-profile') return 'oblique';
-  const front = cam === 17 ? cam17 === 'front' : cam17 !== 'front';
-  return front ? 'front' : 'side';
-};
-
-const START_MS = 1_000_000;
-const FPS = 30;
-
-export interface RepResult {
-  video: string;
-  cam: 17 | 18;
-  exercise: string;
-  person: number;
-  group: string;
-  labelledView: CameraView;
-  appView: CameraView | null;
-  correct: boolean;
-  lights: boolean;
-  extraPerson: number;
-  /** An app repetition peaked inside this labelled repetition. */
-  counted: boolean;
-  appPeak: number | null;
-  truePeak: number | null;
-  findings: string[];
-}
-
-function loadReps(file: string): LabelledRep[] {
-  const [head, ...lines] = fs.readFileSync(file, 'utf8').trim().split('\n');
-  const cols = head.split(';');
-  return lines.map((line) => {
-    const v = Object.fromEntries(line.split(';').map((x, i) => [cols[i], x]));
-    return {
-      video: v.video_id,
-      exercise: v.exercise_id,
-      person: Number(v.person_id),
-      first: Number(v.first_frame),
-      last: Number(v.last_frame),
-      cam17: v.cam17_orientation,
-      subtype: v.exercise_subtype,
-      lights: v.lights_on === '1',
-      extra17: Number(v.extra_person_in_cam17),
-      extra18: Number(v.extra_person_in_cam18),
-      correct: v.correctness === '1',
-    };
-  });
-}
-
-function evaluate(
-  data: VideoLandmarks,
-  cam: 17 | 18,
-  reps: LabelledRep[],
-  truth: Record<string, (number | null)[]>
-): RepResult[] {
-  const ex = EXERCISES[reps[0].exercise];
-  const results: RepResult[] = [];
-  // One session per working side (lunges alternate the front leg)
-  const bySide = new Map<BodySide, LabelledRep[]>();
-  reps.forEach((r) => {
-    const side = ex.side(r.subtype);
-    bySide.set(side, [...(bySide.get(side) ?? []), r]);
-  });
-  for (const [side, sideReps] of bySide) {
-    const context: MovementContext = { joint: ex.joint, side, exerciseId: ex.exerciseId };
-    const recorder = new MovementRecorder(context);
-    for (const f of new VideoPatient(data).frames()) if (f.pose) recorder.add(f.pose);
-    const frames = recorder.frames;
-    const analysis = analyseSession(frames, context, {}, { detect: detectCompensations });
-    const truthSeries = truth[`${side}_${ex.joint}`] ?? [];
-    for (const r of sideReps) {
-      const from = START_MS + (r.first / FPS) * 1000;
-      const to = START_MS + (r.last / FPS) * 1000;
-      const inside = frames.filter((f: MovementFrame) => f.t >= from && f.t <= to);
-      const angles = inside.map((f) => f.angle).filter((a): a is number => a !== null);
-      const appRep = analysis.reps.find((a) => a.peakT >= from && a.peakT <= to);
-      const views = new Map<CameraView, number>();
-      inside.forEach((f) => views.set(f.view, (views.get(f.view) ?? 0) + 1));
-      const trueAngles = truthSeries
-        .slice(r.first, r.last + 1)
-        .filter((a): a is number => a !== null);
-      results.push({
-        video: r.video,
-        cam,
-        exercise: r.exercise,
-        person: r.person,
-        group: groupOf(r.person),
-        labelledView: viewFor(cam, r.cam17),
-        appView: [...views.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
-        correct: r.correct,
-        lights: r.lights,
-        extraPerson: cam === 17 ? r.extra17 : r.extra18,
-        counted: appRep !== undefined,
-        appPeak: angles.length ? Math.max(...angles) : null,
-        truePeak: trueAngles.length ? Math.max(...trueAngles) : null,
-        findings: appRep
-          ? analysis.findings
-              .filter((f) => f.reps.includes(appRep.index))
-              .map((f) => `${f.id}:${f.severity}`)
-          : [],
-      });
-    }
-  }
-  return results;
-}
-
-const pct = (n: number, d: number) => (d ? `${Math.round((100 * n) / d)}%` : 'n/a');
-const median = (a: number[]) => {
-  const s = [...a].sort((x, y) => x - y);
-  return s.length ? s[Math.floor(s.length / 2)] : NaN;
-};
 const f1 = (x: number) => (Number.isFinite(x) ? x.toFixed(1) : 'n/a');
+const pct = (n: number, d: number) => (d ? `${Math.round((100 * n) / d)}%` : 'n/a');
+const mean = (a: number[]) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : NaN);
+const quantile = (a: number[], q: number) => {
+  const s = [...a].sort((x, y) => x - y);
+  return s.length ? s[Math.min(s.length - 1, Math.floor(s.length * q))] : NaN;
+};
 const table = (header: string[], rows: string[][]) =>
   [header, header.map(() => '---'), ...rows]
     .map((r) => `| ${r.join(' | ')} |`)
     .join('\n');
+const exName = (id: string) => REHAB24_EXERCISES[id].name;
 
-export function summarise(rs: RepResult[]): string[] {
-  const good = rs.filter((r) => r.correct);
-  const bad = rs.filter((r) => !r.correct);
-  const any = (r: RepResult) => r.findings.length > 0;
-  const flagged = (r: RepResult) => r.findings.some((f) => f.endsWith(':flag'));
-  const errs = rs
-    .filter((r) => r.appPeak !== null && r.truePeak !== null)
-    .map((r) => (r.appPeak as number) - (r.truePeak as number));
-  return [
-    String(rs.length),
-    pct(rs.filter((r) => r.counted).length, rs.length),
-    pct(rs.filter((r) => r.appView === r.labelledView).length, rs.length),
-    f1(median(errs)),
-    f1(median(errs.map(Math.abs))),
-    pct(good.filter(any).length, good.length),
-    pct(bad.filter(any).length, bad.length),
-    pct(good.filter(flagged).length, good.length),
-    pct(bad.filter(flagged).length, bad.length),
-  ];
-}
-export const SUMMARY_HEADER = [
-  'Repetitions',
-  'Counted',
-  'View as labelled',
-  'Peak bias vs mocap (°)',
-  'Median abs error (°)',
-  'Finding on correct reps',
-  'Finding on incorrect reps',
-  'Flag on correct reps',
-  'Flag on incorrect reps',
+/** Errors (measured - truth) over frames where both exist. */
+const errors = (frames: FrameRecord[], pick: (f: FrameRecord) => number | null) =>
+  frames
+    .map((f) => {
+      const m = pick(f);
+      return m !== null && f.truth !== null ? m - f.truth : null;
+    })
+    .filter((e): e is number => e !== null);
+const errorCells = (e: number[]) => [
+  String(e.length),
+  f1(mean(e)),
+  f1(mean(e.map(Math.abs))),
+  f1(quantile(e.map(Math.abs), 0.95)),
 ];
 
+/** Seeded RNG so bootstrap intervals are reproducible. */
+function rng(seed: number) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 2 ** 32;
+  };
+}
+/** 95% interval of the mean over participants, resampling participants. */
+function bootstrap(values: number[], n = 2000): [number, number] {
+  if (values.length < 2) return [NaN, NaN];
+  const r = rng(24);
+  const means = Array.from({ length: n }, () =>
+    mean(values.map(() => values[Math.floor(r() * values.length)]))
+  );
+  return [quantile(means, 0.025), quantile(means, 0.975)];
+}
+
+function groupBy<T>(items: T[], key: (t: T) => string | null): [string, T[]][] {
+  const m = new Map<string, T[]>();
+  items.forEach((t) => {
+    const k = key(t);
+    if (k !== null) m.set(k, [...(m.get(k) ?? []), t]);
+  });
+  return [...m.entries()].sort(([a], [b]) => a.localeCompare(b));
+}
+
 (dir ? it : it.skip)('REHAB24-6 benchmark', () => {
-  const labelled = loadReps(path.join(dir!, 'Segmentation.csv')).filter(
-    (r) => EXERCISES[r.exercise] && (!groups || groups.includes(groupOf(r.person)))
+  const labelled = parseSegmentation(
+    fs.readFileSync(path.join(dir!, 'Segmentation.csv'), 'utf8')
+  ).filter(
+    (r) =>
+      REHAB24_EXERCISES[r.exercise] && (!groups || groups.includes(groupOf(r.person)))
   );
   const truth = JSON.parse(fs.readFileSync(path.join(dir!, 'truth.json'), 'utf8'))
-    .videos as Record<string, Record<string, (number | null)[]>>;
+    .videos as Record<string, Truth>;
   const byVideo = new Map<string, LabelledRep[]>();
   labelled.forEach((r) => byVideo.set(r.video, [...(byVideo.get(r.video) ?? []), r]));
 
-  const results: RepResult[] = [];
+  const cameras: CameraRecord[] = [];
   for (const [video, reps] of byVideo) {
     for (const cam of [17, 18] as const) {
       const file = path.join(dir!, 'landmarks', `${video}.c${cam}.json.gz`);
@@ -247,81 +104,250 @@ export const SUMMARY_HEADER = [
       const data: VideoLandmarks = JSON.parse(
         zlib.gunzipSync(fs.readFileSync(file)).toString('utf8')
       );
-      results.push(...evaluate(data, cam, reps, truth[video] ?? {}));
+      cameras.push(...evaluateCamera(data, cam, reps, truth[video] ?? {}));
     }
   }
+  const reps = cameras.flatMap((c) => c.reps);
+  const frames = (rs: RepRecord[]) => rs.flatMap((r) => r.frames);
+  const byExView = (r: RepRecord) => `${exName(r.exercise)}, ${r.labelledView}`;
+  const isShoulder = (r: RepRecord) => REHAB24_EXERCISES[r.exercise].joint === 'shoulder';
 
-  const rows = <K extends string>(key: (r: RepResult) => K | null) => {
-    const m = new Map<K, RepResult[]>();
-    results.forEach((r) => {
-      const k = key(r);
-      if (k !== null) m.set(k, [...(m.get(k) ?? []), r]);
+  // 1. Coverage
+  const coverage = groupBy(reps, byExView).map(([k, rs]) => {
+    const fs_ = frames(rs);
+    return [
+      k,
+      String(fs_.length),
+      pct(fs_.filter((f) => f.pose).length, fs_.length),
+      pct(fs_.filter((f) => f.visibility >= 0.5).length, fs_.length),
+      pct(fs_.filter((f) => f.app !== null).length, fs_.length),
+      pct(
+        fs_.filter((f) => f.estimated && f.app !== null).length,
+        fs_.filter((f) => f.app !== null).length
+      ),
+    ];
+  });
+
+  // 2. Frame-by-frame angle agreement: app (2D) vs pose-model 3D world
+  const agreement = groupBy(reps, byExView).map(([k, rs]) => {
+    const fs_ = frames(rs);
+    const jointDef = rs.some(isShoulder)
+      ? f1(
+          mean(
+            fs_
+              .filter((f) => f.app !== null && f.truthJoint !== null)
+              .map((f) => Math.abs((f.app as number) - (f.truthJoint as number)))
+          )
+        )
+      : '—';
+    return [
+      k,
+      ...errorCells(errors(fs_, (f) => f.app)),
+      ...errorCells(errors(fs_, (f) => (f.pose ? f.world : null))).slice(1),
+      jointDef,
+    ];
+  });
+
+  // 3. Per participant (all views), with a participant-level bootstrap
+  const perPerson = groupBy(reps, (r) => exName(r.exercise)).map(([k, rs]) => {
+    const people = groupBy(rs, (r) => String(r.person));
+    const maes = people.map(([, pr]) =>
+      mean(errors(frames(pr), (f) => f.app).map(Math.abs))
+    );
+    const [lo, hi] = bootstrap(maes.filter(Number.isFinite));
+    return [
+      k,
+      people.map(([p], i) => `P${p} ${f1(maes[i])}`).join(', '),
+      `${f1(mean(maes.filter(Number.isFinite)))} (${f1(lo)}–${f1(hi)})`,
+    ];
+  });
+
+  // 4. Repetitions: counting, timing, peak and bottom of range
+  const repRows = groupBy(reps, byExView).map(([k, rs]) => {
+    const peak = rs
+      .filter((r) => r.appPeak !== null && r.truePeak !== null)
+      .map((r) => (r.appPeak as number) - (r.truePeak as number));
+    const low = rs
+      .filter((r) => r.appMin !== null && r.trueMin !== null)
+      .map((r) => (r.appMin as number) - (r.trueMin as number));
+    const timing = rs
+      .flatMap((r) => [r.startErrorMs, r.endErrorMs])
+      .filter((x): x is number => x !== null)
+      .map(Math.abs);
+    return [
+      k,
+      String(rs.length),
+      pct(rs.filter((r) => r.counted).length, rs.length),
+      `${Math.round(quantile(timing, 0.5))} / ${Math.round(quantile(timing, 0.9))}`,
+      f1(mean(peak)),
+      f1(mean(peak.map(Math.abs))),
+      f1(mean(low)),
+      f1(mean(low.map(Math.abs))),
+    ];
+  });
+  const countRows = groupBy(cameras, (c) => exName(c.exercise)).map(([k, cs]) => {
+    const diff = cs.map((c) => c.appReps - c.labelledReps);
+    return [
+      k,
+      String(cs.length),
+      pct(diff.filter((d) => d === 0).length, cs.length),
+      pct(diff.filter((d) => Math.abs(d) <= 1).length, cs.length),
+      f1(mean(diff)),
+    ];
+  });
+
+  // 5. View classification
+  const viewRows = groupBy(reps, byExView).map(([k, rs]) => {
+    const got = groupBy(rs, (r) => r.appView ?? 'none')
+      .map(([v, n]) => `${v} ${n.length}`)
+      .join(', ');
+    return [
+      k,
+      String(rs.length),
+      pct(rs.filter((r) => r.appView === r.labelledView).length, rs.length),
+      got,
+    ];
+  });
+
+  // 6. Does confidence predict error?
+  const measured = frames(reps).filter((f) => f.app !== null && f.truth !== null);
+  const bins: [string, (f: FrameRecord) => boolean][] = [
+    ['visibility < 0.5', (f) => f.visibility < 0.5],
+    ['0.5–0.8', (f) => f.visibility >= 0.5 && f.visibility < 0.8],
+    ['0.8–0.95', (f) => f.visibility >= 0.8 && f.visibility < 0.95],
+    ['≥ 0.95', (f) => f.visibility >= 0.95],
+    ['shown as estimate', (f) => f.estimated],
+    ['not an estimate', (f) => !f.estimated],
+  ];
+  const confidenceRows = (joint: 'shoulder' | 'knee') => {
+    const fs_ = reps
+      .filter((r) => REHAB24_EXERCISES[r.exercise].joint === joint)
+      .flatMap((r) => r.frames)
+      .filter((f) => f.app !== null && f.truth !== null);
+    return bins.map(([label, test]) => {
+      const e = errors(fs_.filter(test), (f) => f.app).map(Math.abs);
+      return [`${joint}: ${label}`, String(e.length), f1(mean(e)), f1(quantile(e, 0.95))];
     });
-    return [...m.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, rs]) => [k, ...summarise(rs)]);
   };
-  const H = ['Subset', ...SUMMARY_HEADER];
-  const findingCounts = (correct: boolean) => {
-    const m = new Map<string, number>();
-    results
-      .filter((r) => r.correct === correct)
-      .forEach((r) => r.findings.forEach((f) => m.set(f, (m.get(f) ?? 0) + 1)));
-    return [...m.entries()].sort((a, b) => b[1] - a[1]);
-  };
-  const correctFindings = new Map(findingCounts(true));
-  const incorrectFindings = new Map(findingCounts(false));
-  const ids = [
-    ...new Set([...correctFindings.keys(), ...incorrectFindings.keys()]),
-  ].sort();
 
+  // 7. Findings on correct vs incorrect repetitions (exploratory)
+  const anyF = (r: RepRecord) => r.findings.length > 0;
+  const flagF = (r: RepRecord) => r.findings.some((f) => f.endsWith(':flag'));
+  const findingRows = groupBy(reps, byExView).map(([k, rs]) => {
+    const good = rs.filter((r) => r.correct);
+    const bad = rs.filter((r) => !r.correct);
+    return [
+      k,
+      `${good.length} / ${bad.length}`,
+      pct(good.filter(anyF).length, good.length),
+      pct(bad.filter(anyF).length, bad.length),
+      pct(good.filter(flagF).length, good.length),
+      pct(bad.filter(flagF).length, bad.length),
+    ];
+  });
+  const findingIds = groupBy(
+    reps.flatMap((r) => r.findings.map((f) => ({ f, r }))),
+    ({ f, r }) => `${exName(r.exercise)}: ${f}`
+  ).map(([k, xs]) => [
+    k,
+    String(xs.filter((x) => x.r.correct).length),
+    String(xs.filter((x) => !x.r.correct).length),
+  ]);
+
+  // 8. Conditions
+  const conditionRows = [
+    ...groupBy(
+      reps,
+      (r) =>
+        ['no other person', 'negligible', 'noticeable', 'large'][r.extraPerson] ?? null
+    ).map(([k, rs]) => [`other person in view: ${k}`, rs] as const),
+    ...groupBy(reps, (r) => (r.lights ? 'lights on' : 'evening light')).map(
+      ([k, rs]) => [k, rs] as const
+    ),
+  ].map(([k, rs]) => [
+    k,
+    String(rs.length),
+    pct(frames(rs).filter((f) => f.pose).length, frames(rs).length),
+    pct(rs.filter((r) => r.counted).length, rs.length),
+    f1(mean(errors(frames(rs), (f) => f.app).map(Math.abs))),
+  ]);
+
+  // 9. Worst repetitions by peak error
+  const worst = reps
+    .filter((r) => r.appPeak !== null && r.truePeak !== null)
+    .map((r) => ({ r, err: (r.appPeak as number) - (r.truePeak as number) }))
+    .sort((a, b) => Math.abs(b.err) - Math.abs(a.err))
+    .slice(0, 20)
+    .map(({ r, err }) => [
+      `${r.video} c${r.cam} #${r.rep}`,
+      exName(r.exercise),
+      `${r.labelledView} → ${r.appView ?? 'none'}`,
+      f1(err),
+      f1(
+        quantile(
+          r.frames.map((f) => f.visibility),
+          0.5
+        )
+      ),
+      pct(r.frames.filter((f) => f.estimated).length, r.frames.length),
+      String(r.extraPerson),
+      r.lights ? 'on' : 'evening',
+      r.correct ? 'correct' : 'incorrect',
+    ]);
+
+  const EX_VIEW = 'Exercise, labelled view';
   const md = `# REHAB24-6 benchmark results
 
-Generated by \`src/testing/videoPatient/__tests__/rehab24.test.ts\`${groups ? ` (groups: ${groups.join(', ')})` : ''}. Every labelled repetition, seen by each of the two cameras (${results.length} repetition-views). REHAB24-6: Černek, Sedmidubsky, Budikova, SISAP 2024, CC BY-NC 4.0, used for non-commercial benchmarking only. Method: REHAB24_BENCHMARK.md.
+Internal exploratory benchmarking, not product or clinical validation. Generated by \`src/testing/videoPatient/__tests__/rehab24.test.ts\`${groups ? ` (groups: ${groups.join(', ')})` : ' (all participants)'}: ${reps.length} labelled repetitions × camera views from ${cameras.length} camera sessions. REHAB24-6: Černek, Sedmidubsky, Budikova, SISAP 2024, CC BY-NC 4.0. Method: REHAB24_BENCHMARK.md.
 
-## By exercise and camera view
-${table(
-  H,
-  rows((r) => `${EXERCISES[r.exercise].name}, ${r.labelledView}`)
-)}
+## 1. Coverage (frames inside labelled repetitions)
+${table([EX_VIEW, 'Frames', 'Person found', 'Needed landmarks visible', 'Angle measured', 'Measured shown as estimate'], coverage)}
 
-## By exercise
-${table(
-  H,
-  rows((r) => EXERCISES[r.exercise].name)
-)}
+## 2. Frame-by-frame angle vs motion capture
+App = the angle the app shows (2D, aspect-corrected). 3D = the same angle from MediaPipe's world landmarks. Errors in degrees (measured − motion capture).
+${table([EX_VIEW, 'Frames', 'App bias', 'App MAE', 'App 95th pct |error|', '3D bias', '3D MAE', '3D 95th pct |error|', 'App MAE vs joint-angle definition'], agreement)}
 
-## By participant group
-${table(
-  H,
-  rows((r) => r.group)
-)}
+## 3. App MAE per participant (all views), mean with participant-bootstrap 95% interval
+${table(['Exercise', 'Per participant (°)', 'Mean (95% CI)'], perPerson)}
 
-## Another person in the camera's view
-${table(
-  H,
-  rows((r) => ['none', 'negligible', 'noticeable', 'large'][r.extraPerson] ?? null)
-)}
+## 4. Repetitions
+${table([EX_VIEW, 'Labelled reps', 'Counted', 'Start/end timing error, median / 90th pct (ms)', 'Peak bias', 'Peak MAE', 'Bottom-of-range bias', 'Bottom-of-range MAE'], repRows)}
 
-## Lighting
-${table(
-  H,
-  rows((r) => (r.lights ? 'lights on' : 'evening light'))
-)}
+Rep count per camera session:
+${table(['Exercise', 'Sessions', 'Exact', 'Within ±1', 'Mean difference'], countRows)}
 
-## Findings raised (repetition-views)
-${table(
-  ['Finding', 'On correct reps', 'On incorrect reps'],
-  ids.map((id) => [
-    id,
-    String(correctFindings.get(id) ?? 0),
-    String(incorrectFindings.get(id) ?? 0),
-  ])
-)}
+## 5. Camera view
+${table([EX_VIEW, 'Reps', 'Detected as labelled', 'App detected'], viewRows)}
+
+## 6. Does confidence predict error?
+${table(['Frames', 'n', 'MAE', '95th pct |error|'], [...confidenceRows('shoulder'), ...confidenceRows('knee')])}
+
+## 7. Findings on correct vs incorrect repetitions (exploratory: the label is broad)
+${table([EX_VIEW, 'Correct / incorrect reps', 'Any finding, correct', 'Any finding, incorrect', 'Flag, correct', 'Flag, incorrect'], findingRows)}
+
+${table(['Finding', 'On correct reps', 'On incorrect reps'], findingIds)}
+
+## 8. Conditions
+${table(['Condition', 'Reps', 'Person found', 'Counted', 'App MAE'], conditionRows)}
+
+## 9. Twenty worst repetitions by peak error
+${table(['Repetition', 'Exercise', 'View (labelled → app)', 'Peak error', 'Median visibility', 'Estimate frames', 'Other person (0–3)', 'Light', 'Label'], worst)}
+
+Median inference ${f1(
+    quantile(
+      cameras.map((c) => c.medianInferenceMs),
+      0.5
+    )
+  )} ms per frame (desktop CPU).
 `;
   if (process.env.REHAB24_OUT) fs.writeFileSync(process.env.REHAB24_OUT, md);
   if (process.env.REHAB24_JSON)
-    fs.writeFileSync(process.env.REHAB24_JSON, JSON.stringify(results));
+    fs.writeFileSync(
+      process.env.REHAB24_JSON,
+      JSON.stringify(
+        cameras.map((c) => ({ ...c, reps: c.reps.map(({ frames: _f, ...r }) => r) }))
+      )
+    );
   console.log(md);
-  expect(results.length).toBeGreaterThan(0);
+  expect(reps.length).toBeGreaterThan(0);
 });
