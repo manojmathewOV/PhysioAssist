@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,28 +7,33 @@ import {
   Alert,
   // Dimensions,
 } from 'react-native';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import {
-  Camera,
-  useCameraDevice,
-  useFrameProcessor,
-  Frame,
-} from 'react-native-vision-camera';
-import { Worklets } from 'react-native-worklets-core';
+  usePoseDetection,
+  RunningMode,
+  Delegate,
+  type PoseDetectionResultBundle,
+  type ViewCoordinator,
+} from 'react-native-mediapipe';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from '@store/index';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
-import { poseDetectionService } from '@services/poseDetectionService';
+import {
+  BLAZEPOSE_MODEL_FILE,
+  mediapipeResultToPoseData,
+} from '@services/pose/mediapipeLandmarks';
 import type { MockPoseDataSimulator } from '@services/mockPoseDataSimulator';
 // Conditional import: Only include mock simulator in development builds
 const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
-  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator // eslint-disable-line @typescript-eslint/no-var-requires
+  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator
   : null;
 import PoseOverlay from '@components/pose/PoseOverlay';
 import ExerciseControls from '@components/exercises/ExerciseControls';
 
-// const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+// Camera runs at 30 FPS; the frame-skip setting lowers the detection rate from there.
+const CAMERA_FPS = 30;
 
 const PoseDetectionScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -45,9 +50,16 @@ const PoseDetectionScreen: React.FC = () => {
   const [initError, setInitError] = useState<string | null>(null);
   const frameCountRef = useRef(0);
 
+  // Read inside the MediaPipe result callback, which is registered once per detector
+  const isDetectingRef = useRef(isDetecting);
+  const isPausedRef = useRef(isPaused);
+  isDetectingRef.current = isDetecting;
+  isPausedRef.current = isPaused;
+
   useEffect(() => {
     requestCameraPermission();
-    initializePoseDetection();
+    // The BlazePose detector is created natively by usePoseDetection below
+    setIsInitialized(true);
 
     return () => {
       if (isDetecting) {
@@ -63,37 +75,6 @@ const PoseDetectionScreen: React.FC = () => {
       Alert.alert(
         'Camera Permission Required',
         'Please grant camera permission to use pose detection.'
-      );
-    }
-  };
-
-  const initializePoseDetection = async () => {
-    try {
-      await poseDetectionService.initialize();
-      poseDetectionService.setPoseDataCallback((poseData) => {
-        dispatch(setPoseData(poseData));
-      });
-      setIsInitialized(true);
-      setUseMockData(false);
-      console.log('Pose detection initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize pose detection:', error);
-      setInitError('Pose detection unavailable');
-
-      // Fall back to mock data simulator
-      Alert.alert(
-        'Using Mock Data',
-        'Pose detection service unavailable. Using simulated data for testing. This is normal in development/test environments.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setUseMockData(true);
-              setIsInitialized(true);
-              console.log('Switched to mock pose data simulator');
-            },
-          },
-        ]
       );
     }
   };
@@ -145,37 +126,47 @@ const PoseDetectionScreen: React.FC = () => {
     frameCountRef.current = 0;
   }, []);
 
-  // Process frame callback (runs on the JS thread, called from the frame processor worklet).
-  // Frame skipping lives here because refs and React state can't be mutated inside worklets.
-  const processFrameData = useCallback(
-    async (_width: number, _height: number) => {
-      frameCountRef.current++;
-      if (frameCountRef.current % frameSkip !== 0) {
+  // MediaPipe BlazePose (33 landmarks + world 3D) via react-native-mediapipe.
+  // Results arrive on the JS thread; landmarks are mapped into the mirrored, cropped
+  // preview so the overlay lines up with the camera image.
+  const onPoseResults = useCallback(
+    (bundle: PoseDetectionResultBundle, viewCoordinator: ViewCoordinator) => {
+      if (!isDetectingRef.current || isPausedRef.current) {
         return;
       }
-      try {
-        // Frame-to-tensor conversion needs a native resize plugin; until it's wired up,
-        // pose data comes through the callback set in initializePoseDetection.
-      } catch (error) {
-        console.error('Error processing frame:', error);
+      const frameDims = viewCoordinator.getFrameDims(bundle);
+      const view = cameraViewDimsRef.current;
+      const poseData = mediapipeResultToPoseData(bundle, Date.now(), (point) => {
+        const mapped = viewCoordinator.convertPoint(frameDims, point);
+        return { x: mapped.x / view.width, y: mapped.y / view.height };
+      });
+      if (poseData) {
+        dispatch(setPoseData(poseData));
       }
     },
-    [frameSkip]
+    [dispatch]
   );
 
-  const processFrameOnJS = useMemo(
-    () => Worklets.createRunOnJS(processFrameData),
-    [processFrameData]
-  );
+  const onPoseError = useCallback((error: { code: number; message: string }) => {
+    console.error('Pose detection error:', error.message);
+    setInitError('Pose detection unavailable');
+  }, []);
 
-  // Frame processor for pose detection (VisionCamera v4 + react-native-worklets-core)
-  const frameProcessor = useFrameProcessor(
-    (frame: Frame) => {
-      'worklet';
-      processFrameOnJS(frame.width, frame.height);
-    },
-    [processFrameOnJS]
+  const poseSolution = usePoseDetection(
+    { onResults: onPoseResults, onError: onPoseError },
+    RunningMode.LIVE_STREAM,
+    BLAZEPOSE_MODEL_FILE,
+    {
+      delegate: Delegate.GPU,
+      fpsMode: Math.max(1, Math.round(CAMERA_FPS / Math.max(1, frameSkip))),
+    }
   );
+  const cameraViewDimsRef = useRef(poseSolution.cameraViewDimensions);
+  cameraViewDimsRef.current = poseSolution.cameraViewDimensions;
+
+  useEffect(() => {
+    poseSolution.cameraDeviceChangeHandler(device);
+  }, [device, poseSolution]);
 
   // Render fallback UI when camera is not available but mock data is enabled
   if ((!device || !hasPermission) && !useMockData) {
@@ -209,8 +200,15 @@ const PoseDetectionScreen: React.FC = () => {
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={isFocused}
-          frameProcessor={isDetecting && !isPaused ? frameProcessor : undefined}
-          fps={30}
+          pixelFormat="rgb"
+          resizeMode="cover"
+          onLayout={poseSolution.cameraViewLayoutChangeHandler}
+          onOutputOrientationChanged={poseSolution.cameraOrientationChangedHandler}
+          frameProcessor={
+            isDetecting && !isPaused ? poseSolution.frameProcessor : undefined
+          }
+          fps={CAMERA_FPS}
+          testID="camera-view"
         />
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.mockBackground]}>

@@ -10,7 +10,6 @@ jest.mock('react-native/Libraries/Settings/Settings', () => ({
 
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const Reanimated = require('react-native-reanimated/mock');
   Reanimated.default.call = () => {};
   return Reanimated;
@@ -37,6 +36,20 @@ jest.mock('react-native-worklets-core', () => ({
     createRunOnJSFunction: (fn: (...args: unknown[]) => unknown) => fn,
   },
   useSharedValue: (value: unknown) => ({ value }),
+}));
+
+// Mock react-native-mediapipe (native BlazePose detector + frame processor plugin)
+jest.mock('react-native-mediapipe', () => ({
+  usePoseDetection: jest.fn(() => ({
+    frameProcessor: jest.fn(),
+    cameraViewLayoutChangeHandler: jest.fn(),
+    cameraDeviceChangeHandler: jest.fn(),
+    cameraOrientationChangedHandler: jest.fn(),
+    resizeModeChangeHandler: jest.fn(),
+    cameraViewDimensions: { width: 1, height: 1 },
+  })),
+  RunningMode: { IMAGE: 0, VIDEO: 1, LIVE_STREAM: 2 },
+  Delegate: { CPU: 0, GPU: 1 },
 }));
 
 // Mock TensorFlow.js - using __mocks__/@tensorflow/tfjs.js
@@ -119,7 +132,6 @@ global.cancelAnimationFrame = (id: number) => {
 
 // Mock ImageData for Node environment (needed for video frame processing tests)
 if (typeof ImageData === 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (global as any).ImageData = class ImageData {
     data: Uint8ClampedArray;
     width: number;
