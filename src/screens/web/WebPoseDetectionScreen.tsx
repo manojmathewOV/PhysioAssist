@@ -5,7 +5,7 @@
  * an optional pain check. When the browser has no camera or blocks it, a friendly
  * full-screen explanation offers "Try again" or practice mode.
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -34,6 +34,8 @@ import {
   updateValidation,
 } from '../../store/slices/exerciseSlice';
 import type { RootState } from '../../store';
+import { setExercisePlan } from '../../store/slices/settingsSlice';
+import { ExercisePlan, applyPlan } from '../../services/pose/exercisePlan';
 import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
 import WebPoseOverlay from '../../components/web/WebPoseOverlay';
 import { focusFromExercise } from '../../components/pose/overlayGeometry';
@@ -55,6 +57,11 @@ import {
 import { AccessibilityIds } from '../../constants/accessibility';
 import type { MainTabParamList } from '../../navigation/types';
 import { colors } from '../../theme';
+
+/** First exercise that trains the plan's joint (falls back to the bicep curl). */
+const firstKeyFor = (plan?: ExercisePlan | null): ExerciseKey =>
+  EXERCISE_OPTIONS.find((o) => plan && o.exercise.primaryJoint === plan.joint)?.key ??
+  'bicepCurl';
 
 // Displayed joints: screen/overlay key -> goniometerService joint name
 const WEB_JOINTS: Record<string, string> = {
@@ -100,8 +107,9 @@ const WebPoseDetectionScreen: React.FC = () => {
   const showPoseOverlay = useSelector((s: RootState) => s.settings.showPoseOverlay);
   const currentLandmarks = useSelector((s: RootState) => s.pose.currentPose?.landmarks);
 
+  const plan = useSelector((s: RootState) => s.settings.exercisePlan);
   const [stage, setStage] = useState<Stage>('choose');
-  const [selectedKey, setSelectedKey] = useState<ExerciseKey>('bicepCurl');
+  const [selectedKey, setSelectedKey] = useState<ExerciseKey>(() => firstKeyFor(plan));
   const [cameraState, setCameraState] = useState<CameraState>('starting');
   const [practice, setPractice] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -112,6 +120,15 @@ const WebPoseDetectionScreen: React.FC = () => {
   const [videoAspect, setVideoAspect] = useState(16 / 9);
 
   const option = EXERCISE_OPTIONS.find((o) => o.key === selectedKey)!;
+  // The patient's version: only the joint of interest, with their physio's goal
+  const plannedExercise = useMemo(() => applyPlan(option.exercise, plan), [option, plan]);
+  const changePlan = useCallback(
+    (next: ExercisePlan) => {
+      dispatch(setExercisePlan(next));
+      setSelectedKey(firstKeyFor(next));
+    },
+    [dispatch]
+  );
   const lastSpokenRef = useRef('');
   const lastRepsRef = useRef(0);
   const pausedRef = useRef(false);
@@ -123,8 +140,8 @@ const WebPoseDetectionScreen: React.FC = () => {
     landmarks: currentLandmarks,
     onGo: () => {
       lastRepsRef.current = 0;
-      dispatch(startExercise(option.exercise));
-      exerciseValidationService.startExercise(option.exercise);
+      dispatch(startExercise(plannedExercise));
+      exerciseValidationService.startExercise(plannedExercise);
     },
   });
   const { start: startGate, reset: resetGate } = gate;
@@ -233,7 +250,7 @@ const WebPoseDetectionScreen: React.FC = () => {
 
   const beginExercise = useCallback(
     (practiceMode: boolean) => {
-      const exercise = option.exercise;
+      const exercise = plannedExercise;
       lastSpokenRef.current = '';
       setIsPaused(false);
       setPractice(practiceMode);
@@ -255,7 +272,7 @@ const WebPoseDetectionScreen: React.FC = () => {
         );
       }
     },
-    [dispatch, handlePoseResults, option, startGate]
+    [dispatch, handlePoseResults, option, plannedExercise, startGate]
   );
 
   const stopEverything = useCallback(() => {
@@ -338,12 +355,14 @@ const WebPoseDetectionScreen: React.FC = () => {
     }
     resetGate();
     const { repetitionCount, formScore, startedAt, currentExercise } = exerciseState;
+    const sessionRange = exerciseValidationService.getSessionRange();
     exerciseValidationService.stopExercise();
     stopEverything();
     // Practice sessions use a pretend body, so they are not saved to history
-    dispatch(practice ? clearExercise() : stopExercise());
+    dispatch(practice ? clearExercise() : stopExercise(sessionRange ?? undefined));
     audioFeedbackService.speak('Well done');
     setSummary({
+      range: sessionRange,
       exercise: option.title,
       reps: repetitionCount,
       duration: startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0,
@@ -380,6 +399,8 @@ const WebPoseDetectionScreen: React.FC = () => {
         <ExerciseChooser
           selectedKey={selectedKey}
           onSelect={setSelectedKey}
+          plan={plan}
+          onPlanChange={changePlan}
           onStart={handleStart}
         />
       </View>

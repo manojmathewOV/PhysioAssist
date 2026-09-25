@@ -11,6 +11,17 @@ import {
   getMeasurementLandmarks,
   getOutOfPlaneJoints,
 } from './pose/measurementLandmarks';
+import { clinicalAngle, goalDegreesOf, trackedJoint } from './pose/exercisePlan';
+
+/** Best range reached this session for the exercise's joint of interest. */
+export interface SessionRange {
+  /** e.g. 'left_shoulder'. */
+  joint: string;
+  /** Clinical degrees from neutral. */
+  bestDegrees: number;
+  /** The goal the patient was asked to reach, if the exercise has one. */
+  goalDegrees?: number;
+}
 
 /**
  * A phase counts as reached only after its joint requirements hold continuously
@@ -52,6 +63,8 @@ export class ExerciseValidationService {
   private isInRestPosition: boolean = true;
   private lastValidationResult: ValidationResult | null = null;
   private hasMovedFromRest: boolean = false;
+  private trackedJoint: string | undefined;
+  private bestDegrees: number | null = null;
 
   /**
    * Start tracking a new exercise
@@ -61,6 +74,8 @@ export class ExerciseValidationService {
     this.currentPhase = exercise.phases[0];
     // Angle smoothing must not blend in the previous session's last angles
     goniometerService.resetHistory();
+    this.trackedJoint = trackedJoint(exercise);
+    this.bestDegrees = null;
     this.phaseStartTime = Date.now();
     this.phaseValidSince = null;
     this.returningToStart = false;
@@ -108,6 +123,7 @@ export class ExerciseValidationService {
       validation.feedback.push('Turn side-on to the camera for an accurate reading');
     }
 
+    this.trackRange(validation, jointAngles);
     this.advanceStateMachine(validation, jointAngles, now);
 
     this.lastValidationResult = validation;
@@ -191,6 +207,36 @@ export class ExerciseValidationService {
     return (this.currentPhase?.jointRequirements ?? []).every(
       (r) => jointAngles.get(r.joint)?.isValid
     );
+  }
+
+  /** Best range for the joint of interest, and the plan's safety limit. */
+  private trackRange(validation: ValidationResult, jointAngles: Map<string, JointAngle>) {
+    const kind = this.currentExercise?.primaryJoint;
+    const angle = this.trackedJoint ? jointAngles.get(this.trackedJoint) : undefined;
+    if (!kind || !angle?.isValid) return;
+    const degrees = clinicalAngle(kind, angle.angle);
+    this.bestDegrees = Math.max(this.bestDegrees ?? -Infinity, degrees);
+    const limit = this.currentExercise?.safetyLimit;
+    if (limit && limit.joint === this.trackedJoint && degrees > limit.maxDegrees) {
+      validation.overLimit = true;
+      validation.isValid = false;
+      // Safety first: this is the instruction the patient sees and hears
+      validation.errors.unshift(
+        `Not so far: stay below ${Math.round(limit.maxDegrees)}°`
+      );
+    }
+  }
+
+  /** Best range reached for the exercise's joint of interest this session. */
+  getSessionRange(): SessionRange | null {
+    if (!this.currentExercise || !this.trackedJoint || this.bestDegrees === null) {
+      return null;
+    }
+    return {
+      joint: this.trackedJoint,
+      bestDegrees: Math.round(this.bestDegrees),
+      goalDegrees: goalDegreesOf(this.currentExercise),
+    };
   }
 
   /** True when every required joint is within the phase range widened by `margin`. */

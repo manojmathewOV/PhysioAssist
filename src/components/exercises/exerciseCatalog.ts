@@ -30,6 +30,14 @@ export const EXERCISE_OPTIONS: ExerciseOption[] = [
     icon: 'fitness-center',
   },
   {
+    key: 'armRaise',
+    exercise: EXERCISES.armRaise,
+    title: 'Arm raise',
+    description: 'Lift your arm forward and up, as high as is comfortable',
+    goal: `${EXERCISES.armRaise.targetRepetitions} repetitions`,
+    icon: 'pan-tool',
+  },
+  {
     key: 'shoulderPress',
     exercise: EXERCISES.shoulderPress,
     title: 'Shoulder press',

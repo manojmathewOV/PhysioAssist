@@ -119,6 +119,10 @@ const ProgressScreen: React.FC = () => {
             title={h.exerciseName}
             description={`${formatDate(h.date)} · ${h.reps} reps${
               h.formScore ? ` · form ${formPercent(h.formScore)}%` : ''
+            }${
+              h.bestDegrees !== undefined
+                ? ` · ${h.bestDegrees}°${h.goalDegrees ? ` of ${h.goalDegrees}°` : ''}`
+                : ''
             }${h.painScore !== undefined ? ` · pain ${h.painScore}/10` : ''}`}
             last={i === list.length - 1}
             testID={`progress-session-${i}`}

@@ -8,6 +8,7 @@ import { ExerciseValidationService } from '../../../services/exerciseValidationS
 import { GoniometerService } from '../../../services/goniometerService';
 import { getMeasurementLandmarks } from '../../../services/pose/measurementLandmarks';
 import { mediapipeResultToPoseData } from '../../../services/pose/mediapipeLandmarks';
+import { applyPlan } from '../../../services/pose/exercisePlan';
 import { BodyPose, STANDING, renderBody } from '../body';
 import { SCENARIOS } from '../scenarios';
 import { VirtualPatient } from '../VirtualPatient';
@@ -63,18 +64,25 @@ describe('virtual patient body (geometry gate)', () => {
 describe('virtual patient scenarios (state machine + feedback gate)', () => {
   it.each(SCENARIOS.map((s) => [s.id, s] as const))('%s', (_id, scenario) => {
     const service = new ExerciseValidationService();
-    service.startExercise(exerciseById(scenario.exerciseId));
+    service.startExercise(applyPlan(exerciseById(scenario.exerciseId), scenario.plan));
     let sawEstimated = false;
+    let sawOverLimit = false;
     let maxReps = 0;
     for (const frame of new VirtualPatient(scenario).frames()) {
       const result = service.validatePose(frame.pose);
       sawEstimated ||= Boolean(result.estimatedJoints?.length);
+      sawOverLimit ||= Boolean(result.overLimit);
       maxReps = Math.max(maxReps, service.getCurrentState().repetitionCount);
     }
     expect(service.getCurrentState().repetitionCount).toBe(scenario.expect.reps);
     // Counts never go backwards or overshoot
     expect(maxReps).toBe(scenario.expect.reps);
     expect(sawEstimated).toBe(Boolean(scenario.expect.estimatedJoints));
+    expect(sawOverLimit).toBe(Boolean(scenario.expect.overLimit));
+    if (scenario.expect.bestDegrees !== undefined) {
+      const best = service.getSessionRange()!.bestDegrees;
+      expect(Math.abs(best - scenario.expect.bestDegrees)).toBeLessThanOrEqual(3);
+    }
   });
 });
 

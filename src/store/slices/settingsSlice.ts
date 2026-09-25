@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { ExercisePlan } from '../../services/pose/exercisePlan';
 
 interface SettingsState {
   // Audio Settings
@@ -20,6 +21,8 @@ interface SettingsState {
   frameSkip: number;
   /** Repetitions per day the Home ring fills towards. */
   dailyRepGoal: number;
+  /** Joint of interest and the standard the physiotherapist set (null = not chosen). */
+  exercisePlan: ExercisePlan | null;
   highPerformanceMode: boolean;
 
   // Accessibility Settings
@@ -51,6 +54,7 @@ const initialState: SettingsState = {
   // Performance Settings
   frameSkip: 3,
   dailyRepGoal: 30,
+  exercisePlan: null,
   highPerformanceMode: false,
 
   // Accessibility Settings
@@ -67,6 +71,9 @@ const settingsSlice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
+    setExercisePlan: (state, action: PayloadAction<ExercisePlan | null>) => {
+      state.exercisePlan = action.payload;
+    },
     setDailyRepGoal: (state, action: PayloadAction<number>) => {
       state.dailyRepGoal = Math.max(5, Math.min(200, Math.round(action.payload)));
     },
@@ -145,6 +152,7 @@ const settingsSlice = createSlice({
 });
 
 export const {
+  setExercisePlan,
   setDailyRepGoal,
   toggleSound,
   toggleHaptics,

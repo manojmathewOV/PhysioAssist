@@ -11,6 +11,7 @@ import { AppText, Banner, BigButton, Card, Metric, Screen } from '../ui';
 import { colors, radii, spacing } from '../../theme';
 import { formatDuration } from './exerciseCatalog';
 import PainScale from './PainScale';
+import RangeResult, { RangeResultProps } from './RangeResult';
 
 /** Pain at or above this (0-10) asks the patient to tell their physio. */
 export const HIGH_PAIN = 7;
@@ -39,6 +40,8 @@ export interface ExerciseSummaryProps {
   onPainSelect?: (score: number) => void;
   /** Initial pain answer, if already given. */
   painScore?: number | null;
+  /** Best range for the joint of interest vs the goal they were given. */
+  range?: RangeResultProps | null;
 }
 
 const formWords = (percent: number, reps: number) => {
@@ -82,6 +85,7 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   practice,
   onPainSelect,
   painScore = null,
+  range,
 }) => {
   const [pain, setPain] = useState<number | null>(painScore);
   const choosePain = (value: number) => {
@@ -184,6 +188,8 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
           />
         ) : null}
       </Card>
+
+      {range ? <RangeResult {...range} /> : null}
 
       {onPainSelect ? (
         <Card style={styles.card} testID="pain-check">

@@ -3,6 +3,7 @@ import { Exercise } from '../types/exercise';
 export const EXERCISES: Record<string, Exercise> = {
   bicepCurl: {
     id: 'bicep-curl',
+    primaryJoint: 'elbow',
     name: 'Bicep Curl',
     description: 'Standard bicep curl exercise for arm strength',
     category: 'strength',
@@ -62,6 +63,7 @@ export const EXERCISES: Record<string, Exercise> = {
 
   shoulderPress: {
     id: 'shoulder-press',
+    primaryJoint: 'shoulder',
     name: 'Shoulder Press',
     description: 'Overhead press for shoulder strength',
     category: 'strength',
@@ -145,6 +147,7 @@ export const EXERCISES: Record<string, Exercise> = {
 
   squat: {
     id: 'squat',
+    primaryJoint: 'knee',
     name: 'Bodyweight Squat',
     description: 'Basic squat for leg strength and mobility',
     category: 'strength',
@@ -229,6 +232,7 @@ export const EXERCISES: Record<string, Exercise> = {
 
   hamstringStretch: {
     id: 'hamstring-stretch',
+    primaryJoint: 'hip',
     name: 'Standing Hamstring Stretch',
     description: 'Flexibility exercise for hamstrings',
     category: 'flexibility',
@@ -264,6 +268,45 @@ export const EXERCISES: Record<string, Exercise> = {
           },
         ],
         holdDuration: 30000, // 30 seconds
+      },
+    ],
+  },
+
+  armRaise: {
+    id: 'arm-raise',
+    name: 'Forward Arm Raise',
+    description: 'Shoulder flexion: lift the arm forward and up, side-on to the camera',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'shoulder',
+    targetMuscles: ['anterior deltoid'],
+    equipment: [],
+    targetRepetitions: 10,
+    targetSets: 2,
+    restDuration: 30000,
+    instructions: [
+      'Stand side-on to the camera, arms by your sides',
+      'Keeping the elbow straight, lift your arm forward and up',
+      'Go only as high as is comfortable',
+      'Lower slowly',
+    ],
+    phases: [
+      {
+        name: 'start',
+        description: 'Arm by the side',
+        jointRequirements: [
+          { joint: 'left_shoulder', minAngle: 0, maxAngle: 30, targetAngle: 10 },
+          { joint: 'right_shoulder', minAngle: 0, maxAngle: 30, targetAngle: 10 },
+        ],
+      },
+      {
+        name: 'raise',
+        description: 'Arm lifted forward',
+        jointRequirements: [
+          { joint: 'left_shoulder', minAngle: 140, maxAngle: 180, targetAngle: 160 },
+          { joint: 'right_shoulder', minAngle: 140, maxAngle: 180, targetAngle: 160 },
+        ],
+        holdDuration: 1000,
       },
     ],
   },

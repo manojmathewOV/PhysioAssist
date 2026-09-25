@@ -8,12 +8,17 @@
  */
 import { BodyPose, FrameEffects, MEDIAPIPE_ORDER, STANDING } from './body';
 import { Keyframe, gaussian, repetitions, seededRandom } from './timeline';
+import type { ExercisePlan } from '../../services/pose/exercisePlan';
 
 export interface ScenarioExpectation {
   /** Exact repetitions the app should count. */
   reps: number;
   /** Should the "turn side-on" (limb out of the image plane) warning appear? */
   estimatedJoints?: boolean;
+  /** Should the plan's "don't go past" warning appear? */
+  overLimit?: boolean;
+  /** Best clinical range recorded for the joint of interest (±3°). */
+  bestDegrees?: number;
 }
 
 export interface Scenario {
@@ -26,6 +31,8 @@ export interface Scenario {
   timeline: Keyframe[];
   /** Per-frame camera/model problems. `rand` is seeded per scenario. */
   effects?: (t: number, rand: () => number) => FrameEffects;
+  /** The patient's plan (joint of interest and prescribed standard), if any. */
+  plan?: ExercisePlan;
   expect: ScenarioExpectation;
 }
 
@@ -226,6 +233,86 @@ export const SCENARIOS: Scenario[] = [
       restMs: 700,
     }),
     expect: { reps: 5 },
+  },
+  {
+    id: 'bicep-curl-left-plan',
+    exerciseId: 'bicep-curl',
+    title: 'Bicep curl, left elbow plan, one arm',
+    description:
+      'The plan is for the left elbow, so only the left arm curls; the right arm rests.',
+    base: SIDE,
+    timeline: curl({ target: { leftElbow: 40, rightElbow: 172 } }),
+    plan: { joint: 'elbow', side: 'left' },
+    expect: { reps: 5, bestDegrees: 140 },
+  },
+  {
+    id: 'arm-raise-normal',
+    exerciseId: 'arm-raise',
+    title: 'Arm raise, full range',
+    description: 'Left arm lifted forward to 155°, five times.',
+    base: SIDE,
+    timeline: repetitions({
+      rest: { leftShoulder: 10 },
+      target: { leftShoulder: 155 },
+      reps: 5,
+      moveMs: 1300,
+      holdMs: 1300,
+      restMs: 700,
+    }),
+    plan: { joint: 'shoulder', side: 'left' },
+    expect: { reps: 5, bestDegrees: 155 },
+  },
+  {
+    id: 'arm-raise-short-of-standard',
+    exerciseId: 'arm-raise',
+    title: 'Arm raise, short of the usual standard',
+    description: 'Reaches 110°, below the default 140° goal: no reps without a plan.',
+    base: SIDE,
+    timeline: repetitions({
+      rest: { leftShoulder: 10 },
+      target: { leftShoulder: 110 },
+      reps: 5,
+      moveMs: 1300,
+      holdMs: 1300,
+      restMs: 700,
+    }),
+    plan: { joint: 'shoulder', side: 'left' },
+    expect: { reps: 0, bestDegrees: 110 },
+  },
+  {
+    id: 'arm-raise-meets-prescribed-goal',
+    exerciseId: 'arm-raise',
+    title: 'Arm raise, meets the physio’s goal',
+    description: 'Same 110° movement, but the physio prescribed 100°: every rep counts.',
+    base: SIDE,
+    timeline: repetitions({
+      rest: { leftShoulder: 10 },
+      target: { leftShoulder: 110 },
+      reps: 5,
+      moveMs: 1300,
+      holdMs: 1300,
+      restMs: 700,
+    }),
+    plan: { joint: 'shoulder', side: 'left', goalDegrees: 100, reps: 5 },
+    expect: { reps: 5, bestDegrees: 110 },
+  },
+  {
+    id: 'arm-raise-past-limit',
+    exerciseId: 'arm-raise',
+    title: 'Arm raise, past the post-op limit',
+    description:
+      'Goal 80°, limit 100° (e.g. after surgery); the patient lifts to 125°. Warned, not counted.',
+    base: SIDE,
+    timeline: repetitions({
+      rest: { leftShoulder: 10 },
+      target: { leftShoulder: 125 },
+      reps: 3,
+      moveMs: 1300,
+      holdMs: 1300,
+      restMs: 700,
+    }),
+    plan: { joint: 'shoulder', side: 'left', goalDegrees: 80, limitDegrees: 100 },
+    expect: { reps: 0, overLimit: true, bestDegrees: 125 },
   },
 ];
 

@@ -16,7 +16,18 @@ export interface Exercise {
   thumbnailUrl?: string;
   instructions: string[];
   warnings?: string[];
+  /** The joint this exercise trains; with a patient's plan, the only joint tracked. */
+  primaryJoint?: JointKind;
+  /**
+   * Prescribed "don't go past" limit (e.g. after surgery), in clinical degrees
+   * from neutral, for one joint. Set from the patient's plan.
+   */
+  safetyLimit?: { joint: string; kind: JointKind; maxDegrees: number };
 }
+
+/** Joints a patient's plan can focus on. */
+export type JointKind = 'shoulder' | 'elbow' | 'hip' | 'knee';
+export type BodySide = 'left' | 'right';
 
 export interface ExercisePhase {
   name: string;
@@ -46,6 +57,8 @@ export interface ValidationResult {
    * angle is foreshortened and should be shown as an estimate.
    */
   estimatedJoints?: string[];
+  /** The joint went past the plan's safety limit on this frame. */
+  overLimit?: boolean;
 }
 
 export interface RepetitionData {

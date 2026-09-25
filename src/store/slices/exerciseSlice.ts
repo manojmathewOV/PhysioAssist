@@ -12,6 +12,19 @@ export interface ExerciseHistory {
   metrics?: ExerciseMetrics;
   /** Patient-reported pain after the session, 0 (none) to 10 (worst). */
   painScore?: number;
+  /** Joint of interest, e.g. 'left_shoulder'. */
+  joint?: string;
+  /** Best range reached for that joint, clinical degrees from neutral. */
+  bestDegrees?: number;
+  /** The goal (standard) the patient was asked to reach. */
+  goalDegrees?: number;
+}
+
+/** Extra results recorded with a finished session. */
+export interface SessionResult {
+  joint?: string;
+  bestDegrees?: number;
+  goalDegrees?: number;
 }
 
 interface ExerciseState {
@@ -57,7 +70,7 @@ const exerciseSlice = createSlice({
       state.feedback = '';
       state.startedAt = Date.now();
     },
-    stopExercise: (state) => {
+    stopExercise: (state, action: PayloadAction<SessionResult | undefined>) => {
       // Record the finished session so patients (and clinicians) can see progress
       if (state.isExercising && state.currentExercise && state.repetitionCount > 0) {
         const now = Date.now();
@@ -69,6 +82,7 @@ const exerciseSlice = createSlice({
           reps: state.repetitionCount,
           duration: state.startedAt ? Math.round((now - state.startedAt) / 1000) : 0,
           formScore: state.formScore,
+          ...action.payload,
         });
         state.history.splice(MAX_HISTORY);
       }

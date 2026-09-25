@@ -12,7 +12,7 @@
  * Without a camera (simulator) or camera permission, a friendly full-screen
  * explanation offers one clear way forward (open Settings / practice mode).
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
@@ -20,6 +20,8 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from '@store/index';
+import { setExercisePlan } from '@store/slices/settingsSlice';
+import { ExercisePlan, applyPlan } from '@services/pose/exercisePlan';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
 import {
   clearExercise,
@@ -55,6 +57,11 @@ import { AccessibilityIds } from '../constants/accessibility';
 import type { MainTabParamList } from '../navigation/types';
 import { colors } from '../theme';
 
+/** First exercise that trains the plan's joint (falls back to the bicep curl). */
+const firstKeyFor = (plan?: ExercisePlan | null): ExerciseKey =>
+  EXERCISE_OPTIONS.find((o) => plan && o.exercise.primaryJoint === plan.joint)?.key ??
+  'bicepCurl';
+
 type Stage = 'choose' | 'exercise' | 'summary';
 type Permission = 'unknown' | 'granted' | 'denied';
 
@@ -71,8 +78,9 @@ const PoseDetectionScreen: React.FC = () => {
   const exerciseState = useSelector((state: RootState) => state.exercise);
   const { isExercising } = exerciseState;
 
+  const plan = useSelector((s: RootState) => s.settings.exercisePlan);
   const [stage, setStage] = useState<Stage>('choose');
-  const [selectedKey, setSelectedKey] = useState<ExerciseKey>('bicepCurl');
+  const [selectedKey, setSelectedKey] = useState<ExerciseKey>(() => firstKeyFor(plan));
   const [permission, setPermission] = useState<Permission>('unknown');
   const [isPaused, setIsPaused] = useState(false);
   const [practice, setPractice] = useState(false);
@@ -83,6 +91,15 @@ const PoseDetectionScreen: React.FC = () => {
   const lastRepsRef = useRef(0);
 
   const option = EXERCISE_OPTIONS.find((o) => o.key === selectedKey)!;
+  // The patient's version: only the joint of interest, with their physio's goal
+  const plannedExercise = useMemo(() => applyPlan(option.exercise, plan), [option, plan]);
+  const changePlan = useCallback(
+    (next: ExercisePlan) => {
+      dispatch(setExercisePlan(next));
+      setSelectedKey(firstKeyFor(next));
+    },
+    [dispatch]
+  );
   const cameraReady = !!device && permission === 'granted';
 
   // Get into position -> 3-2-1 countdown -> count. Counting (and the timer)
@@ -91,8 +108,8 @@ const PoseDetectionScreen: React.FC = () => {
     landmarks: currentPose?.landmarks,
     onGo: () => {
       lastRepsRef.current = 0;
-      dispatch(startExercise(option.exercise));
-      exerciseValidationService.startExercise(option.exercise);
+      dispatch(startExercise(plannedExercise));
+      exerciseValidationService.startExercise(plannedExercise);
     },
   });
   const { start: startGate, reset: resetGate } = gate;
@@ -143,7 +160,7 @@ const PoseDetectionScreen: React.FC = () => {
       if (metrics.repetitionCount > lastRepsRef.current) {
         audioFeedbackService.announceRep(
           metrics.repetitionCount,
-          option.exercise.targetRepetitions
+          plannedExercise.targetRepetitions
         );
       }
       lastRepsRef.current = metrics.repetitionCount;
@@ -159,11 +176,11 @@ const PoseDetectionScreen: React.FC = () => {
     } catch (error) {
       console.error('Failed to validate pose:', error);
     }
-  }, [currentPose, counting, isExercising, isPaused, stage, option, dispatch]);
+  }, [currentPose, counting, isExercising, isPaused, stage, plannedExercise, dispatch]);
 
   const beginSession = useCallback(
     (practiceMode: boolean) => {
-      const exercise = option.exercise;
+      const exercise = plannedExercise;
       lastSpokenRef.current = '';
       setIsPaused(false);
       setPractice(practiceMode);
@@ -183,12 +200,12 @@ const PoseDetectionScreen: React.FC = () => {
             dispatch(setPoseData(poseData));
           },
           30,
-          option.exercise.id
+          plannedExercise.id
         );
       }
       setStage('exercise');
     },
-    [dispatch, option, startGate]
+    [dispatch, option, plannedExercise, startGate]
   );
 
   // Start straight away once the camera becomes available (e.g. permission granted)
@@ -226,14 +243,16 @@ const PoseDetectionScreen: React.FC = () => {
     }
     resetGate();
     const { repetitionCount, formScore, startedAt, currentExercise } = exerciseState;
+    const sessionRange = exerciseValidationService.getSessionRange();
     exerciseValidationService.stopExercise();
     mockPoseDataSimulator?.stop();
     dispatch(setDetecting(false));
     // Practice sessions use a pretend body, so they are not saved to history
-    dispatch(practice ? clearExercise() : stopExercise());
+    dispatch(practice ? clearExercise() : stopExercise(sessionRange ?? undefined));
     audioFeedbackService.speak('Well done');
 
     setSummary({
+      range: sessionRange,
       exercise: option.title,
       reps: repetitionCount,
       duration: startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0,
@@ -256,6 +275,8 @@ const PoseDetectionScreen: React.FC = () => {
         <ExerciseChooser
           selectedKey={selectedKey}
           onSelect={setSelectedKey}
+          plan={plan}
+          onPlanChange={changePlan}
           onStart={handleStart}
         />
       </View>
