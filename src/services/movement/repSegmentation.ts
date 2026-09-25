@@ -14,6 +14,8 @@ import type { MovementDirection, MovementFrame, Repetition } from './types';
 export const MIN_REP_AMPLITUDE = 15;
 /** Smallest hip drop (% of torso length) that counts, when timing by the hips. */
 export const MIN_HIP_DROP = 8;
+/** Below this share of frames with an angle, lower-limb reps are timed by the hips. */
+export const MIN_MEASURED_SHARE = 0.5;
 /** Within this many degrees of the peak counts as holding. */
 export const HOLD_BAND_DEG = 5;
 
@@ -78,8 +80,14 @@ export function segmentReps(
   }
   const angles = smooth(frames.map((f) => f.angle));
   const byAngle = segmentBy(frames, angles, angles, MIN_REP_AMPLITUDE);
-  if (byAngle.length > 0 || fallback !== 'hipDrop') return byAngle;
-  return segmentBy(frames, smooth(hipDrop(frames)), angles, MIN_HIP_DROP);
+  if (fallback !== 'hipDrop') return byAngle;
+  // Time by the hips when the angle barely moves, or is mostly withheld (a
+  // knee filmed from the front has no reliable angle, but the hips still drop)
+  const measured = frames.filter((f) => f.angle !== null).length;
+  if (byAngle.length > 0 && measured >= frames.length * MIN_MEASURED_SHARE)
+    return byAngle;
+  const byHips = segmentBy(frames, smooth(hipDrop(frames)), angles, MIN_HIP_DROP);
+  return byHips.length > 0 ? byHips : byAngle;
 }
 
 /** A repetition's peak must stand out by this share of the session's range. */

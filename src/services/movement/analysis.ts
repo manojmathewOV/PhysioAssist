@@ -5,7 +5,7 @@
  * Findings are reported only when seen in enough repetitions, prioritised
  * (safety first), and at most two patient cues are chosen per session.
  */
-import { directionOf, movementOf } from './exerciseMovement';
+import { directionOf, movementOf, rangeViewOf } from './exerciseMovement';
 import { segmentReps } from './repSegmentation';
 import type {
   CompensationHit,
@@ -173,9 +173,31 @@ export function analyseSession(
       : segmented
   ).map((r, index) => ({ ...r, index }));
   const profile = profileOf(reps, direction);
+
+  // Side-view exercises: the patient's joint (e.g. the operated knee) must be
+  // the one nearer the camera, or it is hidden behind the other
+  const sideFrames = frames.filter((f) => f.view === 'side' && f.nearSide);
+  const farSide =
+    rangeViewOf(context.exerciseId) === 'side' &&
+    sideFrames.length > 0 &&
+    sideFrames.filter((f) => f.nearSide !== context.side).length > sideFrames.length / 2;
+  const setup: Finding[] = farSide
+    ? [
+        {
+          id: 'camera_view',
+          severity: 'warn',
+          cue: `Turn around so your ${context.side} ${
+            context.joint === 'knee' || context.joint === 'hip' ? 'leg' : 'arm'
+          } is closest to the phone.`,
+          detail: `Your ${context.side} ${context.joint} was on the far side, hidden behind the other one.`,
+          reps: reps.map((r) => r.index),
+        },
+      ]
+    : [];
   const cueFor = (id: FindingId) => cues[id] ?? DEFAULT_CUES[id];
   const findings: Finding[] = [];
-  if (!profile) return { reps, profile, findings, cues: [] };
+  findings.push(...setup);
+  if (!profile) return { reps, profile, findings, cues: findings.map((f) => f.cue) };
 
   const joint = `${context.side} ${context.joint}`;
   const ref = targets.reference;
@@ -184,11 +206,19 @@ export function analyseSession(
   // Filmed from the wrong angle, the range can't be judged (a knee bending
   // towards the camera looks straighter than it is): say how to set up instead
   const views = reps.map((r) => r.baseline.view).filter((v) => v !== 'unknown');
-  const wrongView =
+  const inView = (v: string | undefined) =>
+    v !== undefined &&
+    views.length > 0 &&
+    views.filter((x) => x === v).length >= views.length / 2;
+  // Range needs its view; set-up guidance only when the whole exercise does
+  const rangeView = rangeViewOf(context.exerciseId);
+  const wrongView = rangeView !== undefined && views.length > 0 && !inView(rangeView);
+  if (
     movement.view !== undefined &&
     views.length > 0 &&
-    views.filter((v) => v === movement.view).length < views.length / 2;
-  if (wrongView) {
+    !inView(movement.view) &&
+    !farSide
+  ) {
     findings.push({
       id: 'camera_view',
       severity: 'warn',

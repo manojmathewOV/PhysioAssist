@@ -36,6 +36,10 @@ export interface MovementFrame {
   landmarks: PoseLandmark[];
   view: CameraView;
   posture?: Posture;
+  /** The angle is a 3D estimate (camera at an angle to the movement). */
+  estimated?: boolean;
+  /** Which of the joint's pair (e.g. knees) is nearer the camera, from 3D depth. */
+  nearSide?: BodySide;
 }
 
 /** One repetition: rest -> peak -> back to rest. */

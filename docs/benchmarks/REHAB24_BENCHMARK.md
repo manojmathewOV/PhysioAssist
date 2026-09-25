@@ -128,8 +128,51 @@ leg.
 - Named compensations.
 - Pain, tissue loading, or readiness to progress.
 
-## Next (fixes designed on inspection, checked on validation, test group run once)
+## Fixes after the baseline
 
-1. **Side-view gate for knee flexion:** squat and lunge, as for seated knee extension.
-2. **Bilateral knee exercises:** measure the leg nearest the camera.
-3. **Shoulder at oblique views:** consider the world-landmark angle, shown as an estimate.
+The fixes were designed on the inspection participants (1–4) and checked on validation
+(5–6), then run once on the test participants (7–9). The choice to use the 3D angle at
+oblique views was first read from the pooled baseline, which included the test group. So
+for that rule the test group isn't strictly untouched: it held on inspection and on
+validation separately before it was adopted.
+
+1. **3D angle at oblique views, shown as an estimate.** For the shoulder and knee, when
+   the camera is at an angle to the movement, the angle comes from MediaPipe's world
+   landmarks (`services/pose/worldAngle.ts`).
+2. **Knee angle withheld from the front for squat and lunge.** Repetitions are timed by
+   the hips dropping when most frames have no angle. Set-up guidance is not given from the
+   front, because the front view is right for the knee-tracking checks.
+3. **Far-leg set-up guidance.** When the measured joint is behind the other one in a
+   side-view exercise, the app asks the patient to bring that leg or arm closest to the
+   phone. It does not silently measure the other leg, because after surgery the operated
+   side is the one that matters.
+4. **Benchmark reporting.** Set-up guidance is now reported separately from movement
+   findings.
+
+| Test group: app MAE vs motion capture | Frozen baseline | After fixes   |
+| ------------------------------------- | --------------- | ------------- |
+| Arm abduction, oblique                | 16.6°           | 15.1°         |
+| Arm V-W, oblique                      | 18.9°           | 11.0°         |
+| Squat, oblique                        | 16.5°           | 12.1°         |
+| Lunge, oblique                        | 16.2°           | 11.8°         |
+| Squat, front: frames given a number   | 100% (MAE 46°)  | 0% (withheld) |
+| Lunge, front: frames given a number   | 100% (MAE 43°)  | 35% (MAE 14°) |
+
+Inspection and validation groups together:
+
+- **Oblique abduction:** 16° → 10.9°.
+- **Side-view squat, rep count exactly right:** 11% → 67% of sessions (baseline pooled
+  over all participants).
+
+Full tables: [REHAB24_AFTER.md](REHAB24_AFTER.md).
+
+## Open problems (not tuned: seen on the test group, or needing more data)
+
+- **Far-leg guidance on the test group's side-view squats.** It fired on only 3% of
+  repetitions, while the angle was withheld on 99% of frames. The app held back safely but
+  didn't say why. In the development groups it fired on 70%.
+- **Hip-drop counting for front-view squats.** It failed in all 3 test sessions.
+- **Heel-lift false alarms on correct side-view squats.** They were flagged on 31% of
+  correct repetitions in the development groups, now that more side-view repetitions are
+  measured.
+- **Arm V-W.** It doesn't fit the away-and-back repetition model (timing errors of 2–3 s).

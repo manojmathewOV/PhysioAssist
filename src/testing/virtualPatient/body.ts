@@ -103,7 +103,7 @@ function sidePose(pose: BodyPose): Record<string, P> {
     const lean = 180 - hip - thighTilt;
     return { ankle, knee: kneeP, hip: hipP, lean };
   };
-  const left = sideOf('left', 6); // far side, slightly offset
+  const left = sideOf('left', 6); // slightly offset from the right
   const right = sideOf('right', 0);
   // Arching back tilts the trunk; the arm is placed relative to it, so the
   // shoulder angle is unchanged (the hip angle opens by the same amount)
@@ -322,8 +322,9 @@ function sideDepth(name: string, pose: BodyPose): number {
   const upper = ['shoulder', 'elbow', 'wrist', 'pinky', 'index', 'thumb'].includes(part);
   const lower = ['hip', 'knee', 'ankle', 'heel', 'foot_index'].includes(part);
   if (pose.view === 'side') {
-    // Far (left) side away from the camera
-    return sign * (upper ? SHOULDER_HALF_M : lower ? HIP_HALF_M : 0);
+    // The left side (the one scenarios measure) nearer the camera, as a
+    // patient is asked to stand; the right side behind it
+    return -sign * (upper ? SHOULDER_HALF_M : lower ? HIP_HALF_M : 0);
   }
   return upper ? sign * SHOULDER_HALF_M * Math.sin(rad(pose.trunkRotation)) : 0;
 }
@@ -340,7 +341,7 @@ export function renderBody(
     x: (pts.left_hip.x + pts.right_hip.x) / 2,
     y: (pts.left_hip.y + pts.right_hip.y) / 2,
   };
-  const farSide = pose.view === 'side' ? 'left_' : null;
+  const farSide = pose.view === 'side' ? 'right_' : null;
 
   const image: MediaPipeLandmark[] = [];
   const world: MediaPipeLandmark[] = [];

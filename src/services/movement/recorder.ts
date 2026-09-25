@@ -5,10 +5,19 @@
 import type { ProcessedPoseData } from '../../types/pose';
 import { GoniometerService } from '../goniometerService';
 import { getMeasurementLandmarks } from '../pose/measurementLandmarks';
-import { clinicalAngle, jointKey } from '../pose/exercisePlan';
+import { BodySide, clinicalAngle, jointKey, JointKind } from '../pose/exercisePlan';
+import { findLandmark } from '../pose/landmarkLookup';
+import { worldAngle } from '../pose/worldAngle';
+import { rangeViewOf } from './exerciseMovement';
 import { bodyWidthRatios, bodyYawDegrees } from '../pose/OrientationClassifier';
 import { postureOf } from './posture';
 import type { CameraView, MovementContext, MovementFrame } from './types';
+
+/**
+ * Joints measured from MediaPipe's 3D world landmarks when the camera is at an
+ * angle (REHAB24-6: shoulder MAE 16-17° -> 11°, knee 18-20° -> 14-18°).
+ */
+const WORLD_AT_OBLIQUE: JointKind[] = ['shoulder', 'knee'];
 
 /** Keep at most this many frames (10 minutes at 30 fps). */
 const MAX_FRAMES = 18000;
@@ -56,26 +65,60 @@ export function viewOf(
       : 'unknown';
 }
 
+/** Nearer the camera by at least this much (metres) to count. */
+const NEAR_MARGIN_M = 0.05;
+
+/** Which side's joint is nearer the camera (MediaPipe world z: smaller is nearer). */
+function nearerSide(pose: ProcessedPoseData, joint: JointKind): BodySide | undefined {
+  const world = pose.worldLandmarks;
+  if (!world?.length) return undefined;
+  const l = findLandmark(world, `left_${joint}`)?.z;
+  const r = findLandmark(world, `right_${joint}`)?.z;
+  if (l === undefined || r === undefined || Math.abs(l - r) < NEAR_MARGIN_M)
+    return undefined;
+  return l < r ? 'left' : 'right';
+}
+
 export class MovementRecorder {
   readonly frames: MovementFrame[] = [];
   // Own instance: light smoothing, independent of the live rep counter
   private goniometer = new GoniometerService({ smoothingWindow: 3 });
   private readonly key: string;
 
+  private readonly requiredView: CameraView | undefined;
+
   constructor(readonly context: MovementContext) {
     this.key = jointKey(context.side, context.joint);
+    this.requiredView = rangeViewOf(context.exerciseId);
   }
 
   add(pose: ProcessedPoseData): MovementFrame | null {
     if (this.frames.length >= MAX_FRAMES) return null;
     const landmarks = getMeasurementLandmarks(pose);
     const interior = this.goniometer.getJointAngle(this.key, landmarks);
+    const view = viewOf(pose, landmarks);
+    const { joint, side } = this.context;
+    let angle = interior === null ? null : clinicalAngle(joint, interior);
+    let estimated = false;
+    if (angle !== null && view === 'front' && this.requiredView === 'side') {
+      // A knee bending towards the camera reads 40-50° too straight: no number
+      angle = null;
+    } else if (angle !== null && view === 'oblique' && WORLD_AT_OBLIQUE.includes(joint)) {
+      // Turned to the camera, the 3D estimate beats the flattened 2D angle
+      const world = worldAngle(pose.worldLandmarks, joint, side);
+      if (world !== null) {
+        angle = world;
+        estimated = true;
+      }
+    }
     const frame: MovementFrame = {
       t: pose.timestamp,
-      angle: interior === null ? null : clinicalAngle(this.context.joint, interior),
+      angle,
+      estimated,
       landmarks,
-      view: viewOf(pose, landmarks),
+      view,
       posture: postureOf(pose, landmarks),
+      nearSide: nearerSide(pose, joint),
     };
     this.frames.push(frame);
     return frame;

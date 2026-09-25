@@ -233,8 +233,12 @@ function groupBy<T>(items: T[], key: (t: T) => string | null): [string, T[]][] {
   };
 
   // 7. Findings on correct vs incorrect repetitions (exploratory)
-  const anyF = (r: RepRecord) => r.findings.length > 0;
-  const flagF = (r: RepRecord) => r.findings.some((f) => f.endsWith(':flag'));
+  // Set-up guidance ("turn side-on") is not a judgement of the movement
+  const movementFindings = (r: RepRecord) =>
+    r.findings.filter((f) => !f.startsWith('camera_view'));
+  const anyF = (r: RepRecord) => movementFindings(r).length > 0;
+  const flagF = (r: RepRecord) => movementFindings(r).some((f) => f.endsWith(':flag'));
+  const setupF = (r: RepRecord) => r.findings.some((f) => f.startsWith('camera_view'));
   const findingRows = groupBy(reps, byExView).map(([k, rs]) => {
     const good = rs.filter((r) => r.correct);
     const bad = rs.filter((r) => !r.correct);
@@ -245,6 +249,7 @@ function groupBy<T>(items: T[], key: (t: T) => string | null): [string, T[]][] {
       pct(bad.filter(anyF).length, bad.length),
       pct(good.filter(flagF).length, good.length),
       pct(bad.filter(flagF).length, bad.length),
+      pct(rs.filter(setupF).length, rs.length),
     ];
   });
   const findingIds = groupBy(
@@ -325,7 +330,7 @@ ${table([EX_VIEW, 'Reps', 'Detected as labelled', 'App detected'], viewRows)}
 ${table(['Frames', 'n', 'MAE', '95th pct |error|'], [...confidenceRows('shoulder'), ...confidenceRows('knee')])}
 
 ## 7. Findings on correct vs incorrect repetitions (exploratory: the label is broad)
-${table([EX_VIEW, 'Correct / incorrect reps', 'Any finding, correct', 'Any finding, incorrect', 'Flag, correct', 'Flag, incorrect'], findingRows)}
+${table([EX_VIEW, 'Correct / incorrect reps', 'Any finding, correct', 'Any finding, incorrect', 'Flag, correct', 'Flag, incorrect', 'Set-up guidance given'], findingRows)}
 
 ${table(['Finding', 'On correct reps', 'On incorrect reps'], findingIds)}
 

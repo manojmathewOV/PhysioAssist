@@ -13,8 +13,9 @@ import { MovementRecorder } from '../../services/movement/recorder';
 import type { CameraView, MovementContext } from '../../services/movement/types';
 import type { BodySide, JointKind } from '../../services/pose/exercisePlan';
 import { findLandmark } from '../../services/pose/landmarkLookup';
+import { worldAngle } from '../../services/pose/worldAngle';
 import { getOutOfPlaneJoints } from '../../services/pose/measurementLandmarks';
-import type { PoseLandmark, ProcessedPoseData } from '../../types/pose';
+import type { ProcessedPoseData } from '../../types/pose';
 import { VideoLandmarks, VideoPatient } from './VideoPatient';
 
 /** Participant-disjoint groups; persons 1-9 appear in these exercises. */
@@ -162,59 +163,12 @@ export interface CameraRecord {
 
 const START_MS = 1_000_000;
 const FPS = 30;
-const DEG = 180 / Math.PI;
-
-type P = { x: number; y: number; z?: number };
-const sub = (a: P, b: P) => ({ x: a.x - b.x, y: a.y - b.y, z: (a.z ?? 0) - (b.z ?? 0) });
-const angleBetween = (u: P, v: P) => {
-  const dot = u.x * v.x + u.y * v.y + (u.z ?? 0) * (v.z ?? 0);
-  const nu = Math.hypot(u.x, u.y, u.z ?? 0);
-  const nv = Math.hypot(v.x, v.y, v.z ?? 0);
-  return nu && nv ? Math.acos(Math.max(-1, Math.min(1, dot / (nu * nv)))) * DEG : null;
-};
-const mid = (a: P, b: P) => ({
-  x: (a.x + b.x) / 2,
-  y: (a.y + b.y) / 2,
-  z: ((a.z ?? 0) + (b.z ?? 0)) / 2,
-});
 
 /** The landmarks an angle needs (shoulder: arm and trunk; knee: leg). */
 const NEEDED: Record<string, (s: BodySide) => string[]> = {
   shoulder: (s) => [`${s}_shoulder`, `${s}_elbow`, 'left_hip', 'right_hip'],
   knee: (s) => [`${s}_hip`, `${s}_knee`, `${s}_ankle`],
 };
-
-/**
- * The same clinical angle from MediaPipe's 3D world landmarks: shoulder as
- * the upper arm against the trunk midline, knee as 180 - hip-knee-ankle.
- */
-export function worldAngle(
-  world: PoseLandmark[] | undefined,
-  joint: JointKind,
-  side: BodySide
-): number | null {
-  if (!world?.length) return null;
-  const get = (n: string) => findLandmark(world, n);
-  if (joint === 'shoulder') {
-    const s = get(`${side}_shoulder`);
-    const e = get(`${side}_elbow`);
-    const ls = get('left_shoulder');
-    const rs = get('right_shoulder');
-    const lh = get('left_hip');
-    const rh = get('right_hip');
-    if (!s || !e || !ls || !rs || !lh || !rh) return null;
-    return angleBetween(sub(e, s), sub(mid(lh, rh), mid(ls, rs)));
-  }
-  if (joint === 'knee') {
-    const h = get(`${side}_hip`);
-    const k = get(`${side}_knee`);
-    const a = get(`${side}_ankle`);
-    if (!h || !k || !a) return null;
-    const interior = angleBetween(sub(h, k), sub(a, k));
-    return interior === null ? null : 180 - interior;
-  }
-  return null;
-}
 
 const minVisibility = (pose: ProcessedPoseData, names: string[]) =>
   Math.min(...names.map((n) => findLandmark(pose.landmarks, n)?.visibility ?? 0));
