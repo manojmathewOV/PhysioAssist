@@ -16,6 +16,8 @@ export interface RangeResultProps {
   goalDegrees?: number;
   /** What the goal is called, e.g. "your goal" or "the video". */
   goalLabel?: string;
+  /** 'toward' for straightening exercises (smaller is better). */
+  direction?: 'away' | 'toward';
 }
 
 const title = (joint: string) => {
@@ -28,16 +30,29 @@ const RangeResult: React.FC<RangeResultProps> = ({
   bestDegrees,
   goalDegrees,
   goalLabel = 'your goal',
+  direction = 'away',
 }) => {
-  const hasGoal = goalDegrees !== undefined && goalDegrees > 0;
-  const reached = hasGoal && bestDegrees >= goalDegrees;
-  const fraction = hasGoal ? Math.min(1, Math.max(0, bestDegrees / goalDegrees)) : 1;
+  const toward = direction === 'toward';
+  // Straightening: the aim is a small angle (0° = straight), so a goal of 0 counts
+  const hasGoal = goalDegrees !== undefined && (toward || goalDegrees > 0);
+  const reached =
+    hasGoal && (toward ? bestDegrees <= goalDegrees : bestDegrees >= goalDegrees);
+  const shortBy = hasGoal ? Math.abs(bestDegrees - goalDegrees) : 0;
+  const fraction = !hasGoal
+    ? 1
+    : toward
+      ? Math.min(1, Math.max(0, 1 - shortBy / 90))
+      : Math.min(1, Math.max(0, bestDegrees / goalDegrees));
   const tint = reached ? colors.success : colors.category.progress;
   const sentence = !hasGoal
-    ? 'Your best range today.'
+    ? toward
+      ? 'Closest to straight today (0° is fully straight).'
+      : 'Your best range today.'
     : reached
-      ? `You reached ${goalLabel} of ${goalDegrees}°.`
-      : `${goalDegrees - bestDegrees}° short of ${goalLabel} (${goalDegrees}°). It often takes a few weeks.`;
+      ? toward
+        ? `You straightened to within ${goalLabel} of ${goalDegrees}°.`
+        : `You reached ${goalLabel} of ${goalDegrees}°.`
+      : `${shortBy}° short of ${goalLabel} (${goalDegrees}°). It often takes a few weeks.`;
 
   return (
     <Card style={styles.card} testID="range-result">

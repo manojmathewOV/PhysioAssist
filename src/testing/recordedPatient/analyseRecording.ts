@@ -58,13 +58,19 @@ export function analyseRecording(fixture: RecordedFixture): RecordingResult {
   );
 
   const step = 1000 / fixture.groundTruthHz;
+  // The dataset's amplitude convention differs between recordings (for the
+  // seated knee extension it rises in some and falls in others as the knee
+  // straightens), so count repetitions away from wherever the series rests
+  const gt = fixture.groundTruthDegrees.filter((a): a is number => a !== null);
+  const restsHigh = median(gt.slice(0, 10)) > median(gt);
   const gtReps = segmentReps(
     fixture.groundTruthDegrees.map((angle, i) => ({
       t: 1_000_000 + i * step,
       angle,
       landmarks: [],
       view: 'unknown' as const,
-    }))
+    })),
+    { direction: restsHigh ? 'toward' : 'away' }
   );
   const views = new Map<CameraView, number>();
   analysis.reps.forEach((r) =>

@@ -16,6 +16,16 @@ import type { BodySide, JointKind } from '../pose/exercisePlan';
 /** Oblique: turned roughly 30-50° to the camera; neither front nor side checks are reliable. */
 export type CameraView = 'front' | 'side' | 'oblique' | 'unknown';
 
+/**
+ * Which way the working movement goes: away from neutral (raising an arm,
+ * bending a knee in a squat) or towards it (straightening a bent knee while
+ * sitting, where the aim is 0°).
+ */
+export type MovementDirection = 'away' | 'toward';
+
+/** Body position, from the trunk and thighs (services/movement/posture). */
+export type Posture = 'standing' | 'seated' | 'lying' | 'unknown';
+
 /** One analysed frame. */
 export interface MovementFrame {
   /** Milliseconds (frame capture time). */
@@ -25,6 +35,7 @@ export interface MovementFrame {
   /** Measurement landmarks (MediaPipe-33 names). */
   landmarks: PoseLandmark[];
   view: CameraView;
+  posture?: Posture;
 }
 
 /** One repetition: rest -> peak -> back to rest. */
@@ -33,9 +44,12 @@ export interface Repetition {
   startT: number;
   peakT: number;
   endT: number;
-  /** Largest clinical angle reached. */
+  /**
+   * End of the working movement: the largest clinical angle reached, or for
+   * movements towards neutral the smallest (e.g. how straight the knee got).
+   */
   peakDegrees: number;
-  /** Smallest clinical angle at the start/end (how fully they returned). */
+  /** Start/end position (how fully they returned), nearest the rest posture. */
   restDegrees: number;
   /** Time spent within 5° of the peak. */
   holdMs: number;
@@ -50,6 +64,8 @@ export interface MovementContext {
   side: BodySide;
   /** Exercise id, e.g. 'arm-raise' (some checks only apply to some exercises). */
   exerciseId?: string;
+  /** Defaults to the exercise's (services/movement/exerciseMovement), else 'away'. */
+  direction?: MovementDirection;
 }
 
 export type FindingId =
@@ -68,7 +84,10 @@ export type FindingId =
   | 'forward_head'
   | 'head_tilt'
   | 'trunk_forward_lean'
-  | 'pelvic_shift';
+  | 'pelvic_shift'
+  | 'lean_back'
+  | 'thigh_lift'
+  | 'camera_view';
 
 export type Severity = 'ok' | 'warn' | 'flag';
 

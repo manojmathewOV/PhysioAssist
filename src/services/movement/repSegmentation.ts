@@ -1,13 +1,14 @@
 /**
  * Splits a recorded session into repetitions from the joint-of-interest angle.
  *
- * Every exercise here moves the joint away from neutral and back, so a rep is a
- * rise of the clinical angle and a return. Thresholds adapt to the patient's
- * own range (5th-95th percentile), with hysteresis so wobble near the top or
- * bottom doesn't split or merge reps.
+ * Most exercises move the joint away from neutral and back, so a rep is a rise
+ * of the clinical angle and a return. Some move towards neutral (straightening
+ * a bent knee while sitting): there a rep is a fall of the angle and a return,
+ * and its peak is the smallest angle reached. Thresholds adapt to the
+ * patient's own range (5th-95th percentile).
  */
 import { findLandmark } from '../pose/landmarkLookup';
-import type { MovementFrame, Repetition } from './types';
+import type { MovementDirection, MovementFrame, Repetition } from './types';
 
 /** Smallest movement (degrees) that counts as a repetition. */
 export const MIN_REP_AMPLITUDE = 15;
@@ -60,8 +61,21 @@ export function hipDrop(frames: MovementFrame[]): (number | null)[] {
  */
 export function segmentReps(
   frames: MovementFrame[],
-  { fallback }: { fallback?: 'hipDrop' } = {}
+  {
+    fallback,
+    direction = 'away',
+  }: { fallback?: 'hipDrop'; direction?: MovementDirection } = {}
 ): Repetition[] {
+  if (direction === 'toward') {
+    // Segment the mirrored angle (a straightening is then a rise), then report
+    // the real angles: the peak is the smallest, the rest the largest
+    const flipped = smooth(frames.map((f) => (f.angle === null ? null : -f.angle)));
+    return segmentBy(frames, flipped, flipped, MIN_REP_AMPLITUDE).map((r) => ({
+      ...r,
+      peakDegrees: -r.peakDegrees,
+      restDegrees: -r.restDegrees,
+    }));
+  }
   const angles = smooth(frames.map((f) => f.angle));
   const byAngle = segmentBy(frames, angles, angles, MIN_REP_AMPLITUDE);
   if (byAngle.length > 0 || fallback !== 'hipDrop') return byAngle;

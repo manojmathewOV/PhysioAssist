@@ -5,12 +5,14 @@
  * Findings are reported only when seen in enough repetitions, prioritised
  * (safety first), and at most two patient cues are chosen per session.
  */
+import { directionOf, movementOf } from './exerciseMovement';
 import { segmentReps } from './repSegmentation';
 import type {
   CompensationHit,
   Finding,
   FindingId,
   MovementContext,
+  MovementDirection,
   MovementFrame,
   Repetition,
 } from './types';
@@ -62,9 +64,18 @@ export const RANGE_FLAG_RATIO = 0.7;
 export const RETURN_SLACK_DEG = 15;
 export const TOO_FAST_RATIO = 0.7;
 export const HOLD_SLACK_MS = 1000;
+/**
+ * Towards-neutral movements (straightening a bent knee while sitting): the
+ * active extension deficit (degrees short of straight, or of the goal or
+ * demonstration) reported above these. Not "extension lag": lag is the
+ * difference between passive and active extension and needs both measured.
+ */
+export const EXTENSION_DEFICIT_WARN_DEG = 10;
+export const EXTENSION_DEFICIT_FLAG_DEG = 20;
 
 /** Safety-related problems are raised before anything else. */
 const PRIORITY: FindingId[] = [
+  'camera_view',
   'back_arch',
   'knee_valgus',
   'trunk_side_lean',
@@ -73,6 +84,8 @@ const PRIORITY: FindingId[] = [
   'shoulder_hike',
   'hip_hitch',
   'pelvic_shift',
+  'lean_back',
+  'thigh_lift',
   'elbow_bend',
   'heel_lift',
   'forward_head',
@@ -100,6 +113,9 @@ const DEFAULT_CUES: Record<FindingId, string> = {
   head_tilt: 'Keep your head level and relaxed.',
   trunk_forward_lean: 'Keep your body upright; let your arm do the work.',
   pelvic_shift: 'Try to keep your weight evenly on both feet.',
+  lean_back: 'Sit tall; try not to lean back as you straighten your knee.',
+  thigh_lift: 'Keep your thigh resting on the chair; let your knee do the work.',
+  camera_view: 'Turn so your side faces the camera, then we can measure your movement.',
 };
 
 const median = (values: number[]) => {
@@ -109,12 +125,18 @@ const median = (values: number[]) => {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 };
 
-export function profileOf(reps: Repetition[]): MovementProfile | null {
+export function profileOf(
+  reps: Repetition[],
+  direction: MovementDirection = 'away'
+): MovementProfile | null {
   if (reps.length === 0) return null;
+  const peaks = reps.map((r) => r.peakDegrees);
   return {
     repCount: reps.length,
-    peakDegrees: Math.round(median(reps.map((r) => r.peakDegrees))),
-    bestDegrees: Math.round(Math.max(...reps.map((r) => r.peakDegrees))),
+    peakDegrees: Math.round(median(peaks)),
+    bestDegrees: Math.round(
+      direction === 'toward' ? Math.min(...peaks) : Math.max(...peaks)
+    ),
     restDegrees: Math.round(median(reps.map((r) => r.restDegrees))),
     repDurationMs: Math.round(median(reps.map((r) => r.endT - r.startT))),
     holdMs: Math.round(median(reps.map((r) => r.holdMs))),
@@ -125,7 +147,10 @@ export function profileOf(reps: Repetition[]): MovementProfile | null {
 const enoughReps = (seen: number, total: number) => seen >= Math.min(2, total);
 
 /** Build a reference profile from a recorded demonstration. */
-export const buildReference = (frames: MovementFrame[]) => profileOf(segmentReps(frames));
+export const buildReference = (
+  frames: MovementFrame[],
+  direction: MovementDirection = 'away'
+) => profileOf(segmentReps(frames, { direction }), direction);
 
 export function analyseSession(
   frames: MovementFrame[],
@@ -133,9 +158,21 @@ export function analyseSession(
   targets: SessionTargets = {},
   { detect, cues = {} }: AnalysisOptions = {}
 ): SessionAnalysis {
+  const direction = directionOf(context);
+  const movement = movementOf(context.exerciseId);
   const lowerLimb = context.joint === 'knee' || context.joint === 'hip';
-  const reps = segmentReps(frames, { fallback: lowerLimb ? 'hipDrop' : undefined });
-  const profile = profileOf(reps);
+  const segmented = segmentReps(frames, {
+    fallback: lowerLimb && direction === 'away' ? 'hipDrop' : undefined,
+    direction,
+  });
+  // A seated exercise's repetitions start seated: movement after standing up
+  // (or before sitting down) isn't a repetition
+  const reps = (
+    movement.posture === 'seated'
+      ? segmented.filter((r) => !['standing', 'lying'].includes(r.baseline.posture ?? ''))
+      : segmented
+  ).map((r, index) => ({ ...r, index }));
+  const profile = profileOf(reps, direction);
   const cueFor = (id: FindingId) => cues[id] ?? DEFAULT_CUES[id];
   const findings: Finding[] = [];
   if (!profile) return { reps, profile, findings, cues: [] };
@@ -144,8 +181,51 @@ export function analyseSession(
   const ref = targets.reference;
   const all = reps.map((r) => r.index);
 
+  // Filmed from the wrong angle, the range can't be judged (a knee bending
+  // towards the camera looks straighter than it is): say how to set up instead
+  const views = reps.map((r) => r.baseline.view).filter((v) => v !== 'unknown');
+  const wrongView =
+    movement.view !== undefined &&
+    views.length > 0 &&
+    views.filter((v) => v === movement.view).length < views.length / 2;
+  if (wrongView) {
+    findings.push({
+      id: 'camera_view',
+      severity: 'warn',
+      cue: cueFor('camera_view'),
+      detail: `This exercise is measured from the ${movement.view}; it was filmed from ${
+        views.includes('oblique') ? 'an angle' : `the ${views[0]}`
+      }, so the range isn't judged.`,
+      reps: all,
+    });
+  }
+
+  // Towards neutral: how far short of straight (or of the goal/demonstration)
+  if (direction === 'toward' && !wrongView) {
+    const aim = ref?.peakDegrees ?? targets.goalDegrees ?? 0;
+    const deficit = profile.peakDegrees - aim;
+    if (deficit > EXTENSION_DEFICIT_WARN_DEG) {
+      findings.push({
+        id: 'reduced_range',
+        severity: deficit > EXTENSION_DEFICIT_FLAG_DEG ? 'flag' : 'warn',
+        cue: `Try to straighten your ${context.joint} a little more, if it's comfortable.`,
+        detail: `Active extension deficit: your ${joint} straightened to about ${profile.peakDegrees}°; ${
+          ref
+            ? `the demonstration reached ${Math.round(aim)}°`
+            : aim === 0
+              ? 'fully straight is 0°'
+              : `your goal is ${Math.round(aim)}°`
+        }.`,
+        reps: reps
+          .filter((r) => r.peakDegrees - aim > EXTENSION_DEFICIT_WARN_DEG)
+          .map((r) => r.index),
+      });
+    }
+  }
+
   // Range: against the demonstration, else against the prescribed goal
-  const target = ref?.peakDegrees ?? targets.goalDegrees;
+  const target =
+    direction === 'away' ? ref?.peakDegrees ?? targets.goalDegrees : undefined;
   if (target && profile.peakDegrees < target * RANGE_WARN_RATIO) {
     findings.push({
       id: 'reduced_range',
@@ -165,7 +245,11 @@ export function analyseSession(
   // (a natural rest is rarely exactly 0°, and some exercises, like a press,
   // rest part-way: the median catches the repetitions that stopped short)
   const restTarget = ref?.restDegrees ?? median(reps.map((r) => r.restDegrees));
-  const shortReturns = reps.filter((r) => r.restDegrees > restTarget + RETURN_SLACK_DEG);
+  // (Towards neutral, the start is a bent position: returning less is no fault)
+  const shortReturns =
+    direction === 'toward' || wrongView
+      ? []
+      : reps.filter((r) => r.restDegrees > restTarget + RETURN_SLACK_DEG);
   if (enoughReps(shortReturns.length, reps.length)) {
     const straighten = context.joint === 'knee' || context.joint === 'elbow';
     findings.push({

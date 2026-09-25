@@ -12,6 +12,8 @@ import {
   getOutOfPlaneJoints,
 } from './pose/measurementLandmarks';
 import { clinicalAngle, goalDegreesOf, trackedJoint } from './pose/exercisePlan';
+import { movementOf } from './movement/exerciseMovement';
+import type { MovementDirection } from './movement/types';
 
 /** Best range reached this session for the exercise's joint of interest. */
 export interface SessionRange {
@@ -21,6 +23,8 @@ export interface SessionRange {
   bestDegrees: number;
   /** The goal the patient was asked to reach, if the exercise has one. */
   goalDegrees?: number;
+  /** 'toward' for straightening exercises: best is the smallest angle. */
+  direction?: MovementDirection;
 }
 
 /**
@@ -80,6 +84,7 @@ export class ExerciseValidationService {
   private hasMovedFromRest: boolean = false;
   private trackedJoint: string | undefined;
   private bestDegrees: number | null = null;
+  private direction: MovementDirection = 'away';
 
   /**
    * Start tracking a new exercise
@@ -90,6 +95,7 @@ export class ExerciseValidationService {
     // Angle smoothing must not blend in the previous session's last angles
     goniometerService.resetHistory();
     this.trackedJoint = trackedJoint(exercise);
+    this.direction = movementOf(exercise.id).direction;
     this.bestDegrees = null;
     this.phaseStartTime = Date.now();
     this.phaseValidSince = null;
@@ -228,7 +234,11 @@ export class ExerciseValidationService {
     const angle = this.trackedJoint ? jointAngles.get(this.trackedJoint) : undefined;
     if (!kind || !angle?.isValid) return;
     const degrees = clinicalAngle(kind, angle.angle);
-    this.bestDegrees = Math.max(this.bestDegrees ?? -Infinity, degrees);
+    // Best = furthest from neutral, or for straightening exercises closest to it
+    this.bestDegrees =
+      this.direction === 'toward'
+        ? Math.min(this.bestDegrees ?? Infinity, degrees)
+        : Math.max(this.bestDegrees ?? -Infinity, degrees);
     const limit = this.currentExercise?.safetyLimit;
     if (limit && limit.joint === this.trackedJoint && degrees > limit.maxDegrees) {
       validation.overLimit = true;
@@ -249,6 +259,7 @@ export class ExerciseValidationService {
       joint: this.trackedJoint,
       bestDegrees: Math.round(this.bestDegrees),
       goalDegrees: goalDegreesOf(this.currentExercise),
+      direction: this.direction,
     };
   }
 

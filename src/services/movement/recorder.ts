@@ -7,6 +7,7 @@ import { GoniometerService } from '../goniometerService';
 import { getMeasurementLandmarks } from '../pose/measurementLandmarks';
 import { clinicalAngle, jointKey } from '../pose/exercisePlan';
 import { bodyWidthRatios, bodyYawDegrees } from '../pose/OrientationClassifier';
+import { postureOf } from './posture';
 import type { CameraView, MovementContext, MovementFrame } from './types';
 
 /** Keep at most this many frames (10 minutes at 30 fps). */
@@ -74,6 +75,7 @@ export class MovementRecorder {
       angle: interior === null ? null : clinicalAngle(this.context.joint, interior),
       landmarks,
       view: viewOf(pose, landmarks),
+      posture: postureOf(pose, landmarks),
     };
     this.frames.push(frame);
     return frame;

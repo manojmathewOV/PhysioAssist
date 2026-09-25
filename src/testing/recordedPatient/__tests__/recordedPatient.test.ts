@@ -25,21 +25,20 @@ const of = (...exercises: string[]) =>
     .filter((r) => exercises.includes(r.fixture.exercise))
     .map((r) => [named(r), r] as const);
 
-// Knee-straightening exercises move towards neutral, which repetition analysis
-// doesn't support yet (see docs/benchmarks/REAL_HUMAN_VALIDATION.md)
-const SUPPORTED = results.filter((r) => r.fixture.exercise !== 'seated_knee_extension');
-
 describe('recorded patients (real MediaPipe output vs motion capture)', () => {
   it('loads every fixture', () => {
     expect(results).toHaveLength(16);
   });
 
-  it.each(SUPPORTED.map((r) => [named(r), r] as const))(
-    '%s: counts repetitions like motion capture',
-    (_name, r) => {
-      expect(Math.abs(r.analysis.reps.length - r.groundTruthReps)).toBeLessThanOrEqual(1);
-    }
-  );
+  // Seated knee extension here was filmed at 35°; it needs a side view, so the
+  // app must say so instead of counting and judging range (tested below)
+  it.each(
+    results
+      .filter((r) => r.fixture.exercise !== 'seated_knee_extension')
+      .map((r) => [named(r), r] as const)
+  )('%s: counts repetitions like motion capture', (_name, r) => {
+    expect(Math.abs(r.analysis.reps.length - r.groundTruthReps)).toBeLessThanOrEqual(1);
+  });
 
   it.each(of('shoulder_abduction', 'shoulder_press', 'hip_abduction'))(
     '%s: filmed facing the camera, seen as front',
@@ -48,19 +47,40 @@ describe('recorded patients (real MediaPipe output vs motion capture)', () => {
     }
   );
 
-  it.each(of('squat', 'march', 'elbow_flexion'))(
+  it.each(of('squat', 'march', 'elbow_flexion', 'seated_knee_extension'))(
     '%s: filmed at 35°, seen as oblique (front and side checks stay off)',
     (_name, r) => {
       expect(r.view).toBe('oblique');
     }
   );
 
-  it.each(of('shoulder_abduction', 'shoulder_flexion', 'shoulder_press', 'squat'))(
-    '%s: no compensation flagged for a healthy person',
+  it.each(of('seated_knee_extension'))(
+    '%s: filmed at an angle, asks for a side view and judges no range',
     (_name, r) => {
-      expect(r.analysis.findings.filter((f) => f.severity === 'flag')).toEqual([]);
+      const ids = r.analysis.findings.map((f) => f.id);
+      expect(ids).toContain('camera_view');
+      expect(ids).not.toContain('reduced_range');
     }
   );
+
+  it.each(of('seated_knee_extension'))('%s: seen sitting', (_name, r) => {
+    const postures = r.analysis.reps.map((rep) => rep.baseline.posture);
+    expect(postures.filter((p) => p === 'seated').length).toBeGreaterThanOrEqual(
+      postures.length - 1
+    );
+  });
+
+  it.each(
+    of(
+      'shoulder_abduction',
+      'shoulder_flexion',
+      'shoulder_press',
+      'squat',
+      'seated_knee_extension'
+    )
+  )('%s: no compensation flagged for a healthy person', (_name, r) => {
+    expect(r.analysis.findings.filter((f) => f.severity === 'flag')).toEqual([]);
+  });
 
   // Shoulder flexion filmed at 35° reads 5-23° high (depth ambiguity, as the
   // dataset's authors also found): it needs a true side view, so it's reported

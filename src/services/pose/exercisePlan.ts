@@ -22,6 +22,8 @@ import type {
 } from '../../types/exercise';
 
 import type { MovementProfile } from '../movement/analysis';
+import { movementOf } from '../movement/exerciseMovement';
+import type { MovementDirection } from '../movement/types';
 
 export type { BodySide, JointKind };
 
@@ -90,10 +92,22 @@ export const clinicalAngle = (kind: JointKind, interior: number): number =>
 export const interiorAngle = (kind: JointKind, clinical: number): number =>
   kind === 'shoulder' ? clinical : 180 - clinical;
 
-/** Interior-angle range for "at least `goal`, at most `limit`" clinical degrees. */
-const goalRange = (kind: JointKind, goal: number, limit = 180) => {
+/**
+ * Interior-angle range for "at least `goal`, at most `limit`" clinical degrees,
+ * or for movements towards neutral "at most `goal`" (e.g. a seated knee
+ * extension within 5° of straight).
+ */
+const goalRange = (
+  kind: JointKind,
+  goal: number,
+  limit = 180,
+  direction: MovementDirection = 'away'
+) => {
   const a = interiorAngle(kind, goal);
-  const b = interiorAngle(kind, Math.max(goal, limit));
+  const b =
+    direction === 'toward'
+      ? interiorAngle(kind, 0)
+      : interiorAngle(kind, Math.max(goal, limit));
   return { minAngle: Math.min(a, b), maxAngle: Math.max(a, b) };
 };
 
@@ -132,7 +146,12 @@ export function applyPlan(exercise: Exercise, plan?: ExercisePlan | null): Exerc
     let holdDuration = phase.holdDuration;
     if (prescribed && index === goalIndex && exercise.phases.length > 1) {
       if (plan.goalDegrees !== undefined) {
-        const range = goalRange(kind, plan.goalDegrees, plan.limitDegrees);
+        const range = goalRange(
+          kind,
+          plan.goalDegrees,
+          plan.limitDegrees,
+          movementOf(exercise.id).direction
+        );
         requirement = {
           ...req,
           ...range,
@@ -173,6 +192,10 @@ export const goalDegreesOf = (exercise: Exercise): number | undefined => {
   const goal = exercise.phases[exercise.phases.length - 1];
   const req = goal?.jointRequirements.find((r) => r.joint === joint);
   if (!req || !kind || exercise.phases.length < 2) return undefined;
-  // The end of the range nearest neutral is the minimum to reach
-  return Math.min(clinicalAngle(kind, req.minAngle), clinicalAngle(kind, req.maxAngle));
+  const ends = [clinicalAngle(kind, req.minAngle), clinicalAngle(kind, req.maxAngle)];
+  // Away from neutral, the end nearest neutral is the minimum to reach; towards
+  // neutral (straightening), the end furthest from it is the most to stay at
+  return movementOf(exercise.id).direction === 'toward'
+    ? Math.max(...ends)
+    : Math.min(...ends);
 };

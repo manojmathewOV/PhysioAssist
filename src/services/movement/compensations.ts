@@ -16,6 +16,7 @@
 import type { PoseLandmark } from '../../types/pose';
 import { findLandmark } from '../pose/landmarkLookup';
 import type { BodySide, JointKind } from '../pose/exercisePlan';
+import { movementOf } from './exerciseMovement';
 import type {
   CameraView,
   CompensationDetector,
@@ -104,6 +105,12 @@ export const HEEL_LIFT_WARN = 3;
 export const HEEL_LIFT_FLAG = 5;
 /** Toes must stay within this of their rest height (else it isn't a heel lift). */
 export const HEEL_LIFT_MAX_TOE_MOVE = 2;
+/** Seated: trunk leaning back from its rest angle (degrees). Heuristic. */
+export const LEAN_BACK_WARN_DEG = 10;
+export const LEAN_BACK_FLAG_DEG = 15;
+/** Seated: the working thigh rising off the chair (degrees above its rest angle). Heuristic. */
+export const THIGH_LIFT_WARN_DEG = 10;
+export const THIGH_LIFT_FLAG_DEG = 15;
 export const FORWARD_HEAD_WARN = 8;
 export const FORWARD_HEAD_FLAG = 12;
 
@@ -125,6 +132,9 @@ export const PATIENT_CUES: Record<FindingId, string> = {
   head_tilt: 'Keep your head level and relaxed.',
   trunk_forward_lean: 'Keep your body upright; let your arm do the work.',
   pelvic_shift: 'Try to keep your weight evenly on both feet.',
+  lean_back: 'Sit tall; try not to lean back as you straighten your knee.',
+  thigh_lift: 'Keep your thigh resting on the chair; let your knee do the work.',
+  camera_view: 'Turn so your side faces the camera, then we can measure your movement.',
 };
 
 const LEG_CHECKS: FindingId[] = [
@@ -159,7 +169,7 @@ export const DETECTORS_FOR: Record<JointKind, FindingId[]> = {
     'head_tilt',
   ],
   hip: LEG_CHECKS,
-  knee: LEG_CHECKS,
+  knee: [...LEG_CHECKS, 'lean_back', 'thigh_lift'],
 };
 
 /** Per-exercise exceptions: checks that are part of that exercise's movement. */
@@ -180,6 +190,11 @@ export const NOT_FOR_EXERCISE: Record<string, FindingId[]> = {
 export const WEIGHT_BEARING_EXERCISES = ['squat', 'sit-to-stand', 'lunge', 'step-up'];
 const NEEDS_PLANTED_FEET: FindingId[] = ['knee_valgus', 'hip_hitch', 'pelvic_shift'];
 
+/** Checks that assume the patient is standing (feet on the floor, body upright). */
+const STANDING_ONLY: FindingId[] = [...NEEDS_PLANTED_FEET, 'heel_lift'];
+/** Checks for exercises done sitting. */
+const SEATED_ONLY: FindingId[] = ['lean_back', 'thigh_lift'];
+
 /** Whether a check applies to this exercise. */
 export const appliesTo = (id: FindingId, { joint, exerciseId }: MovementContext) =>
   DETECTORS_FOR[joint].includes(id) &&
@@ -189,6 +204,21 @@ export const appliesTo = (id: FindingId, { joint, exerciseId }: MovementContext)
     exerciseId &&
     !WEIGHT_BEARING_EXERCISES.includes(exerciseId)
   );
+
+/**
+ * Whether a check fits the posture the repetition started in: standing checks
+ * don't run on someone sitting or lying (a seated knee extension lifts the
+ * heel by design), and seated checks only run seated. An exercise that is
+ * defined as seated counts as seated even if the posture can't be read.
+ */
+export const fitsPosture = (id: FindingId, rep: Repetition, ctx: MovementContext) => {
+  const posture = rep.baseline.posture ?? 'unknown';
+  const expected = movementOf(ctx.exerciseId).posture;
+  const seated = posture === 'seated' || (posture === 'unknown' && expected === 'seated');
+  if (SEATED_ONLY.includes(id)) return seated;
+  if (STANDING_ONLY.includes(id)) return !seated && posture !== 'lying';
+  return true;
+};
 
 type Pt = { x: number; y: number };
 type Level = 0 | 1 | 2;
@@ -372,7 +402,7 @@ function longestRun(
 
 function makeDetector(check: Check): CompensationDetector {
   return (rep, ctx) => {
-    if (!appliesTo(check.id, ctx)) return null;
+    if (!appliesTo(check.id, ctx) || !fitsPosture(check.id, rep, ctx)) return null;
     const view = repView(rep);
     if (!check.views.includes(view) || rep.frames.length === 0) return null;
     const measure = check.setup(restLandmarks(rep), ctx);
@@ -755,6 +785,55 @@ export const detectForwardHead = makeDetector({
   level: byThreshold(FORWARD_HEAD_WARN, FORWARD_HEAD_FLAG),
 });
 
+/**
+ * Leaning back (side, seated): the trunk tips backward from where it sat at
+ * rest. Leaning back slackens the hamstrings, so a seated knee extension looks
+ * straighter than the knee can manage upright.
+ */
+export const detectLeanBack = makeDetector({
+  id: 'lean_back',
+  unit: 'deg',
+  views: ['side'],
+  setup: (rest) => {
+    const change = forwardTiltChange(rest);
+    return change
+      ? (f) => {
+          const c = change(f);
+          return c === null ? null : -c;
+        }
+      : null;
+  },
+  level: byThreshold(LEAN_BACK_WARN_DEG, LEAN_BACK_FLAG_DEG),
+});
+
+/**
+ * Thigh lift (side, seated): the working thigh rises off the chair (the hip
+ * bends to help), measured as the hip-to-knee line's rise above its rest angle.
+ */
+export const detectThighLift = makeDetector({
+  id: 'thigh_lift',
+  unit: 'deg',
+  views: ['side'],
+  setup: (rest, { side }) => {
+    const dirn = facing(rest);
+    if (!dirn) return null;
+    const rise = (lms: PoseLandmark[]) => {
+      const hip = seen(lms, `${side}_hip`);
+      const knee = seen(lms, `${side}_knee`);
+      if (!hip || !knee) return null;
+      // Positive when the knee is above the hip (image y points down)
+      return Math.atan2(hip.y - knee.y, (knee.x - hip.x) * dirn) * DEG;
+    };
+    const base = rise(rest);
+    if (base === null) return null;
+    return (f) => {
+      const r = rise(f.landmarks);
+      return r === null ? null : r - base;
+    };
+  },
+  level: byThreshold(THIGH_LIFT_WARN_DEG, THIGH_LIFT_FLAG_DEG),
+});
+
 export const COMPENSATION_DETECTORS: Partial<Record<FindingId, CompensationDetector>> = {
   shoulder_hike: detectShoulderHike,
   trunk_side_lean: detectTrunkSideLean,
@@ -768,6 +847,8 @@ export const COMPENSATION_DETECTORS: Partial<Record<FindingId, CompensationDetec
   heel_lift: detectHeelLift,
   forward_head: detectForwardHead,
   head_tilt: detectHeadTilt,
+  lean_back: detectLeanBack,
+  thigh_lift: detectThighLift,
 };
 
 /** Every compensation seen in one repetition. */
