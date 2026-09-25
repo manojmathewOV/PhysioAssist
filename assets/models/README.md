@@ -3,11 +3,15 @@
 Model files are not committed. `npm install` downloads them via
 `scripts/download-models.sh` (also runnable as `npm run download-models`).
 
-## MediaPipe BlazePose Full — primary (iOS/Android camera)
+## MediaPipe BlazePose Full + Lite (iOS/Android camera)
 
-- **File:** `pose_landmarker_full.task` (float16, ~9MB)
-- **Used by:** `src/screens/PoseDetectionScreen.tsx` through `react-native-mediapipe`
-  (VisionCamera frame processor, GPU delegate, live-stream tracking)
+- **Files:** `pose_landmarker_full.task` (float16, ~9MB, default) and
+  `pose_landmarker_lite.task` (~6MB). `src/hooks/useBlazePose.ts` starts on Full and
+  steps down to Lite once if measured inference times exceed the frame budget
+  (`src/services/pose/adaptiveModel.ts`)
+- **Used by:** every native camera screen through `src/hooks/useBlazePose.ts`
+  (`react-native-mediapipe` VisionCamera frame processor, GPU delegate, live-stream tracking)
+- **Benchmark:** docs/benchmarks/POSE_MODELS.md
 - **Output:** 33 landmarks (normalized x/y, relative z, visibility) plus world
   landmarks in metres, converted to `ProcessedPoseData` with schema `mediapipe-33`
   by `src/services/pose/mediapipeLandmarks.ts`
@@ -15,11 +19,12 @@ Model files are not committed. `npm install` downloads them via
   `android/app/src/main/assets/`
 - **Source:** https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task
 
-Chosen over MoveNet because physiotherapy measurements need landmarks MoveNet
-doesn't have: heels and toes (ankle dorsiflexion/plantarflexion) and hand points,
-and because the metric 3D world landmarks reduce angle error from camera
-position. It is also the model family the web build uses (`@mediapipe/pose`), so
-native and web measurements come from the same landmark definitions.
+Chosen over MoveNet: 37% lower joint-angle error on the COCO benchmark, plus heels
+and toes (ankle dorsiflexion/plantarflexion) and hand points that MoveNet doesn't
+have. It is also the model family the web build uses (`@mediapipe/pose`), so native
+and web use the same landmark definitions. Angles are computed from
+aspect-corrected 2D landmarks; world landmarks only flag limbs turned out of the
+image plane (see `src/services/pose/measurementLandmarks.ts`).
 
 ## MoveNet Lightning INT8 — legacy
 

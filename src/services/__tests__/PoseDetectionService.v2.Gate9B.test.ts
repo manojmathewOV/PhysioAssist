@@ -6,6 +6,7 @@
 // Mock react-native-fast-tflite (native dependency)
 jest.mock('react-native-fast-tflite');
 
+import { calculateQualityScore } from '../pose/PoseEnricher';
 import { PoseDetectionServiceV2 } from '../PoseDetectionService.v2';
 import { PoseLandmark } from '../../types/pose';
 
@@ -65,7 +66,7 @@ describe('PoseDetectionServiceV2 - Gate 9B.4 Integration', () => {
       ]);
 
       // Access private method via any for testing
-      const qualityScore = (service as any).calculateQualityScore(landmarks);
+      const qualityScore = calculateQualityScore(landmarks);
 
       expect(qualityScore).toBeGreaterThan(0.8);
       expect(qualityScore).toBeLessThanOrEqual(1.0);
@@ -79,21 +80,21 @@ describe('PoseDetectionServiceV2 - Gate 9B.4 Integration', () => {
         { index: 12, x: 0.65, y: 0.6, visibility: 0.1 }, // right_hip occluded
       ]);
 
-      const qualityScore = (service as any).calculateQualityScore(landmarks);
+      const qualityScore = calculateQualityScore(landmarks);
 
       expect(qualityScore).toBeLessThan(0.8);
       expect(qualityScore).toBeGreaterThan(0.0);
     });
 
     it('should return 0 for empty landmarks', () => {
-      const qualityScore = (service as any).calculateQualityScore([]);
+      const qualityScore = calculateQualityScore([]);
 
       expect(qualityScore).toBe(0);
     });
 
     it('should return quality score in [0, 1] range', () => {
       const landmarks = createMockLandmarks();
-      const qualityScore = (service as any).calculateQualityScore(landmarks);
+      const qualityScore = calculateQualityScore(landmarks);
 
       expect(qualityScore).toBeGreaterThanOrEqual(0.0);
       expect(qualityScore).toBeLessThanOrEqual(1.0);

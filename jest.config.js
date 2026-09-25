@@ -1,5 +1,8 @@
 module.exports = {
   preset: 'react-native',
+  // The first test in a suite pays the cold module-graph load (the full app for the
+  // integration suites): ~0.3s locally but over the 5s default on CI runners.
+  testTimeout: 15000,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   setupFilesAfterEnv: ['<rootDir>/__tests__/setup.ts'],
   testMatch: ['**/__tests__/**/*.(test|spec).(ts|tsx|js)'],

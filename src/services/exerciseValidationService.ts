@@ -7,6 +7,10 @@ import {
 } from '../types/exercise';
 import { JointAngle, ProcessedPoseData } from '../types/pose';
 import { goniometerService } from './goniometerService';
+import {
+  getMeasurementLandmarks,
+  getOutOfPlaneJoints,
+} from './pose/measurementLandmarks';
 
 export class ExerciseValidationService {
   private currentExercise: Exercise | null = null;
@@ -47,10 +51,22 @@ export class ExerciseValidationService {
     }
 
     // Calculate all joint angles
-    const jointAngles = goniometerService.calculateAllJointAngles(poseData.landmarks);
+    const jointAngles = goniometerService.calculateAllJointAngles(
+      getMeasurementLandmarks(poseData)
+    );
 
     // Validate against current phase requirements
     const validation = this.validatePhaseRequirements(jointAngles);
+
+    // Flag required joints whose limb is out of the image plane (from world landmarks)
+    const outOfPlane = getOutOfPlaneJoints(poseData);
+    const estimatedJoints = this.currentPhase.jointRequirements
+      .map((r) => r.joint)
+      .filter((joint) => outOfPlane.has(joint));
+    if (estimatedJoints.length > 0) {
+      validation.estimatedJoints = estimatedJoints;
+      validation.feedback.push('Turn side-on to the camera for an accurate reading');
+    }
 
     // Check for phase transition
     if (validation.isValid && this.shouldTransitionPhase()) {

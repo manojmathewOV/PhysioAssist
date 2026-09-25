@@ -21,7 +21,7 @@ NC='\033[0m' # No Color
 
 # Model URLs (TF Hub links now 404; models are hosted on Kaggle as .tar.gz archives)
 LIGHTNING_URL="https://www.kaggle.com/api/v1/models/google/movenet/tfLite/singlepose-lightning-tflite-int8/1/download"
-BLAZEPOSE_URL="https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task"
+BLAZEPOSE_BASE="https://storage.googleapis.com/mediapipe-models/pose_landmarker"
 # react-native-mediapipe on Android loads models from the APK's assets
 ANDROID_ASSETS_DIR="$(dirname "$0")/../android/app/src/main/assets"
 
@@ -46,21 +46,24 @@ else
 fi
 echo ""
 
-# Download MediaPipe BlazePose Full
-echo -e "${YELLOW}📥 Downloading MediaPipe BlazePose Full (9MB)...${NC}"
-if [ -f "$MODELS_DIR/pose_landmarker_full.task" ]; then
-  echo "   File already exists, skipping..."
-else
-  curl -fsSL "$BLAZEPOSE_URL" -o "$MODELS_DIR/pose_landmarker_full.task"
-  echo -e "${GREEN}   ✅ Downloaded successfully!${NC}"
-fi
+# Download MediaPipe BlazePose Full (default) and Lite (auto-selected on slow devices)
 mkdir -p "$ANDROID_ASSETS_DIR"
-cp "$MODELS_DIR/pose_landmarker_full.task" "$ANDROID_ASSETS_DIR/"
+for variant in full lite; do
+  model="pose_landmarker_${variant}.task"
+  echo -e "${YELLOW}📥 Downloading MediaPipe BlazePose ${variant}...${NC}"
+  if [ -f "$MODELS_DIR/$model" ]; then
+    echo "   File already exists, skipping..."
+  else
+    curl -fsSL "$BLAZEPOSE_BASE/pose_landmarker_${variant}/float16/1/$model" -o "$MODELS_DIR/$model"
+    echo -e "${GREEN}   ✅ Downloaded successfully!${NC}"
+  fi
+  cp "$MODELS_DIR/$model" "$ANDROID_ASSETS_DIR/"
+done
 echo ""
 
 # Verify downloads
 echo -e "${YELLOW}🔍 Verifying downloads...${NC}"
-for model in movenet_lightning_int8.tflite pose_landmarker_full.task; do
+for model in movenet_lightning_int8.tflite pose_landmarker_full.task pose_landmarker_lite.task; do
   echo "   $model: $(du -h "$MODELS_DIR/$model" | cut -f1)"
 done
 echo ""

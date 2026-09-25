@@ -24,9 +24,7 @@ import {
   AdaptiveSettings,
 } from '../utils/compensatoryMechanisms';
 import { PoseLandmarkFilter } from '../utils/smoothing';
-import { OrientationClassifier } from './pose/OrientationClassifier';
-import { AnatomicalFrameCache } from './biomechanics/AnatomicalFrameCache';
-import { AnatomicalReferenceService } from './biomechanics/AnatomicalReferenceService';
+import { PoseEnricher } from './pose/PoseEnricher';
 
 // MoveNet keypoint names (17 total)
 const MOVENET_KEYPOINTS = [
@@ -116,11 +114,9 @@ export class PoseDetectionServiceV2 {
   private filteringEnabled: boolean = true;
 
   // Gate 9B: Orientation classifier for view detection
-  private orientationClassifier: OrientationClassifier;
 
   // Gate 9B.5: Frame caching and anatomical reference service
-  private frameCache: AnatomicalFrameCache;
-  private anatomicalService: AnatomicalReferenceService;
+  private enricher = new PoseEnricher();
 
   constructor(config: PoseDetectionConfig = {}) {
     this.config = {
@@ -141,12 +137,9 @@ export class PoseDetectionServiceV2 {
     this.filteringEnabled = this.config.smoothLandmarks;
 
     // Gate 9B: Initialize orientation classifier with temporal smoothing
-    this.orientationClassifier = new OrientationClassifier(5);
 
     // Gate 9B.5: Initialize frame cache and anatomical service
     // Cache params: maxSize=60 frames, TTL=16ms (60fps), precision=2 (1cm bucketing)
-    this.frameCache = new AnatomicalFrameCache(60, 16, 2);
-    this.anatomicalService = new AnatomicalReferenceService();
   }
 
   /**
@@ -369,28 +362,15 @@ export class PoseDetectionServiceV2 {
         setTimeout(() => this.reloadModel(), 0);
       }
 
-      // Gate 9B: Classify orientation with temporal smoothing
-      const orientationResult = this.orientationClassifier.classifyWithHistory(landmarks);
-
-      // Gate 9B: Calculate quality score
-      const qualityScore = this.calculateQualityScore(landmarks);
-
-      // Gate 9B.5: Pre-compute anatomical frames with caching
-      const cachedFrames = this.preComputeAnatomicalFrames(landmarks);
-
-      const processedData: ProcessedPoseData = {
+      // Orientation, quality score and cached anatomical frames (shared pipeline)
+      const processedData = this.enricher.enrich({
         landmarks,
         timestamp: Date.now(),
         confidence,
         inferenceTime, // For performance monitoring
-        // Gate 9B: Metadata fields
         schemaId: 'movenet-17',
-        viewOrientation: orientationResult.orientation,
         hasDepth: false, // MoveNet doesn't provide depth
-        qualityScore,
-        // Gate 9B.5: Cached anatomical frames
-        cachedAnatomicalFrames: cachedFrames,
-      };
+      });
 
       // Emit to callback
       if (this.poseDataCallback) {
@@ -474,110 +454,6 @@ export class PoseDetectionServiceV2 {
   }
 
   /**
-   * Calculate quality score for pose detection
-   * Gate 9B: Combines landmark visibility, distribution, and environment factors
-   *
-   * Factors:
-   * - Landmark visibility: Average confidence of all landmarks
-   * - Landmark distribution: How well distributed landmarks are (not clustered)
-   * - Environmental factors: Placeholder for lighting, distance (future gates)
-   *
-   * @param landmarks - Detected pose landmarks
-   * @returns Quality score [0, 1]
-   */
-  private calculateQualityScore(landmarks: PoseLandmark[]): number {
-    if (landmarks.length === 0) return 0;
-
-    // Factor 1: Landmark visibility (70% weight)
-    const visibilityScore = this.calculateConfidence(landmarks);
-
-    // Factor 2: Landmark distribution (30% weight)
-    // Check if key torso landmarks are visible (shoulders, hips)
-    const keyLandmarks = [5, 6, 11, 12]; // left/right shoulders, left/right hips
-    const keyVisibleCount = keyLandmarks.filter(
-      (idx) => landmarks[idx] && landmarks[idx].visibility > 0.5
-    ).length;
-    const distributionScore = keyVisibleCount / keyLandmarks.length;
-
-    // Future: Factor 3: Lighting (from adaptive settings)
-    // Future: Factor 4: Distance/scale (from bounding box size)
-
-    // Weighted average
-    const qualityScore = visibilityScore * 0.7 + distributionScore * 0.3;
-
-    return Math.min(1.0, Math.max(0.0, qualityScore));
-  }
-
-  /**
-   * Pre-compute all anatomical reference frames with caching
-   * Gate 9B.5: Eliminates redundant frame calculation in downstream services
-   *
-   * Performance: With 80% cache hit rate, reduces frame computation from ~15ms to <3ms
-   *
-   * Frames computed:
-   * - Global: Always (world coordinate system)
-   * - Thorax: Always (trunk reference)
-   * - Humerus (L/R): Conditional on shoulder/elbow visibility
-   *
-   * @param landmarks - Pose landmarks from detection model
-   * @returns Object containing pre-computed anatomical frames
-   */
-  private preComputeAnatomicalFrames(
-    landmarks: PoseLandmark[]
-  ): ProcessedPoseData['cachedAnatomicalFrames'] {
-    // Global frame: Always compute (foundation for all other frames)
-    const global = this.frameCache.get('global', landmarks, (lm) =>
-      this.anatomicalService.calculateGlobalFrame(lm)
-    );
-
-    // Thorax frame: Always compute (trunk reference for measurements)
-    const thorax = this.frameCache.get('thorax', landmarks, (lm) =>
-      this.anatomicalService.calculateThoraxFrame(lm, global)
-    );
-
-    // Pelvis frame: For Gate 9B.5, use hip midpoint as simplified pelvis
-    // TODO: Implement full calculatePelvisFrame in AnatomicalReferenceService for Gate 10A
-    const pelvis = global; // Simplified: pelvis origin = global origin (hip center)
-
-    // Conditional frames: Only compute if required landmarks are visible
-    const leftShoulder = landmarks.find((lm) => lm.name === 'left_shoulder');
-    const leftElbow = landmarks.find((lm) => lm.name === 'left_elbow');
-    const rightShoulder = landmarks.find((lm) => lm.name === 'right_shoulder');
-    const rightElbow = landmarks.find((lm) => lm.name === 'right_elbow');
-
-    // Left humerus: Requires left shoulder + elbow with sufficient visibility
-    const left_humerus =
-      (leftShoulder?.visibility ?? 0) > 0.5 && (leftElbow?.visibility ?? 0) > 0.5
-        ? this.frameCache.get('left_humerus', landmarks, (lm) =>
-            this.anatomicalService.calculateHumerusFrame(lm, 'left', thorax)
-          )
-        : undefined;
-
-    // Right humerus: Requires right shoulder + elbow with sufficient visibility
-    const right_humerus =
-      (rightShoulder?.visibility ?? 0) > 0.5 && (rightElbow?.visibility ?? 0) > 0.5
-        ? this.frameCache.get('right_humerus', landmarks, (lm) =>
-            this.anatomicalService.calculateHumerusFrame(lm, 'right', thorax)
-          )
-        : undefined;
-
-    // Forearm frames: For Gate 9B.5, omitted (will be added in Gate 10A)
-    // TODO: Implement calculateForearmFrame in AnatomicalReferenceService for Gate 10A
-    const left_forearm = undefined;
-    const right_forearm = undefined;
-
-    return {
-      global,
-      thorax,
-      pelvis,
-      left_humerus,
-      right_humerus,
-      left_forearm,
-      right_forearm,
-    };
-  }
-
-  /**
    * Track performance metrics
    */
   private trackPerformance(inferenceTime: number): void {
@@ -635,17 +511,8 @@ export class PoseDetectionServiceV2 {
       console.log('🔄 One-Euro filter reset');
     }
 
-    // Gate 9B: Reset orientation classifier history
-    if (this.orientationClassifier) {
-      this.orientationClassifier.clearHistory();
-      console.log('🔄 Orientation classifier history reset');
-    }
-
-    // Gate 9B.5: Clear anatomical frame cache
-    if (this.frameCache) {
-      this.frameCache.clear();
-      console.log('🔄 Anatomical frame cache cleared');
-    }
+    // Gate 9B/9B.5: Reset orientation history and anatomical frame cache
+    this.enricher.reset();
   }
 
   /**
@@ -703,14 +570,9 @@ export class PoseDetectionServiceV2 {
     }
 
     // Gate 9B: Reset orientation classifier
-    if (this.orientationClassifier) {
-      this.orientationClassifier.clearHistory();
-    }
 
     // Gate 9B.5: Clear frame cache
-    if (this.frameCache) {
-      this.frameCache.clear();
-    }
+    this.enricher.reset();
 
     console.log('🧹 PoseDetectionService V2 cleaned up');
   }
@@ -755,7 +617,7 @@ export class PoseDetectionServiceV2 {
    * @returns Cache statistics including hit rate and memory usage
    */
   getFrameCacheStats() {
-    return this.frameCache ? this.frameCache.getStats() : null;
+    return this.enricher.getFrameCacheStats();
   }
 }
 

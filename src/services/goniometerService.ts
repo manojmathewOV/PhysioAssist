@@ -2,7 +2,7 @@ import { PoseLandmark, JointAngle, AngleCalculationConfig } from '../types/pose'
 import { Vector3D } from '../types/common';
 import { AnatomicalPlane } from '../types/biomechanics';
 import { angleBetweenVectors, projectVectorOntoPlane } from '@utils/vectorMath';
-import { poseSchemaRegistry } from './pose/PoseSchemaRegistry';
+import { findLandmark } from './pose/landmarkLookup';
 
 type LandmarkTriplet = [proximal: string, vertex: string, distal: string];
 
@@ -26,22 +26,6 @@ const JOINT_LANDMARKS: Record<string, LandmarkTriplet> = {
 /** camelCase joint names accepted by getJointAngle (e.g. 'leftElbow' -> 'left_elbow') */
 const toSnakeCase = (jointName: string): string =>
   jointName.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
-
-/**
- * Find a landmark by name, falling back to its index in the schema implied by the
- * landmark count (17 = MoveNet, 33 = MediaPipe) for data without landmark names.
- */
-function findLandmark(landmarks: PoseLandmark[], name: string): PoseLandmark | undefined {
-  const byName = landmarks.find((lm) => lm?.name === name);
-  if (byName) {
-    return byName;
-  }
-  const schema = poseSchemaRegistry.get(
-    landmarks.length >= 33 ? 'mediapipe-33' : 'movenet-17'
-  );
-  const def = schema?.landmarks.find((d) => d.name === name);
-  return def ? landmarks[def.index] : undefined;
-}
 
 export class GoniometerService {
   private readonly config: Required<AngleCalculationConfig>;

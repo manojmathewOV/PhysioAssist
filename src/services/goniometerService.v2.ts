@@ -19,6 +19,7 @@
  * const shoulderEuler = goniometer.calculateShoulderEulerAngles(poseData, 'left');
  */
 
+import { getMeasurementLandmarks } from './pose/measurementLandmarks';
 import {
   PoseLandmark,
   JointAngle,
@@ -108,10 +109,12 @@ export class GoniometerServiceV2 {
       poseData.schemaId || 'movenet-17'
     );
 
-    // 2. Get landmarks by index property (not array position)
-    const pointA = poseData.landmarks.find((lm) => lm.index === indices.point1);
-    const pointB = poseData.landmarks.find((lm) => lm.index === indices.joint);
-    const pointC = poseData.landmarks.find((lm) => lm.index === indices.point2);
+    // 2. Get landmarks by index property (not array position), in aspect-corrected
+    //    2D measurement space (see pose/measurementLandmarks for why not raw x/y/z)
+    const landmarks = getMeasurementLandmarks(poseData);
+    const pointA = landmarks.find((lm) => lm.index === indices.point1);
+    const pointB = landmarks.find((lm) => lm.index === indices.joint);
+    const pointC = landmarks.find((lm) => lm.index === indices.point2);
 
     // 2a. Check if all landmarks exist
     if (!pointA || !pointB || !pointC) {

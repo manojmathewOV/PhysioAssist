@@ -5,8 +5,8 @@
 import type { PoseLandmark, ProcessedPoseData } from '../../types/pose';
 import { poseSchemaRegistry } from './PoseSchemaRegistry';
 
-/** Bundled model file (see scripts/download-models.sh). */
-export const BLAZEPOSE_MODEL_FILE = 'pose_landmarker_full.task';
+/** Default bundled model file (see scripts/download-models.sh and adaptiveModel). */
+export { BLAZEPOSE_FULL_MODEL_FILE as BLAZEPOSE_MODEL_FILE } from './adaptiveModel';
 
 /** Shape of a MediaPipe landmark as delivered by react-native-mediapipe. */
 export interface MediaPipeLandmark {
@@ -24,6 +24,19 @@ export interface MediaPipePoseResultBundle {
     worldLandmarks: MediaPipeLandmark[][];
   }[];
   inferenceTime: number;
+  inputImageWidth?: number;
+  inputImageHeight?: number;
+}
+
+export interface MediaPipeConversionOptions {
+  timestamp?: number;
+  /**
+   * Map normalized image points into another normalized space, e.g. the mirrored,
+   * cropped camera preview so the overlay lines up. Pass `aspectRatio` for that space.
+   */
+  mapPoint?: (point: { x: number; y: number }) => { x: number; y: number };
+  /** Width / height of the space the (mapped) landmarks are normalized in. */
+  aspectRatio?: number;
 }
 
 const MEDIAPIPE_33_NAMES: string[] = (() => {
@@ -38,18 +51,27 @@ const MEDIAPIPE_33_NAMES: string[] = (() => {
 const landmarkScore = (landmark: MediaPipeLandmark): number =>
   landmark.visibility ?? landmark.presence ?? 0;
 
+const toPoseLandmark = (
+  lm: MediaPipeLandmark,
+  index: number,
+  point: { x: number; y: number } = lm
+): PoseLandmark => ({
+  x: point.x,
+  y: point.y,
+  z: lm.z,
+  visibility: landmarkScore(lm),
+  index,
+  name: MEDIAPIPE_33_NAMES[index] ?? `landmark_${index}`,
+});
+
 /**
  * Convert the first detected pose in a result bundle. Returns null when no pose
- * was found.
- *
- * x/y are normalized [0, 1] image coordinates unless `mapPoint` is given, e.g. to
- * map them into the (mirrored, cropped) camera preview so the overlay lines up.
- * World landmarks are metric 3D coordinates centred on the hips.
+ * was found. World landmarks (metres, hip-centred) keep the image landmarks'
+ * names and visibility so they can be looked up the same way.
  */
 export function mediapipeResultToPoseData(
   bundle: MediaPipePoseResultBundle,
-  timestamp: number = Date.now(),
-  mapPoint?: (point: { x: number; y: number }) => { x: number; y: number }
+  { timestamp = Date.now(), mapPoint, aspectRatio }: MediaPipeConversionOptions = {}
 ): ProcessedPoseData | null {
   const pose = bundle.results[0];
   const rawLandmarks = pose?.landmarks[0];
@@ -57,29 +79,33 @@ export function mediapipeResultToPoseData(
     return null;
   }
 
-  const landmarks: PoseLandmark[] = rawLandmarks.map((lm, index) => {
-    const { x, y } = mapPoint ? mapPoint({ x: lm.x, y: lm.y }) : lm;
-    return {
-      x,
-      y,
-      z: lm.z,
-      visibility: landmarkScore(lm),
-      index,
-      name: MEDIAPIPE_33_NAMES[index] ?? `landmark_${index}`,
-    };
-  });
+  const landmarks = rawLandmarks.map((lm, index) =>
+    toPoseLandmark(lm, index, mapPoint ? mapPoint(lm) : lm)
+  );
+  const rawWorld = pose.worldLandmarks[0];
+  const worldLandmarks = rawWorld?.length
+    ? rawWorld.map((lm, index) => ({
+        ...toPoseLandmark(lm, index),
+        visibility: landmarks[index]?.visibility ?? 0,
+      }))
+    : undefined;
 
   const confidence =
     landmarks.reduce((sum, lm) => sum + lm.visibility, 0) / landmarks.length;
-  const worldLandmarks = pose.worldLandmarks[0];
+  const imageAspect =
+    bundle.inputImageWidth && bundle.inputImageHeight
+      ? bundle.inputImageWidth / bundle.inputImageHeight
+      : undefined;
 
   return {
     landmarks,
     worldLandmarks,
+    aspectRatio: aspectRatio ?? (mapPoint ? undefined : imageAspect),
     timestamp,
     confidence,
     inferenceTime: bundle.inferenceTime,
     schemaId: 'mediapipe-33',
-    hasDepth: Boolean(worldLandmarks && worldLandmarks.length > 0),
+    zIsRelative: true,
+    hasDepth: Boolean(worldLandmarks),
   };
 }

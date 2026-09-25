@@ -24,8 +24,22 @@ export interface ProcessedPoseData {
   landmarks: PoseLandmark[];
   timestamp: number;
   confidence: number;
-  /** World-space 3D landmarks (raw model output, type depends on ML framework) */
-  worldLandmarks?: unknown[];
+  /**
+   * World-space 3D landmarks in metres (hip-centred), same names/indices as
+   * `landmarks`. Used to detect out-of-plane limbs, not to compute angles.
+   */
+  worldLandmarks?: PoseLandmark[];
+  /**
+   * Width / height of the space `landmarks` are normalized in. x and y are
+   * normalized separately, so angle maths rescales x by this (see
+   * services/pose/measurementLandmarks). Defaults to 1.
+   */
+  aspectRatio?: number;
+  /**
+   * True when landmark z is a model's relative depth guess (MediaPipe image
+   * landmarks) rather than a measurement; angle maths then ignores z.
+   */
+  zIsRelative?: boolean;
   inferenceTime?: number; // V2: ML inference time in milliseconds
 
   // Gate 9B: Metadata for schema, orientation, and quality

@@ -1,3 +1,4 @@
+import { findLandmark } from './landmarkLookup';
 import { PoseLandmark } from '../../types/pose';
 
 export interface OrientationResult {
@@ -98,8 +99,8 @@ export class OrientationClassifier {
     let score = 0.0;
 
     // Check shoulder width (wider = more frontal)
-    const leftShoulder = landmarks[5];
-    const rightShoulder = landmarks[6];
+    const leftShoulder = findLandmark(landmarks, 'left_shoulder');
+    const rightShoulder = findLandmark(landmarks, 'right_shoulder');
 
     if (leftShoulder && rightShoulder) {
       const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
@@ -121,8 +122,8 @@ export class OrientationClassifier {
     }
 
     // Check hip width
-    const leftHip = landmarks[11];
-    const rightHip = landmarks[12];
+    const leftHip = findLandmark(landmarks, 'left_hip');
+    const rightHip = findLandmark(landmarks, 'right_hip');
 
     if (leftHip && rightHip) {
       const hipWidth = Math.abs(rightHip.x - leftHip.x);
@@ -139,9 +140,9 @@ export class OrientationClassifier {
     }
 
     // Face visibility (nose, eyes)
-    const nose = landmarks[0];
-    const leftEye = landmarks[1];
-    const rightEye = landmarks[2];
+    const nose = findLandmark(landmarks, 'nose');
+    const leftEye = findLandmark(landmarks, 'left_eye');
+    const rightEye = findLandmark(landmarks, 'right_eye');
 
     if (nose && nose.visibility > 0.5) {
       score += 0.1;
@@ -172,8 +173,8 @@ export class OrientationClassifier {
     let score = 0.0;
 
     // Check shoulder width (narrower = more sagittal)
-    const leftShoulder = landmarks[5];
-    const rightShoulder = landmarks[6];
+    const leftShoulder = findLandmark(landmarks, 'left_shoulder');
+    const rightShoulder = findLandmark(landmarks, 'right_shoulder');
 
     if (leftShoulder && rightShoulder) {
       const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
@@ -195,8 +196,8 @@ export class OrientationClassifier {
     }
 
     // Check hip width
-    const leftHip = landmarks[11];
-    const rightHip = landmarks[12];
+    const leftHip = findLandmark(landmarks, 'left_hip');
+    const rightHip = findLandmark(landmarks, 'right_hip');
 
     if (leftHip && rightHip) {
       const hipWidth = Math.abs(rightHip.x - leftHip.x);
@@ -240,9 +241,9 @@ export class OrientationClassifier {
     let score = 0.0;
 
     // Face NOT visible (key indicator of posterior)
-    const nose = landmarks[0];
-    const leftEye = landmarks[1];
-    const rightEye = landmarks[2];
+    const nose = findLandmark(landmarks, 'nose');
+    const leftEye = findLandmark(landmarks, 'left_eye');
+    const rightEye = findLandmark(landmarks, 'right_eye');
 
     let faceVisibilityCount = 0;
     if (nose && nose.visibility > 0.5) faceVisibilityCount++;
@@ -257,8 +258,8 @@ export class OrientationClassifier {
     }
 
     // Wide shoulders (similar to frontal, but with no face)
-    const leftShoulder = landmarks[5];
-    const rightShoulder = landmarks[6];
+    const leftShoulder = findLandmark(landmarks, 'left_shoulder');
+    const rightShoulder = findLandmark(landmarks, 'right_shoulder');
 
     if (leftShoulder && rightShoulder) {
       const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
@@ -275,8 +276,8 @@ export class OrientationClassifier {
     }
 
     // Wide hips (visible from back)
-    const leftHip = landmarks[11];
-    const rightHip = landmarks[12];
+    const leftHip = findLandmark(landmarks, 'left_hip');
+    const rightHip = findLandmark(landmarks, 'right_hip');
 
     if (leftHip && rightHip) {
       const hipWidth = Math.abs(rightHip.x - leftHip.x);
@@ -287,8 +288,8 @@ export class OrientationClassifier {
     }
 
     // Ears more visible than eyes (looking away)
-    const leftEar = landmarks[3];
-    const rightEar = landmarks[4];
+    const leftEar = findLandmark(landmarks, 'left_ear');
+    const rightEar = findLandmark(landmarks, 'right_ear');
 
     if (leftEar && rightEar) {
       const earVisibility = (leftEar.visibility + rightEar.visibility) / 2;

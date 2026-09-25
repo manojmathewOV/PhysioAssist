@@ -41,6 +41,11 @@ export interface ValidationResult {
   feedback: string[];
   jointAngles?: Record<string, JointAngle>;
   phaseProgress?: number;
+  /**
+   * Required joints whose limb is turned toward/away from the camera, so the 2D
+   * angle is foreshortened and should be shown as an estimate.
+   */
+  estimatedJoints?: string[];
 }
 
 export interface RepetitionData {

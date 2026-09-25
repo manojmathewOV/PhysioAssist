@@ -25,7 +25,9 @@ describe('mediapipeResultToPoseData', () => {
   });
 
   it('converts 33 landmarks with MediaPipe names, schema id and depth info', () => {
-    const pose = mediapipeResultToPoseData(bundle(makeLandmarks(33)), 1000);
+    const pose = mediapipeResultToPoseData(bundle(makeLandmarks(33)), {
+      timestamp: 1000,
+    });
 
     expect(pose).not.toBeNull();
     expect(pose!.schemaId).toBe('mediapipe-33');
@@ -50,10 +52,11 @@ describe('mediapipeResultToPoseData', () => {
   });
 
   it('maps points into view space when a mapper is given', () => {
-    const pose = mediapipeResultToPoseData(bundle(makeLandmarks(33)), 0, ({ x, y }) => ({
-      x: 1 - x,
-      y,
-    }));
+    const pose = mediapipeResultToPoseData(bundle(makeLandmarks(33)), {
+      mapPoint: ({ x, y }) => ({ x: 1 - x, y }),
+      aspectRatio: 0.5,
+    });
+    expect(pose!.aspectRatio).toBe(0.5);
     expect(pose!.landmarks[10].x).toBeCloseTo(0.9);
     expect(pose!.landmarks[10].y).toBeCloseTo(0.05);
   });

@@ -1,29 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  // Dimensions,
-} from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
-import {
-  usePoseDetection,
-  RunningMode,
-  Delegate,
-  type PoseDetectionResultBundle,
-  type ViewCoordinator,
-} from 'react-native-mediapipe';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { RootState } from '@store/index';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
-import {
-  BLAZEPOSE_MODEL_FILE,
-  mediapipeResultToPoseData,
-} from '@services/pose/mediapipeLandmarks';
+import { useBlazePose, CAMERA_FPS } from '@hooks/useBlazePose';
 import type { MockPoseDataSimulator } from '@services/mockPoseDataSimulator';
 // Conditional import: Only include mock simulator in development builds
 const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
@@ -31,9 +14,6 @@ const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
   : null;
 import PoseOverlay from '@components/pose/PoseOverlay';
 import ExerciseControls from '@components/exercises/ExerciseControls';
-
-// Camera runs at 30 FPS; the frame-skip setting lowers the detection rate from there.
-const CAMERA_FPS = 30;
 
 const PoseDetectionScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -50,11 +30,17 @@ const PoseDetectionScreen: React.FC = () => {
   const [initError, setInitError] = useState<string | null>(null);
   const frameCountRef = useRef(0);
 
-  // Read inside the MediaPipe result callback, which is registered once per detector
-  const isDetectingRef = useRef(isDetecting);
-  const isPausedRef = useRef(isPaused);
-  isDetectingRef.current = isDetecting;
-  isPausedRef.current = isPaused;
+  // BlazePose runs only while detecting (and not paused); poses go to the Redux store
+  const { cameraProps, error: detectorError } = useBlazePose({
+    device,
+    enabled: isDetecting && !isPaused && !useMockData,
+    frameSkip,
+  });
+  useEffect(() => {
+    if (detectorError) {
+      setInitError('Pose detection unavailable');
+    }
+  }, [detectorError]);
 
   useEffect(() => {
     requestCameraPermission();
@@ -126,48 +112,6 @@ const PoseDetectionScreen: React.FC = () => {
     frameCountRef.current = 0;
   }, []);
 
-  // MediaPipe BlazePose (33 landmarks + world 3D) via react-native-mediapipe.
-  // Results arrive on the JS thread; landmarks are mapped into the mirrored, cropped
-  // preview so the overlay lines up with the camera image.
-  const onPoseResults = useCallback(
-    (bundle: PoseDetectionResultBundle, viewCoordinator: ViewCoordinator) => {
-      if (!isDetectingRef.current || isPausedRef.current) {
-        return;
-      }
-      const frameDims = viewCoordinator.getFrameDims(bundle);
-      const view = cameraViewDimsRef.current;
-      const poseData = mediapipeResultToPoseData(bundle, Date.now(), (point) => {
-        const mapped = viewCoordinator.convertPoint(frameDims, point);
-        return { x: mapped.x / view.width, y: mapped.y / view.height };
-      });
-      if (poseData) {
-        dispatch(setPoseData(poseData));
-      }
-    },
-    [dispatch]
-  );
-
-  const onPoseError = useCallback((error: { code: number; message: string }) => {
-    console.error('Pose detection error:', error.message);
-    setInitError('Pose detection unavailable');
-  }, []);
-
-  const poseSolution = usePoseDetection(
-    { onResults: onPoseResults, onError: onPoseError },
-    RunningMode.LIVE_STREAM,
-    BLAZEPOSE_MODEL_FILE,
-    {
-      delegate: Delegate.GPU,
-      fpsMode: Math.max(1, Math.round(CAMERA_FPS / Math.max(1, frameSkip))),
-    }
-  );
-  const cameraViewDimsRef = useRef(poseSolution.cameraViewDimensions);
-  cameraViewDimsRef.current = poseSolution.cameraViewDimensions;
-
-  useEffect(() => {
-    poseSolution.cameraDeviceChangeHandler(device);
-  }, [device, poseSolution]);
-
   // Render fallback UI when camera is not available but mock data is enabled
   if ((!device || !hasPermission) && !useMockData) {
     return (
@@ -200,15 +144,10 @@ const PoseDetectionScreen: React.FC = () => {
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={isFocused}
-          pixelFormat="rgb"
           resizeMode="cover"
-          onLayout={poseSolution.cameraViewLayoutChangeHandler}
-          onOutputOrientationChanged={poseSolution.cameraOrientationChangedHandler}
-          frameProcessor={
-            isDetecting && !isPaused ? poseSolution.frameProcessor : undefined
-          }
           fps={CAMERA_FPS}
           testID="camera-view"
+          {...cameraProps}
         />
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.mockBackground]}>
