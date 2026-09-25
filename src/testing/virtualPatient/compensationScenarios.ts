@@ -30,6 +30,13 @@ export interface CompensationScenario extends Scenario {
 
 const SIDE: BodyPose = { ...STANDING, view: 'side' };
 const FRONT: BodyPose = { ...STANDING, view: 'front' };
+/** Sitting side-on, left leg nearest the camera, both knees bent to 90°. */
+export const SEATED: BodyPose = {
+  ...STANDING,
+  view: 'seatedSide',
+  leftKnee: 90,
+  rightKnee: 90,
+};
 
 const LEAD_MS = 500;
 const MOVE_MS = 1200;
@@ -78,6 +85,15 @@ const SHOULDER: MovementContext = {
 };
 const KNEE: MovementContext = { joint: 'knee', side: 'left', exerciseId: 'squat' };
 const HIP: MovementContext = { joint: 'hip', side: 'left', exerciseId: 'squat' };
+export const SEATED_EXTENSION: MovementContext = {
+  joint: 'knee',
+  side: 'left',
+  exerciseId: 'seated-knee-extension',
+};
+
+// Seated knee extension: from 90° to nearly straight (interior 176° = 4° short)
+const extend = (extra: JointAngles = {}, top = 176) =>
+  oneRep({ leftKnee: 90 }, { leftKnee: top, ...extra });
 
 const scenario = (
   id: string,
@@ -122,6 +138,48 @@ const squat = (extra: JointAngles = {}, depth = 100) =>
   });
 
 export const COMPENSATION_SCENARIOS: CompensationScenario[] = [
+  // Seated knee extension, side-on
+  scenario(
+    'seated-extension-clean',
+    'Seated knee extension side-on, good form',
+    SEATED,
+    SEATED_EXTENSION,
+    extend(),
+    []
+  ),
+  scenario(
+    'seated-extension-lean-back-warn',
+    'Seated knee extension, leaning back 12°',
+    SEATED,
+    SEATED_EXTENSION,
+    extend({ trunkLeanBack: 12 }),
+    [{ id: 'lean_back', severity: 'warn' }]
+  ),
+  scenario(
+    'seated-extension-lean-back-flag',
+    'Seated knee extension, leaning back 20°',
+    SEATED,
+    SEATED_EXTENSION,
+    extend({ trunkLeanBack: 20 }),
+    [{ id: 'lean_back', severity: 'flag' }]
+  ),
+  scenario(
+    'seated-extension-thigh-lift-warn',
+    'Seated knee extension, thigh rises 12°',
+    SEATED,
+    SEATED_EXTENSION,
+    extend({ thighLift: 12 }),
+    [{ id: 'thigh_lift', severity: 'warn' }]
+  ),
+  scenario(
+    'seated-extension-thigh-lift-flag',
+    'Seated knee extension, thigh rises 20°',
+    SEATED,
+    SEATED_EXTENSION,
+    extend({ thighLift: 20 }),
+    [{ id: 'thigh_lift', severity: 'flag' }]
+  ),
+
   // Arm raise, side-on
   scenario(
     'raise-side-clean',

@@ -54,6 +54,22 @@ export const EXERCISE_OPTIONS: ExerciseOption[] = [
     icon: 'event-seat',
   },
   {
+    key: 'seatedKneeExtension',
+    exercise: EXERCISES.seatedKneeExtension,
+    title: 'Seated knee straightening',
+    description: 'Sit side-on and straighten your knee as far as is comfortable',
+    goal: `${EXERCISES.seatedKneeExtension.targetRepetitions} repetitions`,
+    icon: 'airline-seat-legroom-extra',
+  },
+  {
+    key: 'seatedKneeFlexion',
+    exercise: EXERCISES.seatedKneeFlexion,
+    title: 'Seated knee bend',
+    description: 'Sit side-on and slide your foot back under the chair',
+    goal: `${EXERCISES.seatedKneeFlexion.targetRepetitions} repetitions`,
+    icon: 'airline-seat-legroom-reduced',
+  },
+  {
     key: 'hamstringStretch',
     exercise: EXERCISES.hamstringStretch,
     title: 'Hamstring stretch',

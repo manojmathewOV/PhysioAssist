@@ -37,6 +37,7 @@ export interface Scenario {
 }
 
 const SIDE: BodyPose = { ...STANDING, view: 'side' };
+const SEATED: BodyPose = { ...STANDING, view: 'seatedSide', leftKnee: 90, rightKnee: 90 };
 const FRONT: BodyPose = {
   ...STANDING,
   view: 'front',
@@ -313,6 +314,79 @@ export const SCENARIOS: Scenario[] = [
     }),
     plan: { joint: 'shoulder', side: 'left', goalDegrees: 80, limitDegrees: 100 },
     expect: { reps: 0, overLimit: true, bestDegrees: 125 },
+  },
+  {
+    id: 'seated-knee-extension-normal',
+    exerciseId: 'seated-knee-extension',
+    title: 'Seated knee straightening, nearly straight',
+    description:
+      'Sitting side-on, the left knee straightens from 90° to 4° short of straight.',
+    base: SEATED,
+    timeline: repetitions({
+      rest: { leftKnee: 90 },
+      target: { leftKnee: 176 },
+      reps: 5,
+      moveMs: 1300,
+      holdMs: 1500,
+      restMs: 700,
+    }),
+    plan: { joint: 'knee', side: 'left' },
+    // Best = closest to straight (smallest flexion)
+    expect: { reps: 5, bestDegrees: 4 },
+  },
+  {
+    id: 'seated-knee-extension-deficit',
+    exerciseId: 'seated-knee-extension',
+    title: 'Seated knee straightening, 30° short of straight',
+    description:
+      'Active extension deficit of 30°: short of the 10° goal, so no reps count.',
+    base: SEATED,
+    timeline: repetitions({
+      rest: { leftKnee: 90 },
+      target: { leftKnee: 150 },
+      reps: 3,
+      moveMs: 1300,
+      holdMs: 1500,
+      restMs: 700,
+    }),
+    plan: { joint: 'knee', side: 'left', goalDegrees: 10 },
+    expect: { reps: 0, bestDegrees: 30 },
+  },
+  {
+    id: 'seated-knee-extension-meets-goal',
+    exerciseId: 'seated-knee-extension',
+    title: 'Seated knee straightening, meets a 30° goal',
+    description:
+      'Early after surgery the physio sets "within 30° of straight"; 25° counts.',
+    base: SEATED,
+    timeline: repetitions({
+      rest: { leftKnee: 90 },
+      target: { leftKnee: 155 },
+      reps: 3,
+      moveMs: 1300,
+      holdMs: 1500,
+      restMs: 700,
+    }),
+    plan: { joint: 'knee', side: 'left', goalDegrees: 30 },
+    expect: { reps: 3, bestDegrees: 25 },
+  },
+  {
+    id: 'seated-knee-flexion-normal',
+    exerciseId: 'seated-knee-flexion',
+    title: 'Seated knee bend to 120°',
+    description:
+      'Sitting side-on, the left foot slides back: knee from 90° to 120° bent.',
+    base: SEATED,
+    timeline: repetitions({
+      rest: { leftKnee: 90 },
+      target: { leftKnee: 60 },
+      reps: 5,
+      moveMs: 1300,
+      holdMs: 1500,
+      restMs: 700,
+    }),
+    plan: { joint: 'knee', side: 'left' },
+    expect: { reps: 5, bestDegrees: 120 },
   },
 ];
 

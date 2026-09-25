@@ -310,6 +310,83 @@ export const EXERCISES: Record<string, Exercise> = {
       },
     ],
   },
+
+  seatedKneeExtension: {
+    id: 'seated-knee-extension',
+    name: 'Seated Knee Extension',
+    description:
+      'Knee straightening while sitting (long-arc quad), side-on to the camera',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'knee',
+    targetMuscles: ['quadriceps'],
+    equipment: ['armless chair'],
+    targetRepetitions: 10,
+    targetSets: 2,
+    restDuration: 30000,
+    instructions: [
+      'Sit on an armless chair, side-on to the phone, with the leg you are exercising closest to it',
+      'Put the phone level with your knee, far enough away to see your hip, knee and foot',
+      'Sit tall with your thigh resting on the chair',
+      'Slowly straighten your knee as far as is comfortable, and hold',
+      'Lower your foot slowly back down',
+    ],
+    warnings: ['Keep your thigh on the chair and your back upright'],
+    phases: [
+      {
+        name: 'bent',
+        description: 'Knee bent, foot under the knee',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 70, maxAngle: 125, targetAngle: 90 },
+        ],
+      },
+      {
+        name: 'straight',
+        description: 'Knee straightened',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 165, maxAngle: 180, targetAngle: 178 },
+        ],
+        holdDuration: 1000,
+      },
+    ],
+  },
+
+  seatedKneeFlexion: {
+    id: 'seated-knee-flexion',
+    name: 'Seated Knee Bend',
+    description: 'Sliding the foot back under the chair to bend the knee past 90°',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'knee',
+    targetMuscles: ['hamstrings'],
+    equipment: ['armless chair'],
+    targetRepetitions: 10,
+    targetSets: 2,
+    restDuration: 30000,
+    instructions: [
+      'Sit on an armless chair, side-on to the phone, with the leg you are exercising closest to it',
+      'Put the phone level with your knee, far enough away to see your hip, knee and foot',
+      'Slide your foot back under the chair as far as is comfortable, and hold',
+      'Slide it forward again',
+    ],
+    phases: [
+      {
+        name: 'start',
+        description: 'Foot under the knee',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 80, maxAngle: 125, targetAngle: 90 },
+        ],
+      },
+      {
+        name: 'bent',
+        description: 'Foot slid back',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 30, maxAngle: 70, targetAngle: 55 },
+        ],
+        holdDuration: 1000,
+      },
+    ],
+  },
 };
 
 export const EXERCISE_CATEGORIES = [

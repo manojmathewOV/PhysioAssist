@@ -33,7 +33,10 @@ const byId = (id: string) => COMPENSATION_SCENARIOS.find((s) => s.id === id)!;
 /** Play a scenario and cut its one repetition, as the recorder would. */
 function repOf(
   scenario: CompensationScenario,
-  { view = scenario.base.view, hidden }: { view?: CameraView; hidden?: string } = {}
+  {
+    view = scenario.base.view === 'seatedSide' ? 'side' : scenario.base.view,
+    hidden,
+  }: { view?: CameraView; hidden?: string } = {}
 ): Repetition {
   const { joint, side } = scenario.context;
   const goniometer = new GoniometerService({ smoothingWindow: 1 });

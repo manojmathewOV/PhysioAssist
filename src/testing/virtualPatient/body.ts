@@ -23,7 +23,8 @@ export const FRAME_HEIGHT = 640;
 const PX_PER_M = 330;
 
 export interface BodyPose {
-  view: 'side' | 'front';
+  /** Standing side-on, standing facing the camera, or sitting side-on on a chair. */
+  view: 'side' | 'front' | 'seatedSide';
   leftElbow: number;
   rightElbow: number;
   leftShoulder: number;
@@ -55,6 +56,8 @@ export interface BodyPose {
   forwardHead: number;
   /** Front: degrees the head tilts (ear towards shoulder), about the nose. */
   headTilt: number;
+  /** Seated: degrees the left thigh rises off the chair. */
+  thighLift: number;
 }
 
 export const STANDING: BodyPose = {
@@ -77,6 +80,7 @@ export const STANDING: BodyPose = {
   heelLift: 0,
   forwardHead: 0,
   headTilt: 0,
+  thighLift: 0,
 };
 
 type P = { x: number; y: number; z?: number };
@@ -135,6 +139,54 @@ function sidePose(pose: BodyPose): Record<string, P> {
   };
   const head = add(midShoulder, dir(180 - lean), L.neck);
   head.x += pose.forwardHead; // facing +x
+  pts.nose = { x: head.x + 22, y: head.y };
+  return pts;
+}
+
+/**
+ * Sitting side-on on a chair, facing +x: pelvis on the seat, thighs forward,
+ * lower legs hanging from the knees. The knee angles are the interior angles
+ * (90 = foot under the knee, 180 = leg straight out); the trunk leans back by
+ * `trunkLeanBack` and the left thigh rises by `thighLift`.
+ */
+function seatedSidePose(pose: BodyPose): Record<string, P> {
+  const pts: Record<string, P> = {};
+  const seat = { x: 190, y: 420 };
+  for (const [side, offset] of [
+    ['left', 0],
+    ['right', 6],
+  ] as const) {
+    const knee = side === 'left' ? pose.leftKnee : pose.rightKnee;
+    const lift = side === 'left' ? pose.thighLift : 0;
+    const hip = { x: seat.x + offset, y: seat.y };
+    // Thigh points forward (+x), rising by `lift`
+    const kneeP = add(hip, dir(90 + lift), L.thigh);
+    // Lower leg turns down from the thigh line by (180 - knee)
+    const shankDeg = 90 + lift - (180 - knee);
+    const ankle = add(kneeP, dir(shankDeg), L.shank);
+    pts[`${side}_hip`] = hip;
+    pts[`${side}_knee`] = kneeP;
+    pts[`${side}_ankle`] = ankle;
+    // Foot at right angles to the lower leg, toes forward
+    pts[`${side}_heel`] = add(ankle, dir(shankDeg - 90), 12);
+    pts[`${side}_foot_index`] = add(ankle, dir(shankDeg + 90), 42);
+  }
+  const lean = -pose.trunkLeanBack; // forward lean from vertical
+  for (const side of ['left', 'right'] as const) {
+    const shoulder = add(pts[`${side}_hip`], dir(180 - lean), L.torso);
+    pts[`${side}_shoulder`] = shoulder;
+    const shoulderAngle = side === 'left' ? pose.leftShoulder : pose.rightShoulder;
+    const elbowAngle = side === 'left' ? pose.leftElbow : pose.rightElbow;
+    const upperArmDeg = shoulderAngle - lean;
+    const elbow = add(shoulder, dir(upperArmDeg), L.upperArm);
+    pts[`${side}_elbow`] = elbow;
+    pts[`${side}_wrist`] = add(elbow, dir(upperArmDeg + (180 - elbowAngle)), L.forearm);
+  }
+  const midShoulder = {
+    x: (pts.left_shoulder.x + pts.right_shoulder.x) / 2,
+    y: (pts.left_shoulder.y + pts.right_shoulder.y) / 2,
+  };
+  const head = add(midShoulder, dir(180 - lean), L.neck);
   pts.nose = { x: head.x + 22, y: head.y };
   return pts;
 }
@@ -321,7 +373,7 @@ function sideDepth(name: string, pose: BodyPose): number {
   const part = name.replace(/^(left|right)_/, '');
   const upper = ['shoulder', 'elbow', 'wrist', 'pinky', 'index', 'thumb'].includes(part);
   const lower = ['hip', 'knee', 'ankle', 'heel', 'foot_index'].includes(part);
-  if (pose.view === 'side') {
+  if (pose.view !== 'front') {
     // The left side (the one scenarios measure) nearer the camera, as a
     // patient is asked to stand; the right side behind it
     return -sign * (upper ? SHOULDER_HALF_M : lower ? HIP_HALF_M : 0);
@@ -334,14 +386,19 @@ export function renderBody(
   pose: BodyPose,
   effects: FrameEffects = {}
 ): MediaPipePoseResultBundle {
-  const pts = pose.view === 'front' ? frontPose(pose) : sidePose(pose);
+  const pts =
+    pose.view === 'front'
+      ? frontPose(pose)
+      : pose.view === 'seatedSide'
+        ? seatedSidePose(pose)
+        : sidePose(pose);
   addDetail(pts);
   if (pose.view === 'front' && pose.headTilt) tiltHead(pts, pose.headTilt);
   const hipMid = {
     x: (pts.left_hip.x + pts.right_hip.x) / 2,
     y: (pts.left_hip.y + pts.right_hip.y) / 2,
   };
-  const farSide = pose.view === 'side' ? 'right_' : null;
+  const farSide = pose.view !== 'front' ? 'right_' : null;
 
   const image: MediaPipeLandmark[] = [];
   const world: MediaPipeLandmark[] = [];
