@@ -1,13 +1,9 @@
-# TEMPLATE: copy this file to .github/workflows/ios-simulator.yml to enable it.
-# (The Claude GitHub App can't push into .github/workflows without the
-# "workflows" permission, so it lives here until it's copied into place.)
-
 name: iOS Simulator
 
 # Builds the iOS app on a macOS runner, launches it in the iOS Simulator
 # (screenshots + crash check) and runs the Detox E2E suite.
-# macOS minutes are billed at 10x, so this runs on demand and on PRs that
-# touch app code, not on every push.
+# macOS minutes are billed at 10x, so this runs on demand, on PRs that touch
+# app code, and on pushes to claude/** branches (for iterating on iOS fixes).
 
 on:
   workflow_dispatch:
@@ -25,6 +21,20 @@ on:
         type: choice
         options: [smoke, full, none]
         default: smoke
+  push:
+    branches: ['claude/**']
+    paths:
+      - 'ios/**'
+      - 'src/**'
+      - 'e2e/**'
+      - 'index.js'
+      - 'babel.config.js'
+      - 'metro.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.detoxrc.js'
+      - 'scripts/ci/**'
+      - '.github/workflows/ios-simulator.yml'
   pull_request:
     paths:
       - 'ios/**'

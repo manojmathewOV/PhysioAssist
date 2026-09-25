@@ -1,7 +1,3 @@
-# TEMPLATE: copy this file to .github/workflows/checks.yml to enable it.
-# (The Claude GitHub App can't push into .github/workflows without the
-# "workflows" permission, so it lives here until it's copied into place.)
-
 name: Checks
 
 # Fast Linux checks (types, lint, unit tests, iOS/Android/web bundles).
@@ -9,7 +5,7 @@ name: Checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'claude/**']
   pull_request:
 
 concurrency:
