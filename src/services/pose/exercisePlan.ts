@@ -34,6 +34,8 @@ export interface PlanReference extends MovementProfile {
   savedAt: string;
   /** e.g. the video's file name. */
   label?: string;
+  /** YouTube video the demonstration was performed along with. */
+  videoId?: string;
 }
 
 export interface ExercisePlan {
@@ -47,6 +49,8 @@ export interface ExercisePlan {
   holdSeconds?: number;
   /** The physio's demonstration to compare each session with. */
   reference?: PlanReference;
+  /** YouTube links for exercise videos, by exercise id (shown, never analysed). */
+  videos?: Record<string, string>;
 }
 
 export const JOINT_KINDS: { kind: JointKind; label: string; movement: string }[] = [

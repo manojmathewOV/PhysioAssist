@@ -45,6 +45,8 @@ import {
   useMovementAnalysis,
 } from '../../components/exercises/useMovementAnalysis';
 import { referenceFromVideoFile } from '../../services/web/videoReference';
+import FollowAlongVideo from '../../components/video/FollowAlongVideo';
+import { parseYouTubeId, parseYouTubeStart } from '../../utils/youtube';
 import ExerciseControls from '../../components/exercises/ExerciseControls';
 import ExerciseSummary, {
   ExerciseSummaryProps,
@@ -143,6 +145,9 @@ const WebPoseDetectionScreen: React.FC = () => {
   // starts at "Go".
   // Records the joint of interest for the end-of-session comparison
   const movement = useMovementAnalysis(plan, plannedExercise);
+  // The physio's YouTube video for this exercise, played alongside the camera
+  const videoLink = plan?.videos?.[plannedExercise.id];
+  const videoId = parseYouTubeId(videoLink);
   const movementRef = useRef(movement);
   movementRef.current = movement;
   const [recordingDemo, setRecordingDemo] = useState(false);
@@ -603,6 +608,11 @@ const WebPoseDetectionScreen: React.FC = () => {
       </View>
 
       <ExerciseControls
+        media={
+          videoId ? (
+            <FollowAlongVideo videoId={videoId} start={parseYouTubeStart(videoLink)} />
+          ) : undefined
+        }
         isActive={exerciseState.isExercising || cameraState === 'starting'}
         isPaused={isPaused}
         practice={practice}

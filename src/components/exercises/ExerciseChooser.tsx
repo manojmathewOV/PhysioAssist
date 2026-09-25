@@ -14,6 +14,9 @@ import type { MainTabParamList } from '../../navigation/types';
 import ExerciseSelector from './ExerciseSelector';
 import { EXERCISE_OPTIONS, ExerciseKey, ExerciseOption } from './exerciseCatalog';
 import PlanEditor from './PlanEditor';
+import ExerciseVideo from '../video/ExerciseVideo';
+import { VideoLinkEditor } from '../video/VideoLinkEditor';
+import { parseYouTubeId, parseYouTubeStart } from '../../utils/youtube';
 import { ExercisePlan, jointLabel } from '../../services/pose/exercisePlan';
 
 interface ExerciseChooserProps {
@@ -64,6 +67,7 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
 }) => {
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const [editingPlan, setEditingPlan] = useState(false);
+  const [editingVideo, setEditingVideo] = useState(false);
   const selected = EXERCISE_OPTIONS.find((o) => o.key === selectedKey);
   const toItem = (o: ExerciseOption) => ({ ...o, id: o.exercise.id, name: o.title });
   const forPlan = EXERCISE_OPTIONS.filter(
@@ -79,6 +83,22 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
       : undefined;
   const removeDemo = () => {
     if (plan && onPlanChange) onPlanChange({ ...plan, reference: undefined });
+  };
+  const exerciseId = selected?.exercise.id;
+  const videoLink = exerciseId ? plan?.videos?.[exerciseId] : undefined;
+  const videoId = parseYouTubeId(videoLink);
+  /** Set or clear this exercise's video; a demonstration made with another video no longer applies. */
+  const setVideo = (link?: string) => {
+    if (!plan || !onPlanChange || !exerciseId) return;
+    const videos = { ...plan.videos };
+    if (link) videos[exerciseId] = link;
+    else delete videos[exerciseId];
+    const staleDemo =
+      plan.reference?.exerciseId === exerciseId &&
+      plan.reference.videoId !== undefined &&
+      plan.reference.videoId !== parseYouTubeId(link);
+    onPlanChange({ ...plan, videos, reference: staleDemo ? undefined : plan.reference });
+    setEditingVideo(false);
   };
 
   // First visit (or "Change"): choose the joint we're working on
@@ -145,6 +165,63 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
           />
         </Card>
       ) : null}
+      {plan && selected && onPlanChange ? (
+        <Card style={styles.plan} testID="exercise-video-card">
+          <AppText variant="label" color={colors.textSecondary}>
+            {`${selected.title.toUpperCase()} VIDEO`}
+          </AppText>
+          {editingVideo ? (
+            <VideoLinkEditor
+              initial={videoLink}
+              onSave={setVideo}
+              onCancel={() => setEditingVideo(false)}
+            />
+          ) : videoId ? (
+            <>
+              <ExerciseVideo
+                videoId={videoId}
+                start={parseYouTubeStart(videoLink)}
+                testID="chooser-video"
+              />
+              <AppText variant="body" color={colors.textSecondary}>
+                Watch it first, then follow along. It plays during the exercise too.
+              </AppText>
+              <View style={styles.videoActions}>
+                <BigButton
+                  variant="ghost"
+                  compact
+                  icon="edit"
+                  label="Change video"
+                  onPress={() => setEditingVideo(true)}
+                  testID="exercise-video-change"
+                />
+                <BigButton
+                  variant="ghost"
+                  compact
+                  icon="delete-outline"
+                  label="Remove"
+                  onPress={() => setVideo(undefined)}
+                  testID="exercise-video-remove"
+                />
+              </View>
+            </>
+          ) : (
+            <>
+              <AppText variant="body" color={colors.textSecondary}>
+                Your physio can add a YouTube video showing how to do this exercise.
+              </AppText>
+              <BigButton
+                variant="secondary"
+                compact
+                icon="smart-display"
+                label="Add a YouTube video"
+                onPress={() => setEditingVideo(true)}
+                testID="exercise-video-add"
+              />
+            </>
+          )}
+        </Card>
+      ) : null}
       {plan && selected && (onRecordDemo || onUploadVideo) ? (
         <Card style={styles.plan} testID="exercise-demo">
           <View style={styles.tip}>
@@ -170,7 +247,9 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
                     ? `Reaches about ${reference.peakDegrees}°, ${(
                         reference.repDurationMs / 1000
                       ).toFixed(1)} s per repetition`
-                    : 'Not recorded yet. Your physio can do the exercise once while the camera watches.')}
+                    : videoId
+                      ? 'Not recorded yet. Your physio can do the exercise once along with the video while the camera watches.'
+                      : 'Not recorded yet. Your physio can do the exercise once while the camera watches.')}
               </AppText>
             </View>
           </View>
@@ -263,6 +342,7 @@ const styles = StyleSheet.create({
   setup: { gap: spacing.md, marginTop: spacing.sm },
   plan: { gap: spacing.sm },
   demoActions: { gap: spacing.sm },
+  videoActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   others: { marginTop: spacing.md, marginLeft: spacing.xs },
   tip: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   tipIcon: {

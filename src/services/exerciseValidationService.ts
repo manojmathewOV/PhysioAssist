@@ -41,6 +41,21 @@ export const MIN_REP_INTERVAL_MS = 500;
 export const PHASE_HYSTERESIS_DEG = 8;
 
 /**
+ * What to tell the patient when a joint is outside the phase's range. Angles
+ * are interior angles: for the shoulder (arm-trunk angle) bigger means the arm
+ * is higher; for elbows, knees and hips bigger means straighter.
+ */
+export function rangeInstruction(joint: string, tooLarge: boolean): string {
+  const shoulder = joint.match(/^(left|right)_shoulder$/);
+  if (shoulder) {
+    return tooLarge
+      ? `Lower your ${shoulder[1]} arm a little`
+      : `Raise your ${shoulder[1]} arm higher`;
+  }
+  return tooLarge ? `Bend ${joint} more` : `Straighten ${joint} a little`;
+}
+
+/**
  * Rep counting is a phase state machine (the approach used by open-source
  * trainers such as LearnOpenCV's squat analyser and Good-GYM): the patient must
  * reach every phase in order, each for its dwell time, and a rep completes on
@@ -166,9 +181,7 @@ export class ExerciseValidationService {
       // Check if angle is within acceptable range
       if (angle < minAngle || angle > maxAngle) {
         isValid = false;
-        // Interior angle: above the range means the joint isn't bent enough
-        const direction = angle > maxAngle ? 'more' : 'less';
-        errors.push(`Bend ${requirement.joint} ${direction}`);
+        errors.push(rangeInstruction(requirement.joint, angle > maxAngle));
       }
 
       // Provide feedback on how close to target

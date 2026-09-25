@@ -4,7 +4,10 @@
  * machine) and the app must produce the scenario's expected outcome.
  */
 import { EXERCISES } from '../../../constants/exercises';
-import { ExerciseValidationService } from '../../../services/exerciseValidationService';
+import {
+  ExerciseValidationService,
+  rangeInstruction,
+} from '../../../services/exerciseValidationService';
 import { GoniometerService } from '../../../services/goniometerService';
 import { getMeasurementLandmarks } from '../../../services/pose/measurementLandmarks';
 import { mediapipeResultToPoseData } from '../../../services/pose/mediapipeLandmarks';
@@ -100,5 +103,31 @@ describe('virtual patient feedback gate', () => {
       'Bend left_elbow more',
       'Bend right_elbow more',
     ]);
+  });
+});
+
+describe('range instructions', () => {
+  it('says raise/lower for the shoulder and bend/straighten elsewhere', () => {
+    const { rangeInstruction } = jest.requireActual(
+      '../../../services/exerciseValidationService'
+    );
+    expect(rangeInstruction('left_shoulder', false)).toBe('Raise your left arm higher');
+    expect(rangeInstruction('right_shoulder', true)).toBe(
+      'Lower your right arm a little'
+    );
+    expect(rangeInstruction('left_knee', true)).toBe('Bend left_knee more');
+    expect(rangeInstruction('left_knee', false)).toBe('Straighten left_knee a little');
+  });
+
+  it('tells a patient lifting their arm to raise it higher', () => {
+    const scenario = SCENARIOS.find((s) => s.id === 'arm-raise-short-of-standard')!;
+    const service = new ExerciseValidationService();
+    service.startExercise(applyPlan(exerciseById(scenario.exerciseId), scenario.plan));
+    const raiseErrors = new Set<string>();
+    for (const frame of new VirtualPatient(scenario).frames()) {
+      const result = service.validatePose(frame.pose);
+      if (result.phase === 'raise') result.errors.forEach((e) => raiseErrors.add(e));
+    }
+    expect([...raiseErrors]).toEqual(['Raise your left arm higher']);
   });
 });

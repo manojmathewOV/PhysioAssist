@@ -41,6 +41,8 @@ const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
   ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator
   : null;
 import PoseOverlay from '@components/pose/PoseOverlay';
+import FollowAlongVideo from '@components/video/FollowAlongVideo';
+import { parseYouTubeId, parseYouTubeStart } from '../utils/youtube';
 import ExerciseControls from '@components/exercises/ExerciseControls';
 import ExerciseChooser from '@components/exercises/ExerciseChooser';
 import {
@@ -107,6 +109,9 @@ const PoseDetectionScreen: React.FC = () => {
   const cameraReady = !!device && permission === 'granted';
   // Records the joint of interest for the end-of-session comparison
   const movement = useMovementAnalysis(plan, plannedExercise);
+  // The physio's YouTube video for this exercise, played alongside the camera
+  const videoLink = plan?.videos?.[plannedExercise.id];
+  const videoId = parseYouTubeId(videoLink);
   const [recordingDemo, setRecordingDemo] = useState(false);
 
   // Get into position -> 3-2-1 countdown -> count. Counting (and the timer)
@@ -456,6 +461,11 @@ const PoseDetectionScreen: React.FC = () => {
       {showPoseOverlay !== false ? <PoseOverlay showAngles={showJointAngles} /> : null}
 
       <ExerciseControls
+        media={
+          videoId ? (
+            <FollowAlongVideo videoId={videoId} start={parseYouTubeStart(videoLink)} />
+          ) : undefined
+        }
         isActive={isExercising}
         isPaused={isPaused}
         practice={practice}

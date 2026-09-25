@@ -53,6 +53,8 @@ const ON_DARK = colors.textInverse;
 const ON_DARK_SOFT = 'rgba(255, 255, 255, 0.82)';
 
 interface ExerciseControlsProps {
+  /** Shown above the bottom panel while counting, e.g. the physio's video. */
+  media?: React.ReactNode;
   isActive?: boolean;
   isPaused?: boolean;
   onStart?: () => void;
@@ -74,6 +76,7 @@ interface ExerciseControlsProps {
 }
 
 const ExerciseControls: React.FC<ExerciseControlsProps> = ({
+  media,
   isActive: propIsActive,
   isPaused = false,
   onStart: propOnStart,
@@ -317,6 +320,10 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
 
       {outOfView && !isPaused ? (
         <FramingGuide inFrame={false} />
+      ) : media ? (
+        <View style={[styles.flex, styles.media]} pointerEvents="box-none">
+          {media}
+        </View>
       ) : (
         <View style={styles.flex} pointerEvents="none" />
       )}
@@ -432,6 +439,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.warningSoft,
   },
   bottomPanel: { padding: spacing.lg, gap: spacing.md },
+  media: { justifyContent: 'flex-end', paddingVertical: spacing.sm },
   gatePanel: { padding: spacing.md },
   statsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   statsText: { flex: 1, gap: spacing.xs },

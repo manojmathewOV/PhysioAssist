@@ -20,7 +20,22 @@ import {
   analyseSession,
 } from '../../services/movement/analysis';
 import type { RangeResultProps } from './RangeResult';
+import { parseYouTubeId } from '../../utils/youtube';
 import { detectCompensations, PATIENT_CUES } from '../../services/movement/compensations';
+
+/**
+ * The demonstration to compare with: saved for this exercise, and (if it was
+ * performed along with a video) for the video the exercise uses now.
+ */
+export function referenceFor(
+  plan: ExercisePlan | null | undefined,
+  exercise: Exercise
+): PlanReference | undefined {
+  const ref = plan?.reference;
+  if (!ref || ref.exerciseId !== exercise.id) return undefined;
+  const videoId = parseYouTubeId(plan?.videos?.[exercise.id]);
+  return !ref.videoId || ref.videoId === videoId ? ref : undefined;
+}
 
 export function useMovementAnalysis(
   plan: ExercisePlan | null | undefined,
@@ -48,8 +63,7 @@ export function useMovementAnalysis(
     const rec = recorder.current;
     recorder.current = null;
     if (!rec || rec.frames.length === 0) return null;
-    const reference =
-      plan?.reference?.exerciseId === exercise.id ? plan.reference : undefined;
+    const reference = referenceFor(plan, exercise);
     return analyseSession(
       rec.frames,
       rec.context,
@@ -114,14 +128,14 @@ export function sessionOutcome(
       exerciseId: exercise.id,
       source: 'demonstration',
       savedAt: new Date().toISOString(),
+      videoId: parseYouTubeId(plan.videos?.[exercise.id]) ?? undefined,
     };
     return {
       planUpdate: { ...plan, reference },
       summary: { ...empty, demoSaved: analysis.profile },
     };
   }
-  const reference =
-    plan?.reference?.exerciseId === exercise.id ? plan.reference : undefined;
+  const reference = referenceFor(plan, exercise);
   const range = sessionRange
     ? reference
       ? {
