@@ -102,6 +102,7 @@ export const Screen: React.FC<ScreenProps> = ({
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          testID={testID ? `${testID}-scroll` : undefined}
         >
           {header}
           {children}

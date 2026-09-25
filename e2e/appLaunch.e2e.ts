@@ -72,6 +72,11 @@ describe('App launch smoke test', () => {
   });
 
   it('opens every tab and the help page', async () => {
+    // The help tile is at the bottom of Home: scroll until it can be tapped
+    await waitFor(element(by.id('home-help')))
+      .toBeVisible(100)
+      .whileElement(by.id('home-screen-scroll'))
+      .scroll(250, 'down');
     await element(by.id('home-help')).tap();
     await waitFor(element(by.id('help-screen')))
       .toBeVisible()
