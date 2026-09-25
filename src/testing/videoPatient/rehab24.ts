@@ -71,7 +71,7 @@ export interface LabelledRep {
 }
 
 export function parseSegmentation(csv: string): LabelledRep[] {
-  const [head, ...lines] = csv.trim().split('\n');
+  const [head, ...lines] = csv.trim().split(/\r?\n/);
   const cols = head.split(';');
   return lines.map((line) => {
     const v = Object.fromEntries(line.split(';').map((x, i) => [cols[i], x]));
