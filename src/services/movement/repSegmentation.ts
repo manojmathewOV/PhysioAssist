@@ -68,69 +68,112 @@ export function segmentReps(
   return segmentBy(frames, smooth(hipDrop(frames)), angles, MIN_HIP_DROP);
 }
 
-/** Split by `signal`; peaks, rest and hold are measured on `angles`. */
+/** A repetition's peak must stand out by this share of the session's range. */
+export const MIN_PROMINENCE_SHARE = 0.35;
+/** Wobble (in signal units) ignored when finding where a movement starts or ends. */
+const EDGE_TOLERANCE = 1.5;
+
+/**
+ * Split by `signal`; peaks, rest and hold are measured on `angles`.
+ *
+ * A repetition is a peak that stands out from the valleys on both sides
+ * (topographic prominence, as in scipy's find_peaks) by at least
+ * max(minAmplitude, 35% of the session's range). Unlike fixed thresholds this
+ * handles exercises that don't return to neutral between repetitions (a
+ * shoulder press moves between "goalpost" and overhead) and rests at different
+ * heights, and ignores a final repetition that never comes back down.
+ */
 function segmentBy(
   frames: MovementFrame[],
   signal: (number | null)[],
   angles: (number | null)[],
   minAmplitude: number
 ): Repetition[] {
-  const valid = signal.filter((a): a is number => a !== null).sort((a, b) => a - b);
-  if (valid.length < 10) return [];
-  const low = percentile(valid, 0.05);
-  const high = percentile(valid, 0.95);
-  const amplitude = high - low;
-  if (amplitude < minAmplitude) return [];
-  const upAt = low + 0.6 * amplitude;
-  const downAt = low + 0.3 * amplitude;
-
-  const reps: Repetition[] = [];
-  let lastRestIndex = -1; // most recent frame below downAt
-  let upIndex = -1; // where the current rep crossed upAt
-
+  const idx: number[] = [];
   signal.forEach((a, i) => {
-    if (a === null) return;
-    if (upIndex < 0) {
-      if (a < downAt) lastRestIndex = i;
-      else if (a > upAt && lastRestIndex >= 0) upIndex = i;
-      return;
-    }
-    if (a < downAt) {
-      // Back near rest: the rep ends where the angle stops falling
-      let end = i;
-      while (
-        end + 1 < signal.length &&
-        signal[end + 1] !== null &&
-        (signal[end + 1] as number) <= (signal[end] as number)
-      ) {
-        end++;
-      }
-      reps.push(buildRep(frames, signal, angles, lastRestIndex, end, reps.length));
-      upIndex = -1;
-      lastRestIndex = i;
-    }
+    if (a !== null) idx.push(i);
   });
-  return reps;
+  if (idx.length < 10) return [];
+  const v = idx.map((i) => signal[i] as number);
+  const sorted = [...v].sort((a, b) => a - b);
+  const range = percentile(sorted, 0.95) - percentile(sorted, 0.05);
+  const minProminence = Math.max(minAmplitude, MIN_PROMINENCE_SHARE * range);
+  if (range < minAmplitude) return [];
+
+  // Local maxima (plateaus count once, at their middle)
+  const candidates: number[] = [];
+  for (let k = 1; k < v.length - 1; k++) {
+    if (v[k] > v[k - 1]) {
+      let j = k;
+      while (j + 1 < v.length && v[j + 1] === v[k]) j++;
+      if (j + 1 < v.length && v[j + 1] < v[k]) candidates.push(Math.floor((k + j) / 2));
+      k = j;
+    }
+  }
+
+  // Prominence: height above the higher of the two lowest points reached
+  // before the signal climbs above the peak on either side (or the data ends)
+  const peaks = candidates.filter((k) => {
+    let leftMin = v[k];
+    for (let j = k - 1; j >= 0 && v[j] <= v[k]; j--) leftMin = Math.min(leftMin, v[j]);
+    let rightMin = v[k];
+    for (let j = k + 1; j < v.length && v[j] <= v[k]; j++)
+      rightMin = Math.min(rightMin, v[j]);
+    return v[k] - Math.max(leftMin, rightMin) >= minProminence;
+  });
+
+  // Merge peaks with no real valley between them (a wobbly top is one repetition)
+  const kept: number[] = [];
+  for (const k of peaks) {
+    const prev = kept[kept.length - 1];
+    if (prev !== undefined) {
+      let valley = Infinity;
+      for (let j = prev; j <= k; j++) valley = Math.min(valley, v[j]);
+      if (Math.min(v[prev], v[k]) - valley < minProminence) {
+        if (v[k] > v[prev]) kept[kept.length - 1] = k;
+        continue;
+      }
+    }
+    kept.push(k);
+  }
+
+  const argminBetween = (a: number, b: number) => {
+    let m = a;
+    for (let j = a; j <= b; j++) if (v[j] < v[m]) m = j;
+    return m;
+  };
+  return kept.map((k, n) => {
+    const leftValley = argminBetween(n === 0 ? 0 : kept[n - 1], k);
+    const rightValley = argminBetween(
+      k,
+      n === kept.length - 1 ? v.length - 1 : kept[n + 1]
+    );
+    // The movement starts where the signal last left its valley level, and ends
+    // where it gets back down to the valley level after the peak
+    const drop = (v[k] - v[leftValley]) * 0.1 + EDGE_TOLERANCE;
+    let a = k;
+    while (a > leftValley && v[a - 1] > v[leftValley] + drop) a--;
+    // ...then down to the bottom of that slope: the patient's rest posture
+    while (a > leftValley && v[a - 1] < v[a]) a--;
+    const rise = (v[k] - v[rightValley]) * 0.1 + EDGE_TOLERANCE;
+    let b = k;
+    while (b < rightValley && v[b + 1] > v[rightValley] + rise) b++;
+    while (b < rightValley && v[b + 1] < v[b]) b++;
+    return buildRep(frames, angles, idx[a], idx[k], idx[b], n);
+  });
 }
 
 function buildRep(
   frames: MovementFrame[],
-  signal: (number | null)[],
   angles: (number | null)[],
-  from: number,
+  start: number,
+  peakAt: number,
   to: number,
   index: number
 ): Repetition {
-  // Start where the signal last sat at its lowest before rising
-  let start = from;
-  while (
-    start > 0 &&
-    signal[start - 1] !== null &&
-    (signal[start - 1] as number) <= (signal[start] as number)
-  ) {
-    start--;
-  }
-  let peakIndex = start;
+  // The peak is the largest joint angle in the repetition (the signal may be
+  // another measure, such as hip drop)
+  let peakIndex = peakAt;
   for (let i = start; i <= to; i++) {
     if ((angles[i] ?? -Infinity) > (angles[peakIndex] ?? -Infinity)) peakIndex = i;
   }

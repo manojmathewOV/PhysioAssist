@@ -49,6 +49,12 @@ export const TRUNK_SIDE_LEAN_FLAG_DEG = 12;
 /** Shoulder width (relative to hip width) as a share of the rest width. */
 export const TRUNK_ROTATION_WARN_RATIO = 0.85;
 export const TRUNK_ROTATION_FLAG_RATIO = 0.75;
+/**
+ * Above this shoulder angle MediaPipe's shoulder points slide towards the neck
+ * (the shoulder girdle elevates), which reads as the trunk turning: healthy
+ * people pressing overhead were flagged. Such frames are skipped.
+ */
+export const TRUNK_ROTATION_MAX_ARM_DEG = 100;
 export const BACK_ARCH_WARN_DEG = 10;
 export const BACK_ARCH_FLAG_DEG = 15;
 export const TRUNK_FORWARD_LEAN_WARN_DEG = 10;
@@ -131,12 +137,29 @@ export const DETECTORS_FOR: Record<JointKind, FindingId[]> = {
 export const NOT_FOR_EXERCISE: Record<string, FindingId[]> = {
   // The leg is lifted onto a step, so the heel leaves the floor by design
   'hamstring-stretch': ['heel_lift'],
+  // Bending the elbows is part of a press
+  'shoulder-press': ['elbow_bend'],
 };
+
+/**
+ * Exercises with both feet planted. The knee and pelvis checks need that: on
+ * real recordings of healthy people (Clemente et al. 2024) a moving leg drags
+ * the ankle midpoint and MediaPipe's hip point with it, so in hip abduction
+ * "pelvis shifting" measured a median 62% of torso length and "pelvis not
+ * level" 11%, flagging nearly every repetition.
+ */
+export const WEIGHT_BEARING_EXERCISES = ['squat', 'sit-to-stand', 'lunge', 'step-up'];
+const NEEDS_PLANTED_FEET: FindingId[] = ['knee_valgus', 'hip_hitch', 'pelvic_shift'];
 
 /** Whether a check applies to this exercise. */
 export const appliesTo = (id: FindingId, { joint, exerciseId }: MovementContext) =>
   DETECTORS_FOR[joint].includes(id) &&
-  !(exerciseId && NOT_FOR_EXERCISE[exerciseId]?.includes(id));
+  !(exerciseId && NOT_FOR_EXERCISE[exerciseId]?.includes(id)) &&
+  !(
+    NEEDS_PLANTED_FEET.includes(id) &&
+    exerciseId &&
+    !WEIGHT_BEARING_EXERCISES.includes(exerciseId)
+  );
 
 type Pt = { x: number; y: number };
 type Level = 0 | 1 | 2;
@@ -463,7 +486,7 @@ export const detectTrunkRotation = makeDetector({
   id: 'trunk_rotation',
   unit: 'ratio',
   views: ['front'],
-  setup: (rest) => {
+  setup: (rest, ctx) => {
     const widths = (lms: PoseLandmark[]) => {
       const s = pair(lms, 'shoulder');
       const h = pair(lms, 'hip');
@@ -476,6 +499,13 @@ export const detectTrunkRotation = makeDetector({
     if (!base) return null;
     // Measured as the lost share (1 - ratio), so bigger is worse
     return (f) => {
+      if (
+        f.angle !== null &&
+        f.angle > TRUNK_ROTATION_MAX_ARM_DEG &&
+        ctx.joint === 'shoulder'
+      ) {
+        return null;
+      }
       const w = widths(f.landmarks);
       return w ? 1 - w.sw / base.sw / (w.hw / base.hw) : null;
     };

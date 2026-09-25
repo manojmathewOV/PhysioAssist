@@ -58,7 +58,8 @@ export interface SessionAnalysis {
 // Heuristic thresholds (tune with physios and the virtual-patient scenarios)
 export const RANGE_WARN_RATIO = 0.85;
 export const RANGE_FLAG_RATIO = 0.7;
-export const RETURN_SLACK_DEG = 10;
+// Healthy people vary ~10-15° in where they rest between repetitions (real recordings)
+export const RETURN_SLACK_DEG = 15;
 export const TOO_FAST_RATIO = 0.7;
 export const HOLD_SLACK_MS = 1000;
 
@@ -160,9 +161,10 @@ export function analyseSession(
   }
 
   // Coming back to the start (e.g. fully straightening the knee or elbow)
-  // Without a demonstration, compare with the patient's own best return today
-  // (a natural resting posture is rarely exactly 0°)
-  const restTarget = ref?.restDegrees ?? Math.min(...reps.map((r) => r.restDegrees));
+  // Without a demonstration, compare with the patient's own usual return today
+  // (a natural rest is rarely exactly 0°, and some exercises, like a press,
+  // rest part-way: the median catches the repetitions that stopped short)
+  const restTarget = ref?.restDegrees ?? median(reps.map((r) => r.restDegrees));
   const shortReturns = reps.filter((r) => r.restDegrees > restTarget + RETURN_SLACK_DEG);
   if (enoughReps(shortReturns.length, reps.length)) {
     const straighten = context.joint === 'knee' || context.joint === 'elbow';
@@ -172,9 +174,9 @@ export function analyseSession(
       cue: straighten
         ? `Try to straighten your ${context.joint} all the way each time.`
         : cueFor('incomplete_return'),
-      detail: `Between repetitions your ${joint} stayed about ${Math.round(
-        profile.restDegrees - restTarget
-      )}° short of ${ref ? 'the starting position in the demonstration' : 'your best return'}.`,
+      detail: `In ${shortReturns.length} of ${reps.length} repetitions your ${joint} stayed about ${Math.round(
+        median(shortReturns.map((r) => r.restDegrees)) - restTarget
+      )}° short of ${ref ? 'the starting position in the demonstration' : 'your usual starting position'}.`,
       reps: shortReturns.map((r) => r.index),
     });
   }

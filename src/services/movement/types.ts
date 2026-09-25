@@ -13,7 +13,8 @@
 import type { PoseLandmark } from '../../types/pose';
 import type { BodySide, JointKind } from '../pose/exercisePlan';
 
-export type CameraView = 'front' | 'side' | 'unknown';
+/** Oblique: turned roughly 30-50° to the camera; neither front nor side checks are reliable. */
+export type CameraView = 'front' | 'side' | 'oblique' | 'unknown';
 
 /** One analysed frame. */
 export interface MovementFrame {

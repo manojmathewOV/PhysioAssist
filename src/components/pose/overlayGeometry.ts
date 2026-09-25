@@ -10,6 +10,7 @@
  */
 import type { PoseLandmark } from '../../types/pose';
 import { findLandmark } from '../../services/pose/landmarkLookup';
+import { jointPoints } from '../../services/pose/jointPoints';
 
 export interface Point {
   x: number;
@@ -255,10 +256,10 @@ export function buildOverlayModel(
     Object.keys(angleValues).forEach((k) => wanted.add(toJointKey(k)));
   }
   for (const joint of wanted) {
-    const triplet = JOINT_TRIPLETS[joint];
-    if (!triplet) continue;
-    const [pa, pb, pc] = triplet.map(get);
-    if (!pa || !pb || !pc) continue;
+    const points = jointPoints(landmarks, joint);
+    if (!points) continue;
+    const [pa, pb, pc] = points;
+    if (Math.min(...points.map((p) => p.visibility)) < MIN_VISIBILITY) continue;
     const A = px(pa);
     const B = px(pb);
     const C = px(pc);

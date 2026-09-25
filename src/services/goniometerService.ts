@@ -2,7 +2,7 @@ import { PoseLandmark, JointAngle, AngleCalculationConfig } from '../types/pose'
 import { Vector3D } from '../types/common';
 import { AnatomicalPlane } from '../types/biomechanics';
 import { angleBetweenVectors, projectVectorOntoPlane } from '@utils/vectorMath';
-import { findLandmark } from './pose/landmarkLookup';
+import { jointPoints } from './pose/jointPoints';
 
 type LandmarkTriplet = [proximal: string, vertex: string, distal: string];
 
@@ -237,12 +237,10 @@ export class GoniometerService {
   calculateAllJointAngles(landmarks: PoseLandmark[]): Map<string, JointAngle> {
     const angles = new Map<string, JointAngle>();
 
-    for (const [jointName, names] of Object.entries(JOINT_LANDMARKS)) {
-      const [proximal, vertex, distal] = names.map((name) =>
-        findLandmark(landmarks, name)
-      );
-      if (proximal && vertex && distal) {
-        angles.set(jointName, this.calculateAngle(proximal, vertex, distal, jointName));
+    for (const jointName of Object.keys(JOINT_LANDMARKS)) {
+      const points = jointPoints(landmarks, jointName);
+      if (points) {
+        angles.set(jointName, this.calculateAngle(...points, jointName));
       }
     }
 
@@ -253,16 +251,12 @@ export class GoniometerService {
    * Get joint angle by name
    */
   getJointAngle(jointName: string, landmarks: PoseLandmark[]): number | null {
-    const names = JOINT_LANDMARKS[toSnakeCase(jointName)];
-    if (!names) {
-      return null;
-    }
-    const [proximal, vertex, distal] = names.map((name) => findLandmark(landmarks, name));
-    if (!proximal || !vertex || !distal) {
+    const points = jointPoints(landmarks, toSnakeCase(jointName));
+    if (!points) {
       return null;
     }
 
-    const angle = this.calculateAngle(proximal, vertex, distal, jointName);
+    const angle = this.calculateAngle(...points, jointName);
 
     return angle.isValid ? angle.angle : null;
   }

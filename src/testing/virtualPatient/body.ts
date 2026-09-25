@@ -160,7 +160,9 @@ function frontPose(pose: BodyPose): Record<string, P> {
   ] as const) {
     const isLeft = side === 'left';
     const drop = legDrop(isLeft ? pose.leftKnee : pose.rightKnee);
-    const ankle = { x: 240 + sign * 32, y: 330 + L.thigh + L.shank };
+    // Hip width 0.51 and shoulder width 0.72 of the torso length: the median
+    // proportions of real people facing the camera (Clemente et al. 2024)
+    const ankle = { x: 240 + sign * 38, y: 330 + L.thigh + L.shank };
     const hip = {
       x: ankle.x + pose.pelvicShift,
       y: 330 + drop.hip - stand.hip - (isLeft ? pose.hipHitch : 0),
@@ -186,7 +188,7 @@ function frontPose(pose: BodyPose): Record<string, P> {
     x: hipMid.x + dx * Math.cos(tilt) + dy * Math.sin(tilt),
     y: hipMid.y - dx * Math.sin(tilt) + dy * Math.cos(tilt),
   });
-  const halfWidth = 62 * Math.cos(rad(pose.trunkRotation));
+  const halfWidth = 54 * Math.cos(rad(pose.trunkRotation));
   pts.nose = place(0, -L.torso - L.neck);
   for (const [side, sign] of [
     ['left', 1],
@@ -194,13 +196,16 @@ function frontPose(pose: BodyPose): Record<string, P> {
   ] as const) {
     const hike = side === 'left' ? pose.shoulderHike : 0;
     const shoulder = place(sign * halfWidth, -L.torso - hike);
-    const hip = pts[`${side}_hip`];
     pts[`${side}_shoulder`] = shoulder;
     const shoulderAngle = side === 'left' ? pose.leftShoulder : pose.rightShoulder;
     const elbowAngle = side === 'left' ? pose.leftElbow : pose.rightElbow;
-    // Abduction: rotate outward from the trunk line (shoulder -> hip), so the
-    // elbow-shoulder-hip angle is exactly the requested shoulder angle
-    const trunk = Math.atan2(hip.x - shoulder.x, hip.y - shoulder.y) * (180 / Math.PI);
+    // Abduction: rotate outward from the trunk midline (shoulder midpoint ->
+    // hip midpoint), the line the shoulder angle is measured against
+    const lsh = place(halfWidth, -L.torso - pose.shoulderHike);
+    const rsh = place(-halfWidth, -L.torso);
+    const trunk =
+      Math.atan2(hipMid.x - (lsh.x + rsh.x) / 2, hipMid.y - (lsh.y + rsh.y) / 2) *
+      (180 / Math.PI);
     const upper = trunk + sign * shoulderAngle;
     const elbow = add(shoulder, dir(upper), L.upperArm);
     const wrist = add(elbow, dir(upper + sign * (180 - elbowAngle)), L.forearm);

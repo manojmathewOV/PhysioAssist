@@ -23,6 +23,30 @@ export interface OrientationResult {
  * console.log(result.orientation); // 'frontal'
  * console.log(result.confidence); // 0.85
  */
+/**
+ * Shoulder and hip width as a fraction of torso length (shoulder midpoint to
+ * hip midpoint). Unlike widths in image units, these don't depend on how far
+ * the patient stands from the camera. Measured on real MediaPipe output
+ * (Clemente et al. 2024 dataset): facing the camera shoulder/torso ≈ 0.64-0.77
+ * and hip/torso ≈ 0.44-0.53; turned 35° ≈ 0.50-0.62 / 0.38-0.46; side-on
+ * both fall towards 0.1-0.3.
+ */
+export function bodyWidthRatios(
+  landmarks: PoseLandmark[]
+): { shoulder: number; hip: number } | null {
+  const ls = findLandmark(landmarks, 'left_shoulder');
+  const rs = findLandmark(landmarks, 'right_shoulder');
+  const lh = findLandmark(landmarks, 'left_hip');
+  const rh = findLandmark(landmarks, 'right_hip');
+  if (!ls || !rs || !lh || !rh) return null;
+  const torso = Math.hypot(
+    (ls.x + rs.x - lh.x - rh.x) / 2,
+    (ls.y + rs.y - lh.y - rh.y) / 2
+  );
+  if (torso < 1e-6) return null;
+  return { shoulder: Math.abs(rs.x - ls.x) / torso, hip: Math.abs(rh.x - lh.x) / torso };
+}
+
 export class OrientationClassifier {
   private orientationHistory: OrientationResult[] = [];
   private readonly historyWindow: number;
@@ -102,14 +126,14 @@ export class OrientationClassifier {
     const leftShoulder = findLandmark(landmarks, 'left_shoulder');
     const rightShoulder = findLandmark(landmarks, 'right_shoulder');
 
-    if (leftShoulder && rightShoulder) {
-      const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
+    const ratios = bodyWidthRatios(landmarks);
 
-      // Wide shoulders (>0.2 normalized) indicate frontal view
-      if (shoulderWidth > 0.2) {
+    if (leftShoulder && rightShoulder) {
+      // Wide shoulders relative to the torso indicate a frontal view
+      if (ratios && ratios.shoulder > 0.6) {
         score += 0.3;
         // Bonus for very wide shoulders
-        if (shoulderWidth > 0.3) {
+        if (ratios.shoulder > 0.68) {
           score += 0.1;
         }
       }
@@ -126,9 +150,7 @@ export class OrientationClassifier {
     const rightHip = findLandmark(landmarks, 'right_hip');
 
     if (leftHip && rightHip) {
-      const hipWidth = Math.abs(rightHip.x - leftHip.x);
-
-      if (hipWidth > 0.15) {
+      if (ratios && ratios.hip > 0.42) {
         score += 0.2;
       }
 
@@ -176,14 +198,14 @@ export class OrientationClassifier {
     const leftShoulder = findLandmark(landmarks, 'left_shoulder');
     const rightShoulder = findLandmark(landmarks, 'right_shoulder');
 
-    if (leftShoulder && rightShoulder) {
-      const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
+    const ratios = bodyWidthRatios(landmarks);
 
-      // Narrow shoulders (<0.15 normalized) indicate sagittal view
-      if (shoulderWidth < 0.15) {
+    if (leftShoulder && rightShoulder) {
+      // Narrow shoulders relative to the torso indicate a sagittal view
+      if (ratios && ratios.shoulder < 0.35) {
         score += 0.4;
         // Bonus for very narrow shoulders
-        if (shoulderWidth < 0.08) {
+        if (ratios.shoulder < 0.2) {
           score += 0.1;
         }
       }
@@ -200,9 +222,7 @@ export class OrientationClassifier {
     const rightHip = findLandmark(landmarks, 'right_hip');
 
     if (leftHip && rightHip) {
-      const hipWidth = Math.abs(rightHip.x - leftHip.x);
-
-      if (hipWidth < 0.1) {
+      if (ratios && ratios.hip < 0.25) {
         score += 0.2;
       }
 
@@ -261,10 +281,10 @@ export class OrientationClassifier {
     const leftShoulder = findLandmark(landmarks, 'left_shoulder');
     const rightShoulder = findLandmark(landmarks, 'right_shoulder');
 
-    if (leftShoulder && rightShoulder) {
-      const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
+    const ratios = bodyWidthRatios(landmarks);
 
-      if (shoulderWidth > 0.2) {
+    if (leftShoulder && rightShoulder) {
+      if (ratios && ratios.shoulder > 0.6) {
         score += 0.2;
       }
 
@@ -280,9 +300,7 @@ export class OrientationClassifier {
     const rightHip = findLandmark(landmarks, 'right_hip');
 
     if (leftHip && rightHip) {
-      const hipWidth = Math.abs(rightHip.x - leftHip.x);
-
-      if (hipWidth > 0.15) {
+      if (ratios && ratios.hip > 0.42) {
         score += 0.2;
       }
     }
