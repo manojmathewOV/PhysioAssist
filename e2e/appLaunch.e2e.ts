@@ -59,18 +59,34 @@ describe('App launch smoke test', () => {
     await device.takeScreenshot('03-login');
   });
 
-  it('logs in as the demo user and shows the main tabs', async () => {
+  it('logs in as the demo user and lands on Home', async () => {
     await element(by.id('demo-login-button')).tap();
-    await waitFor(element(by.id('tab-exercises')))
+    await waitFor(element(by.id('home-screen')))
       .toBeVisible()
       .withTimeout(15000);
-    // The simulator has no camera; the pose screen may offer mock mode via an alert
-    await dismissAlertIfShown();
-    await device.takeScreenshot('04-exercises-tab');
+    await detoxExpect(element(by.id('home-start-exercises'))).toBeVisible();
+    await device.takeScreenshot('04-home');
+  });
+
+  it('opens every tab and the help page', async () => {
+    await element(by.id('home-help')).tap();
+    await waitFor(element(by.id('help-screen')))
+      .toBeVisible()
+      .withTimeout(5000);
+    await device.takeScreenshot('05-help');
+
+    await element(by.id('tab-progress')).tap();
+    await waitFor(element(by.id('progress-screen')))
+      .toBeVisible()
+      .withTimeout(5000);
+    await device.takeScreenshot('06-progress');
 
     await element(by.id('tab-settings')).tap();
-    await device.takeScreenshot('05-settings-tab');
-    await element(by.id('tab-profile')).tap();
-    await device.takeScreenshot('06-profile-tab');
+    await device.takeScreenshot('07-settings');
+
+    await element(by.id('tab-exercises')).tap();
+    // The simulator has no camera; the exercise screen may show an alert
+    await dismissAlertIfShown();
+    await device.takeScreenshot('08-exercise');
   });
 });

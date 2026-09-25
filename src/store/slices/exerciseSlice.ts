@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Exercise, ValidationResult, ExerciseMetrics } from '../../types/exercise';
 
-interface ExerciseHistory {
+export interface ExerciseHistory {
   id: string;
   exerciseId: string;
   exerciseName: string;
@@ -22,7 +22,12 @@ interface ExerciseState {
   lastValidationResult: ValidationResult | null;
   metrics: ExerciseMetrics | null;
   history: ExerciseHistory[];
+  /** When the current exercise started (ms since epoch). */
+  startedAt: number | null;
 }
+
+/** Most recent sessions kept on the device. */
+const MAX_HISTORY = 200;
 
 const initialState: ExerciseState = {
   currentExercise: null,
@@ -34,6 +39,7 @@ const initialState: ExerciseState = {
   lastValidationResult: null,
   metrics: null,
   history: [],
+  startedAt: null,
 };
 
 const exerciseSlice = createSlice({
@@ -47,10 +53,26 @@ const exerciseSlice = createSlice({
       state.repetitionCount = 0;
       state.formScore = 0;
       state.feedback = '';
+      state.startedAt = Date.now();
     },
     stopExercise: (state) => {
+      // Record the finished session so patients (and clinicians) can see progress
+      if (state.isExercising && state.currentExercise && state.repetitionCount > 0) {
+        const now = Date.now();
+        state.history.unshift({
+          id: `${state.currentExercise.id}-${now}`,
+          exerciseId: state.currentExercise.id,
+          exerciseName: state.currentExercise.name,
+          date: new Date(now).toISOString(),
+          reps: state.repetitionCount,
+          duration: state.startedAt ? Math.round((now - state.startedAt) / 1000) : 0,
+          formScore: state.formScore,
+        });
+        state.history.splice(MAX_HISTORY);
+      }
       state.isExercising = false;
       state.currentPhase = 'rest';
+      state.startedAt = null;
     },
     updateValidation: (state, action: PayloadAction<ValidationResult>) => {
       state.lastValidationResult = action.payload;
@@ -105,6 +127,7 @@ const exerciseSlice = createSlice({
       state.feedback = '';
       state.lastValidationResult = null;
       state.metrics = null;
+      state.startedAt = null;
     },
   },
 });
