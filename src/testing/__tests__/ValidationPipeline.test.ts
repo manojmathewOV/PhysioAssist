@@ -5,6 +5,8 @@
  * Comprehensive validation testing to verify ±5° MAE accuracy target
  */
 
+import os from 'os';
+import path from 'path';
 import { ValidationPipeline } from '../ValidationPipeline';
 import { DEFAULT_VALIDATION_CONFIG } from '../../types/validation';
 
@@ -54,9 +56,9 @@ describe('ValidationPipeline - Gate 10C Clinical Validation', () => {
         )
       );
 
-      // Save report to file
-      const reportPath =
-        '/home/user/PhysioAssist/docs/validation/GATE_10C_VALIDATION_REPORT.json';
+      // Save report to a temp file: the committed docs/validation report is documentation,
+      // and a hard-coded absolute path only existed on one machine.
+      const reportPath = path.join(os.tmpdir(), 'GATE_10C_VALIDATION_REPORT.json');
       await pipeline.saveReport(report, reportPath);
 
       // Assertions

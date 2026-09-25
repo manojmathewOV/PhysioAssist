@@ -157,7 +157,7 @@ jobs:
         run: |
           {
             echo "## iOS Simulator run"
-            echo "- Xcode: $(xcodebuild -version | head -1)"
+            echo "- Xcode: $(xcodebuild -version | sed -n 1p)"
             echo "- Simulator: ${{ steps.sim.outputs.name }}"
             echo "- Smoke status: $(cat "$OUT_DIR/smoke/status.txt" 2>/dev/null || echo 'not reached')"
             if [ -f "$OUT_DIR/xcodebuild.log" ]; then

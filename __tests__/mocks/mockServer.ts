@@ -7,7 +7,9 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+// Node's own UUID generator: the `uuid` package needs a global crypto.getRandomValues,
+// which Node 18 (the version in .nvmrc and CI) doesn't provide.
+import { randomUUID } from 'crypto';
 
 const app = express();
 const PORT = process.env.MOCK_SERVER_PORT || 3001;
@@ -102,7 +104,7 @@ app.post('/api/auth/register', async (req, res) => {
 
   // Create new user
   const newUser = {
-    id: uuidv4(),
+    id: randomUUID(),
     email,
     password, // Should be hashed in production
     name,
@@ -314,7 +316,7 @@ app.post('/api/sessions', authenticateToken, (req: any, res) => {
   const { exerciseId } = req.body;
 
   const session = {
-    id: uuidv4(),
+    id: randomUUID(),
     userId: req.user.id,
     exerciseId,
     startTime: new Date().toISOString(),
