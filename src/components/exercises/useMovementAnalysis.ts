@@ -14,6 +14,7 @@ import {
   PlanReference,
   goalDegreesOf,
   hasExtendedSupport,
+  routineItem,
 } from '../../services/pose/exercisePlan';
 import { MovementRecorder } from '../../services/movement/recorder';
 import {
@@ -67,13 +68,14 @@ export function useMovementAnalysis(
     recorder.current = null;
     if (!rec || rec.frames.length === 0) return null;
     const reference = referenceFor(plan, exercise);
+    const holdSeconds = routineItem(plan, exercise.id)?.holdSeconds ?? plan?.holdSeconds;
     return analyseSession(
       rec.frames,
       rec.context,
       {
         reference,
         goalDegrees: goalDegreesOf(exercise),
-        holdMs: plan?.holdSeconds !== undefined ? plan.holdSeconds * 1000 : undefined,
+        holdMs: holdSeconds !== undefined ? holdSeconds * 1000 : undefined,
       },
       {
         // Compensation checks are part of the extended (shoulder, knee) support
@@ -189,6 +191,7 @@ export function sessionOutcome(
       measured,
       unavailableReason: measured ? undefined : r.reason,
       reps,
+      planVersion: plan?.version,
     };
   } else if (sessionRange) {
     // No movement analysis (no plan): the live counter's range

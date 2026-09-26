@@ -18,6 +18,12 @@ export interface ExerciseHistory {
   bestDegrees?: number;
   /** The goal (standard) the patient was asked to reach. */
   goalDegrees?: number;
+  direction?: SessionResult['direction'];
+  measure?: string;
+  approximate?: boolean;
+  measured?: boolean;
+  unavailableReason?: string;
+  planVersion?: number;
 }
 
 /** Extra results recorded with a finished session. */
@@ -37,7 +43,19 @@ export interface SessionResult {
   measured?: boolean;
   /** Why it couldn't be measured. */
   unavailableReason?: string;
+  /** The prescription version the session was done under (see ExercisePlan.version). */
+  planVersion?: number;
 }
+
+/**
+ * Whether a finished session goes into the history: some repetitions, a
+ * measurement, or an attempt that couldn't be measured (kept, so gaps stay
+ * visible). `liveReps` is the live counter's count.
+ */
+export const isWorthKeeping = (result: SessionResult | undefined, liveReps: number) =>
+  (result?.reps ?? liveReps) > 0 ||
+  result?.bestDegrees !== undefined ||
+  result?.measured === false;
 
 interface ExerciseState {
   currentExercise: Exercise | null;
@@ -87,12 +105,11 @@ const exerciseSlice = createSlice({
       // (Rotation and still measurements are counted by the movement analysis,
       // so their result carries the reps, or a measurement with no reps at all)
       const reps = action.payload?.reps ?? state.repetitionCount;
-      // An attempt that couldn't be measured is kept too, marked as such
-      const worthKeeping =
-        reps > 0 ||
-        action.payload?.bestDegrees !== undefined ||
-        action.payload?.measured === false;
-      if (state.isExercising && state.currentExercise && worthKeeping) {
+      if (
+        state.isExercising &&
+        state.currentExercise &&
+        isWorthKeeping(action.payload, state.repetitionCount)
+      ) {
         const now = Date.now();
         state.history.unshift({
           id: `${state.currentExercise.id}-${now}`,

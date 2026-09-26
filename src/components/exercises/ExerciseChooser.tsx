@@ -8,12 +8,15 @@ import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-import { AppText, BigButton, Card, Screen } from '../ui';
+import { AppText, BigButton, Card, ListRow, Screen } from '../ui';
 import { colors, radii, spacing } from '../../theme';
 import type { MainTabParamList } from '../../navigation/types';
 import ExerciseSelector from './ExerciseSelector';
 import { EXERCISE_OPTIONS, ExerciseKey, ExerciseOption } from './exerciseCatalog';
 import PlanEditor from './PlanEditor';
+import TodaysRoutineCard from './TodaysRoutineCard';
+import type { TodaysRoutine } from '../../services/pose/routine';
+import { inRoutine } from '../../services/pose/routine';
 import ExerciseVideo from '../video/ExerciseVideo';
 import { VideoLinkEditor } from '../video/VideoLinkEditor';
 import { parseYouTubeId, parseYouTubeStart } from '../../utils/youtube';
@@ -40,6 +43,12 @@ interface ExerciseChooserProps {
   onUploadVideo?: () => void;
   /** Shown while a video is being analysed, e.g. "Watching the video… 40%". */
   demoStatus?: string;
+  /** Today's routine, when the physio assigned one. */
+  routine?: TodaysRoutine;
+  /** Start the next exercise of today's routine. */
+  onStartRoutine?: () => void;
+  /** Add the selected exercise to the routine, or take it out (physio set-up). */
+  onToggleRoutine?: (exerciseId: string) => void;
 }
 
 /** "Goal 120° · don't raise your arm past 140° · 10 times". */
@@ -71,6 +80,9 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
   onRecordDemo,
   onUploadVideo,
   demoStatus,
+  routine,
+  onStartRoutine,
+  onToggleRoutine,
 }) => {
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const [editingPlan, setEditingPlan] = useState(false);
@@ -128,23 +140,52 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
     );
   }
 
+  const hasRoutine = Boolean(routine?.items.length);
+  const startSelected = (
+    <BigButton
+      label={selected ? `Start ${selected.title.toLowerCase()}` : 'Start'}
+      icon="play-arrow"
+      variant={hasRoutine && routine?.next ? 'secondary' : 'primary'}
+      onPress={onStart}
+      loading={starting}
+      testID="start-exercise-button"
+      accessibilityHint="Opens the camera and starts counting your repetitions"
+    />
+  );
+
   return (
     <Screen
       testID="exercise-chooser"
-      title="Choose an exercise"
-      subtitle="Tap one, then press Start."
+      title={hasRoutine ? 'Today’s exercises' : 'Choose an exercise'}
+      subtitle={
+        hasRoutine
+          ? 'From your physiotherapist. Press Start and we’ll go through them in order.'
+          : 'Tap one, then press Start.'
+      }
       footer={
-        <BigButton
-          label={selected ? `Start ${selected.title.toLowerCase()}` : 'Start'}
-          icon="play-arrow"
-          onPress={onStart}
-          loading={starting}
-          testID="start-exercise-button"
-          accessibilityHint="Opens the camera and starts counting your repetitions"
-        />
+        hasRoutine && routine?.next && onStartRoutine ? (
+          <>
+            <BigButton
+              label={
+                routine.doneCount > 0
+                  ? 'Continue today’s session'
+                  : 'Start today’s session'
+              }
+              icon="play-arrow"
+              onPress={onStartRoutine}
+              loading={starting}
+              testID="start-routine-button"
+              accessibilityHint="Starts the next exercise your physiotherapist set for today"
+            />
+            {selected && selected.exercise.id !== routine.next ? startSelected : null}
+          </>
+        ) : (
+          startSelected
+        )
       }
     >
       {notice}
+      {hasRoutine && routine ? <TodaysRoutineCard routine={routine} /> : null}
       {plan ? (
         <Card style={styles.plan} testID="exercise-plan-summary">
           <View style={styles.tip}>
@@ -169,6 +210,21 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
             onPress={() => setEditingPlan(true)}
             testID="exercise-plan-change"
             style={styles.helpLink}
+          />
+        </Card>
+      ) : null}
+      {plan && selected && onToggleRoutine ? (
+        <Card style={styles.routineToggle} testID="exercise-routine-card">
+          <ListRow
+            icon="playlist-add-check"
+            title={`${selected.title} in today’s session`}
+            description="Your physio chooses the exercises for each day"
+            toggle={{
+              value: inRoutine(plan, selected.exercise.id),
+              onChange: () => onToggleRoutine(selected.exercise.id),
+              testID: 'exercise-routine-toggle',
+            }}
+            last
           />
         </Card>
       ) : null}
@@ -348,6 +404,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   setup: { gap: spacing.md, marginTop: spacing.sm },
   plan: { gap: spacing.sm },
+  routineToggle: { paddingVertical: 0 },
   demoActions: { gap: spacing.sm },
   videoActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   others: { marginTop: spacing.md, marginLeft: spacing.xs },

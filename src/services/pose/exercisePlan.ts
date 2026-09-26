@@ -40,6 +40,19 @@ export interface PlanReference extends MovementProfile {
   videoId?: string;
 }
 
+/**
+ * One exercise the physiotherapist assigned, in the order it is done. Its own
+ * repetitions, hold and goal replace the plan's when set; the goal is in the
+ * exercise's own measure (how far to bend or raise, or how close to straight
+ * for a straightening exercise) and never applies to rotation.
+ */
+export interface PrescribedExercise {
+  exerciseId: string;
+  reps?: number;
+  holdSeconds?: number;
+  goalDegrees?: number;
+}
+
 export interface ExercisePlan {
   joint: JointKind;
   side: BodySide;
@@ -68,6 +81,16 @@ export interface ExercisePlan {
   reference?: PlanReference;
   /** YouTube links for exercise videos, by exercise id (shown, never analysed). */
   videos?: Record<string, string>;
+  /** Today's exercises, in order (empty or missing: the patient chooses). */
+  routine?: PrescribedExercise[];
+  /**
+   * Starts at 1 and goes up whenever the prescription changes (joint, side,
+   * goals, limit, repetitions, hold or routine), so sessions done under
+   * different prescriptions aren't compared as one series.
+   */
+  version?: number;
+  /** When this version was prescribed (ISO date). */
+  prescribedAt?: string;
 }
 
 export const JOINT_KINDS: { kind: JointKind; label: string; movement: string }[] = [
@@ -157,6 +180,10 @@ export function applyPlan(exercise: Exercise, plan?: ExercisePlan | null): Exerc
   const key = jointKey(plan.side, kind);
   const prescribed = kind === plan.joint;
   const goalIndex = exercise.phases.length - 1;
+  // This exercise's own prescription, where the routine sets one
+  const item = prescribed ? routineItem(plan, exercise.id) : undefined;
+  const reps = item?.reps ?? plan.reps;
+  const holdSeconds = item?.holdSeconds ?? plan.holdSeconds;
 
   const phases = exercise.phases.map((phase, index) => {
     const req = focusRequirement(phase, kind, plan.side);
@@ -169,9 +196,10 @@ export function applyPlan(exercise: Exercise, plan?: ExercisePlan | null): Exerc
       const movement = movementOf(exercise.id);
       const goal = movement.measure
         ? undefined
-        : movement.direction === 'toward'
-          ? plan.extensionGoalDegrees
-          : plan.goalDegrees;
+        : item?.goalDegrees ??
+          (movement.direction === 'toward'
+            ? plan.extensionGoalDegrees
+            : plan.goalDegrees);
       if (goal !== undefined) {
         const range = goalRange(kind, goal, plan.limitDegrees, movement.direction);
         requirement = {
@@ -180,7 +208,7 @@ export function applyPlan(exercise: Exercise, plan?: ExercisePlan | null): Exerc
           targetAngle: interiorAngle(kind, goal),
         };
       }
-      if (plan.holdSeconds !== undefined) holdDuration = plan.holdSeconds * 1000;
+      if (holdSeconds !== undefined) holdDuration = holdSeconds * 1000;
     }
     return { ...phase, jointRequirements: [requirement], holdDuration };
   });
@@ -188,13 +216,20 @@ export function applyPlan(exercise: Exercise, plan?: ExercisePlan | null): Exerc
   return {
     ...exercise,
     phases,
-    targetRepetitions: prescribed && plan.reps ? plan.reps : exercise.targetRepetitions,
+    targetRepetitions: prescribed && reps ? reps : exercise.targetRepetitions,
     safetyLimit:
       prescribed && plan.limitDegrees !== undefined
         ? { joint: key, kind, maxDegrees: plan.limitDegrees }
         : undefined,
   };
 }
+
+/** The routine's prescription for an exercise, if it is in the routine. */
+export const routineItem = (
+  plan: ExercisePlan | null | undefined,
+  exerciseId: string
+): PrescribedExercise | undefined =>
+  plan?.routine?.find((i) => i.exerciseId === exerciseId);
 
 /** The joint an exercise tracks (first primary-joint rule), e.g. 'left_elbow'. */
 export const trackedJoint = (exercise: Exercise): string | undefined => {

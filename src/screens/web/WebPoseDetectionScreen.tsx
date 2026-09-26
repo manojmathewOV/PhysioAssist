@@ -27,6 +27,7 @@ import {
 import { setPoseData, setDetecting } from '../../store/slices/poseSlice';
 import {
   clearExercise,
+  isWorthKeeping,
   setFeedback,
   setLastSessionPain,
   startExercise,
@@ -41,6 +42,7 @@ import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
 import WebPoseOverlay from '../../components/web/WebPoseOverlay';
 import { focusFromExercise } from '../../components/pose/overlayGeometry';
 import ExerciseChooser from '../../components/exercises/ExerciseChooser';
+import { useRoutineFlow } from '../../components/exercises/useRoutineFlow';
 import {
   sessionOutcome,
   useMovementAnalysis,
@@ -119,7 +121,7 @@ const WebPoseDetectionScreen: React.FC = () => {
   const [practice, setPractice] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [summary, setSummary] = useState<
-    (ExerciseSummaryProps & { saved: boolean }) | null
+    (ExerciseSummaryProps & { saved: boolean; exerciseId: string }) | null
   >(null);
   const [area, setArea] = useState({ width: 0, height: 0 });
   const [videoAspect, setVideoAspect] = useState(16 / 9);
@@ -374,6 +376,9 @@ const WebPoseDetectionScreen: React.FC = () => {
     setStage('exercise');
   };
 
+  // Today's routine: start the next exercise, and what follows each one
+  const routineFlow = useRoutineFlow({ plan, setSelectedKey, start: handleStart });
+
   const handleStop = () => {
     if (gate.phase !== 'active') {
       // Still getting ready: nothing to save
@@ -411,8 +416,15 @@ const WebPoseDetectionScreen: React.FC = () => {
       formAccuracy: Math.round(formScore * 100),
       targetReps: currentExercise?.targetRepetitions,
       practice,
-      // stopExercise only records sessions with at least one rep
-      saved: !practice && !recordingDemo && repetitionCount > 0,
+      exerciseId: plannedExercise.id,
+      // The same rule stopExercise uses to keep a session
+      saved:
+        !practice &&
+        !recordingDemo &&
+        isWorthKeeping(
+          outcome.historyResult ?? sessionRange ?? undefined,
+          repetitionCount
+        ),
     });
     setIsPaused(false);
     setRecordingDemo(false);
@@ -495,6 +507,9 @@ const WebPoseDetectionScreen: React.FC = () => {
           onUploadVideo={uploadVideo}
           demoStatus={demoStatus}
           onStart={handleStart}
+          routine={routineFlow.routine}
+          onStartRoutine={routineFlow.startRoutine}
+          onToggleRoutine={routineFlow.toggle}
         />
       </View>
     );
@@ -519,6 +534,7 @@ const WebPoseDetectionScreen: React.FC = () => {
             navigation.navigate('HomeTab', { screen: 'Home' });
           }}
           onRepeat={() => setStage('choose')}
+          {...(summary.practice ? {} : routineFlow.afterSession(summary.exerciseId))}
         />
       </View>
     );

@@ -20,6 +20,10 @@ import {
 import { colors, radii, spacing } from '../theme';
 import type { MainTabParamList } from '../navigation/types';
 import { currentStreak, dailyReps, summarizeWeek } from '../utils/progressSummary';
+import { measurementSeries, seriesValue } from '../utils/measurementSeries';
+
+const shortDate = (iso: string) =>
+  new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 
 const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const CHART_HEIGHT = 140;
@@ -41,6 +45,7 @@ const ProgressScreen: React.FC = () => {
   const week = summarizeWeek(history);
   const streak = currentStreak(history);
   const max = Math.max(1, ...days.map((d) => d.value));
+  const series = measurementSeries(history);
 
   if (history.length === 0) {
     return (
@@ -110,6 +115,50 @@ const ProgressScreen: React.FC = () => {
         </View>
       </Card>
 
+      {series.length ? (
+        <>
+          <SectionTitle>Measurements</SectionTitle>
+          <Card testID="progress-series">
+            {series.map((s, i) => {
+              const { latest, firstThisPlan } = s;
+              const lines = [
+                latest
+                  ? `Latest ${seriesValue(s, latest)} (${shortDate(latest.date)})`
+                  : 'Not measured yet',
+                firstThisPlan && latest && firstThisPlan !== latest
+                  ? `First with this plan ${seriesValue(s, firstThisPlan)} (${shortDate(
+                      firstThisPlan.date
+                    )})`
+                  : undefined,
+                `${s.measuredCount} measured${
+                  s.unmeasuredCount ? `, ${s.unmeasuredCount} not measured` : ''
+                }`,
+              ].filter(Boolean);
+              return (
+                <ListRow
+                  key={s.key}
+                  icon="straighten"
+                  title={`${s.exerciseName} · ${s.joint.replace(/_/g, ' ')}`}
+                  description={lines.join(' · ')}
+                  last={i === series.length - 1}
+                  testID={`progress-series-${i}`}
+                />
+              );
+            })}
+          </Card>
+          <AppText
+            variant="caption"
+            color={colors.textSecondary}
+            style={styles.note}
+            testID="progress-series-note"
+          >
+            Camera measurements at home vary by several degrees from day to day, so small
+            differences may not be real changes. Your physiotherapist will look at the
+            trend with you.
+          </AppText>
+        </>
+      ) : null}
+
       <SectionTitle>Recent sessions</SectionTitle>
       <Card>
         {history.slice(0, 10).map((h, i, list) => (
@@ -132,6 +181,7 @@ const ProgressScreen: React.FC = () => {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   gap: { marginTop: spacing.sm },
+  note: { marginHorizontal: spacing.xs },
   streakCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   chart: {
     flexDirection: 'row',

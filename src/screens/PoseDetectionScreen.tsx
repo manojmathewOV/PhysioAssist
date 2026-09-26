@@ -26,6 +26,7 @@ import { ExercisePlan, applyPlan } from '@services/pose/exercisePlan';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
 import {
   clearExercise,
+  isWorthKeeping,
   setFeedback,
   setLastSessionPain,
   startExercise,
@@ -46,6 +47,7 @@ import FollowAlongVideo from '@components/video/FollowAlongVideo';
 import { parseYouTubeId, parseYouTubeStart } from '../utils/youtube';
 import ExerciseControls from '@components/exercises/ExerciseControls';
 import ExerciseChooser from '@components/exercises/ExerciseChooser';
+import { useRoutineFlow } from '@components/exercises/useRoutineFlow';
 import {
   sessionOutcome,
   useMovementAnalysis,
@@ -89,7 +91,7 @@ const PoseDetectionScreen: React.FC = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [practice, setPractice] = useState(false);
   const [summary, setSummary] = useState<
-    (ExerciseSummaryProps & { saved: boolean }) | null
+    (ExerciseSummaryProps & { saved: boolean; exerciseId: string }) | null
   >(null);
   const lastSpokenRef = useRef('');
   const lastRepsRef = useRef(0);
@@ -256,6 +258,9 @@ const PoseDetectionScreen: React.FC = () => {
     }
   };
 
+  // Today's routine: start the next exercise, and what follows each one
+  const routineFlow = useRoutineFlow({ plan, setSelectedKey, start: handleStart });
+
   const backToChooser = useCallback(() => {
     resetGate();
     exerciseValidationService.stopExercise();
@@ -306,8 +311,15 @@ const PoseDetectionScreen: React.FC = () => {
       formAccuracy: Math.round(formScore * 100),
       targetReps: currentExercise?.targetRepetitions,
       practice,
-      // stopExercise only records sessions with at least one rep
-      saved: !practice && !recordingDemo && repetitionCount > 0,
+      exerciseId: plannedExercise.id,
+      // The same rule stopExercise uses to keep a session
+      saved:
+        !practice &&
+        !recordingDemo &&
+        isWorthKeeping(
+          outcome.historyResult ?? sessionRange ?? undefined,
+          repetitionCount
+        ),
     });
     setIsPaused(false);
     setRecordingDemo(false);
@@ -342,6 +354,9 @@ const PoseDetectionScreen: React.FC = () => {
             setRecordingDemo(true);
           }}
           onStart={handleStart}
+          routine={routineFlow.routine}
+          onStartRoutine={routineFlow.startRoutine}
+          onToggleRoutine={routineFlow.toggle}
         />
       </View>
     );
@@ -366,6 +381,7 @@ const PoseDetectionScreen: React.FC = () => {
             navigation.navigate('HomeTab', { screen: 'Home' });
           }}
           onRepeat={() => setStage('choose')}
+          {...(summary.practice ? {} : routineFlow.afterSession(summary.exerciseId))}
         />
       </View>
     );

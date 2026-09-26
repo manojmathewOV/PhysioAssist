@@ -35,6 +35,10 @@ export interface ExerciseSummaryProps {
   onDone?: () => void;
   /** Shown as the secondary action ("Do another"). */
   onRepeat?: () => void;
+  /** The next exercise of today's routine: shown as the main action. */
+  next?: { title: string; onPress: () => void };
+  /** This session finished today's routine. */
+  routineDone?: boolean;
   /** Practice mode: nothing was saved. */
   practice?: boolean;
   /**
@@ -92,6 +96,8 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   previousBestScore,
   onDone,
   onRepeat,
+  next,
+  routineDone,
   practice,
   onPainSelect,
   painScore = null,
@@ -112,12 +118,27 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   const didReps = reps > 0;
 
   const footer =
-    onDone || onRepeat ? (
+    onDone || onRepeat || next ? (
       <>
-        {onDone ? (
-          <BigButton label="Done" icon="check" onPress={onDone} testID="done-button" />
+        {next ? (
+          <BigButton
+            label={`Next: ${next.title}`}
+            icon="skip-next"
+            onPress={next.onPress}
+            testID="next-exercise-button"
+            accessibilityHint="Starts the next exercise of today's session"
+          />
         ) : null}
-        {onRepeat ? (
+        {onDone ? (
+          <BigButton
+            label="Done"
+            icon="check"
+            variant={next ? 'secondary' : 'primary'}
+            onPress={onDone}
+            testID="done-button"
+          />
+        ) : null}
+        {onRepeat && !next ? (
           <BigButton
             label="Do another"
             icon="replay"
@@ -204,6 +225,13 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
       </Card>
 
       {notice ? <Banner tone="warning" message={notice} testID="summary-notice" /> : null}
+      {routineDone ? (
+        <Banner
+          tone="success"
+          message="That’s today’s session done. Well done."
+          testID="summary-routine-done"
+        />
+      ) : null}
       {demoSaved ? <DemonstrationSaved profile={demoSaved} /> : null}
       {range ? <RangeResult {...range} /> : null}
       {findings ? (

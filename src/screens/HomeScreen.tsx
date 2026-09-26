@@ -27,6 +27,7 @@ import {
   repsToday,
   weeklyHighlight,
 } from '../utils/progressSummary';
+import { todaysRoutine } from '../services/pose/routine';
 
 const greeting = (hour: number) =>
   hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -39,6 +40,11 @@ const HomeScreen: React.FC = () => {
   const name = useSelector((s: RootState) => s.user.currentUser?.name);
   const history = useSelector((s: RootState) => s.exercise.history);
   const goal = useSelector((s: RootState) => s.settings.dailyRepGoal ?? 30);
+  const plan = useSelector((s: RootState) => s.settings.exercisePlan);
+  // The physio's routine, when one is set, is what "today" means
+  const routine = todaysRoutine(plan, history);
+  const hasRoutine = routine.items.length > 0;
+  const routineLeft = routine.items.length - routine.doneCount;
 
   const firstName = name?.split(' ')[0];
   const today = repsToday(history);
@@ -81,19 +87,42 @@ const HomeScreen: React.FC = () => {
               of {goal}
             </AppText>
           </ProgressRing>
-          <View style={styles.flex}>
-            <AppText variant="heading">
-              {remaining === 0 ? 'Goal reached' : `${remaining} to go`}
-            </AppText>
-            <AppText variant="body" color={colors.textSecondary}>
-              {remaining === 0
-                ? 'Lovely work today. Rest is part of getting better.'
-                : 'repetitions to reach today’s goal'}
-            </AppText>
-          </View>
+          {hasRoutine ? (
+            <View style={styles.flex} testID="home-routine">
+              <AppText variant="heading">
+                {routineLeft === 0
+                  ? 'Today’s session done'
+                  : `${routineLeft} ${routineLeft === 1 ? 'exercise' : 'exercises'} to go`}
+              </AppText>
+              <AppText variant="body" color={colors.textSecondary}>
+                {routineLeft === 0
+                  ? 'Lovely work today. Rest is part of getting better.'
+                  : `${routine.doneCount} of ${routine.items.length} done from your physio’s plan`}
+              </AppText>
+            </View>
+          ) : (
+            <View style={styles.flex}>
+              <AppText variant="heading">
+                {remaining === 0 ? 'Goal reached' : `${remaining} to go`}
+              </AppText>
+              <AppText variant="body" color={colors.textSecondary}>
+                {remaining === 0
+                  ? 'Lovely work today. Rest is part of getting better.'
+                  : 'repetitions to reach today’s goal'}
+              </AppText>
+            </View>
+          )}
         </View>
         <BigButton
-          label={today === 0 ? 'Start exercises' : 'Continue exercises'}
+          label={
+            hasRoutine && routineLeft > 0
+              ? routine.doneCount === 0
+                ? 'Start today’s session'
+                : 'Continue today’s session'
+              : today === 0
+                ? 'Start exercises'
+                : 'Continue exercises'
+          }
           icon="play-arrow"
           onPress={startExercises}
           testID="home-start-exercises"

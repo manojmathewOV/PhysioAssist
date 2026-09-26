@@ -6,12 +6,12 @@ import type { ExerciseHistory } from '../store/slices/exerciseSlice';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Local calendar day (YYYY-MM-DD), so an evening session counts on the right day. */
-const localDay = (ms: number): string => {
+export const localDay = (ms: number): string => {
   const d = new Date(ms);
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
-const dayKey = (iso: string) => localDay(new Date(iso).getTime());
+export const dayKey = (iso: string) => localDay(new Date(iso).getTime());
 
 export interface WeekSummary {
   sessions: number;
