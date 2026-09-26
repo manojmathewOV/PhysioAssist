@@ -10,6 +10,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { AppText, Banner, BigButton, Card, Metric, Screen } from '../ui';
 import { colors, radii, spacing } from '../../theme';
 import { formatDuration } from './exerciseCatalog';
+import type { Completion } from '../../services/pose/routine';
 import PainScale from './PainScale';
 import RangeResult, { RangeResultProps } from './RangeResult';
 import { DemonstrationSaved, MovementFeedback } from './MovementFeedback';
@@ -56,7 +57,46 @@ export interface ExerciseSummaryProps {
   demoSaved?: MovementProfile | null;
   /** A message to show at the top (e.g. the demonstration couldn't be saved). */
   notice?: string;
+  /** 'hold': a still exercise (heel prop), timed, not counted in repetitions. */
+  mode?: 'reps' | 'hold';
+  /** A still exercise's prescribed time (seconds). */
+  holdSeconds?: number;
+  /** How much of the prescribed exercise was done (unset: judged from repetitions). */
+  completion?: Completion;
+  /** "I did the whole exercise", when the camera couldn't count it. */
+  onConfirmCompleted?: () => void;
+  /**
+   * Whether enough movement was seen to judge technique. When not, an empty
+   * list of findings says nothing about how the patient moved.
+   */
+  assessed?: boolean;
 }
+
+/** The headline and one plain sentence for how much was done. */
+const completionWords = (
+  completion: Completion,
+  measured: boolean
+): { title: string; line: string } => {
+  switch (completion) {
+    case 'completed':
+      return {
+        title: 'Well done!',
+        line: measured
+          ? 'You completed the exercise.'
+          : 'You completed the exercise. We couldn’t measure it this time.',
+      };
+    case 'stopped_early':
+      return {
+        title: 'You stopped early',
+        line: 'Your attempt has been saved. Stopping when something doesn’t feel right is the right thing to do.',
+      };
+    default:
+      return {
+        title: 'Saved as an attempt',
+        line: 'The exercise wasn’t counted as done. If you did the whole exercise, tell us below.',
+      };
+  }
+};
 
 const formWords = (percent: number, reps: number) => {
   if (reps === 0 && percent === 0) {
@@ -106,7 +146,13 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   comparedWithDemo,
   demoSaved,
   notice,
+  mode = 'reps',
+  holdSeconds,
+  completion,
+  onConfirmCompleted,
+  assessed,
 }) => {
+  const [confirmed, setConfirmed] = useState(false);
   const [pain, setPain] = useState<number | null>(painScore);
   const choosePain = (value: number) => {
     setPain(value);
@@ -116,6 +162,10 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   const reachedGoal = !!targetReps && reps >= targetReps;
   const isPersonalBest = previousBestScore !== undefined && score > previousBestScore;
   const didReps = reps > 0;
+  const status: Completion | undefined =
+    confirmed && completion === 'attempted' ? 'completed' : completion;
+  const words = status ? completionWords(status, Boolean(range)) : undefined;
+  const positive = status ? status === 'completed' : didReps;
 
   const footer =
     onDone || onRepeat || next ? (
@@ -153,65 +203,109 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   return (
     <Screen testID="exercise-summary" footer={footer}>
       <View style={styles.hero}>
-        <View style={[styles.heroIcon, !didReps && styles.heroIconNeutral]}>
+        <View style={[styles.heroIcon, !positive && styles.heroIconNeutral]}>
           <Icon
-            name={didReps ? 'celebration' : 'self-improvement'}
+            name={positive ? 'celebration' : 'self-improvement'}
             size={44}
-            color={didReps ? colors.success : colors.primary}
+            color={positive ? colors.success : colors.primary}
           />
         </View>
-        <AppText variant="display" center accessibilityRole="header">
-          {didReps ? 'Well done!' : 'Good try'}
+        <AppText
+          variant="display"
+          center
+          accessibilityRole="header"
+          testID="summary-title"
+        >
+          {words ? words.title : didReps ? 'Well done!' : 'Good try'}
         </AppText>
         <AppText variant="body" color={colors.textSecondary} center>
-          You finished: {exercise}
+          {words ? `${exercise}. ${words.line}` : `You finished: ${exercise}`}
         </AppText>
+        {status === 'attempted' && onConfirmCompleted && !practice ? (
+          <BigButton
+            variant="secondary"
+            compact
+            icon="check"
+            label="I did the whole exercise"
+            onPress={() => {
+              setConfirmed(true);
+              onConfirmCompleted();
+            }}
+            testID="summary-confirm-completed"
+          />
+        ) : null}
       </View>
 
       {isPersonalBest ? <Banner tone="success" message="New personal best!" /> : null}
 
       <Card style={styles.card}>
-        <View style={styles.statsRow}>
-          <View style={styles.repsCol}>
-            <Metric
-              value={String(reps)}
-              label={reps === 1 ? 'repetition' : 'repetitions'}
-              color={colors.primary}
-              testID="reps-completed"
-            />
+        {mode === 'hold' ? (
+          <View style={styles.statsRow} testID="summary-hold">
+            <View style={styles.repsCol}>
+              <Metric
+                value={formatDuration(duration)}
+                label="resting still"
+                color={colors.primary}
+                testID="exercise-duration"
+              />
+            </View>
+            {holdSeconds ? (
+              <View style={styles.statsCol}>
+                <Stat
+                  icon="flag"
+                  label="Your physio’s plan"
+                  value={`Rest still for ${formatDuration(holdSeconds)}`}
+                  testID="summary-hold-goal"
+                />
+              </View>
+            ) : null}
           </View>
-          <View style={styles.statsCol}>
-            <Stat
-              icon="timer"
-              label="Time"
-              value={formatDuration(duration)}
-              testID="exercise-duration"
-            />
-            <Stat
-              icon="thumb-up"
-              label="Form"
-              value={formWords(percent, reps)}
-              testID="form-accuracy"
-            />
-          </View>
-        </View>
+        ) : (
+          <>
+            <View style={styles.statsRow}>
+              <View style={styles.repsCol}>
+                <Metric
+                  value={String(reps)}
+                  label={reps === 1 ? 'repetition' : 'repetitions'}
+                  color={colors.primary}
+                  testID="reps-completed"
+                />
+              </View>
+              <View style={styles.statsCol}>
+                <Stat
+                  icon="timer"
+                  label="Time"
+                  value={formatDuration(duration)}
+                  testID="exercise-duration"
+                />
+                <Stat
+                  icon="thumb-up"
+                  label="Form"
+                  value={formWords(percent, reps)}
+                  testID="form-accuracy"
+                />
+              </View>
+            </View>
 
-        {targetReps ? (
-          <View style={[styles.goal, reachedGoal && styles.goalReached]}>
-            <Icon
-              name={reachedGoal ? 'check-circle' : 'flag'}
-              size={22}
-              color={reachedGoal ? colors.success : colors.textSecondary}
-            />
-            <AppText
-              variant="bodyStrong"
-              color={reachedGoal ? colors.success : colors.textSecondary}
-            >
-              {reachedGoal ? `Goal of ${targetReps} reached` : `Your goal: ${targetReps}`}
-            </AppText>
-          </View>
-        ) : null}
-
+            {targetReps ? (
+              <View style={[styles.goal, reachedGoal && styles.goalReached]}>
+                <Icon
+                  name={reachedGoal ? 'check-circle' : 'flag'}
+                  size={22}
+                  color={reachedGoal ? colors.success : colors.textSecondary}
+                />
+                <AppText
+                  variant="bodyStrong"
+                  color={reachedGoal ? colors.success : colors.textSecondary}
+                >
+                  {reachedGoal
+                    ? `Goal of ${targetReps} reached`
+                    : `Your goal: ${targetReps}`}
+                </AppText>
+              </View>
+            ) : null}
+          </>
+        )}
         {calories > 0 ? (
           <Stat icon="local-fire-department" label="Energy" value={`${calories} kcal`} />
         ) : null}
@@ -235,7 +329,11 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
       {demoSaved ? <DemonstrationSaved profile={demoSaved} /> : null}
       {range ? <RangeResult {...range} /> : null}
       {findings ? (
-        <MovementFeedback findings={findings} comparedWithDemo={comparedWithDemo} />
+        <MovementFeedback
+          findings={findings}
+          comparedWithDemo={comparedWithDemo}
+          assessed={assessed}
+        />
       ) : null}
 
       {onPainSelect ? (
@@ -272,7 +370,9 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
       <View style={styles.note} testID="summary-encouragement">
         <Icon name="favorite-border" size={24} color={colors.warning} />
         <AppText variant="body" style={styles.flex}>
-          {encouragement(percent, reps, reachedGoal)}
+          {mode === 'hold' || status
+            ? 'Every session helps. Take your time, and rest before your next exercise.'
+            : encouragement(percent, reps, reachedGoal)}
         </AppText>
       </View>
     </Screen>

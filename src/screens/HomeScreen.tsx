@@ -44,7 +44,7 @@ const HomeScreen: React.FC = () => {
   // The physio's routine, when one is set, is what "today" means
   const routine = todaysRoutine(plan, history);
   const hasRoutine = routine.items.length > 0;
-  const routineLeft = routine.items.length - routine.doneCount;
+  const routineLeft = routine.items.length - routine.finishedCount;
 
   const firstName = name?.split(' ')[0];
   const today = repsToday(history);

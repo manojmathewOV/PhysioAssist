@@ -27,8 +27,8 @@ import {
 import { setPoseData, setDetecting } from '../../store/slices/poseSlice';
 import {
   clearExercise,
+  confirmLastSessionCompleted,
   isWorthKeeping,
-  setFeedback,
   setLastSessionPain,
   startExercise,
   stopExercise,
@@ -38,11 +38,14 @@ import {
 import type { RootState } from '../../store';
 import { setExercisePlan } from '../../store/slices/settingsSlice';
 import { ExercisePlan, applyPlan } from '../../services/pose/exercisePlan';
+import { completionOf } from '../../services/pose/routine';
+import { movementOf } from '../../services/movement/exerciseMovement';
 import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
 import WebPoseOverlay from '../../components/web/WebPoseOverlay';
 import { focusFromExercise } from '../../components/pose/overlayGeometry';
 import ExerciseChooser from '../../components/exercises/ExerciseChooser';
 import { useRoutineFlow } from '../../components/exercises/useRoutineFlow';
+import { speakLiveFeedback } from '../../components/exercises/liveFeedback';
 import {
   sessionOutcome,
   useMovementAnalysis,
@@ -62,7 +65,6 @@ import {
 import {
   EXERCISE_OPTIONS,
   ExerciseKey,
-  friendlyInstruction,
   firstKeyFor,
   keepOrFirstKey,
 } from '../../components/exercises/exerciseCatalog';
@@ -224,11 +226,7 @@ const WebPoseDetectionScreen: React.FC = () => {
         const validation = exerciseValidationService.validatePose(poseData);
         movementRef.current.add(poseData);
         const metrics = exerciseValidationService.getExerciseMetrics();
-        const raw = validation.feedback[0] ?? validation.errors[0] ?? '';
         dispatch(updateValidation(validation));
-        if (!validation.feedback.length && raw) {
-          dispatch(setFeedback(raw));
-        }
         dispatch(
           updateExerciseProgress({
             reps: metrics.repetitionCount,
@@ -236,22 +234,15 @@ const WebPoseDetectionScreen: React.FC = () => {
             phase: validation.phase,
           })
         );
-        if (metrics.repetitionCount > lastRepsRef.current) {
-          audioFeedbackService.announceRep(
-            metrics.repetitionCount,
-            exerciseValidationService.getCurrentState().exercise?.targetRepetitions
-          );
-        }
+        const spoken = speakLiveFeedback(validation, {
+          reps: metrics.repetitionCount,
+          previousReps: lastRepsRef.current,
+          target: exerciseValidationService.getCurrentState().exercise?.targetRepetitions,
+          outOfView: outOfViewRef.current,
+          lastSpoken: lastSpokenRef.current,
+        });
+        if (spoken) lastSpokenRef.current = spoken;
         lastRepsRef.current = metrics.repetitionCount;
-        // While out of view the screen already says "Step back into view"
-        const message = outOfViewRef.current ? '' : friendlyInstruction(raw);
-        if (
-          message &&
-          message !== lastSpokenRef.current &&
-          audioFeedbackService.speakCorrection(message)
-        ) {
-          lastSpokenRef.current = message;
-        }
       }
 
       // Draw the skeleton
@@ -399,32 +390,31 @@ const WebPoseDetectionScreen: React.FC = () => {
     if (outcome.planUpdate) {
       dispatch(setExercisePlan(outcome.planUpdate));
     }
+    const duration = startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0;
+    const reps = outcome.summary.reps ?? repetitionCount;
+    // How much of the prescribed exercise was done: separate from whether it
+    // could be measured
+    const completion = completionOf(plannedExercise, { reps, durationSeconds: duration });
+    const result = { ...(outcome.historyResult ?? sessionRange ?? {}), completion };
+    const saved = !practice && !recordingDemo && isWorthKeeping(result, repetitionCount);
     // Practice sessions and demonstrations are not the patient's own history
-    dispatch(
-      practice || recordingDemo
-        ? clearExercise()
-        : stopExercise(outcome.historyResult ?? sessionRange ?? undefined)
-    );
+    dispatch(practice || recordingDemo ? clearExercise() : stopExercise(result));
     audioFeedbackService.speak(
       outcome.spokenCue ? `Well done. ${outcome.spokenCue}` : 'Well done'
     );
     setSummary({
       ...outcome.summary,
       exercise: option.title,
-      reps: outcome.summary.reps ?? repetitionCount,
-      duration: startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0,
+      reps,
+      duration,
       formAccuracy: Math.round(formScore * 100),
       targetReps: currentExercise?.targetRepetitions,
       practice,
       exerciseId: plannedExercise.id,
-      // The same rule stopExercise uses to keep a session
-      saved:
-        !practice &&
-        !recordingDemo &&
-        isWorthKeeping(
-          outcome.historyResult ?? sessionRange ?? undefined,
-          repetitionCount
-        ),
+      mode: movementOf(plannedExercise.id).mode ?? 'reps',
+      holdSeconds: (plannedExercise.phases[0]?.holdDuration ?? 0) / 1000 || undefined,
+      completion: recordingDemo ? undefined : completion,
+      saved,
     });
     setIsPaused(false);
     setRecordingDemo(false);
@@ -523,6 +513,9 @@ const WebPoseDetectionScreen: React.FC = () => {
       <View style={styles.flex} testID={AccessibilityIds.poseDetection.screen}>
         <ExerciseSummary
           {...summary}
+          onConfirmCompleted={
+            summary.saved ? () => dispatch(confirmLastSessionCompleted()) : undefined
+          }
           onPainSelect={(score) => {
             // Practice sessions aren't saved, so there is nothing to attach it to
             if (summary.saved) {

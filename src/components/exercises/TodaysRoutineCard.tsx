@@ -10,18 +10,33 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { AppText, Card } from '../ui';
 import { colors, radii, spacing } from '../../theme';
 import type { TodaysRoutine } from '../../services/pose/routine';
-import { findExerciseOption } from './exerciseCatalog';
+import { findExerciseOption, formatDuration } from './exerciseCatalog';
+import { movementOf } from '../../services/movement/exerciseMovement';
+import type { PrescribedExercise } from '../../services/pose/exercisePlan';
+import type { Completion } from '../../services/pose/routine';
 
-/** "10 times", "Rest still for 30 seconds". */
-const amount = (item: TodaysRoutine['items'][number]) => {
+/** "10 times", "Rest still for 1 min": the prescription, else the exercise's default. */
+export const routineAmount = (item: PrescribedExercise): string => {
   const option = findExerciseOption(item.exerciseId);
-  if (item.reps !== undefined) return `${item.reps} times`;
-  return option?.goal ?? '';
+  if (movementOf(item.exerciseId).mode === 'hold') {
+    const ms = item.holdSeconds
+      ? item.holdSeconds * 1000
+      : option?.exercise.phases[0]?.holdDuration;
+    return ms ? `Rest still for ${formatDuration(ms / 1000)}` : option?.goal ?? '';
+  }
+  const reps = item.reps ?? option?.exercise.targetRepetitions;
+  return reps ? `${reps} times` : option?.goal ?? '';
+};
+
+const STATUS_WORDS: Record<Completion, string> = {
+  completed: 'Done today',
+  stopped_early: 'Stopped early today',
+  attempted: 'Tried today, not finished',
 };
 
 export const TodaysRoutineCard: React.FC<{ routine: TodaysRoutine }> = ({ routine }) => {
   const total = routine.items.length;
-  const allDone = routine.doneCount === total;
+  const allDone = routine.finishedCount === total;
   return (
     <Card style={styles.card} testID="todays-routine">
       <AppText variant="label" color={colors.textSecondary} accessibilityRole="header">
@@ -41,19 +56,20 @@ export const TodaysRoutineCard: React.FC<{ routine: TodaysRoutine }> = ({ routin
               key={item.exerciseId}
               style={[styles.row, i > 0 && styles.divider]}
               accessible
-              accessibilityLabel={`${i + 1}. ${option?.title ?? item.exerciseId}, ${amount(
+              accessibilityLabel={`${i + 1}. ${option?.title ?? item.exerciseId}, ${routineAmount(
                 item
-              )}. ${item.done ? 'Done today' : isNext ? 'Next' : 'To do'}`}
+              )}. ${item.status ? STATUS_WORDS[item.status] : isNext ? 'Next' : 'To do'}`}
               testID={`todays-routine-item-${i}`}
             >
               <View
                 style={[
                   styles.marker,
                   item.done && styles.markerDone,
+                  item.status === 'stopped_early' && styles.markerStopped,
                   isNext && styles.markerNext,
                 ]}
               >
-                {item.done ? (
+                {item.finished ? (
                   <Icon name="check" size={22} color={colors.onPrimary} />
                 ) : (
                   <AppText
@@ -67,7 +83,9 @@ export const TodaysRoutineCard: React.FC<{ routine: TodaysRoutine }> = ({ routin
               <View style={styles.flex}>
                 <AppText variant="bodyStrong">{option?.title ?? item.exerciseId}</AppText>
                 <AppText variant="body" color={colors.textSecondary}>
-                  {item.done ? 'Done today' : amount(item)}
+                  {item.status && item.status !== 'attempted'
+                    ? STATUS_WORDS[item.status]
+                    : routineAmount(item)}
                 </AppText>
               </View>
             </View>
@@ -97,6 +115,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   markerDone: { backgroundColor: colors.success },
+  markerStopped: { backgroundColor: colors.textSecondary },
   markerNext: { backgroundColor: colors.primary },
 });
 

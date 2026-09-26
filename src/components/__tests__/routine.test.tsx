@@ -260,28 +260,32 @@ describe('progress as one series per exercise', () => {
   ];
 
   it('never mixes exercises, keeps unmeasured sessions, and compares within one plan', () => {
-    const series = measurementSeries(history);
+    const series = measurementSeries(history, 2);
     const active = series.find((s) => s.exerciseId === 'seated-knee-extension')!;
     expect(active.points.map((p) => p.degrees)).toEqual([25, 12, 8]);
-    expect(active.latest?.degrees).toBe(8);
-    expect(active.firstThisPlan?.degrees).toBe(12); // not 25, from the old plan
+    expect(active.thisPlan.map((p) => p.degrees)).toEqual([12, 8]);
+    expect(active.earlierPlans.map((p) => p.degrees)).toEqual([25]);
     const passive = series.find((s) => s.exerciseId === 'heel-prop-extension')!;
     expect(passive).toMatchObject({ measuredCount: 0, unmeasuredCount: 1 });
     expect(passive.latest).toBeUndefined();
   });
 
-  it('Progress shows the series without claiming improvement', () => {
+  it('Progress leads with the measurement, labelled by plan, without claiming improvement', () => {
     const { getByTestId, queryByText } = render(
-      <Provider store={storeWith(kneePlan, history)}>
+      <Provider store={storeWith({ ...kneePlan, version: 2 }, history)}>
         <ProgressScreen />
       </Provider>
     );
-    expect(getByTestId('progress-series')).toHaveTextContent(/Latest 8° from straight/);
-    expect(getByTestId('progress-series')).toHaveTextContent(
-      /First with this plan 12° from straight/
+    expect(getByTestId('progress-series-0-latest')).toHaveTextContent(
+      /8°.*from straight/
     );
-    expect(getByTestId('progress-series')).toHaveTextContent(
-      /0 measured, 1 not measured/
+    expect(getByTestId('progress-series-0-earlier')).toHaveTextContent(/12°/);
+    expect(getByTestId('progress-series-0-before')).toHaveTextContent(
+      /Before your current plan: 25° from straight/
+    );
+    expect(getByTestId('progress-series-1-none')).toBeTruthy();
+    expect(getByTestId('progress-series-1-unmeasured')).toHaveTextContent(
+      '1 session couldn’t be measured'
     );
     expect(getByTestId('progress-series-note')).toBeTruthy();
     expect(queryByText(/improved/i)).toBeNull();

@@ -76,7 +76,7 @@ export function useRoutineFlow({
         routineDone:
           inRoutine(plan, exerciseId) &&
           routine.items.length > 0 &&
-          routine.doneCount === routine.items.length,
+          routine.finishedCount === routine.items.length,
       };
     },
     [plan, routine, startExercise]

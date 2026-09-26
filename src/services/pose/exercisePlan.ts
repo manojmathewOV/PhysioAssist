@@ -190,7 +190,8 @@ export function applyPlan(exercise: Exercise, plan?: ExercisePlan | null): Exerc
     if (!req) return phase; // no rule for this joint: keep the phase as written
     let requirement = req;
     let holdDuration = phase.holdDuration;
-    if (prescribed && index === goalIndex && exercise.phases.length > 1) {
+    // The goal phase: the last of several, or a still hold's only phase
+    if (prescribed && index === goalIndex && hasGoalPhase(exercise)) {
       // Each goal applies only to its kind of exercise: a bend goal isn't a
       // straightening goal, and neither applies to rotation
       const movement = movementOf(exercise.id);
@@ -224,6 +225,14 @@ export function applyPlan(exercise: Exercise, plan?: ExercisePlan | null): Exerc
   };
 }
 
+/**
+ * Whether the exercise has a phase a goal applies to: the last of several
+ * (the working position), or the only phase of a still hold (heel prop). A
+ * single-phase stretch without a measured hold has none.
+ */
+const hasGoalPhase = (exercise: Exercise) =>
+  exercise.phases.length > 1 || movementOf(exercise.id).mode === 'hold';
+
 /** The routine's prescription for an exercise, if it is in the routine. */
 export const routineItem = (
   plan: ExercisePlan | null | undefined,
@@ -248,7 +257,7 @@ export const goalDegreesOf = (exercise: Exercise): number | undefined => {
   const kind = exercise.primaryJoint;
   const goal = exercise.phases[exercise.phases.length - 1];
   const req = goal?.jointRequirements.find((r) => r.joint === joint);
-  if (!req || !kind || exercise.phases.length < 2) return undefined;
+  if (!req || !kind || !hasGoalPhase(exercise)) return undefined;
   const ends = [clinicalAngle(kind, req.minAngle), clinicalAngle(kind, req.maxAngle)];
   // Away from neutral, the end nearest neutral is the minimum to reach; towards
   // neutral (straightening), the end furthest from it is the most to stay at

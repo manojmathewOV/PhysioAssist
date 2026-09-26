@@ -167,7 +167,7 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
           <>
             <BigButton
               label={
-                routine.doneCount > 0
+                routine.items.some((i) => i.status)
                   ? 'Continue today’s session'
                   : 'Start today’s session'
               }

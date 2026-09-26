@@ -99,6 +99,8 @@ export interface SessionOutcome {
     notice?: string;
     /** Repetitions from the movement analysis, when the live counter can't count them. */
     reps?: number;
+    /** Enough movement was seen to judge technique (else no "nothing to correct"). */
+    assessed?: boolean;
   };
   /** Said after "Well done" (the most important thing to work on). */
   spokenCue?: string;
@@ -211,6 +213,9 @@ export function sessionOutcome(
       comparedWithDemo: Boolean(reference),
       reps,
       notice,
+      assessed: analysis
+        ? analysis.result.status === 'measured' || analysis.reps.length > 0
+        : undefined,
     },
     spokenCue: analysis?.cues[0],
   };

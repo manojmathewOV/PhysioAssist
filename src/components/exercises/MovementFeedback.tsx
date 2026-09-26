@@ -15,7 +15,9 @@ export const MovementFeedback: React.FC<{
   findings: Finding[];
   /** Compared with the physio's demonstration (vs only the goal). */
   comparedWithDemo?: boolean;
-}> = ({ findings, comparedWithDemo }) => {
+  /** False when too little movement was seen to judge technique. */
+  assessed?: boolean;
+}> = ({ findings, comparedWithDemo, assessed = true }) => {
   const top = findings.slice(0, 2);
   return (
     <Card style={styles.card} testID="movement-feedback">
@@ -27,7 +29,16 @@ export const MovementFeedback: React.FC<{
           Compared with your physiotherapist’s demonstration.
         </AppText>
       ) : null}
-      {top.length === 0 ? (
+      {top.length === 0 && !assessed ? (
+        <View style={styles.row} testID="movement-not-assessed">
+          <View style={styles.icon}>
+            <Icon name="visibility-off" size={22} color={colors.textSecondary} />
+          </View>
+          <AppText variant="bodyStrong" style={styles.flex}>
+            Not enough movement was seen to judge your technique this time.
+          </AppText>
+        </View>
+      ) : top.length === 0 ? (
         <View style={styles.row}>
           <View style={[styles.icon, styles.iconGood]}>
             <Icon name="check" size={22} color={colors.success} />

@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Exercise, ValidationResult, ExerciseMetrics } from '../../types/exercise';
+import { liveCue } from '../../utils/liveCue';
 
 export interface ExerciseHistory {
   id: string;
@@ -24,6 +25,9 @@ export interface ExerciseHistory {
   measured?: boolean;
   unavailableReason?: string;
   planVersion?: number;
+  completion?: SessionResult['completion'];
+  /** The patient said they did the whole exercise (the camera couldn't count it). */
+  confirmedByPatient?: boolean;
 }
 
 /** Extra results recorded with a finished session. */
@@ -45,6 +49,8 @@ export interface SessionResult {
   unavailableReason?: string;
   /** The prescription version the session was done under (see ExercisePlan.version). */
   planVersion?: number;
+  /** How much of the prescribed exercise was done (see completionOf). */
+  completion?: 'completed' | 'stopped_early' | 'attempted';
 }
 
 /**
@@ -130,9 +136,9 @@ const exerciseSlice = createSlice({
     updateValidation: (state, action: PayloadAction<ValidationResult>) => {
       state.lastValidationResult = action.payload;
       state.currentPhase = action.payload.phase;
-      if (action.payload.feedback.length > 0) {
-        state.feedback = action.payload.feedback[0];
-      }
+      // The same instruction the screens show and speak (a precaution first)
+      const cue = liveCue(action.payload);
+      if (cue.text) state.feedback = cue.text;
     },
     incrementReps: (state, action: PayloadAction<number>) => {
       state.repetitionCount += action.payload;
@@ -171,6 +177,16 @@ const exerciseSlice = createSlice({
         state.metrics = action.payload.metrics;
       }
     },
+    /**
+     * The patient confirms they did the whole exercise when the camera
+     * couldn't count it: completed, but still not measured.
+     */
+    confirmLastSessionCompleted: (state) => {
+      if (state.history[0]) {
+        state.history[0].completion = 'completed';
+        state.history[0].confirmedByPatient = true;
+      }
+    },
     /** Pain (0-10) reported on the summary screen for the session just recorded. */
     setLastSessionPain: (state, action: PayloadAction<number>) => {
       const score = Math.round(action.payload);
@@ -203,6 +219,7 @@ export const {
   setMetrics,
   updateExerciseProgress,
   setLastSessionPain,
+  confirmLastSessionCompleted,
   clearExercise,
 } = exerciseSlice.actions;
 

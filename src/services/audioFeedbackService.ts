@@ -10,6 +10,8 @@ import HapticFeedback from 'react-native-haptic-feedback';
  */
 export const CORRECTION_MIN_GAP_MS = 4000;
 export const CORRECTION_REPEAT_GAP_MS = 10000;
+/** The same precaution isn't repeated more often than this (ms). */
+export const WARNING_REPEAT_GAP_MS = 4000;
 
 export interface FeedbackConfig {
   enableSpeech: boolean;
@@ -29,6 +31,7 @@ export class AudioFeedbackService {
   private isSpeaking: boolean = false;
   private lastCorrectionTime = -Infinity;
   private lastCorrectionByText = new Map<string, number>();
+  private lastWarningByText = new Map<string, number>();
 
   // Fixed: Store listener references for proper cleanup
   private ttsStartListener: (() => void) | null = null;
@@ -157,6 +160,27 @@ export class AudioFeedbackService {
    * Announce a completed repetition ("3"), interrupting any correction, since the
    * count is the most useful thing to hear.
    */
+  /**
+   * A precaution (e.g. past the physio's limit): spoken ahead of anything
+   * queued, without the pacing that keeps ordinary corrections quiet; only
+   * the same warning within a few seconds is skipped.
+   */
+  speakWarning(message: string, now: number = Date.now()): boolean {
+    if (!this.config.enableSpeech || !message) return false;
+    if (
+      now - (this.lastWarningByText.get(message) ?? -Infinity) <
+      WARNING_REPEAT_GAP_MS
+    ) {
+      return false;
+    }
+    this.lastWarningByText.set(message, now);
+    this.lastCorrectionTime = now;
+    // Drop queued praise, counts and corrections: the warning replaces them
+    this.speakingQueue = [message];
+    this.processQueue();
+    return true;
+  }
+
   async announceRep(count: number, target?: number): Promise<void> {
     const text =
       target && count >= target ? `${count}. Well done, that's all of them` : `${count}`;

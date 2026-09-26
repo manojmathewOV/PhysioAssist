@@ -28,14 +28,23 @@ export interface MeasurementSeries {
   points: SeriesPoint[];
   measuredCount: number;
   unmeasuredCount: number;
-  /** Most recent measured session. */
+  /** Most recent measured session (under any prescription). */
   latest?: SeriesPoint;
-  /** First measured session under the same prescription as the latest. */
-  firstThisPlan?: SeriesPoint;
+  /** Measured sessions under the current prescription, oldest first. */
+  thisPlan: SeriesPoint[];
+  /** Measured sessions under earlier prescriptions, oldest first. */
+  earlierPlans: SeriesPoint[];
 }
 
-/** Series of measured (or attempted) sessions, most recently active first. */
-export function measurementSeries(history: ExerciseHistory[]): MeasurementSeries[] {
+/**
+ * Series of measured (or attempted) sessions, most recently active first.
+ * `currentVersion` is the plan's prescription version now: only sessions
+ * under it are "this plan" (without it, the latest measured session's).
+ */
+export function measurementSeries(
+  history: ExerciseHistory[],
+  currentVersion?: number
+): MeasurementSeries[] {
   const byKey = new Map<string, MeasurementSeries>();
   // History is newest first; build each series oldest first
   for (const h of [...history].reverse()) {
@@ -52,6 +61,8 @@ export function measurementSeries(history: ExerciseHistory[]): MeasurementSeries
         points: [],
         measuredCount: 0,
         unmeasuredCount: 0,
+        thisPlan: [],
+        earlierPlans: [],
       };
       byKey.set(key, s);
     }
@@ -72,7 +83,9 @@ export function measurementSeries(history: ExerciseHistory[]): MeasurementSeries
   for (const s of series) {
     const measured = s.points.filter((p) => p.measured);
     s.latest = measured[measured.length - 1];
-    s.firstThisPlan = measured.find((p) => p.planVersion === s.latest?.planVersion);
+    const version = currentVersion ?? s.latest?.planVersion;
+    s.thisPlan = measured.filter((p) => p.planVersion === version);
+    s.earlierPlans = measured.filter((p) => p.planVersion !== version);
   }
   return series.sort((a, b) =>
     (b.points[b.points.length - 1]?.date ?? '').localeCompare(

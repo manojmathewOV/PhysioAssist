@@ -284,6 +284,11 @@ export class ExerciseValidationService {
     if (limit && limit.joint === this.trackedJoint && degrees > limit.maxDegrees) {
       validation.overLimit = true;
       validation.isValid = false;
+      // Nothing that encourages going further stays alongside it: no praise,
+      // no hold countdown
+      validation.feedback = validation.feedback.filter(
+        (m) => !/^(Perfect|Good) |^Hold for /.test(m)
+      );
       // Safety first: this is the instruction the patient sees and hears
       validation.errors.unshift(
         `Not so far: don't ${limitMovement(limit.kind)} past ${Math.round(
