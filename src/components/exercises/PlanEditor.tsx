@@ -42,7 +42,7 @@ const DEFAULT_GOAL: Record<JointKind, number> = {
   knee: 90,
 };
 
-const Stepper: React.FC<{
+export const Stepper: React.FC<{
   label: string;
   value: number;
   unit: string;
@@ -129,6 +129,8 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ value, onSave, onCancel }) => {
               testID={`plan-joint-${j.kind}`}
               accessibilityRole="radio"
               accessibilityState={{ checked: selected }}
+              // Web: react-native-web doesn't turn the checked state into aria-checked
+              aria-checked={selected}
               accessibilityLabel={`${j.label}. ${j.movement}${
                 hasExtendedSupport(j.kind) ? '. Full movement guidance' : ''
               }`}

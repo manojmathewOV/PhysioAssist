@@ -50,6 +50,8 @@ const PainScale: React.FC<PainScaleProps> = ({
                 accessibilityRole="radio"
                 accessibilityLabel={optionLabel(n)}
                 accessibilityState={{ selected, checked: selected }}
+                // Web: react-native-web doesn't turn the checked state into aria-checked
+                aria-checked={selected}
                 style={({ pressed }) => [
                   styles.option,
                   selected && styles.optionSelected,

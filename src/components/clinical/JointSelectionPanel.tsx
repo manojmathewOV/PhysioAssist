@@ -245,6 +245,8 @@ const JointSelectionPanel: React.FC<JointSelectionPanelProps> = ({
                       accessibilityLabel={`${movement.label}: ${movement.description}. Target ${movement.targetAngle} degrees`}
                       accessibilityRole="radio"
                       accessibilityState={{ selected, checked: selected }}
+                      // Web: react-native-web doesn't turn the checked state into aria-checked
+                      aria-checked={selected}
                     >
                       <Icon
                         name={

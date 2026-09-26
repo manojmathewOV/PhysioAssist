@@ -23,6 +23,11 @@ export interface RepRingProps {
   testID?: string;
   /** testID for the number itself (e.g. the existing rep-counter id). */
   valueTestID?: string;
+  /**
+   * Shows something other than a repetition count (e.g. a still hold's time):
+   * the text in the middle, the caption under it, and what is announced.
+   */
+  display?: { value: string; caption: string; spoken: string };
 }
 
 const palette = {
@@ -50,6 +55,7 @@ export const RepRing: React.FC<RepRingProps> = ({
   tone = 'dark',
   testID,
   valueTestID,
+  display,
 }) => {
   const p = palette[tone];
   const hasGoal = !!target && target > 0;
@@ -65,9 +71,11 @@ export const RepRing: React.FC<RepRingProps> = ({
       accessible
       accessibilityRole="progressbar"
       accessibilityLabel={
-        hasGoal
-          ? `${value} of ${target} repetitions${reached ? ', goal reached' : ''}`
-          : `${value} ${value === 1 ? 'repetition' : 'repetitions'}`
+        display
+          ? display.spoken
+          : hasGoal
+            ? `${value} of ${target} repetitions${reached ? ', goal reached' : ''}`
+            : `${value} ${value === 1 ? 'repetition' : 'repetitions'}`
       }
       accessibilityValue={hasGoal ? { min: 0, max: target, now: value } : undefined}
       testID={testID}
@@ -90,7 +98,7 @@ export const RepRing: React.FC<RepRingProps> = ({
           maxFontSizeMultiplier={1.2}
           testID={valueTestID}
         >
-          {value}
+          {display ? display.value : value}
         </AppText>
         <AppText
           variant="label"
@@ -98,7 +106,7 @@ export const RepRing: React.FC<RepRingProps> = ({
           maxFontSizeMultiplier={1.2}
           style={styles.caption}
         >
-          {hasGoal ? `of ${target}` : unit}
+          {display ? display.caption : hasGoal ? `of ${target}` : unit}
         </AppText>
       </View>
     </View>

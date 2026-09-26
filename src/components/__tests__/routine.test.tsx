@@ -172,7 +172,7 @@ describe('Exercise screen with a routine', () => {
     expect(onStartRoutine).toHaveBeenCalled();
   });
 
-  it('the physio adds or removes the selected exercise', () => {
+  it('the physio adds or removes the selected exercise in set-up', () => {
     const onToggleRoutine = jest.fn();
     const { getByTestId } = render(
       <Provider store={storeWith(kneePlan)}>
@@ -188,6 +188,8 @@ describe('Exercise screen with a routine', () => {
         />
       </Provider>
     );
+    // Set-up is behind "Physio set-up", not on the patient's screen
+    fireEvent.press(getByTestId('exercise-setup-open'));
     fireEvent(getByTestId('exercise-routine-toggle'), 'onValueChange', true);
     expect(onToggleRoutine).toHaveBeenCalledWith('short-arc-quad');
   });
@@ -224,9 +226,7 @@ describe('Home with a routine', () => {
       </Provider>
     );
     expect(getByTestId('home-routine')).toHaveTextContent(/2 exercises to go/);
-    expect(getByTestId('home-start-exercises')).toHaveTextContent(
-      'Continue today’s session'
-    );
+    expect(getByTestId('home-start-exercises')).toHaveTextContent('Next exercise');
   });
 });
 

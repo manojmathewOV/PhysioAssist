@@ -1,6 +1,10 @@
 /**
- * Step 1 of the Exercise tab (native and web): pick one exercise from large
- * cards, glance at the set-up reminder, then press the one big Start button.
+ * Step 1 of the Exercise tab (native and web).
+ *
+ * For the patient: with a routine from the physio, the next exercise and "I'm
+ * ready" (TodayPrep), no choosing; without one, pick an exercise and Start.
+ * Everything that configures the plan (goals, today's exercises, videos,
+ * demonstrations) is in "Physio set-up", out of the everyday path.
  */
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -13,10 +17,16 @@ import { colors, radii, spacing } from '../../theme';
 import type { MainTabParamList } from '../../navigation/types';
 import ExerciseSelector from './ExerciseSelector';
 import { EXERCISE_OPTIONS, ExerciseKey, ExerciseOption } from './exerciseCatalog';
-import PlanEditor from './PlanEditor';
+import PlanEditor, { Stepper } from './PlanEditor';
 import TodaysRoutineCard from './TodaysRoutineCard';
+import TodayPrep from './TodayPrep';
 import type { TodaysRoutine } from '../../services/pose/routine';
-import { inRoutine } from '../../services/pose/routine';
+import {
+  inRoutine,
+  moveRoutineItem,
+  updateRoutineItem,
+} from '../../services/pose/routine';
+import { movementOf } from '../../services/movement/exerciseMovement';
 import ExerciseVideo from '../video/ExerciseVideo';
 import { VideoLinkEditor } from '../video/VideoLinkEditor';
 import { parseYouTubeId, parseYouTubeStart } from '../../utils/youtube';
@@ -24,6 +34,7 @@ import {
   ExercisePlan,
   jointLabel,
   limitMovement,
+  routineItem,
 } from '../../services/pose/exercisePlan';
 
 interface ExerciseChooserProps {
@@ -49,6 +60,8 @@ interface ExerciseChooserProps {
   onStartRoutine?: () => void;
   /** Add the selected exercise to the routine, or take it out (physio set-up). */
   onToggleRoutine?: (exerciseId: string) => void;
+  /** Start a particular exercise (doing one of today's again). */
+  onStartExercise?: (exerciseId: string) => void;
 }
 
 /** "Goal 120° · don't raise your arm past 140° · 10 times". */
@@ -83,7 +96,9 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
   routine,
   onStartRoutine,
   onToggleRoutine,
+  onStartExercise,
 }) => {
+  const [setupOpen, setSetupOpen] = useState(false);
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const [editingPlan, setEditingPlan] = useState(false);
   const [editingVideo, setEditingVideo] = useState(false);
@@ -141,52 +156,73 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
   }
 
   const hasRoutine = Boolean(routine?.items.length);
-  const startSelected = (
-    <BigButton
-      label={selected ? `Start ${selected.title.toLowerCase()}` : 'Start'}
-      icon="play-arrow"
-      variant={hasRoutine && routine?.next ? 'secondary' : 'primary'}
-      onPress={onStart}
-      loading={starting}
-      testID="start-exercise-button"
-      accessibilityHint="Opens the camera and starts counting your repetitions"
-    />
-  );
+  const openHelp = () => navigation.navigate('HomeTab', { screen: 'Help' });
+
+  // The patient's day, when the physio set one: no choosing
+  if (plan && routine && hasRoutine && !setupOpen && onStartRoutine) {
+    return (
+      <TodayPrep
+        routine={routine}
+        plan={plan}
+        onReady={onStartRoutine}
+        onRepeat={(id) => onStartExercise?.(id)}
+        onOpenSetup={() => setSetupOpen(true)}
+        onHelp={openHelp}
+        starting={starting}
+        notice={notice}
+      />
+    );
+  }
+  const setup = setupOpen;
+  const selectedItemRoutine =
+    plan && selected ? routineItem(plan, selected.exercise.id) : undefined;
+  const isHold = selected ? movementOf(selected.exercise.id).mode === 'hold' : false;
+  const routineIndex =
+    plan?.routine?.findIndex((i) => i.exerciseId === selected?.exercise.id) ?? -1;
 
   return (
     <Screen
-      testID="exercise-chooser"
-      title={hasRoutine ? 'Today’s exercises' : 'Choose an exercise'}
+      testID={setup ? 'exercise-physio-setup' : 'exercise-chooser'}
+      title={setup ? 'Physio set-up' : 'Choose an exercise'}
       subtitle={
-        hasRoutine
-          ? 'From your physiotherapist. Press Start and we’ll go through them in order.'
+        setup
+          ? 'For your physiotherapist or carer: the plan, today’s exercises and videos.'
           : 'Tap one, then press Start.'
       }
       footer={
-        hasRoutine && routine?.next && onStartRoutine ? (
+        setup ? (
           <>
             <BigButton
-              label={
-                routine.items.some((i) => i.status)
-                  ? 'Continue today’s session'
-                  : 'Start today’s session'
-              }
-              icon="play-arrow"
-              onPress={onStartRoutine}
-              loading={starting}
-              testID="start-routine-button"
-              accessibilityHint="Starts the next exercise your physiotherapist set for today"
+              label="Done"
+              icon="check"
+              onPress={() => setSetupOpen(false)}
+              testID="exercise-setup-done"
             />
-            {selected && selected.exercise.id !== routine.next ? startSelected : null}
+            <BigButton
+              variant="secondary"
+              label={selected ? `Try ${selected.title.toLowerCase()}` : 'Try it'}
+              icon="play-arrow"
+              onPress={onStart}
+              loading={starting}
+              testID="start-exercise-button"
+              accessibilityHint="Opens the camera for the selected exercise"
+            />
           </>
         ) : (
-          startSelected
+          <BigButton
+            label={selected ? `Start ${selected.title.toLowerCase()}` : 'Start'}
+            icon="play-arrow"
+            onPress={onStart}
+            loading={starting}
+            testID="start-exercise-button"
+            accessibilityHint="Opens the camera and starts counting your repetitions"
+          />
         )
       }
     >
       {notice}
-      {hasRoutine && routine ? <TodaysRoutineCard routine={routine} /> : null}
-      {plan ? (
+      {setup && hasRoutine && routine ? <TodaysRoutineCard routine={routine} /> : null}
+      {setup && plan ? (
         <Card style={styles.plan} testID="exercise-plan-summary">
           <View style={styles.tip}>
             <View style={styles.tipIcon}>
@@ -213,22 +249,87 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
           />
         </Card>
       ) : null}
-      {plan && selected && onToggleRoutine ? (
+      {setup && plan && selected && onToggleRoutine ? (
         <Card style={styles.routineToggle} testID="exercise-routine-card">
           <ListRow
             icon="playlist-add-check"
             title={`${selected.title} in today’s session`}
-            description="Your physio chooses the exercises for each day"
+            description="The exercises the patient does each day, in order"
             toggle={{
               value: inRoutine(plan, selected.exercise.id),
               onChange: () => onToggleRoutine(selected.exercise.id),
               testID: 'exercise-routine-toggle',
             }}
-            last
+            last={!selectedItemRoutine}
           />
+          {selectedItemRoutine && onPlanChange ? (
+            <View style={styles.routineControls} testID="exercise-routine-controls">
+              {isHold ? (
+                <Stepper
+                  label="Rest still for"
+                  value={selectedItemRoutine.holdSeconds ?? 30}
+                  unit="seconds"
+                  step={10}
+                  min={10}
+                  max={600}
+                  onChange={(v) =>
+                    onPlanChange(
+                      updateRoutineItem(plan, selected.exercise.id, { holdSeconds: v })
+                    )
+                  }
+                  testID="routine-hold"
+                />
+              ) : (
+                <Stepper
+                  label="Repetitions"
+                  value={
+                    selectedItemRoutine.reps ??
+                    plan.reps ??
+                    selected.exercise.targetRepetitions
+                  }
+                  unit="times"
+                  step={1}
+                  min={1}
+                  max={50}
+                  onChange={(v) =>
+                    onPlanChange(
+                      updateRoutineItem(plan, selected.exercise.id, { reps: v })
+                    )
+                  }
+                  testID="routine-reps"
+                />
+              )}
+              <View style={styles.videoActions}>
+                <BigButton
+                  variant="ghost"
+                  compact
+                  icon="arrow-upward"
+                  label="Earlier"
+                  disabled={routineIndex <= 0}
+                  onPress={() =>
+                    onPlanChange(moveRoutineItem(plan, selected.exercise.id, -1))
+                  }
+                  testID="routine-move-earlier"
+                />
+                <BigButton
+                  variant="ghost"
+                  compact
+                  icon="arrow-downward"
+                  label="Later"
+                  disabled={
+                    routineIndex < 0 || routineIndex >= (plan.routine?.length ?? 0) - 1
+                  }
+                  onPress={() =>
+                    onPlanChange(moveRoutineItem(plan, selected.exercise.id, 1))
+                  }
+                  testID="routine-move-later"
+                />
+              </View>
+            </View>
+          ) : null}
         </Card>
       ) : null}
-      {plan && selected && onPlanChange ? (
+      {setup && plan && selected && onPlanChange ? (
         <Card style={styles.plan} testID="exercise-video-card">
           <AppText variant="label" color={colors.textSecondary}>
             {`${selected.title.toUpperCase()} VIDEO`}
@@ -285,7 +386,7 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
           )}
         </Card>
       ) : null}
-      {plan && selected && (onRecordDemo || onUploadVideo) ? (
+      {setup && plan && selected && (onRecordDemo || onUploadVideo) ? (
         <Card style={styles.plan} testID="exercise-demo">
           <View style={styles.tip}>
             <View style={styles.tipIcon}>
@@ -372,30 +473,50 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
         </>
       ) : null}
 
-      <Card style={styles.setup} testID="exercise-setup-tips">
-        <AppText variant="label" color={colors.textSecondary} accessibilityRole="header">
-          BEFORE YOU START
-        </AppText>
-        {TIPS.map((tip) => (
-          <View key={tip.icon} style={styles.tip}>
-            <View style={styles.tipIcon}>
-              <Icon name={tip.icon} size={24} color={colors.warning} />
-            </View>
-            <AppText variant="bodyStrong" style={styles.flex}>
-              {tip.text}
+      {setup ? null : (
+        <>
+          <Card style={styles.setup} testID="exercise-setup-tips">
+            <AppText
+              variant="label"
+              color={colors.textSecondary}
+              accessibilityRole="header"
+            >
+              BEFORE YOU START
             </AppText>
-          </View>
-        ))}
-        <BigButton
-          variant="ghost"
-          compact
-          icon="help-outline"
-          label="How to set up"
-          onPress={() => navigation.navigate('HomeTab', { screen: 'Help' })}
-          testID="exercise-setup-help"
-          style={styles.helpLink}
-        />
-      </Card>
+            {TIPS.map((tip) => (
+              <View key={tip.icon} style={styles.tip}>
+                <View style={styles.tipIcon}>
+                  <Icon name={tip.icon} size={24} color={colors.warning} />
+                </View>
+                <AppText variant="bodyStrong" style={styles.flex}>
+                  {tip.text}
+                </AppText>
+              </View>
+            ))}
+            <BigButton
+              variant="ghost"
+              compact
+              icon="help-outline"
+              label="How to set up"
+              onPress={openHelp}
+              testID="exercise-setup-help"
+              style={styles.helpLink}
+            />
+          </Card>
+          {onPlanChange ? (
+            <BigButton
+              variant="ghost"
+              compact
+              icon="tune"
+              label="Physio set-up"
+              onPress={() => setSetupOpen(true)}
+              testID="exercise-setup-open"
+              style={styles.helpLink}
+              accessibilityHint="For your physiotherapist or carer: exercises, goals and videos"
+            />
+          ) : null}
+        </>
+      )}
     </Screen>
   );
 };
@@ -405,6 +526,7 @@ const styles = StyleSheet.create({
   setup: { gap: spacing.md, marginTop: spacing.sm },
   plan: { gap: spacing.sm },
   routineToggle: { paddingVertical: 0 },
+  routineControls: { paddingBottom: spacing.sm },
   demoActions: { gap: spacing.sm },
   videoActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   others: { marginTop: spacing.md, marginLeft: spacing.xs },

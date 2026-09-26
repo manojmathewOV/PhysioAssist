@@ -60,6 +60,20 @@ export function toggleRoutine(plan: ExercisePlan, exerciseId: string): ExerciseP
   };
 }
 
+/** Moves an exercise earlier (-1) or later (+1) in the routine. */
+export function moveRoutineItem(
+  plan: ExercisePlan,
+  exerciseId: string,
+  delta: -1 | 1
+): ExercisePlan {
+  const routine = [...(plan.routine ?? [])];
+  const from = routine.findIndex((i) => i.exerciseId === exerciseId);
+  const to = from + delta;
+  if (from < 0 || to < 0 || to >= routine.length) return plan;
+  [routine[from], routine[to]] = [routine[to], routine[from]];
+  return { ...plan, routine };
+}
+
 /** Changes one routine exercise's own prescription (e.g. its repetitions). */
 export function updateRoutineItem(
   plan: ExercisePlan,

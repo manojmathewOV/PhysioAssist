@@ -249,6 +249,8 @@ const SettingsScreen: React.FC = () => {
                     accessibilityRole="radio"
                     accessibilityLabel={`${speed.label} speaking speed`}
                     accessibilityState={{ checked: selected, selected }}
+                    // Web: react-native-web doesn't turn the checked state into aria-checked
+                    aria-checked={selected}
                     style={({ pressed }) => [
                       styles.segment,
                       selected && styles.segmentSelected,

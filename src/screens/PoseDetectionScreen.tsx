@@ -184,6 +184,7 @@ const PoseDetectionScreen: React.FC = () => {
         target: plannedExercise.targetRepetitions,
         outOfView: outOfViewRef.current,
         lastSpoken: lastSpokenRef.current,
+        hold: movementOf(plannedExercise.id).mode === 'hold',
       });
       if (spoken) lastSpokenRef.current = spoken;
       lastRepsRef.current = metrics.repetitionCount;
@@ -308,7 +309,8 @@ const PoseDetectionScreen: React.FC = () => {
       exerciseId: plannedExercise.id,
       mode: movementOf(plannedExercise.id).mode ?? 'reps',
       holdSeconds: (plannedExercise.phases[0]?.holdDuration ?? 0) / 1000 || undefined,
-      completion: recordingDemo ? undefined : completion,
+      // Practice and demonstrations are not saved, so they have no completion
+      completion: practice || recordingDemo ? undefined : completion,
       saved,
     });
     setIsPaused(false);
@@ -347,6 +349,7 @@ const PoseDetectionScreen: React.FC = () => {
           routine={routineFlow.routine}
           onStartRoutine={routineFlow.startRoutine}
           onToggleRoutine={routineFlow.toggle}
+          onStartExercise={routineFlow.startExercise}
         />
       </View>
     );

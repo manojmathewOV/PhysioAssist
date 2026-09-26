@@ -21,6 +21,8 @@ import {
 import ExerciseSummary from '../exercises/ExerciseSummary';
 import { routineAmount } from '../exercises/TodaysRoutineCard';
 import ProgressScreen from '../../screens/ProgressScreen';
+import HomeScreen from '../../screens/HomeScreen';
+import ExerciseChooser from '../exercises/ExerciseChooser';
 import { completionOf, todaysRoutine } from '../../services/pose/routine';
 import { measurementSeries } from '../../utils/measurementSeries';
 import { measureStaticHold } from '../../services/movement/staticHold';
@@ -344,5 +346,176 @@ describe('summaries say what actually happened', () => {
     expect(getByTestId('summary-title')).toHaveTextContent('Well done!');
     rerender(<ExerciseSummary completion="stopped_early" />);
     expect(getByText('You stopped early')).toBeTruthy();
+  });
+});
+
+describe('the patient path has no configuration and one next action', () => {
+  const plan: ExercisePlan = {
+    joint: 'knee',
+    side: 'left',
+    videos: { 'seated-knee-extension': 'https://youtu.be/dQw4w9WgXcQ' },
+    routine: [
+      { exerciseId: 'heel-prop-extension', holdSeconds: 60 },
+      { exerciseId: 'seated-knee-extension', reps: 12 },
+      { exerciseId: 'seated-knee-flexion', reps: 10 },
+    ],
+  };
+  const store = () => {
+    const defaults = rootReducer(undefined, { type: '@@test/INIT' });
+    return configureStore({
+      reducer: rootReducer,
+      preloadedState: {
+        ...defaults,
+        settings: { ...defaults.settings, exercisePlan: plan },
+      },
+    });
+  };
+  const chooser = (
+    history: ExerciseHistory[],
+    extra: Partial<React.ComponentProps<typeof ExerciseChooser>> = {}
+  ) =>
+    render(
+      <Provider store={store()}>
+        <ExerciseChooser
+          selectedKey="squat"
+          onSelect={jest.fn()}
+          onStart={jest.fn()}
+          plan={plan}
+          onPlanChange={jest.fn()}
+          onRecordDemo={jest.fn()}
+          routine={todaysRoutine(plan, history)}
+          onStartRoutine={jest.fn()}
+          onToggleRoutine={jest.fn()}
+          {...extra}
+        />
+      </Provider>
+    );
+
+  it('shows the next exercise, how to set up, and only "I’m ready"', () => {
+    const { getByTestId, queryByTestId, getByText, queryByText } = chooser([
+      entry({
+        exerciseId: 'heel-prop-extension',
+        joint: 'left_knee',
+        completion: 'completed',
+      }),
+    ]);
+    expect(getByTestId('today-next-title')).toHaveTextContent(
+      'Seated knee straightening'
+    );
+    expect(getByText('HOW TO SET UP')).toBeTruthy();
+    expect(getByTestId('start-routine-button')).toHaveTextContent('I’m ready');
+    // No unassigned exercise, no plan, video or demonstration controls
+    expect(queryByTestId('start-exercise-button')).toBeNull();
+    expect(queryByTestId('exercise-plan-summary')).toBeNull();
+    expect(queryByTestId('exercise-video-card')).toBeNull();
+    expect(queryByTestId('exercise-demo')).toBeNull();
+    expect(queryByText(/squat/i)).toBeNull();
+  });
+
+  it('set-up holds the per-exercise prescription and order', () => {
+    const onPlanChange = jest.fn();
+    const { getByTestId } = chooser([], {
+      selectedKey: 'seatedKneeExtension',
+      onPlanChange,
+    });
+    fireEvent.press(getByTestId('exercise-setup-open'));
+    fireEvent.press(getByTestId('routine-reps-plus'));
+    expect(onPlanChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        routine: expect.arrayContaining([
+          { exerciseId: 'seated-knee-extension', reps: 13 },
+        ]),
+      })
+    );
+    fireEvent.press(getByTestId('routine-move-earlier'));
+    expect(onPlanChange.mock.calls.at(-1)[0].routine[0].exerciseId).toBe(
+      'seated-knee-extension'
+    );
+  });
+
+  it('when all are done, it says so and any one can be done again', () => {
+    const onStartExercise = jest.fn();
+    const done = plan.routine!.map((i) =>
+      entry({ exerciseId: i.exerciseId, joint: 'left_knee', completion: 'completed' })
+    );
+    const { getByTestId, queryByTestId } = chooser(done, { onStartExercise });
+    expect(getByTestId('today-all-done')).toBeTruthy();
+    expect(queryByTestId('start-routine-button')).toBeNull();
+    fireEvent.press(getByTestId('todays-routine-item-0'));
+    expect(onStartExercise).toHaveBeenCalledWith('heel-prop-extension');
+  });
+
+  it('Home counts prescribed exercises, not a repetition quota', () => {
+    const s = store();
+    const { getByTestId, queryByTestId, rerender } = render(
+      <Provider store={s}>
+        <HomeScreen />
+      </Provider>
+    );
+    expect(getByTestId('home-goal-ring').props.accessibilityLabel).toBe(
+      '0 of 3 exercises done today'
+    );
+    expect(getByTestId('home-start-exercises')).toHaveTextContent('Start exercises');
+    const defaults = rootReducer(undefined, { type: '@@test/INIT' });
+    const allDone = configureStore({
+      reducer: rootReducer,
+      preloadedState: {
+        ...defaults,
+        settings: { ...defaults.settings, exercisePlan: plan },
+        exercise: {
+          ...defaults.exercise,
+          history: plan.routine!.map((i) =>
+            entry({
+              exerciseId: i.exerciseId,
+              joint: 'left_knee',
+              completion: 'completed',
+            })
+          ),
+        },
+      },
+    });
+    rerender(
+      <Provider store={allDone}>
+        <HomeScreen />
+      </Provider>
+    );
+    expect(getByTestId('home-routine')).toHaveTextContent(/Today’s exercises done/);
+    expect(queryByTestId('home-start-exercises')).toBeNull();
+    expect(getByTestId('home-see-progress')).toBeTruthy();
+  });
+});
+
+describe('during a still hold', () => {
+  it('shows a timer and a calm instruction, not repetitions or "Step: rest"', () => {
+    const defaults = rootReducer(undefined, { type: '@@test/INIT' });
+    const store = configureStore({ reducer: rootReducer, preloadedState: defaults });
+    const heel = applyPlan(EXERCISES.heelPropExtension, {
+      joint: 'knee',
+      side: 'left',
+      routine: [{ exerciseId: 'heel-prop-extension', holdSeconds: 60 }],
+    });
+    store.dispatch(startExercise(heel));
+    // The goal range would say "straighten more": not during a relaxed hold
+    store.dispatch(
+      updateValidation({
+        isValid: false,
+        errors: ['Straighten left_knee more'],
+        feedback: [],
+        phase: 'rest',
+      })
+    );
+    const { getByTestId, queryByTestId, queryByText } = render(
+      <Provider store={store}>
+        <ExerciseControls isActive />
+      </Provider>
+    );
+    expect(getByTestId('rep-ring').props.accessibilityLabel).toMatch(
+      /0:00 of 1:00 resting still/
+    );
+    expect(getByTestId('exercise-hold-status')).toHaveTextContent('Resting still');
+    expect(queryByTestId('exercise-phase-indicator')).toBeNull();
+    expect(queryByText(/Straighten/)).toBeNull();
+    // (No pose in this store yet, so it asks the patient to step into view)
+    expect(queryByText(/Relax and keep still|Step into view/)).toBeTruthy();
   });
 });

@@ -16,7 +16,7 @@
  *
  * Used standalone (no callbacks) it drives the Redux exercise slice itself.
  */
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Vibration, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -33,6 +33,8 @@ import { exerciseValidationService } from '../../services/exerciseValidationServ
 import { AppText, BigButton } from '../ui';
 import { CameraPanel } from '../ui/CameraPanel';
 import { RepRing } from '../ui/RepRing';
+import { movementOf } from '../../services/movement/exerciseMovement';
+import { liveCue } from '../../utils/liveCue';
 import { colors, radii, spacing, touch } from '../../theme';
 import {
   EXERCISE_OPTIONS,
@@ -124,6 +126,17 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
     }
   }, [feedback, formScore, isActive, enableHaptics]);
 
+  // A still hold's clock: counts seconds of the session, not while paused
+  const startedAt = useSelector((state: RootState) => state.exercise.startedAt);
+  const holdActive = movementOf(currentExercise?.id).mode === 'hold' && isActive;
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => setElapsed(0), [startedAt]);
+  useEffect(() => {
+    if (!holdActive || isPaused || gate) return undefined;
+    const timer = setInterval(() => setElapsed((e) => e + 1), 1000);
+    return () => clearInterval(timer);
+  }, [holdActive, isPaused, gate]);
+
   const handleSelect = (key: (typeof EXERCISE_OPTIONS)[number]['key']) => {
     const exercise = EXERCISE_OPTIONS.find((o) => o.key === key)!.exercise;
     dispatch(startExercise(exercise));
@@ -196,13 +209,20 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
   // During the exercise
   // ---------------------------------------------------------------------------
   const option = findExerciseOption(currentExercise?.id);
+  // A still hold (heel prop) is timed, not counted
+  const isHold = movementOf(currentExercise?.id).mode === 'hold';
+  const holdSeconds = isHold
+    ? Math.round((currentExercise?.phases[0]?.holdDuration ?? 0) / 1000)
+    : 0;
   const exerciseName = option?.title ?? currentExercise?.name ?? 'Exercise';
   const target = currentExercise?.targetRepetitions;
 
   const isEstimate =
     (lastValidationResult?.estimatedJoints?.length ?? 0) > 0 ||
     /turn side-on/i.test(feedback);
-  const spoken = friendlyInstruction(feedback);
+  const cue = liveCue(lastValidationResult, { hold: isHold });
+  // During a still hold only precautions and "can't see you" come through
+  const spoken = friendlyInstruction(isHold ? cue.text : feedback);
   const instruction = isPaused
     ? 'Paused. Take a rest.'
     : outOfView
@@ -211,8 +231,10 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
         ? spoken
         : !hasPose
           ? 'Step into view so the camera can see you'
-          : currentExercise?.instructions?.[0] ?? 'Get into position';
-  const showForm = repetitionCount > 0 || formScore > 0;
+          : isHold
+            ? 'Relax and keep still'
+            : currentExercise?.instructions?.[0] ?? 'Get into position';
+  const showForm = !isHold && (repetitionCount > 0 || formScore > 0);
 
   const header = (
     <View style={styles.topRow}>
@@ -331,15 +353,30 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
       <CameraPanel style={styles.bottomPanel}>
         <View style={styles.statsRow}>
           <RepRing
-            value={repetitionCount}
-            target={target}
+            value={isHold ? elapsed : repetitionCount}
+            target={isHold ? holdSeconds || undefined : target}
+            display={
+              isHold
+                ? {
+                    value: clock(elapsed),
+                    caption: holdSeconds ? `of ${clock(holdSeconds)}` : 'resting',
+                    spoken: `${clock(elapsed)} of ${clock(holdSeconds)} resting still`,
+                  }
+                : undefined
+            }
             size={116}
             strokeWidth={12}
             testID="rep-ring"
             valueTestID={AccessibilityIds.exercise.repCounter}
           />
           <View style={styles.statsText}>
-            {target && repetitionCount >= target ? (
+            {isHold ? (
+              <AppText variant="bodyStrong" color={ON_DARK} testID="exercise-hold-status">
+                {holdSeconds && elapsed >= holdSeconds
+                  ? 'Time’s up. Press Stop when you’re ready.'
+                  : 'Resting still'}
+              </AppText>
+            ) : target && repetitionCount >= target ? (
               <AppText variant="bodyStrong" color={colors.poseGood}>
                 Goal reached!
               </AppText>
@@ -362,13 +399,15 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
                 </AppText>
               </View>
             ) : null}
-            <AppText
-              variant="caption"
-              color={ON_DARK_SOFT}
-              testID="exercise-phase-indicator"
-            >
-              Step: {currentPhase}
-            </AppText>
+            {isHold ? null : (
+              <AppText
+                variant="caption"
+                color={ON_DARK_SOFT}
+                testID="exercise-phase-indicator"
+              >
+                Step: {currentPhase}
+              </AppText>
+            )}
           </View>
         </View>
 
@@ -399,6 +438,10 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
     </SafeAreaView>
   );
 };
+
+/** "0:42", "1:05". */
+const clock = (seconds: number) =>
+  `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },

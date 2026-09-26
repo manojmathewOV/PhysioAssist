@@ -17,6 +17,7 @@ export function speakLiveFeedback(
     target,
     outOfView,
     lastSpoken,
+    hold = false,
   }: {
     reps: number;
     previousReps: number;
@@ -24,9 +25,11 @@ export function speakLiveFeedback(
     /** The screen already says "Step back into view". */
     outOfView: boolean;
     lastSpoken: string;
+    /** A still exercise: no coaching beyond precautions (see liveCue). */
+    hold?: boolean;
   }
 ): string | undefined {
-  const cue = liveCue(validation);
+  const cue = liveCue(validation, { hold });
   if (reps > previousReps && !cue.warning) {
     audioFeedbackService.announceRep(reps, target);
   }

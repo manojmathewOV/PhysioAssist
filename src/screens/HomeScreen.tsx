@@ -6,7 +6,7 @@
  * number and a plain-language sentence.
  */
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
@@ -28,6 +28,11 @@ import {
   weeklyHighlight,
 } from '../utils/progressSummary';
 import { todaysRoutine } from '../services/pose/routine';
+import {
+  findExerciseOption,
+  formatDuration,
+} from '../components/exercises/exerciseCatalog';
+import { movementOf } from '../services/movement/exerciseMovement';
 
 const greeting = (hour: number) =>
   hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -45,6 +50,11 @@ const HomeScreen: React.FC = () => {
   const routine = todaysRoutine(plan, history);
   const hasRoutine = routine.items.length > 0;
   const routineLeft = routine.items.length - routine.finishedCount;
+  // Small phones: the ring above the words, so words aren't broken up
+  const narrow = useWindowDimensions().width < 360;
+  const nextTitle = routine.next
+    ? findExerciseOption(routine.next)?.title.toLowerCase() ?? ''
+    : '';
 
   const firstName = name?.split(' ')[0];
   const today = repsToday(history);
@@ -54,6 +64,7 @@ const HomeScreen: React.FC = () => {
   const streak = currentStreak(history);
   const highlight = weeklyHighlight(history);
   const last = history[0];
+  const lastIsHold = last ? movementOf(last.exerciseId).mode === 'hold' : false;
   const startExercises = () => navigation.navigate('Exercise');
 
   return (
@@ -74,34 +85,51 @@ const HomeScreen: React.FC = () => {
         when="Today"
         testID="home-today"
       >
-        <View style={styles.todayRow}>
-          <ProgressRing
-            progress={today / goal}
-            size={132}
-            thickness={16}
-            testID="home-goal-ring"
-            accessibilityLabel={`${today} of ${goal} repetitions today`}
+        {hasRoutine ? (
+          <View
+            style={[styles.todayRow, narrow && styles.todayStack]}
+            testID="home-routine"
           >
-            <AppText variant="value">{today}</AppText>
-            <AppText variant="caption" color={colors.textSecondary}>
-              of {goal}
-            </AppText>
-          </ProgressRing>
-          {hasRoutine ? (
-            <View style={styles.flex} testID="home-routine">
+            <ProgressRing
+              progress={routine.finishedCount / routine.items.length}
+              size={132}
+              thickness={16}
+              testID="home-goal-ring"
+              accessibilityLabel={`${routine.finishedCount} of ${routine.items.length} exercises done today`}
+            >
+              <AppText variant="value">{routine.finishedCount}</AppText>
+              <AppText variant="caption" color={colors.textSecondary}>
+                {`of ${routine.items.length}`}
+              </AppText>
+            </ProgressRing>
+            <View style={narrow ? undefined : styles.flex}>
               <AppText variant="heading">
                 {routineLeft === 0
-                  ? 'Today’s session done'
+                  ? 'Today’s exercises done'
                   : `${routineLeft} ${routineLeft === 1 ? 'exercise' : 'exercises'} to go`}
               </AppText>
               <AppText variant="body" color={colors.textSecondary}>
                 {routineLeft === 0
                   ? 'Lovely work today. Rest is part of getting better.'
-                  : `${routine.doneCount} of ${routine.items.length} done from your physio’s plan`}
+                  : `Next: ${nextTitle}`}
               </AppText>
             </View>
-          ) : (
-            <View style={styles.flex}>
+          </View>
+        ) : (
+          <View style={[styles.todayRow, narrow && styles.todayStack]}>
+            <ProgressRing
+              progress={today / goal}
+              size={132}
+              thickness={16}
+              testID="home-goal-ring"
+              accessibilityLabel={`${today} of ${goal} repetitions today`}
+            >
+              <AppText variant="value">{today}</AppText>
+              <AppText variant="caption" color={colors.textSecondary}>
+                of {goal}
+              </AppText>
+            </ProgressRing>
+            <View style={narrow ? undefined : styles.flex}>
               <AppText variant="heading">
                 {remaining === 0 ? 'Goal reached' : `${remaining} to go`}
               </AppText>
@@ -111,22 +139,32 @@ const HomeScreen: React.FC = () => {
                   : 'repetitions to reach today’s goal'}
               </AppText>
             </View>
-          )}
-        </View>
-        <BigButton
-          label={
-            hasRoutine && routineLeft > 0
-              ? routine.doneCount === 0
-                ? 'Start today’s session'
-                : 'Continue today’s session'
-              : today === 0
-                ? 'Start exercises'
-                : 'Continue exercises'
-          }
-          icon="play-arrow"
-          onPress={startExercises}
-          testID="home-start-exercises"
-        />
+          </View>
+        )}
+        {hasRoutine && routineLeft === 0 ? (
+          <BigButton
+            variant="secondary"
+            label="See my progress"
+            icon="insights"
+            onPress={() => navigation.navigate('Progress')}
+            testID="home-see-progress"
+          />
+        ) : (
+          <BigButton
+            label={
+              hasRoutine
+                ? routine.items.some((i) => i.status)
+                  ? 'Next exercise'
+                  : 'Start exercises'
+                : today === 0
+                  ? 'Start exercises'
+                  : 'Continue exercises'
+            }
+            icon="play-arrow"
+            onPress={startExercises}
+            testID="home-start-exercises"
+          />
+        )}
       </SummaryCard>
 
       {/* This week: day dots, like an activity history */}
@@ -139,7 +177,7 @@ const HomeScreen: React.FC = () => {
         testID="home-week-summary"
       >
         <WeekStrip days={week} testID="home-week-strip" />
-        {highlight ? (
+        {highlight && !hasRoutine ? (
           <Highlight
             icon="auto-awesome"
             tint={colors.category.time}
@@ -170,8 +208,11 @@ const HomeScreen: React.FC = () => {
           category="Last session"
           tint={colors.category.progress}
           when={shortDate(last.date)}
-          value={`${last.reps}`}
-          unit={`reps · ${last.exerciseName}`}
+          // A still hold is timed, not counted
+          value={lastIsHold ? formatDuration(last.duration) : `${last.reps}`}
+          unit={`${lastIsHold ? 'resting still' : 'reps'} · ${
+            findExerciseOption(last.exerciseId)?.title ?? last.exerciseName
+          }`}
           onPress={() => navigation.navigate('Progress')}
           testID="home-progress"
         />
@@ -200,6 +241,7 @@ const HomeScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  todayStack: { flexDirection: 'column', alignItems: 'flex-start', gap: spacing.md },
   todayRow: {
     flexDirection: 'row',
     alignItems: 'center',

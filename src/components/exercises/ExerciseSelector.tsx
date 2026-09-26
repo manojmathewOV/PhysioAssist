@@ -47,6 +47,8 @@ function ExerciseSelector<T extends SelectableExercise>({
             testID={`exercise-${item.id}`}
             accessibilityRole="radio"
             accessibilityState={{ checked: selected, selected }}
+            // Web: react-native-web doesn't turn the checked state into aria-checked
+            aria-checked={selected}
             accessibilityLabel={`${item.name}. ${item.description}${
               item.goal ? `. ${item.goal}` : ''
             }`}

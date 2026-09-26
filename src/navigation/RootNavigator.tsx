@@ -5,6 +5,7 @@ import {
 } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable } from 'react-native';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
@@ -86,6 +87,14 @@ const MainTabs = () => {
           title: tab.label,
           tabBarTestID: tab.testID,
           tabBarAccessibilityLabel: `${tab.label} tab`,
+          // Each item is a tab of the tab bar (screen readers, web)
+          tabBarButton: (props) => (
+            <Pressable
+              {...props}
+              role="tab"
+              aria-selected={Boolean(props.accessibilityState?.selected)}
+            />
+          ),
           tabBarIcon: ({ color }) => <Icon name={tab.icon} size={30} color={color} />,
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textSecondary,

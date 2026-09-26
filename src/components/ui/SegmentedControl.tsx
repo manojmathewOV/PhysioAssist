@@ -57,6 +57,8 @@ export function SegmentedControl<T extends string>({
               accessibilityLabel ? `${accessibilityLabel}: ${option.label}` : option.label
             }
             accessibilityState={{ selected, checked: selected }}
+            // Web: react-native-web doesn't turn the checked state into aria-checked
+            aria-checked={selected}
             style={({ pressed }) => [
               styles.segment,
               dark ? styles.segmentDark : styles.segmentLight,

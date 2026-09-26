@@ -4,7 +4,7 @@
  * next one.
  */
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import { AppText, Card } from '../ui';
@@ -34,7 +34,11 @@ const STATUS_WORDS: Record<Completion, string> = {
   attempted: 'Tried today, not finished',
 };
 
-export const TodaysRoutineCard: React.FC<{ routine: TodaysRoutine }> = ({ routine }) => {
+export const TodaysRoutineCard: React.FC<{
+  routine: TodaysRoutine;
+  /** Makes each exercise a button (e.g. to do one again). */
+  onPressItem?: (exerciseId: string) => void;
+}> = ({ routine, onPressItem }) => {
   const total = routine.items.length;
   const allDone = routine.finishedCount === total;
   return (
@@ -47,14 +51,21 @@ export const TodaysRoutineCard: React.FC<{ routine: TodaysRoutine }> = ({ routin
           ? 'All done for today'
           : `${routine.doneCount} of ${total} ${total === 1 ? 'exercise' : 'exercises'} done`}
       </AppText>
-      <View accessibilityRole="list">
+      <View>
         {routine.items.map((item, i) => {
           const option = findExerciseOption(item.exerciseId);
           const isNext = item.exerciseId === routine.next;
           return (
-            <View
+            <Pressable
               key={item.exerciseId}
-              style={[styles.row, i > 0 && styles.divider]}
+              style={({ pressed }) => [
+                styles.row,
+                i > 0 && styles.divider,
+                pressed && styles.pressed,
+              ]}
+              disabled={!onPressItem}
+              onPress={onPressItem ? () => onPressItem(item.exerciseId) : undefined}
+              accessibilityRole={onPressItem ? 'button' : undefined}
               accessible
               accessibilityLabel={`${i + 1}. ${option?.title ?? item.exerciseId}, ${routineAmount(
                 item
@@ -88,7 +99,7 @@ export const TodaysRoutineCard: React.FC<{ routine: TodaysRoutine }> = ({ routin
                     : routineAmount(item)}
                 </AppText>
               </View>
-            </View>
+            </Pressable>
           );
         })}
       </View>
@@ -105,6 +116,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: spacing.sm,
   },
+  pressed: { backgroundColor: colors.surfaceMuted },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   marker: {
     width: 40,

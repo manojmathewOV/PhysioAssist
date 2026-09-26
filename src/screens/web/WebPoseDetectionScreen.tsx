@@ -240,6 +240,9 @@ const WebPoseDetectionScreen: React.FC = () => {
           target: exerciseValidationService.getCurrentState().exercise?.targetRepetitions,
           outOfView: outOfViewRef.current,
           lastSpoken: lastSpokenRef.current,
+          hold:
+            movementOf(exerciseValidationService.getCurrentState().exercise?.id).mode ===
+            'hold',
         });
         if (spoken) lastSpokenRef.current = spoken;
         lastRepsRef.current = metrics.repetitionCount;
@@ -413,7 +416,8 @@ const WebPoseDetectionScreen: React.FC = () => {
       exerciseId: plannedExercise.id,
       mode: movementOf(plannedExercise.id).mode ?? 'reps',
       holdSeconds: (plannedExercise.phases[0]?.holdDuration ?? 0) / 1000 || undefined,
-      completion: recordingDemo ? undefined : completion,
+      // Practice and demonstrations are not saved, so they have no completion
+      completion: practice || recordingDemo ? undefined : completion,
       saved,
     });
     setIsPaused(false);
@@ -500,6 +504,7 @@ const WebPoseDetectionScreen: React.FC = () => {
           routine={routineFlow.routine}
           onStartRoutine={routineFlow.startRoutine}
           onToggleRoutine={routineFlow.toggle}
+          onStartExercise={routineFlow.startExercise}
         />
       </View>
     );

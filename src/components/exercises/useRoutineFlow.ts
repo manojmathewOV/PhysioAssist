@@ -82,5 +82,5 @@ export function useRoutineFlow({
     [plan, routine, startExercise]
   );
 
-  return { routine, startRoutine, toggle, afterSession };
+  return { routine, startRoutine, startExercise, toggle, afterSession };
 }

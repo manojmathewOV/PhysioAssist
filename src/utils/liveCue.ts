@@ -12,10 +12,24 @@ export interface LiveCue {
   warning: boolean;
 }
 
-export function liveCue(result: ValidationResult | null | undefined): LiveCue {
+/**
+ * `hold`: a still exercise (heel prop). The patient relaxes, so there is no
+ * "straighten more" or countdown coaching; only precautions, set-up blocks
+ * and "can't see you" come through.
+ */
+export function liveCue(
+  result: ValidationResult | null | undefined,
+  { hold = false }: { hold?: boolean } = {}
+): LiveCue {
   if (!result) return { text: '', warning: false };
   if (result.overLimit || result.withheld) {
     return { text: result.errors[0] ?? '', warning: Boolean(result.overLimit) };
+  }
+  if (hold) {
+    return {
+      text: result.errors.find((e) => /^Cannot detect/.test(e)) ?? '',
+      warning: false,
+    };
   }
   return { text: result.feedback[0] ?? result.errors[0] ?? '', warning: false };
 }

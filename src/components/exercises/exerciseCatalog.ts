@@ -104,8 +104,12 @@ export const EXERCISE_OPTIONS: ExerciseOption[] = [
   },
 ];
 
-/** First exercise that trains the plan's joint (falls back to the bicep curl). */
+/**
+ * The exercise to start on: the routine's first, else the first that trains
+ * the plan's joint (falls back to the bicep curl).
+ */
 export const firstKeyFor = (plan?: ExercisePlan | null): ExerciseKey =>
+  findExerciseOption(plan?.routine?.[0]?.exerciseId)?.key ??
   EXERCISE_OPTIONS.find((o) => plan && o.exercise.primaryJoint === plan.joint)?.key ??
   'bicepCurl';
 

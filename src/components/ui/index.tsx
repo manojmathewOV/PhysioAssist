@@ -7,7 +7,9 @@ import React from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  Platform,
   ScrollView,
+  useWindowDimensions,
   StyleProp,
   StyleSheet,
   Switch,
@@ -71,6 +73,9 @@ export interface ScreenProps {
   headerRight?: React.ReactNode;
 }
 
+/** Widest the content column gets (tablets, desktop browsers). */
+export const MAX_CONTENT_WIDTH = 680;
+
 export const Screen: React.FC<ScreenProps> = ({
   title,
   subtitle,
@@ -80,10 +85,16 @@ export const Screen: React.FC<ScreenProps> = ({
   footer,
   headerRight,
 }) => {
+  // Small phones: a smaller title leaves room for the content
+  const compact = useWindowDimensions().width < 360;
   const header = title ? (
     <View style={styles.header}>
       <View style={styles.headerText}>
-        <AppText variant="title" accessibilityRole="header">
+        <AppText
+          variant="title"
+          accessibilityRole="header"
+          style={compact ? styles.titleCompact : undefined}
+        >
           {title}
         </AppText>
         {subtitle ? (
@@ -97,9 +108,16 @@ export const Screen: React.FC<ScreenProps> = ({
   ) : null;
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']} testID={testID}>
+    <SafeAreaView
+      style={styles.screen}
+      edges={['top', 'left', 'right']}
+      testID={testID}
+      role="main"
+    >
       {scroll ? (
         <ScrollView
+          // Web: a scrollable area must be reachable by keyboard
+          focusable={Platform.OS === 'web'}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           testID={testID ? `${testID}-scroll` : undefined}
@@ -444,7 +462,12 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { textAlign: 'center' },
   screen: { flex: 1, backgroundColor: colors.background },
+  titleCompact: { fontSize: 28, lineHeight: 34 },
   scrollContent: {
+    // Tablets: a comfortable reading width rather than stretched cards
+    width: '100%',
+    maxWidth: MAX_CONTENT_WIDTH,
+    alignSelf: 'center',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.xxl,
@@ -454,6 +477,9 @@ const styles = StyleSheet.create({
   headerText: { flex: 1 },
   subtitle: { marginTop: spacing.xs },
   footer: {
+    width: '100%',
+    maxWidth: MAX_CONTENT_WIDTH,
+    alignSelf: 'center',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
