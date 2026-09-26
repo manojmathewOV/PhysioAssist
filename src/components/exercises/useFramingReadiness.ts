@@ -1,9 +1,12 @@
 /**
- * "Get into position" gate: is the patient's whole body inside the camera
- * frame, and has it stayed there long enough to start counting?
+ * "Get into position" gate: are the body parts this exercise needs inside the
+ * camera frame, and have they stayed there long enough to start counting?
  *
- * Counting only starts once the key full-body landmarks (shoulders, hips,
- * knees, ankles, plus the head) have been clearly visible for about a second
+ * What must be seen depends on the exercise (see framingRequirement): the
+ * working arm and the trunk for a shoulder exercise, the working leg and the
+ * trunk for a seated or lying knee exercise, the whole body otherwise. Without
+ * a requirement the whole body (head, shoulders, hips, knees, ankles) is used.
+ * Counting starts once they have been clearly visible for about a second
  * (or ~15 poses in a row, whichever comes first). Later in the session the same
  * tracker reports when the patient has stepped out of view, so the screen can
  * ask them to step back in without resetting the count.
@@ -42,7 +45,26 @@ const BODY_PARTS: Record<'shoulders' | 'hips' | 'knees' | 'ankles', [string, str
   ankles: ['left_ankle', 'right_ankle'],
 };
 
+/** A group of landmarks the patient is told about ("Arm visible"). */
+export interface FramingPart {
+  label: string;
+  landmarks: string[];
+}
+
+/**
+ * What an exercise needs in view. Each part is seen when all of its
+ * landmarks are.
+ */
+export type FramingRequirement = FramingPart[];
+
 export interface FramingChecks {
+  /**
+   * The parts the exercise needs, each seen or not (only when a requirement
+   * was given).
+   */
+  parts?: { label: string; ok: boolean }[];
+  /** Everything the exercise needs is in the frame (the whole body without a requirement). */
+  inFrame: boolean;
   /** Head (nose, eyes or ears) is visible. */
   head: boolean;
   shoulders: boolean;
@@ -61,6 +83,7 @@ export const NO_BODY: FramingChecks = {
   knees: false,
   feet: false,
   fullBody: false,
+  inFrame: false,
 };
 
 const isSeen = (landmark: PoseLandmark | undefined, minVisibility: number): boolean =>
@@ -74,10 +97,13 @@ const isSeen = (landmark: PoseLandmark | undefined, minVisibility: number): bool
 /** Which parts of the body the camera can clearly see in one pose. */
 export function checkFraming(
   landmarks: PoseLandmark[] | null | undefined,
-  minVisibility = FRAMING_VISIBILITY
+  minVisibility = FRAMING_VISIBILITY,
+  required?: FramingRequirement
 ): FramingChecks {
   if (!landmarks || landmarks.length === 0) {
-    return NO_BODY;
+    return required
+      ? { ...NO_BODY, parts: required.map((p) => ({ label: p.label, ok: false })) }
+      : NO_BODY;
   }
   const seen = (name: string) => isSeen(findLandmark(landmarks, name), minVisibility);
   const pair = ([left, right]: [string, string]) => seen(left) || seen(right);
@@ -87,13 +113,17 @@ export function checkFraming(
   const hips = pair(BODY_PARTS.hips);
   const knees = pair(BODY_PARTS.knees);
   const feet = pair(BODY_PARTS.ankles);
+  const fullBody = head && shoulders && hips && knees && feet;
+  const parts = required?.map((p) => ({ label: p.label, ok: p.landmarks.every(seen) }));
   return {
     head,
     shoulders,
     hips,
     knees,
     feet,
-    fullBody: head && shoulders && hips && knees && feet,
+    fullBody,
+    ...(parts ? { parts } : {}),
+    inFrame: parts ? parts.every((p) => p.ok) : fullBody,
   };
 }
 
@@ -124,6 +154,8 @@ export interface FramingTrackerOptions {
   lostMs?: number;
   staleMs?: number;
   minVisibility?: number;
+  /** What this exercise needs in view (default: the whole body). */
+  required?: FramingRequirement;
 }
 
 export interface FramingTracker {
@@ -141,6 +173,7 @@ export function createFramingTracker({
   lostMs = FRAMING_LOST_MS,
   staleMs = FRAMING_STALE_MS,
   minVisibility = FRAMING_VISIBILITY,
+  required,
 }: FramingTrackerOptions = {}): FramingTracker {
   let state: FramingState = INITIAL_FRAMING;
   let streakStart: number | null = null;
@@ -151,7 +184,7 @@ export function createFramingTracker({
   const inViewAt = (now: number) => lastSeenAt !== null && now - lastSeenAt < lostMs;
 
   const apply = (checks: FramingChecks, now: number, fromPose: boolean) => {
-    if (checks.fullBody) {
+    if (checks.inFrame) {
       if (streakStart === null) {
         streakStart = now;
         streakPoses = 0;
@@ -172,7 +205,7 @@ export function createFramingTracker({
       checks,
       progress,
       ready: state.ready || progress >= 1,
-      inView: checks.fullBody || inViewAt(now),
+      inView: checks.inFrame || inViewAt(now),
     };
     return state;
   };
@@ -180,14 +213,14 @@ export function createFramingTracker({
   return {
     update(landmarks, now) {
       lastPoseAt = now;
-      return apply(checkFraming(landmarks, minVisibility), now, true);
+      return apply(checkFraming(landmarks, minVisibility, required), now, true);
     },
     tick(now) {
       if (lastPoseAt === null || now - lastPoseAt >= staleMs) {
         // Nobody detected recently
         return apply(NO_BODY, now, false);
       }
-      if (state.checks.fullBody) {
+      if (state.checks.inFrame) {
         // Still in view: let the hold timer advance between poses
         return apply(state.checks, now, false);
       }
@@ -212,9 +245,10 @@ const sameState = (a: FramingState, b: FramingState) =>
   a.ready === b.ready &&
   a.inView === b.inView &&
   Math.abs(a.progress - b.progress) < 0.05 &&
-  (Object.keys(a.checks) as (keyof FramingChecks)[]).every(
-    (k) => a.checks[k] === b.checks[k]
-  );
+  a.checks.inFrame === b.checks.inFrame &&
+  a.checks.head === b.checks.head &&
+  a.checks.feet === b.checks.feet &&
+  JSON.stringify(a.checks.parts) === JSON.stringify(b.checks.parts);
 
 /** How often the hook re-checks while no new poses arrive. */
 const TICK_MS = 250;
@@ -229,8 +263,12 @@ export function useFramingReadiness(
   options?: FramingTrackerOptions
 ): FramingState {
   const trackerRef = useRef<FramingTracker | null>(null);
-  if (!trackerRef.current) {
+  // A new requirement (another exercise or side) needs a new tracker
+  const requirementKey = JSON.stringify(options?.required ?? null);
+  const keyRef = useRef(requirementKey);
+  if (!trackerRef.current || keyRef.current !== requirementKey) {
     trackerRef.current = createFramingTracker(options);
+    keyRef.current = requirementKey;
   }
   const [state, setState] = useState<FramingState>(INITIAL_FRAMING);
 

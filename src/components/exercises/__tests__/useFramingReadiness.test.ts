@@ -45,6 +45,8 @@ describe('checkFraming', () => {
       knees: true,
       feet: true,
       fullBody: true,
+      // Without an exercise requirement, "in frame" means the whole body
+      inFrame: true,
     });
   });
 

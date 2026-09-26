@@ -49,10 +49,13 @@ export const FramingChecklist: React.FC<{
   /** 0-1 hold progress once the whole body is in view. */
   progress: number;
 }> = ({ checks, progress }) => {
-  const items = [
-    { key: 'head', label: 'Head visible', ok: checks.head },
-    { key: 'feet', label: 'Feet visible', ok: checks.feet },
-  ];
+  // The parts this exercise needs, else head and feet (the whole body)
+  const items = checks.parts
+    ? checks.parts.map((p) => ({ key: p.label.split(' ')[0].toLowerCase(), ...p }))
+    : [
+        { key: 'head', label: 'Head visible', ok: checks.head },
+        { key: 'feet', label: 'Feet visible', ok: checks.feet },
+      ];
   return (
     <View style={styles.checklist} testID="framing-checklist">
       <View style={styles.checkRow}>
@@ -75,7 +78,7 @@ export const FramingChecklist: React.FC<{
           </View>
         ))}
       </View>
-      {checks.fullBody ? (
+      {checks.inFrame ? (
         <View style={styles.hold} accessibilityLiveRegion="polite">
           <AppText variant="bodyStrong" color={colors.poseGood}>
             That's it. Hold still…

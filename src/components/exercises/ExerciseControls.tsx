@@ -272,7 +272,7 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
         </CameraPanel>
 
         {framingStep ? (
-          <FramingGuide inFrame={framing.checks.fullBody} />
+          <FramingGuide inFrame={framing.checks.inFrame} />
         ) : (
           <CountdownBadge value={countdown} />
         )}

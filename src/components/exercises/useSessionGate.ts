@@ -11,11 +11,15 @@
  * During the active step `outOfView` turns true when the patient leaves the
  * frame, so the screen can ask them to step back in (the count is kept).
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useMemo, useEffect, useRef, useState } from 'react';
 
 import type { PoseLandmark } from '../../types/pose';
 import { audioFeedbackService } from '../../services/audioFeedbackService';
-import { FramingState, useFramingReadiness } from './useFramingReadiness';
+import {
+  FramingRequirement,
+  FramingState,
+  useFramingReadiness,
+} from './useFramingReadiness';
 
 export type SessionPhase = 'idle' | 'framing' | 'countdown' | 'active';
 
@@ -48,8 +52,11 @@ export interface SessionGate {
 export function useSessionGate({
   landmarks,
   onGo,
+  required,
 }: {
   landmarks: PoseLandmark[] | null | undefined;
+  /** What this exercise needs in view (default: the whole body). */
+  required?: FramingRequirement;
   /** Called once when the countdown reaches "Go". */
   onGo: () => void;
 }): SessionGate {
@@ -60,7 +67,8 @@ export function useSessionGate({
   onGoRef.current = onGo;
 
   const tracking = !skipFraming && phase !== 'idle';
-  const framing = useFramingReadiness(landmarks, tracking);
+  const framingOptions = useMemo(() => ({ required }), [required]);
+  const framing = useFramingReadiness(landmarks, tracking, framingOptions);
 
   const start = useCallback((options?: { skipFraming?: boolean }) => {
     const skip = !!options?.skipFraming;

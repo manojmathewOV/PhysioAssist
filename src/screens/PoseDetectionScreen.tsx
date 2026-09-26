@@ -13,6 +13,7 @@
  * explanation offers one clear way forward (open Settings / practice mode).
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { framingRequirement } from '../components/exercises/framingRequirement';
 import { Linking, StyleSheet, View } from 'react-native';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
@@ -115,8 +116,15 @@ const PoseDetectionScreen: React.FC = () => {
 
   // Get into position -> 3-2-1 countdown -> count. Counting (and the timer)
   // starts at "Go".
+  // What this exercise needs in view (the working arm or leg, not always the
+  // whole body)
+  const framingRequired = useMemo(
+    () => framingRequirement(plannedExercise, plan?.side),
+    [plannedExercise, plan?.side]
+  );
   const gate = useSessionGate({
     landmarks: currentPose?.landmarks,
+    required: framingRequired,
     onGo: () => {
       lastRepsRef.current = 0;
       dispatch(startExercise(plannedExercise));

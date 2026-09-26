@@ -6,6 +6,7 @@
  * full-screen explanation offers "Try again" or practice mode.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { framingRequirement } from '../../components/exercises/framingRequirement';
 import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -152,8 +153,15 @@ const WebPoseDetectionScreen: React.FC = () => {
   const [recordingDemo, setRecordingDemo] = useState(false);
   const [demoStatus, setDemoStatus] = useState<string | undefined>();
 
+  // What this exercise needs in view (the working arm or leg, not always the
+  // whole body)
+  const framingRequired = useMemo(
+    () => framingRequirement(plannedExercise, plan?.side),
+    [plannedExercise, plan?.side]
+  );
   const gate = useSessionGate({
     landmarks: currentLandmarks,
+    required: framingRequired,
     onGo: () => {
       lastRepsRef.current = 0;
       dispatch(startExercise(plannedExercise));
