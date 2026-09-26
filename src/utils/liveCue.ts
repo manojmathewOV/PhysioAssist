@@ -13,19 +13,20 @@ export interface LiveCue {
 }
 
 /**
- * `hold`: a still exercise (heel prop). The patient relaxes, so there is no
- * "straighten more" or countdown coaching; only precautions, set-up blocks
- * and "can't see you" come through.
+ * `hold`: a still exercise (heel prop), and `comfort`: a phase where the
+ * patient moves within comfort (protecting a repair, symptom-limited
+ * mobility). Neither gets "straighten more" / "raise higher" or countdown
+ * coaching; only precautions, set-up blocks and "can't see you" come through.
  */
 export function liveCue(
   result: ValidationResult | null | undefined,
-  { hold = false }: { hold?: boolean } = {}
+  { hold = false, comfort = false }: { hold?: boolean; comfort?: boolean } = {}
 ): LiveCue {
   if (!result) return { text: '', warning: false };
   if (result.overLimit || result.withheld) {
     return { text: result.errors[0] ?? '', warning: Boolean(result.overLimit) };
   }
-  if (hold) {
+  if (hold || comfort) {
     return {
       text: result.errors.find((e) => /^Cannot detect/.test(e)) ?? '',
       warning: false,

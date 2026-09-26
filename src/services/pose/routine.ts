@@ -19,6 +19,7 @@ const PRESCRIPTION_KEYS = [
   'reps',
   'holdSeconds',
   'routine',
+  'episode',
 ] as const;
 
 const prescriptionOf = (plan: ExercisePlan) =>

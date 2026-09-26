@@ -28,6 +28,7 @@ import {
   weeklyHighlight,
 } from '../utils/progressSummary';
 import { todaysRoutine } from '../services/pose/routine';
+import { exercisesAllowed } from '../services/care/episode';
 import {
   findExerciseOption,
   formatDuration,
@@ -49,6 +50,8 @@ const HomeScreen: React.FC = () => {
   // The physio's routine, when one is set, is what "today" means
   const routine = todaysRoutine(plan, history);
   const hasRoutine = routine.items.length > 0;
+  // Not confirmed for this stage of recovery: no exercises offered
+  const waiting = !exercisesAllowed(plan);
   const routineLeft = routine.items.length - routine.finishedCount;
   // Small phones: the ring above the words, so words aren't broken up
   const narrow = useWindowDimensions().width < 360;
@@ -85,7 +88,15 @@ const HomeScreen: React.FC = () => {
         when="Today"
         testID="home-today"
       >
-        {hasRoutine ? (
+        {waiting ? (
+          <View style={styles.waiting} testID="home-waiting">
+            <AppText variant="heading">Your programme is being prepared</AppText>
+            <AppText variant="body" color={colors.textSecondary}>
+              Your physiotherapist will confirm your exercises for this stage. Until then,
+              follow the instructions they gave you.
+            </AppText>
+          </View>
+        ) : hasRoutine ? (
           <View
             style={[styles.todayRow, narrow && styles.todayStack]}
             testID="home-routine"
@@ -141,7 +152,7 @@ const HomeScreen: React.FC = () => {
             </View>
           </View>
         )}
-        {hasRoutine && routineLeft === 0 ? (
+        {waiting ? null : hasRoutine && routineLeft === 0 ? (
           <BigButton
             variant="secondary"
             label="See my progress"
@@ -241,6 +252,7 @@ const HomeScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  waiting: { gap: spacing.xs, marginVertical: spacing.sm },
   todayStack: { flexDirection: 'column', alignItems: 'flex-start', gap: spacing.md },
   todayRow: {
     flexDirection: 'row',

@@ -36,9 +36,9 @@ export const MeasurementCard: React.FC<{
 }> = ({ series: s, testID }) => {
   const title = findExerciseOption(s.exerciseId)?.title ?? s.exerciseName;
   const side = s.joint.replace(/_/g, ' ');
-  const latest = s.thisPlan[s.thisPlan.length - 1];
-  const earlier = s.thisPlan.slice(-RECENT - 1, -1);
-  const before = s.earlierPlans[s.earlierPlans.length - 1];
+  const latest = s.comparable[s.comparable.length - 1];
+  const earlier = s.comparable.slice(-RECENT - 1, -1);
+  const before = s.measuredDifferently[s.measuredDifferently.length - 1];
   const main = latest ? valueOf(s, latest) : undefined;
 
   return (
@@ -56,7 +56,7 @@ export const MeasurementCard: React.FC<{
         <View
           style={styles.latest}
           accessible
-          accessibilityLabel={`Latest with your current plan: ${main.number} ${main.unit}, ${shortDate(
+          accessibilityLabel={`Latest: ${main.number} ${main.unit}, ${shortDate(
             latest.date
           )}`}
           testID={testID && `${testID}-latest`}
@@ -77,14 +77,14 @@ export const MeasurementCard: React.FC<{
           color={colors.textSecondary}
           testID={testID && `${testID}-none`}
         >
-          No measurement with your current plan yet.
+          No measurement taken the current way yet.
         </AppText>
       )}
 
       {earlier.length ? (
         <View testID={testID && `${testID}-earlier`}>
           <AppText variant="label" color={colors.textSecondary}>
-            EARLIER WITH THIS PLAN
+            EARLIER
           </AppText>
           <View style={styles.chips}>
             {earlier
@@ -108,7 +108,7 @@ export const MeasurementCard: React.FC<{
           color={colors.textSecondary}
           testID={testID && `${testID}-before`}
         >
-          {`Before your current plan: ${valueOf(s, before).number} ${
+          {`Measured differently before: ${valueOf(s, before).number} ${
             valueOf(s, before).unit
           } (${shortDate(before.date)})`.replace(/ +\(/, ' (')}
         </AppText>

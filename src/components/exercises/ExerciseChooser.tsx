@@ -19,7 +19,9 @@ import ExerciseSelector from './ExerciseSelector';
 import { EXERCISE_OPTIONS, ExerciseKey, ExerciseOption } from './exerciseCatalog';
 import PlanEditor, { Stepper } from './PlanEditor';
 import TodaysRoutineCard from './TodaysRoutineCard';
-import TodayPrep from './TodayPrep';
+import TodayPrep, { ProgrammeWaiting } from './TodayPrep';
+import CareEpisodeCard from './CareEpisodeCard';
+import { episodeStatus, exercisesAllowed } from '../../services/care/episode';
 import type { TodaysRoutine } from '../../services/pose/routine';
 import {
   inRoutine,
@@ -158,6 +160,17 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
   const hasRoutine = Boolean(routine?.items.length);
   const openHelp = () => navigation.navigate('HomeTab', { screen: 'Help' });
 
+  // Not confirmed for this stage of recovery: no exercises for the patient
+  if (plan && !setupOpen && !exercisesAllowed(plan)) {
+    return (
+      <ProgrammeWaiting
+        needsSpecialist={episodeStatus(plan) === 'needs_specialist'}
+        onOpenSetup={() => setSetupOpen(true)}
+        onHelp={openHelp}
+      />
+    );
+  }
+
   // The patient's day, when the physio set one: no choosing
   if (plan && routine && hasRoutine && !setupOpen && onStartRoutine) {
     return (
@@ -221,6 +234,9 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
       }
     >
       {notice}
+      {setup && plan && onPlanChange ? (
+        <CareEpisodeCard plan={plan} onChange={onPlanChange} />
+      ) : null}
       {setup && hasRoutine && routine ? <TodaysRoutineCard routine={routine} /> : null}
       {setup && plan ? (
         <Card style={styles.plan} testID="exercise-plan-summary">

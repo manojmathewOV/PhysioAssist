@@ -42,6 +42,7 @@ import type { RootState } from '../../store';
 import { setExercisePlan } from '../../store/slices/settingsSlice';
 import { ExercisePlan, applyPlan } from '../../services/pose/exercisePlan';
 import { completionOf } from '../../services/pose/routine';
+import { coachingOf } from '../../services/care/episode';
 import { activeMs, seconds } from '../../services/session/sessionClock';
 import { movementOf } from '../../services/movement/exerciseMovement';
 import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
@@ -157,6 +158,9 @@ const WebPoseDetectionScreen: React.FC = () => {
   // The physio's YouTube video for this exercise, played alongside the camera
   const videoLink = plan?.videos?.[plannedExercise.id];
   const videoId = parseYouTubeId(videoLink);
+  // A comfort phase (protecting a repair, symptom-limited): no pushing for range
+  const comfortRef = useRef(false);
+  comfortRef.current = coachingOf(plan) === 'comfort';
   const plannedExerciseRef = useRef(plannedExercise);
   plannedExerciseRef.current = plannedExercise;
   const movementRef = useRef(movement);
@@ -250,6 +254,7 @@ const WebPoseDetectionScreen: React.FC = () => {
           hold:
             movementOf(exerciseValidationService.getCurrentState().exercise?.id).mode ===
             'hold',
+          comfort: comfortRef.current,
         });
         if (spoken) lastSpokenRef.current = spoken;
         lastRepsRef.current = metrics.repetitionCount;

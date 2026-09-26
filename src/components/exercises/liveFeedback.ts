@@ -18,6 +18,7 @@ export function speakLiveFeedback(
     outOfView,
     lastSpoken,
     hold = false,
+    comfort = false,
   }: {
     reps: number;
     previousReps: number;
@@ -27,9 +28,11 @@ export function speakLiveFeedback(
     lastSpoken: string;
     /** A still exercise: no coaching beyond precautions (see liveCue). */
     hold?: boolean;
+    /** A comfort phase (see coachingOf): no pushing for range. */
+    comfort?: boolean;
   }
 ): string | undefined {
-  const cue = liveCue(validation, { hold });
+  const cue = liveCue(validation, { hold, comfort });
   if (reps > previousReps && !cue.warning) {
     audioFeedbackService.announceRep(reps, target);
   }

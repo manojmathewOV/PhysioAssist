@@ -36,6 +36,7 @@ import { CameraPanel } from '../ui/CameraPanel';
 import { RepRing } from '../ui/RepRing';
 import { movementOf } from '../../services/movement/exerciseMovement';
 import { liveCue } from '../../utils/liveCue';
+import { coachingOf } from '../../services/care/episode';
 import { activeMs, seconds } from '../../services/session/sessionClock';
 import { colors, radii, spacing, touch } from '../../theme';
 import {
@@ -108,6 +109,9 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
   const hasPose = useSelector((state: RootState) => !!state.pose.currentPose);
   const enableHaptics = useSelector(
     (state: RootState) => state.settings.enableHaptics !== false
+  );
+  const comfort = useSelector(
+    (state: RootState) => coachingOf(state.settings.exercisePlan) === 'comfort'
   );
   const showJointAngles = useSelector(
     (state: RootState) => state.settings.showJointAngles
@@ -223,9 +227,10 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
   const isEstimate =
     (lastValidationResult?.estimatedJoints?.length ?? 0) > 0 ||
     /turn side-on/i.test(feedback);
-  const cue = liveCue(lastValidationResult, { hold: isHold });
-  // During a still hold only precautions and "can't see you" come through
-  const spoken = friendlyInstruction(isHold ? cue.text : feedback);
+  // During a still hold, or a comfort phase, only precautions and "can't see
+  // you" come through (no pushing for range)
+  const cue = liveCue(lastValidationResult, { hold: isHold, comfort });
+  const spoken = friendlyInstruction(isHold || comfort ? cue.text : feedback);
   const instruction = isPaused
     ? 'Paused. Take a rest.'
     : outOfView
@@ -236,7 +241,9 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
           ? 'Step into view so the camera can see you'
           : isHold
             ? 'Relax and keep still'
-            : currentExercise?.instructions?.[0] ?? 'Get into position';
+            : comfort
+              ? 'Move gently, within comfort'
+              : currentExercise?.instructions?.[0] ?? 'Get into position';
   const showForm = !isHold && (repetitionCount > 0 || formScore > 0);
 
   const header = (

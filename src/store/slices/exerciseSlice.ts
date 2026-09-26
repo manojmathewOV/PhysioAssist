@@ -45,6 +45,7 @@ export interface ExerciseHistory {
   measured?: boolean;
   unavailableReason?: string;
   planVersion?: number;
+  method?: string;
   /** From Go to Stop, and how much of it was paused (s); `duration` is active time. */
   wallSeconds?: number;
   pausedSeconds?: number;
@@ -72,6 +73,8 @@ export interface SessionResult {
   unavailableReason?: string;
   /** The prescription version the session was done under (see ExercisePlan.version). */
   planVersion?: number;
+  /** How the number was measured (see measurementMethodOf): series compare within one. */
+  method?: string;
   /** How much of the prescribed exercise was done (see completionOf). */
   completion?: 'completed' | 'stopped_early' | 'attempted';
 }

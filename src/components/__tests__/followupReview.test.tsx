@@ -237,14 +237,25 @@ describe('F4: a still exercise takes its own prescription', () => {
   });
 });
 
-describe('F5: "this plan" means the current prescription', () => {
+// F5, refined by the later clinical scrutiny: a dose or goal change (a new
+// plan version) doesn't make earlier values incomparable; a change in how the
+// number is measured does. "Current" means the current measurement method.
+describe('F5: comparisons follow the measurement method, not the plan version', () => {
+  const V1 = 'heel-prop-extension|angle|passive|v1';
   const history = [
-    entry({ joint: 'left_knee', measured: false, planVersion: 3, date: on(10) }),
+    entry({
+      joint: 'left_knee',
+      measured: false,
+      planVersion: 3,
+      method: V1,
+      date: on(10),
+    }),
     entry({
       joint: 'left_knee',
       bestDegrees: 9,
       direction: 'toward',
       planVersion: 2,
+      method: V1,
       date: on(9),
     }),
     entry({
@@ -252,17 +263,18 @@ describe('F5: "this plan" means the current prescription', () => {
       bestDegrees: 14,
       direction: 'toward',
       planVersion: 2,
+      method: 'heel-prop-extension|angle|passive|v0',
       date: on(8),
     }),
   ];
 
-  it('an unmeasured session under a new plan leaves older values as earlier plans', () => {
-    const [s] = measurementSeries(history, 3);
-    expect(s.thisPlan).toEqual([]);
-    expect(s.earlierPlans.map((p) => p.degrees)).toEqual([14, 9]);
+  it('a new plan version keeps same-method values comparable; another method is kept apart', () => {
+    const [s] = measurementSeries(history);
+    expect(s.comparable.map((p) => p.degrees)).toEqual([9]);
+    expect(s.measuredDifferently.map((p) => p.degrees)).toEqual([14]);
   });
 
-  it('Progress says so instead of calling old values "this plan"', () => {
+  it('Progress labels values measured differently, and never says "this plan"', () => {
     const defaults = rootReducer(undefined, { type: '@@test/INIT' });
     const store = configureStore({
       reducer: rootReducer,
@@ -280,11 +292,21 @@ describe('F5: "this plan" means the current prescription', () => {
         <ProgressScreen />
       </Provider>
     );
-    expect(getByTestId('progress-series-0-none')).toHaveTextContent(
-      'No measurement with your current plan yet.'
+    expect(getByTestId('progress-series-0-latest')).toHaveTextContent(/9°/);
+    expect(getByTestId('progress-series-0-before')).toHaveTextContent(
+      /Measured differently before: 14°/
     );
-    expect(getByTestId('progress-series-0-before')).toHaveTextContent(/9°/);
-    expect(queryByText(/with this plan/i)).toBeNull();
+    expect(queryByText(/this plan/i)).toBeNull();
+  });
+
+  it('with no measurement taken the current way yet, it says so', () => {
+    const [s] = measurementSeries([
+      entry({ joint: 'left_knee', measured: false, method: V1, date: on(10) }),
+      entry({ joint: 'left_knee', bestDegrees: 14, direction: 'toward', date: on(8) }),
+    ]);
+    expect(s.comparable).toEqual([]);
+    // (an older record without a method is kept apart: unknown stays unknown)
+    expect(s.measuredDifferently.map((p) => p.degrees)).toEqual([14]);
   });
 });
 

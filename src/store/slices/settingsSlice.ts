@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { ExercisePlan } from '../../services/pose/exercisePlan';
 import { withVersion } from '../../services/pose/routine';
+import { keepConfirmationHonest } from '../../services/care/episode';
 
 interface SettingsState {
   // Audio Settings
@@ -80,8 +81,12 @@ const settingsSlice = createSlice({
   reducers: {
     setExercisePlan: (state, action: PayloadAction<ExercisePlan | null>) => {
       // A changed prescription gets a new version (sessions record it)
+      // (and a confirmed programme that changed needs confirming again)
       state.exercisePlan = action.payload
-        ? withVersion(state.exercisePlan, action.payload)
+        ? withVersion(
+            state.exercisePlan,
+            keepConfirmationHonest(state.exercisePlan, action.payload)
+          )
         : null;
     },
     setDailyRepGoal: (state, action: PayloadAction<number>) => {

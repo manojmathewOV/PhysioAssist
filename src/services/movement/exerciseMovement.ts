@@ -23,6 +23,20 @@ export interface ExerciseMovement {
    * rotation with the elbow at the side instead of how high the arm is.
    */
   measure?: 'external_rotation';
+  /**
+   * Who moves the joint in this variant (declared by the exercise, not seen by
+   * the camera): 'passive' (relaxed, e.g. resting on a roll), 'assisted', or
+   * 'active' (the default).
+   */
+  assistance?: 'active' | 'assisted' | 'passive';
+  /** Whether the limb takes body weight in this variant (default 'unloaded'). */
+  loading?: 'unloaded' | 'weight_bearing';
+  /**
+   * Version of how this exercise's number is measured (angle definition,
+   * estimator, set-up). Bump it when that changes: values measured
+   * differently are not compared as one series. Default 1.
+   */
+  methodVersion?: number;
 }
 
 export const EXERCISE_MOVEMENT: Record<string, ExerciseMovement> = {
@@ -44,6 +58,7 @@ export const EXERCISE_MOVEMENT: Record<string, ExerciseMovement> = {
     posture: 'lying',
     view: 'side',
     mode: 'hold',
+    assistance: 'passive',
   },
   // Lying, a roll under the knee: the heel lifts to straighten the knee while
   // the thigh stays on the roll
@@ -52,9 +67,19 @@ export const EXERCISE_MOVEMENT: Record<string, ExerciseMovement> = {
   'seated-knee-flexion': { direction: 'away', posture: 'seated', view: 'side' },
   // Knee flexion needs a side view: from the front the knee bends towards the
   // camera and reads 42-47° too straight (REHAB24-6); from the side 7-9° error
-  squat: { direction: 'away', posture: 'standing', rangeView: 'side' },
-  lunge: { direction: 'away', posture: 'standing', rangeView: 'side' },
-  'sit-to-stand': { direction: 'away' },
+  squat: {
+    direction: 'away',
+    posture: 'standing',
+    rangeView: 'side',
+    loading: 'weight_bearing',
+  },
+  lunge: {
+    direction: 'away',
+    posture: 'standing',
+    rangeView: 'side',
+    loading: 'weight_bearing',
+  },
+  'sit-to-stand': { direction: 'away', loading: 'weight_bearing' },
 };
 
 export const movementOf = (exerciseId?: string): ExerciseMovement =>
@@ -68,3 +93,15 @@ export const rangeViewOf = (exerciseId?: string): CameraView | undefined => {
 
 export const directionOf = (context: Pick<MovementContext, 'direction' | 'exerciseId'>) =>
   context.direction ?? movementOf(context.exerciseId).direction;
+
+/**
+ * What a number from this exercise is: the exercise, who moved the joint and
+ * the measurement method's version. Values are compared over time only within
+ * one method; a change of dose or goal doesn't change it.
+ */
+export const measurementMethodOf = (exerciseId: string): string => {
+  const m = movementOf(exerciseId);
+  return `${exerciseId}|${m.measure ?? 'angle'}|${m.assistance ?? 'active'}|v${
+    m.methodVersion ?? 1
+  }`;
+};

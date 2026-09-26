@@ -3,6 +3,10 @@
  * straightening and a heel prop measure different things, so they are never
  * mixed), with sessions that couldn't be measured kept visible.
  *
+ * Values are compared within one measurement method (see measurementMethodOf):
+ * a change of dose or goal doesn't split a series, a change of how the number
+ * is measured does. Older records without a method are kept apart.
+ *
  * Deliberately no "improved by N°": how repeatable a home camera measurement
  * is hasn't been established, so the series reports what was measured and
  * leaves the judgement of change to the physiotherapist.
@@ -15,6 +19,7 @@ export interface SeriesPoint {
   approximate?: boolean;
   measured: boolean;
   planVersion?: number;
+  method?: string;
 }
 
 export interface MeasurementSeries {
@@ -30,21 +35,17 @@ export interface MeasurementSeries {
   unmeasuredCount: number;
   /** Most recent measured session (under any prescription). */
   latest?: SeriesPoint;
-  /** Measured sessions under the current prescription, oldest first. */
-  thisPlan: SeriesPoint[];
-  /** Measured sessions under earlier prescriptions, oldest first. */
-  earlierPlans: SeriesPoint[];
+  /** Measured sessions with the current measurement method, oldest first. */
+  comparable: SeriesPoint[];
+  /** Measured sessions measured differently (or of unknown method), oldest first. */
+  measuredDifferently: SeriesPoint[];
 }
 
 /**
  * Series of measured (or attempted) sessions, most recently active first.
- * `currentVersion` is the plan's prescription version now: only sessions
- * under it are "this plan" (without it, the latest measured session's).
+ * The current method is the one the most recent session of the series used.
  */
-export function measurementSeries(
-  history: ExerciseHistory[],
-  currentVersion?: number
-): MeasurementSeries[] {
+export function measurementSeries(history: ExerciseHistory[]): MeasurementSeries[] {
   const byKey = new Map<string, MeasurementSeries>();
   // History is newest first; build each series oldest first
   for (const h of [...history].reverse()) {
@@ -63,8 +64,8 @@ export function measurementSeries(
         points: [],
         measuredCount: 0,
         unmeasuredCount: 0,
-        thisPlan: [],
-        earlierPlans: [],
+        comparable: [],
+        measuredDifferently: [],
       };
       byKey.set(key, s);
     }
@@ -80,6 +81,7 @@ export function measurementSeries(
       approximate: h.approximate,
       measured,
       planVersion: h.planVersion,
+      method: h.method,
     });
     if (measured) s.measuredCount++;
     else s.unmeasuredCount++;
@@ -88,9 +90,10 @@ export function measurementSeries(
   for (const s of series) {
     const measured = s.points.filter((p) => p.measured);
     s.latest = measured[measured.length - 1];
-    const version = currentVersion ?? s.latest?.planVersion;
-    s.thisPlan = measured.filter((p) => p.planVersion === version);
-    s.earlierPlans = measured.filter((p) => p.planVersion !== version);
+    const method = s.points[s.points.length - 1]?.method;
+    const same = (p: SeriesPoint) => method !== undefined && p.method === method;
+    s.comparable = measured.filter(same);
+    s.measuredDifferently = measured.filter((p) => !same(p));
   }
   return series.sort((a, b) =>
     (b.points[b.points.length - 1]?.date ?? '').localeCompare(

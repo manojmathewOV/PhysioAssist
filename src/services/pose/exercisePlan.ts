@@ -22,6 +22,7 @@ import type {
 } from '../../types/exercise';
 
 import type { MovementProfile } from '../movement/analysis';
+import type { CareEpisode } from '../care/episode';
 import { movementOf } from '../movement/exerciseMovement';
 import type { MovementDirection } from '../movement/types';
 
@@ -93,6 +94,8 @@ export interface ExercisePlan {
   version?: number;
   /** When this version was prescribed (ISO date). */
   prescribedAt?: string;
+  /** What is being treated, the phase, and whether the programme is confirmed. */
+  episode?: CareEpisode;
 }
 
 export const JOINT_KINDS: { kind: JointKind; label: string; movement: string }[] = [

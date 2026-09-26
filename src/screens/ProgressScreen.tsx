@@ -43,8 +43,7 @@ const ProgressScreen: React.FC = () => {
   const week = summarizeWeek(history);
   const streak = currentStreak(history);
   const max = Math.max(1, ...days.map((d) => d.value));
-  const planVersion = useSelector((s: RootState) => s.settings.exercisePlan?.version);
-  const series = measurementSeries(history, planVersion);
+  const series = measurementSeries(history);
 
   if (history.length === 0) {
     return (

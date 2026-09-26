@@ -24,6 +24,7 @@ import { RootState } from '@store/index';
 import { setExercisePlan } from '@store/slices/settingsSlice';
 import { ExercisePlan, applyPlan } from '@services/pose/exercisePlan';
 import { completionOf } from '@services/pose/routine';
+import { coachingOf } from '@services/care/episode';
 import { activeMs, seconds } from '@services/session/sessionClock';
 import { movementOf } from '@services/movement/exerciseMovement';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
@@ -189,6 +190,7 @@ const PoseDetectionScreen: React.FC = () => {
         outOfView: outOfViewRef.current,
         lastSpoken: lastSpokenRef.current,
         hold: movementOf(plannedExercise.id).mode === 'hold',
+        comfort: coachingOf(plan) === 'comfort',
       });
       if (spoken) lastSpokenRef.current = spoken;
       lastRepsRef.current = metrics.repetitionCount;
@@ -202,6 +204,7 @@ const PoseDetectionScreen: React.FC = () => {
     isPaused,
     stage,
     plannedExercise,
+    plan,
     dispatch,
     movement,
   ]);

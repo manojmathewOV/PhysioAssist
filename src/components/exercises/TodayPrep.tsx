@@ -193,3 +193,65 @@ const styles = StyleSheet.create({
 });
 
 export default TodayPrep;
+
+/**
+ * The patient's screen while the programme isn't confirmed (new pathway or
+ * phase, or a specialist programme awaited): no exercises, and why.
+ */
+export const ProgrammeWaiting: React.FC<{
+  needsSpecialist: boolean;
+  onOpenSetup: () => void;
+  onHelp: () => void;
+}> = ({ needsSpecialist, onOpenSetup, onHelp }) => (
+  <Screen testID="programme-waiting" title="Today’s exercises">
+    <Card style={waitingStyles.card}>
+      <View style={waitingStyles.row}>
+        <View style={waitingStyles.icon}>
+          <Icon name="hourglass-empty" size={28} color={colors.primary} />
+        </View>
+        <AppText variant="heading" style={waitingStyles.flex} accessibilityRole="header">
+          Your programme is being prepared
+        </AppText>
+      </View>
+      <AppText variant="body" color={colors.textSecondary}>
+        {needsSpecialist
+          ? 'Your exercises will appear here once your specialist team has approved them. Until then, follow the instructions they gave you.'
+          : 'Your physiotherapist will confirm your exercises for this stage of your recovery. Until then, follow the instructions they gave you.'}
+      </AppText>
+    </Card>
+    <View style={waitingStyles.links}>
+      <BigButton
+        variant="ghost"
+        compact
+        icon="help-outline"
+        label="Where to put the phone"
+        onPress={onHelp}
+        testID="exercise-setup-help"
+      />
+      <BigButton
+        variant="ghost"
+        compact
+        icon="tune"
+        label="Physio set-up"
+        onPress={onOpenSetup}
+        testID="exercise-setup-open"
+        accessibilityHint="For your physiotherapist or carer: exercises, goals and videos"
+      />
+    </View>
+  </Screen>
+);
+
+const waitingStyles = StyleSheet.create({
+  flex: { flex: 1 },
+  card: { gap: spacing.md },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  icon: {
+    width: 48,
+    height: 48,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  links: { alignItems: 'flex-start', gap: spacing.xs },
+});

@@ -3,7 +3,10 @@
  * range, tempo, hold and compensations, compared with the physio's
  * demonstration (if one was saved for this exercise) or the prescribed goal.
  */
-import { movementOf } from '../../services/movement/exerciseMovement';
+import {
+  measurementMethodOf,
+  movementOf,
+} from '../../services/movement/exerciseMovement';
 import type { SessionResult } from '../../store/slices/exerciseSlice';
 import { useCallback, useRef } from 'react';
 
@@ -194,6 +197,7 @@ export function sessionOutcome(
       unavailableReason: measured ? undefined : r.reason,
       reps,
       planVersion: plan?.version,
+      method: measurementMethodOf(exercise.id),
     };
   } else if (sessionRange) {
     // No movement analysis (no plan): the live counter's range
