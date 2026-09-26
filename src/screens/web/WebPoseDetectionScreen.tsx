@@ -118,6 +118,7 @@ const WebPoseDetectionScreen: React.FC = () => {
   const exerciseState = useSelector((s: RootState) => s.exercise);
   const showJointAngles = useSelector((s: RootState) => s.settings.showJointAngles);
   const showPoseOverlay = useSelector((s: RootState) => s.settings.showPoseOverlay);
+  const cameraFocus = useSelector((s: RootState) => s.settings.cameraFocus !== false);
   const currentLandmarks = useSelector((s: RootState) => s.pose.currentPose?.landmarks);
 
   const plan = useSelector((s: RootState) => s.settings.exercisePlan);
@@ -156,6 +157,8 @@ const WebPoseDetectionScreen: React.FC = () => {
   // The physio's YouTube video for this exercise, played alongside the camera
   const videoLink = plan?.videos?.[plannedExercise.id];
   const videoId = parseYouTubeId(videoLink);
+  const plannedExerciseRef = useRef(plannedExercise);
+  plannedExerciseRef.current = plannedExercise;
   const movementRef = useRef(movement);
   movementRef.current = movement;
   const [recordingDemo, setRecordingDemo] = useState(false);
@@ -180,8 +183,8 @@ const WebPoseDetectionScreen: React.FC = () => {
   const { start: startGate, reset: resetGate } = gate;
   const outOfViewRef = useRef(false);
   outOfViewRef.current = gate.outOfView;
-  const settingsRef = useRef({ showJointAngles, showPoseOverlay });
-  settingsRef.current = { showJointAngles, showPoseOverlay };
+  const settingsRef = useRef({ showJointAngles, showPoseOverlay, cameraFocus });
+  settingsRef.current = { showJointAngles, showPoseOverlay, cameraFocus };
 
   const handlePoseResults = useCallback(
     (landmarks: PoseLandmark[], detected: ProcessedPoseData | null) => {
@@ -262,11 +265,15 @@ const WebPoseDetectionScreen: React.FC = () => {
           overlay.clientWidth || canvasRef.current?.width || 640,
           overlay.clientHeight || canvasRef.current?.height || 360,
           {
+            // Before Go the validator isn't running yet: the planned
+            // exercise still says which joint matters
             focus: focusFromExercise(
-              exerciseValidationService.getCurrentState().exercise,
+              exerciseValidationService.getCurrentState().exercise ??
+                plannedExerciseRef.current,
               exerciseValidationService.getCurrentState().phase?.name
             ),
             showAngles: settingsRef.current.showJointAngles,
+            emphasis: settingsRef.current.cameraFocus,
           }
         );
       }
@@ -326,6 +333,7 @@ const WebPoseDetectionScreen: React.FC = () => {
       }
       try {
         beginExercise(false);
+        webPoseDetectionService.setVideoStyle(cameraFocus ? 'focus' : 'natural');
         await webPoseDetectionService.startDetection(
           videoRef.current,
           canvasRef.current,
@@ -355,6 +363,7 @@ const WebPoseDetectionScreen: React.FC = () => {
     handlePoseResults,
     dispatch,
     stopEverything,
+    cameraFocus,
   ]);
 
   // Stop the camera when leaving the screen

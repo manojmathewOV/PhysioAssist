@@ -5,13 +5,23 @@
  */
 import { PoseLandmark } from '../../types/pose';
 import { colors } from '../../theme';
-import { AngleStatus, JointFocus, buildOverlayModel } from '../pose/overlayGeometry';
+import {
+  AngleStatus,
+  JointFocus,
+  buildOverlayModel,
+  toJointKey,
+} from '../pose/overlayGeometry';
 
 export interface WebOverlayOptions {
   /** Joints and goal ranges to guide (e.g. from focusFromExercise). */
   focus?: JointFocus[];
   /** Show angle numbers; otherwise only arcs and a tick when in range. */
   showAngles?: boolean;
+  /**
+   * Over the focused (dimmed) picture: the working limb glows and the rest of
+   * the skeleton recedes, so the angle being worked on is what stands out.
+   */
+  emphasis?: boolean;
 }
 
 const statusColor: Record<AngleStatus, string> = {
@@ -44,7 +54,7 @@ const WebPoseOverlay = {
     angles: { [key: string]: number },
     width: number,
     height: number,
-    { focus = [], showAngles = false }: WebOverlayOptions = {}
+    { focus = [], showAngles = false, emphasis = false }: WebOverlayOptions = {}
   ) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -66,9 +76,13 @@ const WebPoseOverlay = {
     });
 
     // Limbs: shadow pass, then colour
+    const hasFocus = model.segments.some((s) => s.focus);
     for (const pass of ['shadow', 'limb'] as const) {
       for (const s of model.segments) {
-        ctx.globalAlpha = s.opacity;
+        // With emphasis, limbs that aren't being worked on recede
+        ctx.globalAlpha = s.opacity * (emphasis && hasFocus && !s.focus ? 0.35 : 1);
+        ctx.shadowBlur = emphasis && s.focus && pass === 'limb' ? 14 : 0;
+        ctx.shadowColor = colors.skeleton;
         ctx.strokeStyle =
           pass === 'shadow'
             ? colors.poseShadow
@@ -83,8 +97,9 @@ const WebPoseOverlay = {
       }
     }
 
+    ctx.shadowBlur = 0;
     if (model.head) {
-      ctx.globalAlpha = model.head.opacity;
+      ctx.globalAlpha = model.head.opacity * (emphasis && hasFocus ? 0.35 : 1);
       ctx.strokeStyle = colors.poseLimb;
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -94,7 +109,7 @@ const WebPoseOverlay = {
 
     // Joints
     for (const j of model.joints) {
-      ctx.globalAlpha = j.opacity;
+      ctx.globalAlpha = j.opacity * (emphasis && hasFocus && !j.focus ? 0.35 : 1);
       ctx.beginPath();
       ctx.arc(j.at.x, j.at.y, j.focus ? 8 : 5, 0, 2 * Math.PI);
       ctx.fillStyle = '#FFFFFF';
@@ -105,8 +120,13 @@ const WebPoseOverlay = {
     }
     ctx.globalAlpha = 1;
 
-    // Angle arcs and labels
-    for (const a of model.angles) {
+    // Angle arcs and labels. With emphasis, only the joint being worked on
+    // (when the exercise names one): one clear angle, no clutter
+    const focusJoints = new Set(focus.map((f) => toJointKey(f.joint)));
+    const shown = model.angles.filter(
+      (a) => !emphasis || focusJoints.size === 0 || focusJoints.has(toJointKey(a.joint))
+    );
+    for (const a of shown) {
       const color = statusColor[a.status];
       if (a.targetPath) {
         ctx.strokeStyle = colors.poseTarget;
@@ -117,9 +137,13 @@ const WebPoseOverlay = {
       ctx.strokeStyle = colors.poseShadow;
       ctx.lineWidth = 8;
       ctx.stroke(arc);
+      // The angle glows in its status colour over the dimmed picture
+      ctx.shadowBlur = emphasis ? 12 : 0;
+      ctx.shadowColor = color;
       ctx.strokeStyle = color;
       ctx.lineWidth = 5;
       ctx.stroke(arc);
+      ctx.shadowBlur = 0;
       ctx.beginPath();
       ctx.arc(a.knobAt.x, a.knobAt.y, 6, 0, 2 * Math.PI);
       ctx.fillStyle = color;

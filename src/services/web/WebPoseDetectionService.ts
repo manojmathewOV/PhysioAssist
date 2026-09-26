@@ -2,6 +2,7 @@ import { Camera } from '@mediapipe/camera_utils';
 import { Pose, Results } from '@mediapipe/pose';
 import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
 import { mediapipeResultToPoseData } from '../pose/mediapipeLandmarks';
+import { VideoStyle, drawCameraFrame } from './focusFrame';
 
 /** Frames MediaPipe's browser build accepts, plus raw pixels (see detectFromFrame). */
 export type WebPoseInput =
@@ -36,6 +37,18 @@ export class WebPoseDetectionService {
   private isRunning = false;
   private onResultsCallback: WebPoseResultsCallback | null = null;
   private sendStartedAt = 0;
+  private videoStyle: VideoStyle = 'focus';
+  private scratchCanvas: HTMLCanvasElement | null = null;
+
+  /**
+   * 'focus' dims the room and keeps the person bright (needs the segmentation
+   * mask); 'natural' shows the camera picture as it is. Set before starting.
+   */
+  setVideoStyle(style: VideoStyle) {
+    if (style === this.videoStyle) return;
+    this.videoStyle = style;
+    this.pose?.setOptions({ enableSegmentation: style === 'focus' });
+  }
 
   /**
    * MediaPipe is created lazily: this module is also bundled on iOS/Android
@@ -59,7 +72,9 @@ export class WebPoseDetectionService {
     pose.setOptions({
       modelComplexity: 1,
       smoothLandmarks: true,
-      enableSegmentation: false,
+      // The person's outline, for the 'focus' picture (see focusFrame)
+      enableSegmentation: this.videoStyle === 'focus',
+      smoothSegmentation: true,
       minDetectionConfidence: 0.5,
       minTrackingConfidence: 0.5,
     });
@@ -78,13 +93,16 @@ export class WebPoseDetectionService {
 
     if (canvasCtx && this.canvasElement) {
       canvasCtx.save();
-      canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
-      canvasCtx.drawImage(
-        results.image,
-        0,
-        0,
+      drawCameraFrame(
+        canvasCtx,
+        results.image as CanvasImageSource,
+        this.videoStyle === 'focus'
+          ? (results.segmentationMask as CanvasImageSource | undefined)
+          : null,
         this.canvasElement.width,
-        this.canvasElement.height
+        this.canvasElement.height,
+        this.videoStyle,
+        () => (this.scratchCanvas ??= document.createElement('canvas'))
       );
     }
 

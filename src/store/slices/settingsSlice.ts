@@ -17,6 +17,11 @@ interface SettingsState {
   showFormFeedback: boolean;
   showJointAngles: boolean;
   showPoseOverlay: boolean;
+  /**
+   * Camera picture: dim and soften the room so the patient (and the angle
+   * overlay) stand out; other people and objects recede. Web for now.
+   */
+  cameraFocus: boolean;
 
   // Performance Settings
   frameSkip: number;
@@ -51,6 +56,7 @@ const initialState: SettingsState = {
   showFormFeedback: true,
   showJointAngles: false, // technical numbers are opt-in for patients (see docs/design)
   showPoseOverlay: true,
+  cameraFocus: true,
 
   // Performance Settings
   frameSkip: 3,

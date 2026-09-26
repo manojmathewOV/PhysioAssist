@@ -291,6 +291,16 @@ const SettingsScreen: React.FC = () => {
             }}
           />
           <ListRow
+            icon="center-focus-strong"
+            title="Focus on me"
+            description="Dims the room behind you so you and your movement stand out"
+            toggle={{
+              value: settings.cameraFocus !== false,
+              onChange: (v) => handleToggleSetting('cameraFocus', v),
+              testID: 'camera-focus-toggle',
+            }}
+          />
+          <ListRow
             icon="architecture"
             title="Show joint angles"
             description="Numbers show how far each joint bends"
