@@ -115,5 +115,7 @@ metro.log
 !.yarn/sdks
 !.yarn/versions
 
-# TensorFlow models (downloaded via postinstall)
+# Pose models (downloaded via postinstall: scripts/download-models.sh)
 assets/models/*.tflite
+assets/models/*.task
+android/app/src/main/assets/*.task

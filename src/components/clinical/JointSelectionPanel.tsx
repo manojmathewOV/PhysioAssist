@@ -13,15 +13,13 @@
  */
 
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Animated,
-} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, StyleSheet, Pressable } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+import { AppText, BigButton, Screen, SectionTitle } from '../ui';
+import { SegmentedControl } from '../ui/SegmentedControl';
+import { colors, radii, shadows, spacing, touch } from '../../theme';
+import { JOINT_ICONS } from './clinicalIcons';
 
 export type JointType = 'shoulder' | 'elbow' | 'knee' | 'hip';
 
@@ -158,16 +156,6 @@ const JointSelectionPanel: React.FC<JointSelectionPanelProps> = ({
     onSelectMovement(movement);
   };
 
-  const getJointIcon = (joint: JointType): string => {
-    const icons = {
-      shoulder: '💪',
-      elbow: '🦾',
-      knee: '🦵',
-      hip: '🦿',
-    };
-    return icons[joint];
-  };
-
   const getJointLabel = (joint: JointType): string => {
     return joint.charAt(0).toUpperCase() + joint.slice(1);
   };
@@ -175,343 +163,179 @@ const JointSelectionPanel: React.FC<JointSelectionPanelProps> = ({
   const canConfirm = selectedJoint && selectedMovement;
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Select Assessment</Text>
-        <Text style={styles.headerSubtitle}>
-          Choose the joint and movement to measure
-        </Text>
-      </View>
-
+    <Screen
+      title="Select assessment"
+      subtitle="Choose the joint and movement to measure."
+      testID="joint-selection-panel"
+      footer={
+        <BigButton
+          label="Start assessment"
+          icon="play-arrow"
+          onPress={onConfirm}
+          disabled={!canConfirm}
+          accessibilityHint={
+            canConfirm
+              ? 'Confirm selection and start assessment'
+              : 'Choose a joint and a movement first'
+          }
+        />
+      }
+    >
       {/* Side Selection */}
       {onSelectSide && (
-        <View style={styles.sideSelector}>
-          <Text style={styles.sideSelectorLabel}>Side:</Text>
-          <View style={styles.sideButtons}>
-            <TouchableOpacity
-              style={[styles.sideButton, side === 'left' && styles.sideButtonActive]}
-              onPress={() => onSelectSide('left')}
-              accessibilityLabel="Select left side"
-              accessibilityRole="button"
-            >
-              <Text
-                style={[
-                  styles.sideButtonText,
-                  side === 'left' && styles.sideButtonTextActive,
-                ]}
-              >
-                Left
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.sideButton, side === 'right' && styles.sideButtonActive]}
-              onPress={() => onSelectSide('right')}
-              accessibilityLabel="Select right side"
-              accessibilityRole="button"
-            >
-              <Text
-                style={[
-                  styles.sideButtonText,
-                  side === 'right' && styles.sideButtonTextActive,
-                ]}
-              >
-                Right
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <>
+          <SectionTitle>Side</SectionTitle>
+          <SegmentedControl
+            accessibilityLabel="Side"
+            value={side}
+            onChange={onSelectSide}
+            options={[
+              { value: 'left', label: 'Left' },
+              { value: 'right', label: 'Right' },
+            ]}
+          />
+        </>
       )}
 
       {/* Joint Selection */}
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {JOINT_CONFIGS.map((config) => (
-          <View key={config.joint} style={styles.jointSection}>
+      <SectionTitle>Joint and movement</SectionTitle>
+      {JOINT_CONFIGS.map((config) => {
+        const jointSelected = selectedJoint === config.joint;
+        const expanded = expandedJoint === config.joint;
+        return (
+          <View
+            key={config.joint}
+            style={[styles.jointCard, jointSelected && styles.jointCardSelected]}
+          >
             {/* Joint Button */}
-            <TouchableOpacity
-              style={[
-                styles.jointButton,
-                selectedJoint === config.joint && styles.jointButtonSelected,
-              ]}
+            <Pressable
+              style={({ pressed }) => [styles.jointButton, pressed && styles.pressed]}
               onPress={() => handleJointPress(config.joint)}
               accessibilityLabel={`Select ${config.joint} joint`}
               accessibilityRole="button"
-              accessibilityState={{ selected: selectedJoint === config.joint }}
+              accessibilityState={{ selected: jointSelected, expanded }}
             >
-              <View style={styles.jointButtonContent}>
-                <Text style={styles.jointIcon}>{getJointIcon(config.joint)}</Text>
-                <Text style={styles.jointLabel}>{getJointLabel(config.joint)}</Text>
+              <View style={styles.jointIcon}>
+                <Icon name={JOINT_ICONS[config.joint]} size={28} color={colors.primary} />
               </View>
-              <Text style={styles.expandIcon}>
-                {expandedJoint === config.joint ? '▼' : '▶'}
-              </Text>
-            </TouchableOpacity>
+              <AppText variant="heading" style={styles.flex}>
+                {getJointLabel(config.joint)}
+              </AppText>
+              <Icon
+                name={expanded ? 'expand-less' : 'expand-more'}
+                size={32}
+                color={colors.textMuted}
+              />
+            </Pressable>
 
             {/* Movement Options (Expanded) */}
-            {expandedJoint === config.joint && (
+            {expanded && (
               <View style={styles.movementList}>
-                {config.movements.map((movement) => (
-                  <TouchableOpacity
-                    key={movement.type}
-                    style={[
-                      styles.movementButton,
-                      selectedMovement === movement.type && styles.movementButtonSelected,
-                    ]}
-                    onPress={() => handleMovementPress(movement.type)}
-                    accessibilityLabel={`${movement.label}: ${movement.description}`}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: selectedMovement === movement.type }}
-                  >
-                    <View style={styles.movementContent}>
-                      <View style={styles.movementTextContainer}>
-                        <Text style={styles.movementLabel}>{movement.label}</Text>
-                        <Text style={styles.movementDescription}>
+                {config.movements.map((movement) => {
+                  const selected = jointSelected && selectedMovement === movement.type;
+                  return (
+                    <Pressable
+                      key={movement.type}
+                      style={({ pressed }) => [
+                        styles.movementButton,
+                        selected && styles.movementButtonSelected,
+                        pressed && !selected && styles.pressed,
+                      ]}
+                      onPress={() => handleMovementPress(movement.type)}
+                      accessibilityLabel={`${movement.label}: ${movement.description}. Target ${movement.targetAngle} degrees`}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected, checked: selected }}
+                      // Web: react-native-web doesn't turn the checked state into aria-checked
+                      aria-checked={selected}
+                    >
+                      <Icon
+                        name={
+                          selected ? 'radio-button-checked' : 'radio-button-unchecked'
+                        }
+                        size={26}
+                        color={selected ? colors.primary : colors.textMuted}
+                      />
+                      <View style={styles.flex}>
+                        <AppText variant="bodyStrong">{movement.label}</AppText>
+                        <AppText variant="caption" color={colors.textSecondary}>
                           {movement.description}
-                        </Text>
+                        </AppText>
                       </View>
                       <View style={styles.movementTarget}>
-                        <Text style={styles.movementTargetText}>
-                          Target: {movement.targetAngle}°
-                        </Text>
+                        <AppText variant="label" color={colors.text}>
+                          {movement.targetAngle}°
+                        </AppText>
                       </View>
-                    </View>
-                    {selectedMovement === movement.type && (
-                      <View style={styles.selectedBadge}>
-                        <Text style={styles.selectedBadgeText}>✓</Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                ))}
+                    </Pressable>
+                  );
+                })}
               </View>
             )}
           </View>
-        ))}
-      </ScrollView>
-
-      {/* Confirm Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.confirmButton, !canConfirm && styles.confirmButtonDisabled]}
-          onPress={onConfirm}
-          disabled={!canConfirm}
-          accessibilityLabel="Confirm selection and start assessment"
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !canConfirm }}
-        >
-          <LinearGradient
-            colors={
-              canConfirm
-                ? ['#4CAF50', '#45a049']
-                : ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']
-            }
-            style={styles.confirmButtonGradient}
-          >
-            <Text
-              style={[
-                styles.confirmButtonText,
-                !canConfirm && styles.confirmButtonTextDisabled,
-              ]}
-            >
-              Start Assessment
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    </View>
+        );
+      })}
+    </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+  flex: { flex: 1 },
+  jointCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    overflow: 'hidden',
+    ...shadows.card,
   },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#AAA',
-  },
-  sideSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  sideSelectorLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFF',
-    marginRight: 16,
-  },
-  sideButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  sideButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#888',
-    backgroundColor: 'transparent',
-  },
-  sideButtonActive: {
-    backgroundColor: '#2196F3',
-    borderColor: '#2196F3',
-  },
-  sideButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#888',
-  },
-  sideButtonTextActive: {
-    color: '#FFF',
-  },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  jointSection: {
-    marginTop: 16,
+  jointCardSelected: {
+    borderColor: colors.primary,
   },
   jointButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    gap: spacing.md,
+    minHeight: 80,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
   },
-  jointButtonSelected: {
-    borderColor: '#2196F3',
-    backgroundColor: 'rgba(33, 150, 243, 0.15)',
-  },
-  jointButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  pressed: {
+    backgroundColor: colors.surfaceMuted,
   },
   jointIcon: {
-    fontSize: 32,
-    marginRight: 16,
-  },
-  jointLabel: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  expandIcon: {
-    fontSize: 18,
-    color: '#AAA',
+    width: 48,
+    height: 48,
+    borderRadius: radii.sm,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   movementList: {
-    marginTop: 12,
-    marginLeft: 16,
-    gap: 8,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
   },
   movementButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
+    gap: spacing.md,
+    minHeight: touch.min + 16,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   movementButtonSelected: {
-    borderColor: '#4CAF50',
-    backgroundColor: 'rgba(76, 175, 80, 0.15)',
-  },
-  movementContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  movementTextContainer: {
-    flex: 1,
-  },
-  movementLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFF',
-    marginBottom: 4,
-  },
-  movementDescription: {
-    fontSize: 14,
-    color: '#AAA',
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
   },
   movementTarget: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: 'rgba(33, 150, 243, 0.2)',
-    borderRadius: 12,
-    marginLeft: 12,
-  },
-  movementTargetText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2196F3',
-  },
-  selectedBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#4CAF50',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 12,
-  },
-  selectedBadgeText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  footer: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  confirmButton: {
-    borderRadius: 30,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  confirmButtonDisabled: {
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  confirmButtonGradient: {
-    paddingVertical: 18,
-    alignItems: 'center',
-  },
-  confirmButtonText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  confirmButtonTextDisabled: {
-    color: '#666',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radii.pill,
   },
 });
 

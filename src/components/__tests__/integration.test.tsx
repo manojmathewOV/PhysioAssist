@@ -9,6 +9,8 @@ import { Provider } from 'react-redux';
 import { NavigationContainer } from '@react-navigation/native';
 import { configureStore } from '@reduxjs/toolkit';
 import { Alert } from 'react-native';
+import { Camera } from 'react-native-vision-camera';
+import { usePoseDetection } from 'react-native-mediapipe';
 
 // Components
 import PoseDetectionScreen from '../../screens/PoseDetectionScreenAccessible';
@@ -16,32 +18,20 @@ import ExerciseControls from '../exercises/ExerciseControls';
 import PoseOverlay from '../pose/PoseOverlay';
 import SettingsScreen from '../../screens/SettingsScreen';
 
-// Services
-import { poseDetectionService } from '../../services/poseDetectionService';
+// Services (camera screens run BlazePose through useBlazePose ->
+// react-native-mediapipe, mocked in __tests__/setup.ts)
 import { goniometerService } from '../../services/goniometerService';
 import { exerciseValidationService } from '../../services/exerciseValidationService';
 import { audioFeedbackService } from '../../services/audioFeedbackService';
 
 // Store
 import { rootReducer } from '../../store';
-import { setPoseData, setDetecting } from '../../store/slices/poseSlice';
+import { setPoseData } from '../../store/slices/poseSlice';
 import { updateExerciseProgress } from '../../store/slices/exerciseSlice';
+import { EXERCISES } from '../../constants/exercises';
+import { PoseLandmark } from '../../types/pose';
 
 // Mock services
-jest.mock('../../services/poseDetectionService', () => ({
-  poseDetectionService: {
-    initialize: jest.fn().mockResolvedValue(true),
-    startDetection: jest.fn().mockResolvedValue(true),
-    stopDetection: jest.fn().mockResolvedValue(undefined),
-    processFrame: jest.fn().mockReturnValue({
-      landmarks: [],
-      confidence: 0.9,
-    }),
-    cleanup: jest.fn(),
-    updateConfig: jest.fn(),
-  },
-}));
-
 jest.mock('../../services/audioFeedbackService', () => ({
   audioFeedbackService: {
     speak: jest.fn().mockResolvedValue(undefined),
@@ -55,7 +45,12 @@ jest.mock('../../services/goniometerService');
 jest.mock('../../services/exerciseValidationService', () => ({
   exerciseValidationService: {
     startExercise: jest.fn(),
-    validateExercise: jest.fn(),
+    validatePose: jest.fn().mockReturnValue({
+      isValid: true,
+      errors: [],
+      phase: 'rest',
+      feedback: [],
+    }),
     stopExercise: jest.fn(),
   },
 }));
@@ -69,23 +64,38 @@ jest.mock('react-native-vision-camera', () => {
   );
 
   const Camera = Object.assign(MockCamera, {
-    requestCameraPermission: jest.fn().mockResolvedValue('authorized'),
+    requestCameraPermission: jest.fn().mockResolvedValue('granted'),
     getCameraDevice: jest.fn().mockReturnValue({ id: 'back', position: 'back' }),
     openSettings: jest.fn(),
   });
 
   return {
     Camera,
-    useCameraDevices: () => ({ front: { id: 'front' }, back: { id: 'back' } }),
+    useCameraDevices: () => [
+      { id: 'front', position: 'front' },
+      { id: 'back', position: 'back' },
+    ],
+    useCameraDevice: (position: string) => ({ id: position, position }),
     useFrameProcessor: (callback: any) => callback,
   };
 });
 
-// Helper to create test store
-const createTestStore = (preloadedState = {}) => {
+type RootTestState = ReturnType<typeof rootReducer>;
+type PartialTestState = { [K in keyof RootTestState]?: Partial<RootTestState[K]> };
+
+// Helper to create test store. Partial slice state is merged over each slice's
+// initial state so tests only need to specify the fields they care about.
+const createTestStore = (preloadedState: PartialTestState = {}) => {
+  const defaults = rootReducer(undefined, { type: '@@test/INIT' });
+  const merged = Object.fromEntries(
+    Object.entries(defaults).map(([key, value]) => [
+      key,
+      { ...value, ...(preloadedState[key as keyof RootTestState] ?? {}) },
+    ])
+  ) as RootTestState;
   return configureStore({
     reducer: rootReducer,
-    preloadedState,
+    preloadedState: merged,
   });
 };
 
@@ -114,36 +124,26 @@ describe('Component Integration Tests', () => {
 
   describe('Pose Detection Flow Integration', () => {
     it('should complete full exercise session workflow', async () => {
-      // Mock service responses
-      (poseDetectionService.initialize as jest.Mock).mockResolvedValue(true);
-      (poseDetectionService.startDetection as jest.Mock).mockResolvedValue(true);
-      (poseDetectionService.processFrame as jest.Mock).mockReturnValue({
-        landmarks: mockLandmarks,
-        confidence: 0.9,
-      });
+      const { getByTestId, store } = renderWithProviders(<PoseDetectionScreen />);
 
-      const { getByTestId, getByText, store } = renderWithProviders(
-        <PoseDetectionScreen />
-      );
+      // The BlazePose detector is created natively (live-stream mode)
+      expect(usePoseDetection).toHaveBeenCalled();
 
-      // Wait for initialization
-      await waitFor(() => {
-        expect(poseDetectionService.initialize).toHaveBeenCalled();
-      });
+      // Camera permission is granted (mocked), so the start button appears
+      const startButton = await waitFor(() => getByTestId('pose-start-detection'));
 
-      // Grant camera permission (mocked)
-      const startButton = getByTestId('pose-start-detection');
-      expect(startButton).toBeTruthy();
+      // No frames are analysed until detection starts
+      expect(getByTestId('pose-camera-view').props.frameProcessor).toBeUndefined();
 
       // Start detection
       await act(async () => {
         fireEvent.press(startButton);
       });
 
-      // Verify detection started
+      // Verify detection started: BlazePose's frame processor is attached
       await waitFor(() => {
-        expect(poseDetectionService.startDetection).toHaveBeenCalled();
         expect(store.getState().pose.isDetecting).toBe(true);
+        expect(getByTestId('pose-camera-view').props.frameProcessor).toBeDefined();
       });
 
       // Verify UI updates
@@ -163,7 +163,7 @@ describe('Component Integration Tests', () => {
 
       // Verify confidence display
       const confidenceText = getByTestId('pose-confidence');
-      expect(confidenceText).toBeTruthy();
+      expect(confidenceText).toHaveTextContent('90%');
 
       // Stop detection
       const stopButton = getByTestId('pose-stop-detection');
@@ -181,74 +181,59 @@ describe('Component Integration Tests', () => {
       const store = createTestStore({
         pose: {
           isDetecting: true,
-          landmarks: mockLandmarks,
           confidence: 0.9,
         },
       });
 
-      const { getByTestId, getByText } = renderWithProviders(<ExerciseControls />, {
+      const { getByTestId } = renderWithProviders(<ExerciseControls />, {
         store,
       });
 
-      // Select bicep curl exercise
+      // Selecting bicep curl starts the exercise immediately
       const bicepCurlButton = getByTestId('exercise-bicep-curl');
       fireEvent.press(bicepCurlButton);
 
-      // Start exercise
-      const startExerciseButton = getByTestId('exercise-start');
-      fireEvent.press(startExerciseButton);
-
-      // Verify exercise started
+      // Verify exercise started in both the store and the validation service
       await waitFor(() => {
         expect(exerciseValidationService.startExercise).toHaveBeenCalledWith(
-          'bicep_curl',
-          expect.any(Object)
+          expect.objectContaining({ id: 'bicep-curl', name: 'Bicep Curl' })
         );
+        expect(store.getState().exercise.isExercising).toBe(true);
       });
 
       // Simulate exercise validation
       act(() => {
         store.dispatch(
           updateExerciseProgress({
-            exerciseId: 'bicep_curl',
-            repetitions: 5,
-            quality: 0.85,
+            reps: 5,
+            formScore: 0.85,
           })
         );
       });
 
       // Verify UI updates
-      const repCounter = getByTestId('exercise-rep-counter');
-      expect(repCounter).toBeTruthy();
-
-      const formQuality = getByTestId('exercise-form-quality');
-      expect(formQuality).toBeTruthy();
+      expect(getByTestId('exercise-rep-counter')).toHaveTextContent('5');
+      expect(getByTestId('exercise-form-quality')).toHaveTextContent('Excellent');
     });
 
     it('should provide real-time feedback during exercise', async () => {
-      // Mock audio feedback
-      (audioFeedbackService.speak as jest.Mock).mockImplementation(() => {});
-
       const store = createTestStore({
         pose: {
           isDetecting: true,
-          landmarks: mockLandmarks,
           confidence: 0.9,
         },
         exercise: {
-          currentExercise: 'bicep_curl',
-          isActive: true,
+          currentExercise: EXERCISES.bicepCurl,
+          isExercising: true,
         },
       });
 
       // Mock validation results
-      (exerciseValidationService.validateExercise as jest.Mock).mockReturnValue({
+      (exerciseValidationService.validatePose as jest.Mock).mockReturnValue({
         isValid: false,
         phase: 'flexion',
-        formScore: 0.6,
         errors: ['elbow_flare'],
-        feedbackMessage: 'Keep your elbow closer to your body',
-        repetitions: 3,
+        feedback: ['Keep your elbow closer to your body'],
       });
 
       const { getByTestId } = renderWithProviders(<PoseDetectionScreen />, { store });
@@ -273,7 +258,7 @@ describe('Component Integration Tests', () => {
 
       // Verify feedback text display
       const feedbackText = getByTestId('exercise-feedback');
-      expect(feedbackText).toBeTruthy();
+      expect(feedbackText).toHaveTextContent('Keep your elbow closer to your body');
     });
   });
 
@@ -299,11 +284,7 @@ describe('Component Integration Tests', () => {
         enableSound: !initialSoundState,
       });
 
-      // Save settings
-      const saveButton = getByTestId('settings-save');
-      fireEvent.press(saveButton);
-
-      // Verify settings persisted
+      // Changes save straight away (no Save button); a "Saved" toast confirms it
       await waitFor(() => {
         expect(getByTestId('toast-message')).toBeTruthy();
       });
@@ -314,15 +295,14 @@ describe('Component Integration Tests', () => {
 
       const { getByTestId } = renderWithProviders(<SettingsScreen />, { store });
 
-      // Adjust frame skip setting
+      // Frame skip lives in the collapsed "Advanced" section
+      fireEvent.press(getByTestId('settings-advanced-toggle'));
       const frameSkipSlider = getByTestId('settings-frame-skip');
       fireEvent(frameSkipSlider, 'onSlidingComplete', 5);
 
-      // Verify pose detection service updated
+      // Redux settings update immediately; useBlazePose reads settings.frameSkip
       await waitFor(() => {
-        expect(poseDetectionService.updateConfig).toHaveBeenCalledWith({
-          frameSkip: 5,
-        });
+        expect(store.getState().settings.frameSkip).toBe(5);
       });
     });
   });
@@ -330,35 +310,44 @@ describe('Component Integration Tests', () => {
   describe('Error Handling Integration', () => {
     it('should handle camera permission denial gracefully', async () => {
       // Mock permission denial
-      (Camera.requestCameraPermission as jest.Mock).mockResolvedValue('denied');
+      (Camera.requestCameraPermission as jest.Mock).mockResolvedValueOnce('denied');
 
-      const { getByTestId, getByText } = renderWithProviders(<PoseDetectionScreen />);
-
-      // Try to start detection
-      const startButton = getByTestId('pose-start-detection');
-      fireEvent.press(startButton);
+      const { getByTestId, queryByTestId } = renderWithProviders(<PoseDetectionScreen />);
 
       // Verify alert shown
       await waitFor(() => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'Camera Permission Required',
           expect.any(String),
-          expect.any(Array)
+          expect.any(Array),
+          expect.anything()
         );
       });
+
+      // Detection cannot be started; the permission prompt is shown instead
+      expect(getByTestId('camera-permission-dialog')).toBeTruthy();
+      expect(getByTestId('camera-permission-grant')).toBeTruthy();
+      expect(queryByTestId('pose-start-detection')).toBeNull();
+      expect(queryByTestId('pose-camera-view')).toBeNull();
     });
 
     it('should recover from pose detection failure', async () => {
-      // Mock detection failure
-      (poseDetectionService.startDetection as jest.Mock).mockRejectedValue(
-        new Error('Model loading failed')
-      );
+      const { getByTestId, store } = renderWithProviders(<PoseDetectionScreen />);
 
-      const { getByTestId, getByText } = renderWithProviders(<PoseDetectionScreen />);
+      // Start detection
+      const startButton = await waitFor(() => getByTestId('pose-start-detection'));
+      await act(async () => {
+        fireEvent.press(startButton);
+      });
+      await waitFor(() => {
+        expect(store.getState().pose.isDetecting).toBe(true);
+      });
 
-      // Try to start detection
-      const startButton = getByTestId('pose-start-detection');
-      fireEvent.press(startButton);
+      // The native detector reports a failure (e.g. model loading failed)
+      const { onError } = (usePoseDetection as jest.Mock).mock.calls.at(-1)[0];
+      await act(async () => {
+        onError({ code: 1, message: 'Model loading failed' });
+      });
 
       // Verify error handling
       await waitFor(() => {
@@ -371,6 +360,15 @@ describe('Component Integration Tests', () => {
 
       // Verify UI returned to initial state
       expect(getByTestId('pose-start-detection')).toBeTruthy();
+      expect(store.getState().pose.isDetecting).toBe(false);
+
+      // The user can try again
+      await act(async () => {
+        fireEvent.press(getByTestId('pose-start-detection'));
+      });
+      await waitFor(() => {
+        expect(store.getState().pose.isDetecting).toBe(true);
+      });
     });
   });
 
@@ -379,8 +377,24 @@ describe('Component Integration Tests', () => {
       const store = createTestStore({
         exercise: {
           history: [
-            { date: '2025-01-28', exerciseId: 'bicep_curl', reps: 30 },
-            { date: '2025-01-27', exerciseId: 'squat', reps: 20 },
+            {
+              id: 'session-1',
+              date: '2025-01-28',
+              exerciseId: 'bicep-curl',
+              exerciseName: 'Bicep Curl',
+              reps: 30,
+              duration: 600,
+              formScore: 0.85,
+            },
+            {
+              id: 'session-2',
+              date: '2025-01-27',
+              exerciseId: 'squat',
+              exerciseName: 'Squat',
+              reps: 20,
+              duration: 480,
+              formScore: 0.8,
+            },
           ],
         },
       });
@@ -451,12 +465,13 @@ describe('Component Integration Tests', () => {
 });
 
 // Mock data
-const mockLandmarks = Array(33)
+const mockLandmarks: PoseLandmark[] = Array(33)
   .fill(null)
   .map((_, i) => ({
     x: Math.random(),
     y: Math.random(),
     z: 0,
     visibility: 0.9,
+    index: i,
     name: `landmark_${i}`,
   }));

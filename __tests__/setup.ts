@@ -10,7 +10,6 @@ jest.mock('react-native/Libraries/Settings/Settings', () => ({
 
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const Reanimated = require('react-native-reanimated/mock');
   Reanimated.default.call = () => {};
   return Reanimated;
@@ -19,14 +18,38 @@ jest.mock('react-native-reanimated', () => {
 // Mock react-native-vision-camera
 jest.mock('react-native-vision-camera', () => ({
   Camera: {
-    requestCameraPermission: jest.fn(() => Promise.resolve('authorized')),
+    requestCameraPermission: jest.fn(() => Promise.resolve('granted')),
     getCameraDevice: jest.fn(),
   },
-  useCameraDevices: jest.fn(() => ({
-    back: { id: 'back', position: 'back' },
-    front: { id: 'front', position: 'front' },
-  })),
+  useCameraDevices: jest.fn(() => [
+    { id: 'back', position: 'back' },
+    { id: 'front', position: 'front' },
+  ]),
+  useCameraDevice: jest.fn((position: string) => ({ id: position, position })),
   useFrameProcessor: jest.fn(),
+}));
+
+// Mock react-native-worklets-core (VisionCamera frame processor runtime)
+jest.mock('react-native-worklets-core', () => ({
+  Worklets: {
+    createRunOnJS: (fn: (...args: unknown[]) => unknown) => fn,
+    createRunOnJSFunction: (fn: (...args: unknown[]) => unknown) => fn,
+  },
+  useSharedValue: (value: unknown) => ({ value }),
+}));
+
+// Mock react-native-mediapipe (native BlazePose detector + frame processor plugin)
+jest.mock('react-native-mediapipe', () => ({
+  usePoseDetection: jest.fn(() => ({
+    frameProcessor: jest.fn(),
+    cameraViewLayoutChangeHandler: jest.fn(),
+    cameraDeviceChangeHandler: jest.fn(),
+    cameraOrientationChangedHandler: jest.fn(),
+    resizeModeChangeHandler: jest.fn(),
+    cameraViewDimensions: { width: 1, height: 1 },
+  })),
+  RunningMode: { IMAGE: 0, VIDEO: 1, LIVE_STREAM: 2 },
+  Delegate: { CPU: 0, GPU: 1 },
 }));
 
 // Mock TensorFlow.js - using __mocks__/@tensorflow/tfjs.js
@@ -42,7 +65,16 @@ jest.mock('@mediapipe/camera_utils', () => ({
 }));
 
 // Mock React Native TTS
+// WebView (exercise videos) is native-only
+jest.mock('react-native-webview', () => {
+  const { View } = require('react-native');
+  const WebView = (props: Record<string, unknown>) =>
+    require('react').createElement(View, { ...props, testID: 'webview' });
+  return { __esModule: true, WebView, default: WebView };
+});
+
 jest.mock('react-native-tts', () => ({
+  __esModule: true,
   default: {
     speak: jest.fn(() => Promise.resolve()),
     stop: jest.fn(() => Promise.resolve()),
@@ -108,7 +140,6 @@ global.cancelAnimationFrame = (id: number) => {
 
 // Mock ImageData for Node environment (needed for video frame processing tests)
 if (typeof ImageData === 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (global as any).ImageData = class ImageData {
     data: Uint8ClampedArray;
     width: number;

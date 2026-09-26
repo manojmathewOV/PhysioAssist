@@ -3,7 +3,7 @@
  *
  * Provides system health checks and troubleshooting for:
  * - Camera permissions and availability
- * - Pose detection initialization
+ * - Pose detection (MediaPipe BlazePose) availability and recent inference
  * - Network connectivity
  * - Device capabilities
  * - Performance metrics
@@ -12,19 +12,22 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Platform,
-  Alert,
-} from 'react-native';
-import { Camera, useCameraDevices } from 'react-native-vision-camera';
+import { View, StyleSheet, Platform, Alert, NativeModules } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { useSelector } from 'react-redux';
 import { RootState } from '@store/index';
-import { poseDetectionService } from '@services/poseDetectionService';
+import { BLAZEPOSE_MODEL_FILE } from '@services/pose/mediapipeLandmarks';
+import {
+  AppText,
+  Banner,
+  BigButton,
+  Card,
+  ListRow,
+  Screen,
+  SectionTitle,
+} from '@components/ui';
+import { colors, radii, spacing } from '../theme';
 
 interface DiagnosticCheck {
   name: string;
@@ -36,9 +39,11 @@ interface DiagnosticCheck {
 const DiagnosticsScreen: React.FC = () => {
   const [checks, setChecks] = useState<DiagnosticCheck[]>([]);
   const [isRunning, setIsRunning] = useState(false);
-  const devices = useCameraDevices();
+  const frontDevice = useCameraDevice('front');
+  const backDevice = useCameraDevice('back');
   const settings = useSelector((state: RootState) => state.settings);
   const user = useSelector((state: RootState) => state.user);
+  const pose = useSelector((state: RootState) => state.pose);
 
   const runDiagnostics = async () => {
     setIsRunning(true);
@@ -46,12 +51,13 @@ const DiagnosticsScreen: React.FC = () => {
 
     // 1. Check Camera Permission
     try {
-      const permission = await Camera.getCameraPermissionStatus();
+      // VisionCamera v4: synchronous, returns 'granted' | 'not-determined' | 'denied' | 'restricted'
+      const permission = Camera.getCameraPermissionStatus();
       results.push({
         name: 'Camera Permission',
-        status: permission === 'authorized' ? 'success' : 'error',
+        status: permission === 'granted' ? 'success' : 'error',
         message:
-          permission === 'authorized'
+          permission === 'granted'
             ? 'Camera permission granted'
             : `Camera permission ${permission}`,
         details: `Status: ${permission}`,
@@ -66,13 +72,13 @@ const DiagnosticsScreen: React.FC = () => {
     }
 
     // 2. Check Camera Device Availability
-    if (devices.front || devices.back) {
+    if (frontDevice || backDevice) {
       results.push({
         name: 'Camera Device',
         status: 'success',
         message: 'Camera device available',
-        details: `Front: ${devices.front ? 'Yes' : 'No'}, Back: ${
-          devices.back ? 'Yes' : 'No'
+        details: `Front: ${frontDevice ? 'Yes' : 'No'}, Back: ${
+          backDevice ? 'Yes' : 'No'
         }`,
       });
     } else {
@@ -84,25 +90,43 @@ const DiagnosticsScreen: React.FC = () => {
       });
     }
 
-    // 3. Check Pose Detection Service
-    try {
-      const isPoseReady = poseDetectionService.isReady();
+    // 3. Check Pose Detection (MediaPipe BlazePose via react-native-mediapipe).
+    // The detector itself is created by each camera screen (useBlazePose), so
+    // here we check the native module is linked and report the latest poses.
+    const detectorLinked = Platform.OS === 'web' || Boolean(NativeModules.PoseDetection);
+    results.push({
+      name: 'Pose Detection',
+      status: detectorLinked ? 'success' : 'error',
+      message: detectorLinked
+        ? 'BlazePose detector available'
+        : 'BlazePose native module not linked',
+      details: `Model: MediaPipe BlazePose (${BLAZEPOSE_MODEL_FILE}), 33 landmarks`,
+    });
+
+    // 3b. Recent detector output (from the last pose a camera screen produced)
+    const lastPose = pose.currentPose;
+    if (lastPose) {
+      const inferenceMs = lastPose.inferenceTime;
+      const ageSeconds = Math.max(0, (Date.now() - pose.timestamp) / 1000);
       results.push({
-        name: 'Pose Detection',
-        status: isPoseReady ? 'success' : 'warning',
-        message: isPoseReady
-          ? 'Pose detection initialized'
-          : 'Pose detection not initialized',
-        details: isPoseReady
-          ? 'Service ready for frame processing'
-          : 'Will initialize on first use',
+        name: 'Pose Inference',
+        status: inferenceMs === undefined || inferenceMs <= 100 ? 'success' : 'warning',
+        message:
+          inferenceMs !== undefined
+            ? `Last inference ${inferenceMs.toFixed(0)} ms`
+            : 'Pose received (no inference timing)',
+        details: `Schema: ${lastPose.schemaId ?? 'unknown'}, Landmarks: ${
+          lastPose.landmarks.length
+        }, Confidence: ${(lastPose.confidence * 100).toFixed(0)}%, ${ageSeconds.toFixed(
+          0
+        )}s ago`,
       });
-    } catch (error) {
+    } else {
       results.push({
-        name: 'Pose Detection',
-        status: 'error',
-        message: 'Failed to check pose detection service',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        name: 'Pose Inference',
+        status: 'pending',
+        message: 'No poses detected yet',
+        details: 'Start pose detection on a camera screen to measure inference time',
       });
     }
 
@@ -111,9 +135,7 @@ const DiagnosticsScreen: React.FC = () => {
       name: 'Platform',
       status: 'success',
       message: `Running on ${Platform.OS}`,
-      details: `Version: ${Platform.Version}, Select: ${
-        Platform.select ? 'Available' : 'N/A'
-      }`,
+      details: `Version: ${Platform.Version}`,
     });
 
     // 5. Check User Authentication State
@@ -199,36 +221,6 @@ const DiagnosticsScreen: React.FC = () => {
     runDiagnostics();
   }, []);
 
-  const getStatusColor = (status: DiagnosticCheck['status']) => {
-    switch (status) {
-      case 'success':
-        return '#4CAF50';
-      case 'warning':
-        return '#FF9800';
-      case 'error':
-        return '#F44336';
-      case 'pending':
-        return '#9E9E9E';
-      default:
-        return '#9E9E9E';
-    }
-  };
-
-  const getStatusIcon = (status: DiagnosticCheck['status']) => {
-    switch (status) {
-      case 'success':
-        return '✓';
-      case 'warning':
-        return '⚠';
-      case 'error':
-        return '✗';
-      case 'pending':
-        return '○';
-      default:
-        return '?';
-    }
-  };
-
   const exportDiagnostics = () => {
     const report = {
       timestamp: new Date().toISOString(),
@@ -265,171 +257,121 @@ const DiagnosticsScreen: React.FC = () => {
     ]);
   };
 
+  const problems = checks.filter((c) => c.status === 'error').length;
+  const warnings = checks.filter((c) => c.status === 'warning').length;
+  const summary =
+    checks.length === 0
+      ? null
+      : problems > 0
+        ? {
+            tone: 'danger' as const,
+            message: `${problems} ${problems === 1 ? 'problem' : 'problems'} found`,
+          }
+        : warnings > 0
+          ? {
+              tone: 'warning' as const,
+              message: `${warnings} ${warnings === 1 ? 'item needs' : 'items need'} attention`,
+            }
+          : { tone: 'success' as const, message: 'Everything is working' };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>System Diagnostics</Text>
-        <Text style={styles.subtitle}>
-          Health checks for camera, pose detection, and settings
-        </Text>
-      </View>
+    <Screen
+      title="System diagnostics"
+      subtitle="Health checks for camera, pose detection and settings."
+      testID="diagnostics-screen"
+      footer={
+        <>
+          <BigButton
+            label={isRunning ? 'Running…' : 'Run checks again'}
+            icon="refresh"
+            onPress={runDiagnostics}
+            loading={isRunning}
+            accessibilityHint="Refresh diagnostics"
+          />
+          <BigButton
+            label="Export report"
+            icon="description"
+            variant="secondary"
+            onPress={exportDiagnostics}
+            accessibilityHint="Export diagnostics report"
+          />
+        </>
+      }
+    >
+      {summary ? <Banner tone={summary.tone} message={summary.message} /> : null}
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <SectionTitle>Checks</SectionTitle>
+      <Card style={styles.listCard}>
         {checks.map((check, index) => (
-          <View key={index} style={styles.checkCard}>
-            <View style={styles.checkHeader}>
-              <View
-                style={[
-                  styles.statusIndicator,
-                  { backgroundColor: getStatusColor(check.status) },
-                ]}
-              >
-                <Text style={styles.statusIcon}>{getStatusIcon(check.status)}</Text>
-              </View>
-              <View style={styles.checkInfo}>
-                <Text style={styles.checkName}>{check.name}</Text>
-                <Text style={styles.checkMessage}>{check.message}</Text>
-              </View>
-            </View>
-            {check.details && <Text style={styles.checkDetails}>{check.details}</Text>}
-          </View>
+          <ListRow
+            key={index}
+            title={check.name}
+            description={
+              check.details ? `${check.message}\n${check.details}` : check.message
+            }
+            right={<StatusChip status={check.status} />}
+            last={index === checks.length - 1}
+          />
         ))}
-      </ScrollView>
+      </Card>
+    </Screen>
+  );
+};
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.refreshButton}
-          onPress={runDiagnostics}
-          disabled={isRunning}
-          accessible={true}
-          accessibilityLabel="Refresh diagnostics"
-          accessibilityRole="button"
-        >
-          <Text style={styles.refreshButtonText}>
-            {isRunning ? 'Running...' : '🔄 Refresh Diagnostics'}
-          </Text>
-        </TouchableOpacity>
+const STATUS_STYLE: Record<
+  DiagnosticCheck['status'],
+  { label: string; icon: string; bg: string; fg: string }
+> = {
+  success: {
+    label: 'OK',
+    icon: 'check-circle',
+    bg: colors.successSoft,
+    fg: colors.success,
+  },
+  warning: {
+    label: 'Check',
+    icon: 'warning-amber',
+    bg: colors.warningSoft,
+    fg: colors.warning,
+  },
+  error: {
+    label: 'Problem',
+    icon: 'error-outline',
+    bg: colors.dangerSoft,
+    fg: colors.danger,
+  },
+  pending: {
+    label: 'Waiting',
+    icon: 'hourglass-empty',
+    bg: colors.surfaceMuted,
+    fg: colors.textSecondary,
+  },
+};
 
-        <TouchableOpacity
-          style={styles.exportButton}
-          onPress={exportDiagnostics}
-          accessible={true}
-          accessibilityLabel="Export diagnostics report"
-          accessibilityRole="button"
-        >
-          <Text style={styles.exportButtonText}>📋 Export Report</Text>
-        </TouchableOpacity>
-      </View>
+/** Status shown as icon + word + colour (never colour alone). */
+const StatusChip: React.FC<{ status: DiagnosticCheck['status'] }> = ({ status }) => {
+  const st = STATUS_STYLE[status] ?? STATUS_STYLE.pending;
+  return (
+    <View style={[styles.chip, { backgroundColor: st.bg }]}>
+      <Icon name={st.icon} size={20} color={st.fg} />
+      <AppText variant="label" color={st.fg}>
+        {st.label}
+      </AppText>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
+  listCard: {
+    paddingVertical: spacing.sm,
   },
-  header: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
-  },
-  checkCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  checkHeader: {
+  chip: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  statusIndicator: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  statusIcon: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  checkInfo: {
-    flex: 1,
-  },
-  checkName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 2,
-  },
-  checkMessage: {
-    fontSize: 14,
-    color: '#666',
-  },
-  checkDetails: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 8,
-    marginLeft: 48,
-    fontStyle: 'italic',
-  },
-  footer: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    flexDirection: 'row',
-    gap: 12,
-  },
-  refreshButton: {
-    flex: 1,
-    backgroundColor: '#4CAF50',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  refreshButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  exportButton: {
-    flex: 1,
-    backgroundColor: '#2196F3',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  exportButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.pill,
   },
 });
 

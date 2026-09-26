@@ -1,11 +1,13 @@
 # YouTube Video Comparison Feature Implementation
 
 ## 📹 Feature Overview
+
 The YouTube Video Comparison feature allows patients to compare their exercise form with professional demonstration videos by pasting a YouTube link. The app extracts pose data from both sources and provides real-time, side-by-side comparison with detailed feedback.
 
 ## 🏗️ Architecture
 
 ### Components Structure
+
 ```
 src/features/videoComparison/
 ├── components/
@@ -34,6 +36,7 @@ src/features/videoComparison/
 ## 📱 Implementation Details
 
 ### 1. YouTube Video Service
+
 ```typescript
 // src/features/videoComparison/services/youtubeService.ts
 import { ytdl } from 'react-native-ytdl';
@@ -75,7 +78,7 @@ export class YouTubeService {
         title: info.videoDetails.title,
         duration: parseInt(info.videoDetails.lengthSeconds),
         thumbnail: info.videoDetails.thumbnails[0].url,
-        author: info.videoDetails.author.name
+        author: info.videoDetails.author.name,
       };
 
       this.cache.set(url, videoInfo);
@@ -85,17 +88,20 @@ export class YouTubeService {
     }
   }
 
-  async downloadVideo(url: string, quality: 'low' | 'medium' | 'high' = 'medium'): Promise<string> {
+  async downloadVideo(
+    url: string,
+    quality: 'low' | 'medium' | 'high' = 'medium'
+  ): Promise<string> {
     const qualityMap = {
       low: '360p',
       medium: '720p',
-      high: '1080p'
+      high: '1080p',
     };
 
     try {
       const videoPath = `${RNFS.CachesDirectoryPath}/youtube_${Date.now()}.mp4`;
       const stream = ytdl(url, { quality: qualityMap[quality] });
-      
+
       await RNFS.writeFile(videoPath, stream, 'base64');
       return videoPath;
     } catch (error) {
@@ -106,27 +112,25 @@ export class YouTubeService {
 ```
 
 ### 2. Video Processing Service
+
 ```typescript
 // src/features/videoComparison/services/videoProcessingService.ts
 import { FFmpegKit, FFmpegKitConfig } from 'react-native-ffmpeg';
 
 export class VideoProcessingService {
-  static async extractFrames(
-    videoPath: string, 
-    fps: number = 30
-  ): Promise<string[]> {
+  static async extractFrames(videoPath: string, fps: number = 30): Promise<string[]> {
     const outputDir = `${RNFS.CachesDirectoryPath}/frames_${Date.now()}`;
     await RNFS.mkdir(outputDir);
 
     const command = `-i ${videoPath} -vf fps=${fps} ${outputDir}/frame_%04d.jpg`;
-    
+
     await FFmpegKit.execute(command);
-    
+
     const frames = await RNFS.readDir(outputDir);
     return frames
-      .filter(file => file.name.endsWith('.jpg'))
+      .filter((file) => file.name.endsWith('.jpg'))
       .sort((a, b) => a.name.localeCompare(b.name))
-      .map(file => file.path);
+      .map((file) => file.path);
   }
 
   static async synchronizeVideos(
@@ -163,6 +167,7 @@ export class VideoProcessingService {
 ```
 
 ### 3. Pose Extraction Service
+
 ```typescript
 // src/features/videoComparison/services/poseExtractionService.ts
 import { BlazePose } from '@mediapipe/pose';
@@ -180,14 +185,14 @@ export class PoseExtractionService {
     this.blazePose = new BlazePose({
       locateFile: (file) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-      }
+      },
     });
 
     this.blazePose.setOptions({
       modelComplexity: 1,
       smoothLandmarks: true,
       minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5
+      minTrackingConfidence: 0.5,
     });
   }
 
@@ -202,7 +207,7 @@ export class PoseExtractionService {
         poses.push({
           timestamp: i / 30, // Assuming 30 fps
           landmarks: results.poseLandmarks,
-          visibility: results.poseLandmarks.map(l => l.visibility || 0)
+          visibility: results.poseLandmarks.map((l) => l.visibility || 0),
         });
       }
     }
@@ -222,6 +227,7 @@ export class PoseExtractionService {
 ```
 
 ### 4. Comparison Analysis Service
+
 ```typescript
 // src/features/videoComparison/services/comparisonAnalysisService.ts
 export interface ComparisonResult {
@@ -248,13 +254,16 @@ export class ComparisonAnalysisService {
     const angleDeviations = this.compareAngles(referencePoses, userPoses);
     const temporalAlignment = this.analyzeTempo(referencePoses, userPoses);
     const overallScore = this.calculateOverallScore(angleDeviations, temporalAlignment);
-    const recommendations = this.generateRecommendations(angleDeviations, temporalAlignment);
+    const recommendations = this.generateRecommendations(
+      angleDeviations,
+      temporalAlignment
+    );
 
     return {
       overallScore,
       angleDeviations,
       temporalAlignment,
-      recommendations
+      recommendations,
     };
   }
 
@@ -265,7 +274,7 @@ export class ComparisonAnalysisService {
     const criticalJoints = ['elbow', 'shoulder', 'knee', 'hip'];
     const deviations: AngleDeviation[] = [];
 
-    criticalJoints.forEach(joint => {
+    criticalJoints.forEach((joint) => {
       const refAngle = this.calculateAverageAngle(reference, joint);
       const userAngle = this.calculateAverageAngle(user, joint);
       const deviation = Math.abs(refAngle - userAngle);
@@ -275,7 +284,7 @@ export class ComparisonAnalysisService {
         referenceAngle: refAngle,
         userAngle: userAngle,
         deviation,
-        severity: this.getSeverity(deviation)
+        severity: this.getSeverity(deviation),
       });
     });
 
@@ -295,13 +304,13 @@ export class ComparisonAnalysisService {
     const recommendations: Recommendation[] = [];
 
     // Angle-based recommendations
-    angleDeviations.forEach(deviation => {
+    angleDeviations.forEach((deviation) => {
       if (deviation.severity !== 'good') {
         recommendations.push({
           type: 'angle',
           priority: deviation.severity === 'critical' ? 'high' : 'medium',
           message: `Adjust your ${deviation.joint} angle by ${deviation.deviation.toFixed(0)}°`,
-          detail: this.getAngleCorrection(deviation)
+          detail: this.getAngleCorrection(deviation),
         });
       }
     });
@@ -312,7 +321,7 @@ export class ComparisonAnalysisService {
         type: 'tempo',
         priority: 'medium',
         message: 'Slow down your movement',
-        detail: `You're moving ${((temporalAlignment.speedRatio - 1) * 100).toFixed(0)}% faster than the reference`
+        detail: `You're moving ${((temporalAlignment.speedRatio - 1) * 100).toFixed(0)}% faster than the reference`,
       });
     }
 
@@ -322,6 +331,7 @@ export class ComparisonAnalysisService {
 ```
 
 ### 5. React Component Implementation
+
 ```typescript
 // src/features/videoComparison/components/VideoComparisonScreen.tsx
 import React, { useState, useEffect } from 'react';
@@ -385,13 +395,13 @@ export const VideoComparisonScreen: React.FC = () => {
             userCamera={comparison.userCamera}
             poseOverlay={comparison.poseData}
           />
-          
+
           <ComparisonControls
             onPlay={() => comparison.play()}
             onPause={() => comparison.pause()}
             onSync={syncVideos}
           />
-          
+
           <ComparisonFeedback
             analysis={comparison.analysis}
             recommendations={comparison.recommendations}
@@ -404,6 +414,7 @@ export const VideoComparisonScreen: React.FC = () => {
 ```
 
 ### 6. Side-by-Side View Component
+
 ```typescript
 // src/features/videoComparison/components/SideBySideView.tsx
 import React from 'react';
@@ -470,12 +481,14 @@ export const SideBySideView: React.FC<Props> = ({
 ## 🔧 Technical Considerations
 
 ### 1. Performance Optimization
+
 - **Frame Rate**: Process every 3rd frame (10fps) for pose detection to reduce CPU load
 - **Caching**: Cache extracted poses from YouTube videos for repeated use
 - **Threading**: Run pose extraction on separate thread using Worklets
 - **Memory**: Limit video cache to 100MB, use LRU eviction
 
 ### 2. Network Handling
+
 ```typescript
 const networkConfig = {
   timeout: 30000, // 30 seconds
@@ -483,23 +496,25 @@ const networkConfig = {
   quality: {
     wifi: 'high',
     cellular: 'medium',
-    offline: 'cached_only'
-  }
+    offline: 'cached_only',
+  },
 };
 ```
 
 ### 3. Error Handling
+
 ```typescript
 enum VideoComparisonError {
   INVALID_URL = 'Invalid YouTube URL',
   NETWORK_ERROR = 'Network connection failed',
   VIDEO_TOO_LONG = 'Video exceeds 10 minute limit',
   PROCESSING_FAILED = 'Failed to process video',
-  INSUFFICIENT_STORAGE = 'Not enough storage space'
+  INSUFFICIENT_STORAGE = 'Not enough storage space',
 }
 ```
 
 ### 4. Privacy & Security
+
 - Don't store YouTube videos permanently
 - Clear cache after 24 hours
 - Ensure HTTPS for all video downloads
@@ -508,6 +523,7 @@ enum VideoComparisonError {
 ## 📊 Testing Strategy
 
 ### Unit Tests
+
 ```typescript
 describe('YouTubeService', () => {
   test('validates YouTube URLs correctly', () => {
@@ -525,11 +541,13 @@ describe('ComparisonAnalysis', () => {
 ```
 
 ### Integration Tests
+
 - Test full flow from URL input to feedback generation
 - Verify synchronization accuracy
 - Test error recovery mechanisms
 
 ### Performance Tests
+
 - Measure frame processing time
 - Monitor memory usage during video processing
 - Test on low-end devices

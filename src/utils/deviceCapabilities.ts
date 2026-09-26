@@ -89,6 +89,16 @@ const detectDeviceTier = (): 'high' | 'medium' | 'low' => {
 };
 
 /**
+ * Major OS version as a number.
+ * iOS reports Platform.Version as a string (e.g. "17.4.1", which Number() turns
+ * into NaN); Android reports the API level as a number.
+ */
+const getMajorOSVersion = (): number => {
+  const version = Platform.Version;
+  return typeof version === 'number' ? version : parseInt(version, 10) || 0;
+};
+
+/**
  * Detects GPU buffer support
  *
  * iOS: Supported on all devices with Metal (iPhone 5S+)
@@ -97,10 +107,10 @@ const detectDeviceTier = (): 'high' | 'medium' | 'low' => {
 const detectGpuBufferSupport = (): boolean => {
   if (Platform.OS === 'ios') {
     // iOS: Assume Metal support (iPhone 5S+ / iOS 8+)
-    return Platform.Version >= 8;
+    return getMajorOSVersion() >= 8;
   } else {
     // Android: GPU buffers supported on Android 8+ with Vulkan
-    return Platform.Version >= 26;
+    return getMajorOSVersion() >= 26;
   }
 };
 
@@ -110,10 +120,10 @@ const detectGpuBufferSupport = (): boolean => {
 const detectHardwareAcceleration = (): 'coreml' | 'nnapi' | 'gpu' | 'cpu' => {
   if (Platform.OS === 'ios') {
     // iOS: CoreML available on iOS 11+
-    return Platform.Version >= 11 ? 'coreml' : 'gpu';
+    return getMajorOSVersion() >= 11 ? 'coreml' : 'gpu';
   } else {
     // Android: NNAPI available on Android 8.1+
-    return Platform.Version >= 27 ? 'nnapi' : 'gpu';
+    return getMajorOSVersion() >= 27 ? 'nnapi' : 'gpu';
   }
 };
 
@@ -342,10 +352,8 @@ export const validateCameraConfig = (
   }
 
   // Check FPS support
-  const supportsFrameRate = device.formats.some((format) =>
-    format.frameRateRanges.some(
-      (range) => range.minFrameRate <= config.fps && config.fps <= range.maxFrameRate
-    )
+  const supportsFrameRate = device.formats.some(
+    (format) => format.minFps <= config.fps && config.fps <= format.maxFps
   );
 
   if (!supportsFrameRate) {

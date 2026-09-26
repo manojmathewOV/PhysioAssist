@@ -10,8 +10,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, StyleSheet, Pressable } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 // Import from centralized registry
@@ -21,6 +21,10 @@ import {
   MovementType,
   JOINT_METADATA,
 } from '@config/movements.config';
+import { AppText, Screen } from '../ui';
+import { colors, radii, shadows, spacing } from '../../theme';
+import StepHeader from './StepHeader';
+import { JOINT_ICONS, MOVEMENT_ICONS } from './clinicalIcons';
 
 interface MovementSelectionPanelV2Props {
   joint: JointType;
@@ -51,220 +55,118 @@ const MovementSelectionPanelV2: React.FC<MovementSelectionPanelV2Props> = ({
 
   // Generate voice prompt using simple display names
   const voiceOptions = movementDefs.map((m) => `"${m.displayName.simple}"`).join(', ');
+  const sideLabel = side.charAt(0).toUpperCase() + side.slice(1);
 
   return (
-    <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
-      {/* Progress dots */}
-      <View style={styles.progressDots}>
-        <Text style={[styles.dot, styles.dotActive]}>●</Text>
-        <Text style={[styles.dot, styles.dotActive]}>●</Text>
-        <Text style={styles.dot}>○</Text>
-        <Text style={styles.dot}>○</Text>
-      </View>
+    <Screen testID="movement-selection-v2">
+      <StepHeader
+        step={2}
+        totalSteps={4}
+        title="How do you want to move it?"
+        subtitle="Choose the movement to measure."
+        onBack={handleBack}
+      />
 
-      {/* Back button */}
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={handleBack}
-        accessibilityLabel="Go back"
-        accessibilityRole="button"
+      {/* Selected joint */}
+      <View
+        style={styles.jointBadge}
+        accessible
+        accessibilityLabel={`Measuring ${sideLabel} ${jointInfo.displayName}`}
       >
-        <Text style={styles.backButtonText}>←</Text>
-      </TouchableOpacity>
-
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.jointBadge}>
-          <Text style={styles.jointIcon}>{jointInfo.icon}</Text>
-          <Text style={styles.jointText}>
-            {side.charAt(0).toUpperCase() + side.slice(1)} {jointInfo.label}
-          </Text>
-        </View>
-        <Text style={styles.question}>How do you want to move it?</Text>
-        <Text style={styles.subtext}>Choose the movement to measure</Text>
+        <Icon name={JOINT_ICONS[joint]} size={24} color={colors.primary} />
+        <AppText variant="label" color={colors.primary}>
+          {sideLabel} {jointInfo.displayName.toLowerCase()}
+        </AppText>
       </View>
 
       {/* Movement cards */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.cardsContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {movementDefs.map((movementDef) => (
-          <TouchableOpacity
-            key={movementDef.id}
-            style={styles.card}
-            onPress={() => handleSelect(movementDef.type)}
-            activeOpacity={0.8}
-            accessibilityLabel={`${movementDef.displayName.simple}: ${movementDef.description.simple}. Target: ${movementDef.targetAngle} degrees`}
-            accessibilityRole="button"
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardIcon}>{movementDef.icon}</Text>
-              <Text style={styles.cardTitle}>{movementDef.displayName.simple}</Text>
-            </View>
-            <Text style={styles.cardDesc}>{movementDef.description.simple}</Text>
+      {movementDefs.map((movementDef) => (
+        <Pressable
+          key={movementDef.id}
+          style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+          onPress={() => handleSelect(movementDef.type)}
+          accessibilityLabel={`${movementDef.displayName.simple}: ${movementDef.description.simple}. Target: ${movementDef.targetAngle} degrees`}
+          accessibilityRole="button"
+        >
+          <View style={styles.cardIcon}>
+            <Icon
+              name={MOVEMENT_ICONS[movementDef.type] ?? 'open-with'}
+              size={32}
+              color={colors.primary}
+            />
+          </View>
+          <View style={styles.flex}>
+            <AppText variant="heading">{movementDef.displayName.simple}</AppText>
+            <AppText variant="body" color={colors.textSecondary}>
+              {movementDef.description.simple}
+            </AppText>
             <View style={styles.targetBadge}>
-              <Text style={styles.targetText}>Target: {movementDef.targetAngle}°</Text>
+              <Icon name="flag" size={18} color={colors.text} />
+              <AppText variant="label">Target {movementDef.targetAngle}°</AppText>
             </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+          </View>
+          <Icon name="chevron-right" size={32} color={colors.textMuted} />
+        </Pressable>
+      ))}
 
       {/* Voice prompt */}
-      <View style={styles.voicePrompt}>
-        <Text style={styles.micIcon}>🎤</Text>
-        <Text style={styles.voiceText}>Say {voiceOptions}</Text>
+      <View style={styles.hint}>
+        <Icon name="mic" size={24} color={colors.textSecondary} />
+        <AppText variant="caption" color={colors.textSecondary} style={styles.flex}>
+          You can also say {voiceOptions}
+        </AppText>
       </View>
-    </LinearGradient>
+    </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  progressDots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    paddingTop: 20,
-    paddingBottom: 10,
-    gap: 12,
-  },
-  dot: {
-    fontSize: 24,
-    color: '#fff',
-    opacity: 0.3,
-  },
-  dotActive: {
-    opacity: 1,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  backButtonText: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  header: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-  },
+  flex: { flex: 1 },
   jointBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 50,
-    marginBottom: 24,
-  },
-  jointIcon: {
-    fontSize: 24,
-  },
-  jointText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#fff',
-    textTransform: 'capitalize',
-  },
-  question: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 12,
-    lineHeight: 42,
-  },
-  subtext: {
-    fontSize: 18,
-    color: '#fff',
-    opacity: 0.9,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  cardsContainer: {
-    padding: 20,
-    gap: 20,
+    alignSelf: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: colors.primarySoft,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 24,
-    padding: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 20,
-    marginBottom: 16,
+    gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    minHeight: 96,
+    ...shadows.card,
   },
+  cardPressed: { backgroundColor: colors.primarySoft },
   cardIcon: {
-    fontSize: 48,
-  },
-  cardTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#2d3748',
-    flex: 1,
-  },
-  cardDesc: {
-    fontSize: 18,
-    color: '#4a5568',
-    marginBottom: 16,
-    lineHeight: 26,
-  },
-  targetBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  targetText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#667eea',
-  },
-  voicePrompt: {
-    flexDirection: 'row',
+    width: 56,
+    height: 56,
+    borderRadius: radii.md,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 50,
-    marginHorizontal: 20,
-    marginBottom: 20,
-    gap: 12,
   },
-  micIcon: {
-    fontSize: 24,
+  targetBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
   },
-  voiceText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
-    flexShrink: 1,
+  hint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
   },
 });
 

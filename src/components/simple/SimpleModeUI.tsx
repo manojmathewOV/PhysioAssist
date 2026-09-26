@@ -12,18 +12,14 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-  Dimensions,
-} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, StyleSheet, Pressable, Animated } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { AppText, BigButton } from '../ui';
+import { CameraPanel } from '../ui/CameraPanel';
+import { colors, radii, spacing, touch } from '../../theme';
 
 interface SimpleModeUIProps {
   isDetecting: boolean;
@@ -124,7 +120,7 @@ const SimpleModeUI: React.FC<SimpleModeUIProps> = ({
     }
   };
 
-  // Get simple tracking quality indicator
+  // Get simple tracking quality indicator (icon + words, never colour alone)
   const getTrackingQualityIndicator = (): {
     icon: string;
     color: string;
@@ -132,128 +128,134 @@ const SimpleModeUI: React.FC<SimpleModeUIProps> = ({
   } => {
     switch (trackingQuality) {
       case 'excellent':
-        return { icon: '✅', color: '#4CAF50', text: 'Tracking great' };
+        return { icon: 'check-circle', color: colors.skeleton, text: 'Tracking great' };
       case 'good':
-        return { icon: '⚠️', color: '#FFC107', text: 'Tracking okay' };
+        return { icon: 'info-outline', color: colors.accent, text: 'Tracking okay' };
       case 'poor':
-        return { icon: '❌', color: '#F44336', text: "Can't see you well" };
+        return {
+          icon: 'error-outline',
+          color: colors.accent,
+          text: "Can't see you well",
+        };
     }
   };
 
   const trackingIndicator = getTrackingQualityIndicator();
+  const canStart = currentStatus !== 'initializing' && currentStatus !== 'error';
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      {/* Top Status Bar */}
-      <View style={styles.statusBar}>
-        {isDetecting && (
-          <View
-            style={[styles.statusIndicator, { backgroundColor: trackingIndicator.color }]}
-            accessible={true}
-            accessibilityLabel={`Tracking status: ${trackingIndicator.text}`}
-            accessibilityRole="text"
-          >
-            <Text style={styles.statusIcon}>{trackingIndicator.icon}</Text>
-            <Text style={styles.statusText}>{trackingIndicator.text}</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Main Content Area */}
-      <View style={styles.mainContent}>
-        {/* Current Instruction - Large and Clear */}
-        <View
-          style={styles.instructionContainer}
-          accessible={true}
-          accessibilityLabel={`Exercise instruction: ${getCurrentInstruction()}`}
-          accessibilityRole="text"
-          accessibilityLiveRegion="polite"
-        >
-          <Text style={styles.instructionText}>{getCurrentInstruction()}</Text>
+      <SafeAreaView style={styles.flex} edges={['top', 'bottom']}>
+        {/* Top Status Bar */}
+        <View style={styles.statusBar}>
+          {isDetecting && (
+            <View
+              style={styles.statusIndicator}
+              accessible={true}
+              accessibilityLabel={`Tracking status: ${trackingIndicator.text}`}
+              accessibilityRole="text"
+            >
+              <Icon
+                name={trackingIndicator.icon}
+                size={24}
+                color={trackingIndicator.color}
+              />
+              <AppText variant="bodyStrong" color={colors.textInverse}>
+                {trackingIndicator.text}
+              </AppText>
+            </View>
+          )}
         </View>
 
-        {/* Simple Visual Feedback */}
-        {isDetecting && (
-          <View style={styles.feedbackContainer}>
-            <SimpleFeedback currentAngle={currentAngle} targetAngle={targetAngle} />
-          </View>
-        )}
-
-        {/* Big Action Button */}
-        <Animated.View
-          style={[styles.buttonContainer, { transform: [{ scale: pulseAnim }] }]}
-        >
-          <TouchableOpacity
-            style={styles.bigButton}
-            onPress={handleMainAction}
-            activeOpacity={0.8}
-            disabled={currentStatus === 'initializing' || currentStatus === 'error'}
-            accessibilityLabel={isDetecting ? 'Stop exercise' : 'Start exercise'}
-            accessibilityHint={
-              isDetecting
-                ? 'Tap to stop tracking your movement'
-                : 'Tap to begin exercise tracking'
-            }
-            accessibilityRole="button"
-            accessible={true}
-          >
-            <LinearGradient
-              colors={isDetecting ? ['#F44336', '#d32f2f'] : ['#4CAF50', '#45a049']}
-              style={styles.bigButtonGradient}
+        {/* Main Content Area */}
+        <View style={styles.mainContent}>
+          {/* Current Instruction - Large and Clear */}
+          <CameraPanel style={styles.instructionContainer}>
+            <View
+              accessible={true}
+              accessibilityLabel={`Exercise instruction: ${getCurrentInstruction()}`}
+              accessibilityRole="text"
+              accessibilityLiveRegion="polite"
             >
-              <Text style={styles.bigButtonText}>
-                {isDetecting ? 'Stop' : 'Start Exercise'}
-              </Text>
-              <Text style={styles.bigButtonSubtext}>
-                {isDetecting ? 'Tap to stop' : 'Tap to begin'}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </Animated.View>
+              <AppText variant="title" color={colors.textInverse} center>
+                {getCurrentInstruction()}
+              </AppText>
+            </View>
 
-        {/* Exercise Name (if provided) */}
-        {exerciseName && !isDetecting && (
-          <View style={styles.exerciseNameContainer}>
-            <Text style={styles.exerciseNameText}>{exerciseName}</Text>
-          </View>
-        )}
-      </View>
+            {/* Exercise Name (if provided) */}
+            {exerciseName && !isDetecting && (
+              <AppText variant="bodyStrong" color={ON_DARK_SOFT} center>
+                {exerciseName}
+              </AppText>
+            )}
 
-      {/* Bottom Area */}
-      <View style={styles.bottomArea}>
-        {/* Advanced Options (Hidden by Default) */}
-        <TouchableOpacity
-          style={styles.advancedToggle}
-          onPress={handleToggleAdvanced}
-          accessibilityLabel={
-            showAdvanced ? 'Hide advanced details' : 'Show advanced details'
-          }
-          accessibilityHint={
-            showAdvanced
-              ? 'Tap to hide detailed exercise information'
-              : 'Tap to see detailed exercise information'
-          }
-          accessibilityRole="button"
-          accessible={true}
-        >
-          <Text style={styles.advancedToggleText}>
-            {showAdvanced ? '▼ Hide Details' : '▶ Show Details'}
-          </Text>
-        </TouchableOpacity>
+            {/* Simple Visual Feedback */}
+            {isDetecting && (
+              <SimpleFeedback currentAngle={currentAngle} targetAngle={targetAngle} />
+            )}
+          </CameraPanel>
+        </View>
 
-        {showAdvanced && (
-          <View style={styles.advancedPanel}>
-            <AdvancedInfo
-              currentAngle={currentAngle}
-              targetAngle={targetAngle}
-              trackingQuality={trackingQuality}
-            />
-          </View>
-        )}
-      </View>
+        {/* Bottom Area */}
+        <View style={styles.bottomArea}>
+          {/* Big Action Button */}
+          <CameraPanel>
+            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+              <BigButton
+                label={isDetecting ? 'Stop exercise' : 'Start exercise'}
+                icon={isDetecting ? 'stop' : 'play-arrow'}
+                variant={isDetecting ? 'danger' : 'primary'}
+                onPress={handleMainAction}
+                disabled={!canStart}
+                accessibilityHint={
+                  isDetecting
+                    ? 'Tap to stop tracking your movement'
+                    : 'Tap to begin exercise tracking'
+                }
+              />
+            </Animated.View>
+
+            {/* Advanced Options (Hidden by Default) */}
+            <Pressable
+              style={({ pressed }) => [styles.advancedToggle, pressed && styles.pressed]}
+              onPress={handleToggleAdvanced}
+              accessibilityLabel={
+                showAdvanced ? 'Hide advanced details' : 'Show advanced details'
+              }
+              accessibilityHint={
+                showAdvanced
+                  ? 'Tap to hide detailed exercise information'
+                  : 'Tap to see detailed exercise information'
+              }
+              accessibilityRole="button"
+              accessibilityState={{ expanded: showAdvanced }}
+              accessible={true}
+            >
+              <Icon
+                name={showAdvanced ? 'expand-less' : 'expand-more'}
+                size={26}
+                color={colors.textInverse}
+              />
+              <AppText variant="label" color={colors.textInverse}>
+                {showAdvanced ? 'Hide details' : 'Show details'}
+              </AppText>
+            </Pressable>
+
+            {showAdvanced && (
+              <AdvancedInfo
+                currentAngle={currentAngle}
+                targetAngle={targetAngle}
+                trackingQuality={trackingQuality}
+              />
+            )}
+          </CameraPanel>
+        </View>
+      </SafeAreaView>
     </Animated.View>
   );
 };
+
+const ON_DARK_SOFT = 'rgba(255, 255, 255, 0.85)';
 
 // ============================================================================
 // Simple Feedback Component
@@ -278,30 +280,27 @@ const SimpleFeedback: React.FC<SimpleFeedbackProps> = ({ currentAngle, targetAng
       accessibilityLiveRegion="polite"
     >
       {/* Big Angle Number */}
-      <Text style={[styles.bigAngle, isComplete && styles.bigAngleSuccess]}>
+      <AppText variant="metric" color={colors.textInverse} center>
         {Math.round(currentAngle)}°
-      </Text>
+      </AppText>
 
       {/* Simple Progress Bar */}
       <View style={styles.simpleProgressBar}>
-        <View
-          style={[
-            styles.simpleProgressFill,
-            {
-              width: `${progress}%`,
-              backgroundColor: isComplete ? '#4CAF50' : '#2196F3',
-            },
-          ]}
-        />
+        <View style={[styles.simpleProgressFill, { width: `${progress}%` }]} />
       </View>
 
       {/* Target Label */}
-      <Text style={styles.targetLabel}>Target: {targetAngle}°</Text>
+      <AppText variant="bodyStrong" color={ON_DARK_SOFT} center>
+        Target: {targetAngle}°
+      </AppText>
 
       {/* Success Message */}
       {isComplete && (
         <View style={styles.successBadge}>
-          <Text style={styles.successBadgeText}>✅ Great job!</Text>
+          <Icon name="check-circle" size={24} color={colors.success} />
+          <AppText variant="bodyStrong" color={colors.success}>
+            Great job!
+          </AppText>
         </View>
       )}
     </View>
@@ -324,6 +323,15 @@ const AdvancedInfo: React.FC<AdvancedInfoProps> = ({
   trackingQuality,
 }) => {
   const progress = Math.min((currentAngle / targetAngle) * 100, 100);
+  const rows: [string, string][] = [
+    ['Current angle', `${currentAngle.toFixed(1)}°`],
+    ['Target angle', `${targetAngle}°`],
+    ['Progress', `${progress.toFixed(1)}%`],
+    [
+      'Tracking quality',
+      trackingQuality.charAt(0).toUpperCase() + trackingQuality.slice(1),
+    ],
+  ];
 
   return (
     <View
@@ -332,27 +340,16 @@ const AdvancedInfo: React.FC<AdvancedInfoProps> = ({
       accessibilityLabel={`Advanced details. Current angle: ${currentAngle.toFixed(1)} degrees. Target angle: ${targetAngle} degrees. Progress: ${progress.toFixed(1)} percent. Tracking quality: ${trackingQuality}`}
       accessibilityRole="text"
     >
-      <View style={styles.advancedInfoRow}>
-        <Text style={styles.advancedInfoLabel}>Current Angle:</Text>
-        <Text style={styles.advancedInfoValue}>{currentAngle.toFixed(1)}°</Text>
-      </View>
-
-      <View style={styles.advancedInfoRow}>
-        <Text style={styles.advancedInfoLabel}>Target Angle:</Text>
-        <Text style={styles.advancedInfoValue}>{targetAngle}°</Text>
-      </View>
-
-      <View style={styles.advancedInfoRow}>
-        <Text style={styles.advancedInfoLabel}>Progress:</Text>
-        <Text style={styles.advancedInfoValue}>{progress.toFixed(1)}%</Text>
-      </View>
-
-      <View style={styles.advancedInfoRow}>
-        <Text style={styles.advancedInfoLabel}>Tracking Quality:</Text>
-        <Text style={styles.advancedInfoValue}>
-          {trackingQuality.charAt(0).toUpperCase() + trackingQuality.slice(1)}
-        </Text>
-      </View>
+      {rows.map(([label, value]) => (
+        <View key={label} style={styles.advancedInfoRow}>
+          <AppText variant="body" color={ON_DARK_SOFT}>
+            {label}
+          </AppText>
+          <AppText variant="bodyStrong" color={colors.textInverse}>
+            {value}
+          </AppText>
+        </View>
+      ))}
     </View>
   );
 };
@@ -362,176 +359,86 @@ const AdvancedInfo: React.FC<AdvancedInfoProps> = ({
 // ============================================================================
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   container: {
     flex: 1,
     backgroundColor: 'transparent',
   },
   statusBar: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
+    paddingTop: spacing.md,
+    paddingHorizontal: spacing.md,
     alignItems: 'center',
+    minHeight: touch.min,
   },
   statusIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-  statusIcon: {
-    fontSize: 20,
-    marginRight: 8,
-  },
-  statusText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFF',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    backgroundColor: colors.cameraOverlay,
   },
   mainContent: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.md,
   },
   instructionContainer: {
-    marginBottom: 40,
-  },
-  instructionText: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#FFF',
-    textAlign: 'center',
-    lineHeight: 38,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  feedbackContainer: {
-    marginBottom: 40,
-  },
-  buttonContainer: {
-    width: '100%',
-    maxWidth: 300,
-  },
-  bigButton: {
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  bigButtonGradient: {
-    borderRadius: 60,
-    paddingVertical: 28,
-    paddingHorizontal: 40,
-    alignItems: 'center',
-  },
-  bigButtonText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFF',
-    letterSpacing: 0.5,
-  },
-  bigButtonSubtext: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 4,
-  },
-  exerciseNameContainer: {
-    marginTop: 30,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 20,
-  },
-  exerciseNameText: {
-    fontSize: 18,
-    color: '#FFF',
-    fontWeight: '600',
-    textAlign: 'center',
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   bottomArea: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
   },
   advancedToggle: {
-    paddingVertical: 12,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    minHeight: touch.min,
+    borderRadius: radii.md,
   },
-  advancedToggleText: {
-    fontSize: 14,
-    color: '#888',
-    fontWeight: '600',
-  },
-  advancedPanel: {
-    marginTop: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 16,
-    padding: 20,
+  pressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
   simpleFeedbackContainer: {
-    alignItems: 'center',
-  },
-  bigAngle: {
-    fontSize: 80,
-    fontWeight: '700',
-    color: '#2196F3',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 6,
-    marginBottom: 20,
-  },
-  bigAngleSuccess: {
-    color: '#4CAF50',
+    alignItems: 'stretch',
+    gap: spacing.sm,
   },
   simpleProgressBar: {
-    width: 250,
-    height: 12,
+    height: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 6,
+    borderRadius: radii.pill,
     overflow: 'hidden',
-    marginBottom: 12,
   },
   simpleProgressFill: {
     height: '100%',
-    borderRadius: 6,
-  },
-  targetLabel: {
-    fontSize: 16,
-    color: '#CCC',
-    fontWeight: '600',
+    borderRadius: radii.pill,
+    backgroundColor: colors.skeleton,
   },
   successBadge: {
-    marginTop: 20,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(76, 175, 80, 0.3)',
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: '#4CAF50',
-  },
-  successBadgeText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.successSoft,
+    borderRadius: radii.pill,
   },
   advancedInfoContainer: {
-    gap: 12,
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255, 255, 255, 0.25)',
   },
   advancedInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  advancedInfoLabel: {
-    fontSize: 14,
-    color: '#888',
-  },
-  advancedInfoValue: {
-    fontSize: 14,
-    color: '#FFF',
-    fontWeight: '600',
   },
 });
 

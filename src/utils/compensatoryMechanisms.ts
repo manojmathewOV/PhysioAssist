@@ -10,9 +10,8 @@
  * Philosophy: Maintain medical-grade accuracy while maximizing ease of use
  */
 
-import { Frame } from 'react-native-vision-camera';
 import { PoseLandmark } from '../types/pose';
-import { analyzeFrame } from './realFrameAnalysis';
+import { analyzeFrame, FrameInfo } from './realFrameAnalysis';
 
 // ============================================================================
 // Types & Interfaces
@@ -95,7 +94,7 @@ const STABILITY_THRESHOLD = 0.02; // Variance threshold for tremor detection
  * Gate 1 Update: Now uses real frame analysis with ITU-R BT.601 standard
  */
 export const checkLightingConditions = async (
-  frame: Frame
+  frame: FrameInfo
 ): Promise<LightingAssessment> => {
   // Use real frame analysis from realFrameAnalysis.ts
   const analysis = await analyzeFrame(frame, true);
@@ -302,7 +301,7 @@ export const getAdaptiveDistanceSettings = (
  * Gate 1 Update: Now async due to real frame analysis
  */
 export const assessEnvironment = async (
-  frame: Frame,
+  frame: FrameInfo,
   landmarks: PoseLandmark[],
   screenHeight: number
 ): Promise<EnvironmentConditions> => {

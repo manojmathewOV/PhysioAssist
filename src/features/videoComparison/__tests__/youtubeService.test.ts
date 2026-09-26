@@ -10,8 +10,9 @@ jest.mock('react-native-ytdl', () => {
   });
 
   // Create a callable mock that also has getInfo
-  const mockYtdl = jest.fn().mockResolvedValue('mock-stream-data');
-  mockYtdl.getInfo = mockGetInfo;
+  const mockYtdl = Object.assign(jest.fn().mockResolvedValue('mock-stream-data'), {
+    getInfo: mockGetInfo,
+  });
 
   return {
     __esModule: true,

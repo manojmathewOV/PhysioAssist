@@ -5,7 +5,7 @@
  * inference cadence and prevent overheating/battery drain.
  */
 
-import { NativeModules, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { telemetryService } from '../features/videoComparison/services/telemetryService';
 
 export type ThermalState = 'nominal' | 'fair' | 'serious' | 'critical';

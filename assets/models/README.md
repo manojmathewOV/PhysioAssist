@@ -1,108 +1,42 @@
-# TensorFlow Lite Models
+# Pose Detection Models
 
-This directory contains optimized TFLite models for pose detection.
+Model files are not committed. `npm install` downloads them via
+`scripts/download-models.sh` (also runnable as `npm run download-models`).
 
-## Models
+## MediaPipe BlazePose Full + Lite (iOS/Android camera)
 
-### MoveNet Lightning INT8 (Recommended)
-- **File:** `movenet_lightning_int8.tflite`
-- **Input Size:** 192x192 pixels
-- **Format:** INT8 quantized
-- **Size:** ~3MB
-- **Inference:** ~30ms on modern devices
-- **Use Case:** Real-time pose detection with best balance of speed/accuracy
-- **Download:** Run `npm run download-models`
+- **Files:** `pose_landmarker_full.task` (float16, ~9MB, default) and
+  `pose_landmarker_lite.task` (~6MB). `src/hooks/useBlazePose.ts` starts on Full and
+  steps down to Lite once if measured inference times exceed the frame budget
+  (`src/services/pose/adaptiveModel.ts`)
+- **Used by:** every native camera screen through `src/hooks/useBlazePose.ts`
+  (`react-native-mediapipe` VisionCamera frame processor, GPU delegate, live-stream tracking)
+- **Benchmark:** docs/benchmarks/POSE_MODELS.md
+- **Output:** 33 landmarks (normalized x/y, relative z, visibility) plus world
+  landmarks in metres, converted to `ProcessedPoseData` with schema `mediapipe-33`
+  by `src/services/pose/mediapipeLandmarks.ts`
+- **Bundled:** iOS via the Xcode project's Resources phase; Android by copying into
+  `android/app/src/main/assets/`
+- **Source:** https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task
 
-### MoveNet Thunder Float16 (High Accuracy)
-- **File:** `movenet_thunder_fp16.tflite`
-- **Input Size:** 256x256 pixels
-- **Format:** Float16
-- **Size:** ~12MB
-- **Inference:** ~50ms on modern devices
-- **Use Case:** High-accuracy requirements
-- **Download:** Run `npm run download-models`
+Chosen over MoveNet: 37% lower joint-angle error on the COCO benchmark, plus heels
+and toes (ankle dorsiflexion/plantarflexion) and hand points that MoveNet doesn't
+have. It is also the model family the web build uses (`@mediapipe/pose`), so native
+and web use the same landmark definitions. Angles are computed from
+aspect-corrected 2D landmarks; world landmarks only flag limbs turned out of the
+image plane (see `src/services/pose/measurementLandmarks.ts`).
 
-## Keypoints (17 total)
+## MoveNet Lightning INT8 — legacy
 
-MoveNet detects 17 body keypoints:
+- **File:** `movenet_lightning_int8.tflite` (~3MB)
+- **Used by:** `src/services/PoseDetectionService.v2.ts` (react-native-fast-tflite),
+  which native screens other than the main pose screen still import
+- **Output:** 17 keypoints, schema `movenet-17`
+- **Source:** https://www.kaggle.com/models/google/movenet (TF Hub links are retired)
 
-```
-0: nose
-1: left_eye
-2: right_eye
-3: left_ear
-4: right_ear
-5: left_shoulder
-6: right_shoulder
-7: left_elbow
-8: right_elbow
-9: left_wrist
-10: right_wrist
-11: left_hip
-12: right_hip
-13: left_knee
-14: right_knee
-15: left_ankle
-16: right_ankle
-```
+## Landmark schemas
 
-## Output Format
-
-```typescript
-{
-  keypoints: [
-    {
-      x: number,  // 0-1 normalized
-      y: number,  // 0-1 normalized
-      score: number  // confidence 0-1
-    },
-    // ... 17 total
-  ]
-}
-```
-
-## Download Models
-
-Run the download script:
-
-```bash
-npm run download-models
-```
-
-Or manually download:
-
-**Lightning INT8:**
-```bash
-curl -L "https://tfhub.dev/google/lite-model/movenet/singlepose/lightning/tflite/int8/4?lite-format=tflite" \
-  -o assets/models/movenet_lightning_int8.tflite
-```
-
-**Thunder Float16:**
-```bash
-curl -L "https://tfhub.dev/google/lite-model/movenet/singlepose/thunder/tflite/float16/4?lite-format=tflite" \
-  -o assets/models/movenet_thunder_fp16.tflite
-```
-
-## Performance Benchmarks
-
-| Model | iPhone 14 | Pixel 7 | Size |
-|-------|-----------|---------|------|
-| Lightning INT8 | 28ms | 32ms | 3MB |
-| Thunder FP16 | 48ms | 55ms | 12MB |
-
-## Usage
-
-```typescript
-import { TFLiteModel } from 'react-native-fast-tflite';
-
-const model = await TFLiteModel.load({
-  model: require('./movenet_lightning_int8.tflite'),
-  delegates: ['gpu', 'core-ml'],
-});
-
-const output = model.run(inputTensor);
-```
-
-## License
-
-Models are from TensorFlow Hub under Apache 2.0 License.
+Both schemas are defined in `src/services/pose/PoseSchemaRegistry.ts` and share
+snake_case landmark names (`left_knee`, `right_ankle`, ...), so the goniometer
+looks joints up by name and works with either. Ankle angles need
+`left_foot_index`/`right_foot_index`, which only `mediapipe-33` provides.

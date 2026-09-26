@@ -1,85 +1,130 @@
+/**
+ * Large, radio-style exercise cards: icon, name, one line of explanation and
+ * the goal. The selected card is marked with a border, tint and a tick (never
+ * colour alone).
+ */
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
-interface Exercise {
+import { AppText } from '../ui';
+import { colors, radii, shadows, spacing } from '../../theme';
+
+export interface SelectableExercise {
   id: string;
   name: string;
   description: string;
+  /** MaterialIcons name. */
+  icon?: string;
+  /** e.g. "12 repetitions". */
+  goal?: string;
 }
 
-interface ExerciseSelectorProps {
-  exercises: Exercise[];
-  onExerciseSelect: (exercise: Exercise) => void;
-  selectedExercise?: Exercise;
+interface ExerciseSelectorProps<T extends SelectableExercise> {
+  exercises: T[];
+  onExerciseSelect: (exercise: T) => void;
+  selectedExercise?: T;
 }
 
-const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
+function ExerciseSelector<T extends SelectableExercise>({
   exercises,
   onExerciseSelect,
   selectedExercise,
-}) => {
-  const renderExercise = ({ item }: { item: Exercise }) => (
-    <TouchableOpacity
-      style={[
-        styles.exerciseItem,
-        selectedExercise?.id === item.id && styles.selectedItem,
-      ]}
-      onPress={() => onExerciseSelect(item)}
-      testID={`exercise-${item.id}`}
-    >
-      <Text style={styles.exerciseName}>{item.name}</Text>
-      <Text style={styles.exerciseDescription}>{item.description}</Text>
-    </TouchableOpacity>
-  );
-
+}: ExerciseSelectorProps<T>) {
   return (
     <View
-      style={styles.container}
+      style={styles.list}
       testID="exercise-selector"
-      accessibilityLabel="Select exercise type"
+      accessibilityRole="radiogroup"
+      accessibilityLabel="Choose an exercise"
     >
-      <Text style={styles.title}>Select Exercise</Text>
-      <FlatList
-        data={exercises}
-        renderItem={renderExercise}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-      />
+      {exercises.map((item) => {
+        const selected = selectedExercise?.id === item.id;
+        return (
+          <Pressable
+            key={item.id}
+            onPress={() => onExerciseSelect(item)}
+            testID={`exercise-${item.id}`}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: selected, selected }}
+            // Web: react-native-web doesn't turn the checked state into aria-checked
+            aria-checked={selected}
+            accessibilityLabel={`${item.name}. ${item.description}${
+              item.goal ? `. ${item.goal}` : ''
+            }`}
+            style={({ pressed }) => [
+              styles.card,
+              selected && styles.cardSelected,
+              pressed && !selected && styles.cardPressed,
+            ]}
+          >
+            <View style={[styles.icon, selected && styles.iconSelected]}>
+              <Icon
+                name={item.icon ?? 'directions-run'}
+                size={32}
+                color={selected ? colors.onPrimary : colors.primary}
+              />
+            </View>
+            <View style={styles.text}>
+              <AppText variant="heading">{item.name}</AppText>
+              <AppText variant="body" color={colors.textSecondary}>
+                {item.description}
+              </AppText>
+              {item.goal ? (
+                <View style={styles.goal}>
+                  <Icon name="flag" size={18} color={colors.textMuted} />
+                  <AppText variant="caption" color={colors.textMuted}>
+                    {item.goal}
+                  </AppText>
+                </View>
+              ) : null}
+            </View>
+            <Icon
+              name={selected ? 'check-circle' : 'radio-button-unchecked'}
+              size={30}
+              color={selected ? colors.primary : colors.border}
+            />
+          </Pressable>
+        );
+      })}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
+  list: { gap: spacing.md },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    minHeight: 104,
+    padding: spacing.md + spacing.xs,
+    borderRadius: radii.lg,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  cardSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
   },
-  exerciseItem: {
-    padding: 16,
-    marginVertical: 4,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+  cardPressed: { backgroundColor: colors.surfaceMuted },
+  icon: {
+    width: 56,
+    height: 56,
+    borderRadius: radii.md,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  selectedItem: {
-    backgroundColor: '#e3f2fd',
-    borderColor: '#2196f3',
-  },
-  exerciseName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  exerciseDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
+  iconSelected: { backgroundColor: colors.primary },
+  text: { flex: 1, gap: 2 },
+  goal: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
   },
 });
 

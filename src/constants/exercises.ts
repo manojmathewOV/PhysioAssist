@@ -3,6 +3,7 @@ import { Exercise } from '../types/exercise';
 export const EXERCISES: Record<string, Exercise> = {
   bicepCurl: {
     id: 'bicep-curl',
+    primaryJoint: 'elbow',
     name: 'Bicep Curl',
     description: 'Standard bicep curl exercise for arm strength',
     category: 'strength',
@@ -62,6 +63,7 @@ export const EXERCISES: Record<string, Exercise> = {
 
   shoulderPress: {
     id: 'shoulder-press',
+    primaryJoint: 'shoulder',
     name: 'Shoulder Press',
     description: 'Overhead press for shoulder strength',
     category: 'strength',
@@ -145,6 +147,7 @@ export const EXERCISES: Record<string, Exercise> = {
 
   squat: {
     id: 'squat',
+    primaryJoint: 'knee',
     name: 'Bodyweight Squat',
     description: 'Basic squat for leg strength and mobility',
     category: 'strength',
@@ -229,6 +232,7 @@ export const EXERCISES: Record<string, Exercise> = {
 
   hamstringStretch: {
     id: 'hamstring-stretch',
+    primaryJoint: 'hip',
     name: 'Standing Hamstring Stretch',
     description: 'Flexibility exercise for hamstrings',
     category: 'flexibility',
@@ -264,6 +268,223 @@ export const EXERCISES: Record<string, Exercise> = {
           },
         ],
         holdDuration: 30000, // 30 seconds
+      },
+    ],
+  },
+
+  armRaise: {
+    id: 'arm-raise',
+    name: 'Forward Arm Raise',
+    description: 'Shoulder flexion: lift the arm forward and up, side-on to the camera',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'shoulder',
+    targetMuscles: ['anterior deltoid'],
+    equipment: [],
+    targetRepetitions: 10,
+    targetSets: 2,
+    restDuration: 30000,
+    instructions: [
+      'Stand side-on to the camera, arms by your sides',
+      'Keeping the elbow straight, lift your arm forward and up',
+      'Go only as high as is comfortable',
+      'Lower slowly',
+    ],
+    phases: [
+      {
+        name: 'start',
+        description: 'Arm by the side',
+        jointRequirements: [
+          { joint: 'left_shoulder', minAngle: 0, maxAngle: 30, targetAngle: 10 },
+          { joint: 'right_shoulder', minAngle: 0, maxAngle: 30, targetAngle: 10 },
+        ],
+      },
+      {
+        name: 'raise',
+        description: 'Arm lifted forward',
+        jointRequirements: [
+          { joint: 'left_shoulder', minAngle: 140, maxAngle: 180, targetAngle: 160 },
+          { joint: 'right_shoulder', minAngle: 140, maxAngle: 180, targetAngle: 160 },
+        ],
+        holdDuration: 1000,
+      },
+    ],
+  },
+
+  shoulderExternalRotation: {
+    id: 'shoulder-external-rotation',
+    name: 'Shoulder External Rotation',
+    description: 'Elbow bent at the side, turning the forearm outward; facing the camera',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'shoulder',
+    targetMuscles: ['infraspinatus', 'teres minor'],
+    equipment: [],
+    targetRepetitions: 10,
+    targetSets: 2,
+    restDuration: 30000,
+    instructions: [
+      'Face the phone directly, far enough away to see you from head to hips',
+      'Bend your elbow to a right angle and keep it gently against your side',
+      'Turn your forearm outward as far as is comfortable, keeping your elbow at your side',
+      'Return slowly; keep your chest facing the phone throughout',
+    ],
+    warnings: ['Only as far as your surgeon or physiotherapist has allowed'],
+    phases: [
+      {
+        name: 'at side',
+        description: 'Upper arm by the side',
+        jointRequirements: [
+          { joint: 'left_shoulder', minAngle: 0, maxAngle: 40, targetAngle: 10 },
+        ],
+      },
+    ],
+  },
+
+  seatedKneeExtension: {
+    id: 'seated-knee-extension',
+    name: 'Seated Knee Extension',
+    description:
+      'Knee straightening while sitting (long-arc quad), side-on to the camera',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'knee',
+    targetMuscles: ['quadriceps'],
+    equipment: ['armless chair'],
+    targetRepetitions: 10,
+    targetSets: 2,
+    restDuration: 30000,
+    instructions: [
+      'Sit on an armless chair, side-on to the phone, with the leg you are exercising closest to it',
+      'Put the phone level with your knee, far enough away to see your hip, knee and foot',
+      'Sit tall with your thigh resting on the chair',
+      'Slowly straighten your knee as far as is comfortable, and hold',
+      'Lower your foot slowly back down',
+    ],
+    warnings: ['Keep your thigh on the chair and your back upright'],
+    phases: [
+      {
+        name: 'bent',
+        description: 'Knee bent, foot under the knee',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 70, maxAngle: 125, targetAngle: 90 },
+        ],
+      },
+      {
+        name: 'straight',
+        description: 'Knee straightened',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 165, maxAngle: 180, targetAngle: 178 },
+        ],
+        holdDuration: 1000,
+      },
+    ],
+  },
+
+  heelPropExtension: {
+    id: 'heel-prop-extension',
+    name: 'Heel Prop (Knee Straightening Stretch)',
+    description:
+      'Lying with the heel on a rolled towel, the knee relaxes towards straight; measured as it rests',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'knee',
+    targetMuscles: ['posterior knee capsule', 'hamstrings'],
+    equipment: ['rolled towel'],
+    targetRepetitions: 1,
+    targetSets: 1,
+    restDuration: 0,
+    instructions: [
+      'Lie on your back, side-on to the phone, with the leg you are exercising closest to it',
+      'Put the phone level with your knee, far enough away to see your hip, knee and foot',
+      'Rest your heel on a rolled towel, with nothing under your knee',
+      'Relax and let your knee sink towards straight; keep still while it is measured',
+    ],
+    warnings: ['Stop if it is painful; a gentle stretch is enough'],
+    phases: [
+      {
+        name: 'rest',
+        description: 'Heel propped, knee relaxed',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 150, maxAngle: 180, targetAngle: 180 },
+        ],
+        holdDuration: 30000,
+      },
+    ],
+  },
+
+  shortArcQuad: {
+    id: 'short-arc-quad',
+    name: 'Short-Arc Quad',
+    description:
+      'Lying with a roll under the knee, straightening the knee by lifting the heel',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'knee',
+    targetMuscles: ['quadriceps'],
+    equipment: ['rolled towel or foam roll'],
+    targetRepetitions: 10,
+    targetSets: 2,
+    restDuration: 30000,
+    instructions: [
+      'Lie on your back, side-on to the phone, with the leg you are exercising closest to it',
+      'Put the phone level with your knee, far enough away to see your hip, knee and foot',
+      'Place a rolled towel under your knee',
+      'Keeping the back of your thigh on the roll, lift your heel to straighten your knee, and hold',
+      'Lower your heel slowly',
+    ],
+    phases: [
+      {
+        name: 'bent',
+        description: 'Knee over the roll, heel down',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 110, maxAngle: 155, targetAngle: 140 },
+        ],
+      },
+      {
+        name: 'straight',
+        description: 'Heel lifted, knee straight',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 165, maxAngle: 180, targetAngle: 178 },
+        ],
+        holdDuration: 1500,
+      },
+    ],
+  },
+
+  seatedKneeFlexion: {
+    id: 'seated-knee-flexion',
+    name: 'Seated Knee Bend',
+    description: 'Sliding the foot back under the chair to bend the knee past 90°',
+    category: 'rehabilitation',
+    difficulty: 'beginner',
+    primaryJoint: 'knee',
+    targetMuscles: ['hamstrings'],
+    equipment: ['armless chair'],
+    targetRepetitions: 10,
+    targetSets: 2,
+    restDuration: 30000,
+    instructions: [
+      'Sit on an armless chair, side-on to the phone, with the leg you are exercising closest to it',
+      'Put the phone level with your knee, far enough away to see your hip, knee and foot',
+      'Slide your foot back under the chair as far as is comfortable, and hold',
+      'Slide it forward again',
+    ],
+    phases: [
+      {
+        name: 'start',
+        description: 'Foot under the knee',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 80, maxAngle: 125, targetAngle: 90 },
+        ],
+      },
+      {
+        name: 'bent',
+        description: 'Foot slid back',
+        jointRequirements: [
+          { joint: 'left_knee', minAngle: 30, maxAngle: 70, targetAngle: 55 },
+        ],
+        holdDuration: 1000,
       },
     ],
   },

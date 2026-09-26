@@ -8,7 +8,6 @@
 
 import { ProcessedPoseData } from '../types/pose';
 import {
-  GroundTruth,
   ValidationResult,
   ValidationReport,
   ValidationConfig,

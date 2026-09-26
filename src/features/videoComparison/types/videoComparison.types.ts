@@ -43,6 +43,11 @@ export interface Recommendation {
 }
 
 export interface ComparisonResult {
+  /** Analysis session metadata (set by AnalysisSession implementations) */
+  sessionId?: string;
+  timestamp?: number;
+  exerciseType?: string;
+  mode?: 'async' | 'live';
   overallScore: number;
   angleDeviations: AngleDeviation[];
   temporalAlignment: TemporalAlignment;

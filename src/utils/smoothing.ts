@@ -46,6 +46,13 @@ class LowPassFilter {
   }
 
   /**
+   * Last raw (unfiltered) input value, or null before the first sample.
+   */
+  lastRawValue(): number | null {
+    return this.xprev;
+  }
+
+  /**
    * Reset filter state.
    */
   reset(): void {
@@ -117,7 +124,7 @@ export class OneEuroFilter {
     this.tprev = timestamp;
 
     // Calculate velocity (dx/dt)
-    const edx = (value - (this.x.xprev ?? value)) / dt;
+    const edx = (value - (this.x.lastRawValue() ?? value)) / dt;
     const edxHat = this.dx.filter(edx, this.alpha(dt, this.dCutoff));
 
     // Adjust cutoff frequency based on velocity (speed-based adaptation)

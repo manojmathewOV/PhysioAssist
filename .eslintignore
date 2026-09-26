@@ -1,1 +1,11 @@
 jest.config.js
+# Tool config files aren't part of tsconfig.json, so type-aware linting can't parse them
+babel.config.js
+metro.config.js
+.eslintrc.js
+# Need @shopify/react-native-skia (not installed); excluded from tsconfig.json too
+src/components/pose/PoseOverlay.skia.tsx
+src/components/coaching/CoachingOverlay.tsx
+docs/examples/screens/PoseDetectionScreenPatientCentric.example.tsx
+# JS twin of validate-modular-architecture.ts (run by npm run validate:architecture); tsc shadows it
+scripts/validate-modular-architecture.js

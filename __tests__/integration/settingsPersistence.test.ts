@@ -37,7 +37,7 @@ describe('Settings Persistence Tests', () => {
       expect(state.enableSpeech).toBe(true);
 
       // Visual defaults
-      expect(state.showJointAngles).toBe(true);
+      expect(state.showJointAngles).toBe(false); // opt-in: technical numbers hidden from patients by default
       expect(state.showPoseOverlay).toBe(true);
       expect(state.showAngleOverlay).toBe(true);
       expect(state.showFormFeedback).toBe(true);

@@ -1,7 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-react-native';
 import { Pose, Results } from '@mediapipe/pose';
-import { Camera } from 'react-native-vision-camera';
 
 import { PoseLandmark, PoseDetectionConfig, ProcessedPoseData } from '../types/pose';
 import { calculateConfidenceScore } from '@utils/poseUtils';
@@ -10,7 +8,7 @@ export class PoseDetectionService {
   private pose: Pose | null = null;
   private isInitialized: boolean = false;
   private frameSkipCounter: number = 0;
-  private readonly config: PoseDetectionConfig;
+  private readonly config: Required<PoseDetectionConfig>;
 
   constructor(config: PoseDetectionConfig = {}) {
     this.config = {
@@ -85,12 +83,23 @@ export class PoseDetectionService {
       landmarks: this.convertLandmarks(results.poseLandmarks),
       timestamp: Date.now(),
       confidence: calculateConfidenceScore(results.poseLandmarks),
-      worldLandmarks: results.poseWorldLandmarks || undefined,
+      worldLandmarks: results.poseWorldLandmarks
+        ? this.convertLandmarks(results.poseWorldLandmarks)
+        : undefined,
+      aspectRatio: this.imageAspectRatio(results.image),
+      schemaId: 'mediapipe-33',
+      zIsRelative: true,
     };
 
     // Emit processed pose data
     this.emitPoseData(processedData);
   };
+
+  /** Width / height of the processed frame; landmarks are normalized per axis. */
+  private imageAspectRatio(image: unknown): number | undefined {
+    const { width, height } = (image ?? {}) as { width?: number; height?: number };
+    return width && height ? width / height : undefined;
+  }
 
   private convertLandmarks(landmarks: any[]): PoseLandmark[] {
     return landmarks.map((landmark, index) => ({

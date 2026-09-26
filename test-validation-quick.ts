@@ -64,7 +64,7 @@ console.log('Testing validation fixes...\n');
 console.log('=== ELBOW FLEXION ===');
 for (const angle of [0, 30, 60, 90, 120, 150]) {
   const measurementService = new ClinicalMeasurementService(); // Fresh service to avoid temporal smoothing
-  const { poseData, groundTruth } = generator.generateElbowFlexion(angle, 'movenet-17', {
+  const { poseData } = generator.generateElbowFlexion(angle, 'movenet-17', {
     side: 'left',
   });
   const enrichedPose = addAnatomicalFrames(poseData);
@@ -80,7 +80,7 @@ for (const angle of [0, 30, 60, 90, 120, 150]) {
 console.log('\n=== KNEE FLEXION ===');
 for (const angle of [0, 30, 60, 90, 120, 135]) {
   const measurementService = new ClinicalMeasurementService();
-  const { poseData, groundTruth } = generator.generateKneeFlexion(angle, 'movenet-17', {
+  const { poseData } = generator.generateKneeFlexion(angle, 'movenet-17', {
     side: 'left',
   });
   const enrichedPose = addAnatomicalFrames(poseData);
@@ -96,11 +96,9 @@ for (const angle of [0, 30, 60, 90, 120, 135]) {
 console.log('\n=== SHOULDER ABDUCTION ===');
 for (const angle of [0, 30, 60, 90, 120, 150, 180]) {
   const measurementService = new ClinicalMeasurementService();
-  const { poseData, groundTruth } = generator.generateShoulderAbduction(
-    angle,
-    'movenet-17',
-    { side: 'left' }
-  );
+  const { poseData } = generator.generateShoulderAbduction(angle, 'movenet-17', {
+    side: 'left',
+  });
   const enrichedPose = addAnatomicalFrames(poseData);
   const measurement = measurementService.measureShoulderAbduction(enrichedPose, 'left');
   const error = Math.abs(measurement.primaryJoint.angle - angle);
@@ -115,11 +113,9 @@ console.log('\n=== SHOULDER FLEXION ===');
 for (const angle of [0, 30, 60, 90, 120, 150, 180]) {
   try {
     const measurementService = new ClinicalMeasurementService();
-    const { poseData, groundTruth } = generator.generateShoulderFlexion(
-      angle,
-      'movenet-17',
-      { side: 'left' }
-    );
+    const { poseData } = generator.generateShoulderFlexion(angle, 'movenet-17', {
+      side: 'left',
+    });
     const enrichedPose = addAnatomicalFrames(poseData);
     const measurement = measurementService.measureShoulderFlexion(enrichedPose, 'left');
     const error = Math.abs(measurement.primaryJoint.angle - angle);
@@ -137,11 +133,10 @@ console.log('\n=== SHOULDER ROTATION ===');
 for (const angle of [-60, -30, 0, 30, 60, 90]) {
   try {
     const measurementService = new ClinicalMeasurementService();
-    const { poseData, groundTruth } = generator.generateShoulderRotation(
-      angle,
-      'movenet-17',
-      { side: 'left', elbowAngle: 90 }
-    );
+    const { poseData } = generator.generateShoulderRotation(angle, 'movenet-17', {
+      side: 'left',
+      elbowAngle: 90,
+    });
     const enrichedPose = addAnatomicalFrames(poseData);
     const measurement = measurementService.measureShoulderRotation(enrichedPose, 'left');
     const error = Math.abs(measurement.primaryJoint.angle - Math.abs(angle));

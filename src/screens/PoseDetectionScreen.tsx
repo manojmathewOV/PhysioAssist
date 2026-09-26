@@ -1,384 +1,535 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  // Dimensions,
-} from 'react-native';
-import {
-  Camera,
-  useCameraDevices,
-  useFrameProcessor,
-  Frame,
-} from 'react-native-vision-camera';
-import { useIsFocused } from '@react-navigation/native';
+/**
+ * Exercise tab (iOS/Android).
+ *
+ * 1. Choose an exercise (large cards, set-up reminder, one big Start button).
+ * 2. Exercise: the camera fills the screen. First "get into position" (the
+ *    whole body must be in the frame for about a second), then a spoken
+ *    3-2-1 countdown, then counting starts. The instruction, rep ring and one
+ *    big Stop button sit on dark overlay panels (ExerciseControls).
+ * 3. Summary: reps, time and form in words, an optional 0-10 pain check,
+ *    then "Done" or "Do another".
+ *
+ * Without a camera (simulator) or camera permission, a friendly full-screen
+ * explanation offers one clear way forward (open Settings / practice mode).
+ */
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { framingRequirement } from '../components/exercises/framingRequirement';
+import { Linking, StyleSheet, View } from 'react-native';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useDispatch, useSelector } from 'react-redux';
-import { runOnJS } from 'react-native-reanimated';
 
 import { RootState } from '@store/index';
+import { setExercisePlan } from '@store/slices/settingsSlice';
+import { ExercisePlan, applyPlan } from '@services/pose/exercisePlan';
+import { completionOf } from '@services/pose/routine';
+import { coachingOf } from '@services/care/episode';
+import { activeMs, seconds } from '@services/session/sessionClock';
+import { movementOf } from '@services/movement/exerciseMovement';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
-import { poseDetectionService } from '@services/poseDetectionService';
+import {
+  clearExercise,
+  clockOf,
+  confirmLastSessionCompleted,
+  isWorthKeeping,
+  pauseExercise,
+  resumeExercise,
+  setLastSessionPain,
+  startExercise,
+  stopExercise,
+  updateExerciseProgress,
+  updateValidation,
+} from '@store/slices/exerciseSlice';
+import { useBlazePose, CAMERA_FPS } from '@hooks/useBlazePose';
+import { exerciseValidationService } from '@services/exerciseValidationService';
+import { audioFeedbackService } from '@services/audioFeedbackService';
+import type { MockPoseDataSimulator } from '@services/mockPoseDataSimulator';
 // Conditional import: Only include mock simulator in development builds
-const mockPoseDataSimulator = __DEV__
-  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator // eslint-disable-line @typescript-eslint/no-var-requires
+const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
+  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator
   : null;
 import PoseOverlay from '@components/pose/PoseOverlay';
+import FollowAlongVideo from '@components/video/FollowAlongVideo';
+import { parseYouTubeId, parseYouTubeStart } from '../utils/youtube';
 import ExerciseControls from '@components/exercises/ExerciseControls';
+import ExerciseChooser from '@components/exercises/ExerciseChooser';
+import { useRoutineFlow } from '@components/exercises/useRoutineFlow';
+import { speakLiveFeedback } from '@components/exercises/liveFeedback';
+import {
+  sessionOutcome,
+  useMovementAnalysis,
+} from '@components/exercises/useMovementAnalysis';
+import ExerciseSummary, {
+  ExerciseSummaryProps,
+} from '@components/exercises/ExerciseSummary';
+import CameraUnavailable from '@components/exercises/CameraUnavailable';
+import { FRAMING_MESSAGE, useSessionGate } from '@components/exercises/useSessionGate';
+import {
+  EXERCISE_OPTIONS,
+  ExerciseKey,
+  firstKeyFor,
+  keepOrFirstKey,
+} from '@components/exercises/exerciseCatalog';
+import { AccessibilityIds } from '../constants/accessibility';
+import type { MainTabParamList } from '../navigation/types';
+import { colors } from '../theme';
 
-// const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+type Stage = 'choose' | 'exercise' | 'summary';
+type Permission = 'unknown' | 'granted' | 'denied';
 
 const PoseDetectionScreen: React.FC = () => {
   const dispatch = useDispatch();
+  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const isFocused = useIsFocused();
-  const devices = useCameraDevices();
-  const device = devices.front;
+  const device = useCameraDevice('front');
 
-  const { isDetecting, confidence } = useSelector((state: RootState) => state.pose);
-  const { frameSkip } = useSelector((state: RootState) => state.settings);
-  const [hasPermission, setHasPermission] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isExerciseActive, setIsExerciseActive] = useState(false);
+  const { isDetecting, currentPose } = useSelector((state: RootState) => state.pose);
+  const { frameSkip, showPoseOverlay, showJointAngles } = useSelector(
+    (state: RootState) => state.settings
+  );
+  const exerciseState = useSelector((state: RootState) => state.exercise);
+  const { isExercising } = exerciseState;
+
+  const plan = useSelector((s: RootState) => s.settings.exercisePlan);
+  const [stage, setStage] = useState<Stage>('choose');
+  const [selectedKey, setSelectedKey] = useState<ExerciseKey>(() => firstKeyFor(plan));
+  const [permission, setPermission] = useState<Permission>('unknown');
   const [isPaused, setIsPaused] = useState(false);
-  const [useMockData, setUseMockData] = useState(false);
-  const [initError, setInitError] = useState<string | null>(null);
-  const frameCountRef = useRef(0);
+  const [practice, setPractice] = useState(false);
+  const [summary, setSummary] = useState<
+    (ExerciseSummaryProps & { saved: boolean; exerciseId: string }) | null
+  >(null);
+  const lastSpokenRef = useRef('');
+  const lastRepsRef = useRef(0);
+
+  const option = EXERCISE_OPTIONS.find((o) => o.key === selectedKey)!;
+  // The patient's version: only the joint of interest, with their physio's goal
+  const plannedExercise = useMemo(() => applyPlan(option.exercise, plan), [option, plan]);
+  const changePlan = useCallback(
+    (next: ExercisePlan) => {
+      dispatch(setExercisePlan(next));
+      // Keep the chosen exercise while it still fits the plan (saving a video
+      // or a demonstration mustn't jump back to the first exercise)
+      setSelectedKey((current) => keepOrFirstKey(current, next));
+    },
+    [dispatch]
+  );
+  const cameraReady = !!device && permission === 'granted';
+  // Records the joint of interest for the end-of-session comparison
+  const movement = useMovementAnalysis(plan, plannedExercise);
+  // The physio's YouTube video for this exercise, played alongside the camera
+  const videoLink = plan?.videos?.[plannedExercise.id];
+  const videoId = parseYouTubeId(videoLink);
+  const [recordingDemo, setRecordingDemo] = useState(false);
+
+  // Get into position -> 3-2-1 countdown -> count. Counting (and the timer)
+  // starts at "Go".
+  // What this exercise needs in view (the working arm or leg, not always the
+  // whole body)
+  const framingRequired = useMemo(
+    () => framingRequirement(plannedExercise, plan?.side),
+    [plannedExercise, plan?.side]
+  );
+  const gate = useSessionGate({
+    landmarks: currentPose?.landmarks,
+    required: framingRequired,
+    onGo: () => {
+      lastRepsRef.current = 0;
+      dispatch(startExercise(plannedExercise));
+      exerciseValidationService.startExercise(plannedExercise);
+      movement.start();
+    },
+  });
+  const { start: startGate, reset: resetGate } = gate;
+  const counting = gate.phase === 'active';
+  const outOfView = gate.outOfView;
+  const outOfViewRef = useRef(outOfView);
+  outOfViewRef.current = outOfView;
+
+  // BlazePose runs only while detecting (and not paused); poses go to the Redux store
+  const { cameraProps, error: detectorError } = useBlazePose({
+    device,
+    enabled: isDetecting && !isPaused && !practice,
+    frameSkip,
+  });
+
+  const requestCameraPermission = useCallback(async () => {
+    const result = await Camera.requestCameraPermission();
+    setPermission(result === 'granted' ? 'granted' : 'denied');
+  }, []);
 
   useEffect(() => {
     requestCameraPermission();
-    initializePoseDetection();
-
     return () => {
-      if (isDetecting) {
-        stopPoseDetection();
-      }
+      dispatch(setDetecting(false));
+      mockPoseDataSimulator?.stop();
     };
-  }, []);
+  }, [dispatch, requestCameraPermission]);
 
-  const requestCameraPermission = async () => {
-    const permission = await Camera.requestCameraPermission();
-    setHasPermission(permission === 'authorized');
-    if (permission !== 'authorized') {
-      Alert.alert(
-        'Camera Permission Required',
-        'Please grant camera permission to use pose detection.'
-      );
+  // Validate each new pose during the exercise; show and speak the instruction
+  useEffect(() => {
+    if (stage !== 'exercise' || !counting || !isExercising || isPaused || !currentPose) {
+      return;
     }
-  };
-
-  const initializePoseDetection = async () => {
     try {
-      await poseDetectionService.initialize();
-      poseDetectionService.setPoseDataCallback((poseData) => {
-        dispatch(setPoseData(poseData));
+      const result = exerciseValidationService.validatePose(currentPose);
+      movement.add(currentPose);
+      dispatch(updateValidation(result));
+      const metrics = exerciseValidationService.getExerciseMetrics();
+      dispatch(
+        updateExerciseProgress({
+          reps: metrics.repetitionCount,
+          formScore: metrics.averageQuality / 100,
+        })
+      );
+      const spoken = speakLiveFeedback(result, {
+        reps: metrics.repetitionCount,
+        previousReps: lastRepsRef.current,
+        target: plannedExercise.targetRepetitions,
+        outOfView: outOfViewRef.current,
+        lastSpoken: lastSpokenRef.current,
+        hold: movementOf(plannedExercise.id).mode === 'hold',
+        comfort: coachingOf(plan) === 'comfort',
       });
-      setIsInitialized(true);
-      setUseMockData(false);
-      console.log('Pose detection initialized successfully');
+      if (spoken) lastSpokenRef.current = spoken;
+      lastRepsRef.current = metrics.repetitionCount;
     } catch (error) {
-      console.error('Failed to initialize pose detection:', error);
-      setInitError('Pose detection unavailable');
-
-      // Fall back to mock data simulator
-      Alert.alert(
-        'Using Mock Data',
-        'Pose detection service unavailable. Using simulated data for testing. This is normal in development/test environments.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setUseMockData(true);
-              setIsInitialized(true);
-              console.log('Switched to mock pose data simulator');
-            },
-          },
-        ]
-      );
+      console.error('Failed to validate pose:', error);
     }
-  };
+  }, [
+    currentPose,
+    counting,
+    isExercising,
+    isPaused,
+    stage,
+    plannedExercise,
+    plan,
+    dispatch,
+    movement,
+  ]);
 
-  const startPoseDetection = () => {
-    if (isInitialized) {
+  const beginSession = useCallback(
+    (practiceMode: boolean) => {
+      const exercise = plannedExercise;
+      lastSpokenRef.current = '';
+      setIsPaused(false);
+      setPractice(practiceMode);
+      // Shows the exercise on screen; counting only starts after the countdown
+      dispatch(startExercise(exercise));
       dispatch(setDetecting(true));
+      audioFeedbackService.speak(
+        practiceMode
+          ? `${option.title}. Get ready.`
+          : `${option.title}. ${FRAMING_MESSAGE}.`
+      );
+      startGate({ skipFraming: practiceMode });
 
-      // Start mock simulator if using mock data (dev only)
-      if (useMockData && mockPoseDataSimulator) {
-        mockPoseDataSimulator.start((poseData) => {
-          dispatch(setPoseData(poseData));
-        }, 30);
+      if (practiceMode && mockPoseDataSimulator) {
+        mockPoseDataSimulator.start(
+          (poseData) => {
+            dispatch(setPoseData(poseData));
+          },
+          30,
+          plannedExercise.id
+        );
       }
-    }
-  };
-
-  const stopPoseDetection = () => {
-    dispatch(setDetecting(false));
-
-    // Stop mock simulator if running (dev only)
-    if (useMockData && mockPoseDataSimulator && mockPoseDataSimulator.isActive()) {
-      mockPoseDataSimulator.stop();
-    }
-  };
-
-  // Exercise control handlers
-  const handleStartExercise = useCallback(() => {
-    setIsExerciseActive(true);
-    setIsPaused(false);
-    if (!isDetecting) {
-      startPoseDetection();
-    }
-  }, [isDetecting]);
-
-  const handleStopExercise = useCallback(() => {
-    setIsExerciseActive(false);
-    setIsPaused(false);
-    stopPoseDetection();
-  }, []);
-
-  const handlePauseExercise = useCallback(() => {
-    setIsPaused(!isPaused);
-  }, [isPaused]);
-
-  const handleResetExercise = useCallback(() => {
-    setIsExerciseActive(false);
-    setIsPaused(false);
-    frameCountRef.current = 0;
-  }, []);
-
-  // Process frame callback (must be non-worklet function)
-  const processFrameData = useCallback(async (_width: number, _height: number) => {
-    try {
-      // In a real implementation, you would:
-      // 1. Convert the Frame buffer to ImageData
-      // 2. Call poseDetectionService.processFrame(imageData)
-      // 3. The service will call the callback we set up in initializePoseDetection
-      //
-      // For now, we'll simulate this with a mock implementation
-      // since frame-to-ImageData conversion requires native modules or plugins
-      // Mock pose data for testing (replace with actual frame processing)
-      // The actual pose data will come through the callback set in initializePoseDetection
-      // Note: Actual frame processing would happen here
-      // await poseDetectionService.processFrame(imageData);
-    } catch (error) {
-      console.error('Error processing frame:', error);
-    }
-  }, []);
-
-  // Frame processor for pose detection
-  const frameProcessor = useFrameProcessor(
-    (frame: Frame) => {
-      'worklet';
-
-      if (!isDetecting || isPaused) return;
-
-      // Apply frame skipping for performance
-      frameCountRef.current++;
-      if (frameCountRef.current % frameSkip !== 0) {
-        return;
-      }
-
-      // Convert frame to processable format and send to JS thread
-      // Note: Frame-to-ImageData conversion requires native implementation
-      // For now, we'll pass frame dimensions to trigger processing
-      const frameWidth = frame.width;
-      const frameHeight = frame.height;
-
-      runOnJS(processFrameData)(frameWidth, frameHeight);
+      setStage('exercise');
     },
-    [isDetecting, isPaused, frameSkip, processFrameData]
+    [dispatch, option, plannedExercise, startGate]
   );
 
-  // Render fallback UI when camera is not available but mock data is enabled
-  if ((!device || !hasPermission) && !useMockData) {
+  // Start straight away once the camera becomes available (e.g. permission granted)
+  const gatePhase = gate.phase;
+  useEffect(() => {
+    if (stage === 'exercise' && cameraReady && gatePhase === 'idle' && !practice) {
+      beginSession(false);
+    }
+  }, [stage, cameraReady, gatePhase, practice, beginSession]);
+
+  const handleStart = () => {
+    setRecordingDemo(false);
+    if (cameraReady) {
+      beginSession(false);
+    } else {
+      // Shows the friendly "camera unavailable" explanation
+      setStage('exercise');
+    }
+  };
+
+  // Today's routine: start the next exercise, and what follows each one
+  const routineFlow = useRoutineFlow({ plan, setSelectedKey, start: handleStart });
+
+  const backToChooser = useCallback(() => {
+    resetGate();
+    exerciseValidationService.stopExercise();
+    dispatch(clearExercise());
+    mockPoseDataSimulator?.stop();
+    dispatch(setDetecting(false));
+    setPractice(false);
+    setRecordingDemo(false);
+    setStage('choose');
+  }, [dispatch, resetGate]);
+
+  const handleStop = useCallback(() => {
+    if (!counting) {
+      // Still getting ready: nothing to save
+      backToChooser();
+      return;
+    }
+    resetGate();
+    const { repetitionCount, formScore, currentExercise } = exerciseState;
+    const sessionRange = exerciseValidationService.getSessionRange();
+    exerciseValidationService.stopExercise();
+    mockPoseDataSimulator?.stop();
+    dispatch(setDetecting(false));
+    const outcome = sessionOutcome(movement.finish(), {
+      plan,
+      exercise: plannedExercise,
+      recordingDemo,
+      sessionRange,
+    });
+    if (outcome.planUpdate) {
+      dispatch(setExercisePlan(outcome.planUpdate));
+    }
+    // Active time from the session clock: the same the live timer showed
+    const duration = seconds(activeMs(clockOf(exerciseState), Date.now()));
+    const reps = outcome.summary.reps ?? repetitionCount;
+    // How much of the prescribed exercise was done: separate from whether it
+    // could be measured
+    const completion = completionOf(plannedExercise, { reps, durationSeconds: duration });
+    const recorded = outcome.historyResult ?? sessionRange ?? {};
+    const result = {
+      ...recorded,
+      // Always record the side worked on, even when nothing could be measured,
+      // so the session counts for the right limb (see todaysRoutine)
+      joint:
+        recorded.joint ??
+        (plan && plannedExercise.primaryJoint
+          ? `${plan.side}_${plannedExercise.primaryJoint}`
+          : undefined),
+      completion,
+    };
+    const saved = !practice && !recordingDemo && isWorthKeeping(result, repetitionCount);
+    // Practice sessions and demonstrations are not the patient's own history
+    dispatch(practice || recordingDemo ? clearExercise() : stopExercise(result));
+    audioFeedbackService.speak(
+      outcome.spokenCue ? `Well done. ${outcome.spokenCue}` : 'Well done'
+    );
+
+    setSummary({
+      ...outcome.summary,
+      exercise: option.title,
+      reps,
+      duration,
+      formAccuracy: Math.round(formScore * 100),
+      targetReps: currentExercise?.targetRepetitions,
+      practice,
+      exerciseId: plannedExercise.id,
+      mode: movementOf(plannedExercise.id).mode ?? 'reps',
+      holdSeconds: (plannedExercise.phases[0]?.holdDuration ?? 0) / 1000 || undefined,
+      // Practice and demonstrations are not saved, so they have no completion
+      completion: practice || recordingDemo ? undefined : completion,
+      saved,
+    });
+    setIsPaused(false);
+    setRecordingDemo(false);
+    setStage('summary');
+  }, [
+    backToChooser,
+    counting,
+    dispatch,
+    exerciseState,
+    resetGate,
+    option,
+    practice,
+    movement,
+    plan,
+    plannedExercise,
+    recordingDemo,
+  ]);
+
+  // -------------------------------------------------------------------------
+  // 1. Choose
+  // -------------------------------------------------------------------------
+  if (stage === 'choose') {
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>
-          {!device ? 'No camera device found' : 'Camera permission required'}
-        </Text>
-        {isInitialized && (
-          <TouchableOpacity
-            style={styles.mockButton}
-            onPress={() => {
-              setUseMockData(true);
-              Alert.alert(
-                'Mock Mode Enabled',
-                'Using simulated pose data for testing without camera access.'
-              );
-            }}
-          >
-            <Text style={styles.mockButtonText}>Use Mock Data (Testing Mode)</Text>
-          </TouchableOpacity>
-        )}
+      <View style={styles.flex} testID={AccessibilityIds.poseDetection.screen}>
+        <ExerciseChooser
+          selectedKey={selectedKey}
+          onSelect={setSelectedKey}
+          plan={plan}
+          onPlanChange={changePlan}
+          onRecordDemo={() => {
+            handleStart();
+            setRecordingDemo(true);
+          }}
+          onStart={handleStart}
+          routine={routineFlow.routine}
+          onStartRoutine={routineFlow.startRoutine}
+          onToggleRoutine={routineFlow.toggle}
+          onStartExercise={routineFlow.startExercise}
+        />
       </View>
     );
   }
 
+  // -------------------------------------------------------------------------
+  // 3. Summary
+  // -------------------------------------------------------------------------
+  if (stage === 'summary' && summary) {
+    return (
+      <View style={styles.flex} testID={AccessibilityIds.poseDetection.screen}>
+        <ExerciseSummary
+          {...summary}
+          onConfirmCompleted={
+            summary.saved ? () => dispatch(confirmLastSessionCompleted()) : undefined
+          }
+          onPainSelect={(score) => {
+            // Practice sessions aren't saved, so there is nothing to attach it to
+            if (summary.saved) {
+              dispatch(setLastSessionPain(score));
+            }
+          }}
+          onDone={() => {
+            setStage('choose');
+            navigation.navigate('HomeTab', { screen: 'Home' });
+          }}
+          onRepeat={() => setStage('choose')}
+          {...(summary.practice ? {} : routineFlow.afterSession(summary.exerciseId))}
+        />
+      </View>
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Camera not available
+  // -------------------------------------------------------------------------
+  if (!practice && (!cameraReady || detectorError)) {
+    const practiceAction = mockPoseDataSimulator
+      ? {
+          label: 'Practice without camera',
+          icon: 'play-arrow',
+          onPress: () => beginSession(true),
+          testID: 'use-practice-mode',
+        }
+      : undefined;
+    const back = {
+      label: 'Back to exercises',
+      onPress: backToChooser,
+      testID: 'camera-help-back',
+    };
+
+    if (detectorError) {
+      return (
+        <CameraUnavailable
+          testID="camera-error"
+          icon="videocam-off"
+          title="The camera couldn't start"
+          message="Please close the app and open it again. If this keeps happening, restart your phone."
+          primary={{ ...back, icon: 'arrow-back' }}
+        />
+      );
+    }
+    if (permission === 'denied') {
+      return (
+        <CameraUnavailable
+          testID={AccessibilityIds.poseDetection.permissionDialog}
+          icon="photo-camera"
+          title="Allow the camera"
+          message="PhysioAssist uses your camera to watch your movements and count your repetitions. Nothing is recorded or sent anywhere. Turn on the camera for PhysioAssist in your phone's Settings."
+          primary={{
+            label: 'Open Settings',
+            icon: 'settings',
+            onPress: () => Linking.openSettings(),
+            testID: AccessibilityIds.poseDetection.permissionGrantButton,
+          }}
+          secondary={practiceAction ?? back}
+        />
+      );
+    }
+    if (!device) {
+      return (
+        <CameraUnavailable
+          testID="no-camera"
+          icon="no-photography"
+          title="No camera found"
+          message="This device doesn't seem to have a front camera. You can still try the exercise screen in practice mode, with a pretend body."
+          primary={practiceAction ?? { ...back, icon: 'arrow-back' }}
+          secondary={practiceAction ? back : undefined}
+        />
+      );
+    }
+    // Permission still being asked
+    return (
+      <CameraUnavailable
+        testID="camera-waiting"
+        icon="photo-camera"
+        title="Getting the camera ready"
+        message="If your phone asks, please allow PhysioAssist to use the camera."
+        primary={{
+          label: 'Try again',
+          icon: 'refresh',
+          onPress: requestCameraPermission,
+        }}
+        secondary={back}
+      />
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // 2. Exercise (camera full screen)
+  // -------------------------------------------------------------------------
   return (
-    <View style={styles.container}>
-      {device && hasPermission && !useMockData ? (
+    <View style={styles.camera} testID={AccessibilityIds.poseDetection.screen}>
+      {cameraReady && !practice && device ? (
         <Camera
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={isFocused}
-          frameProcessor={frameProcessor}
-          fps={30}
+          resizeMode="cover"
+          fps={CAMERA_FPS}
+          testID="camera-view"
+          {...cameraProps}
         />
       ) : (
-        <View style={[StyleSheet.absoluteFill, styles.mockBackground]}>
-          <Text style={styles.mockModeText}>MOCK DATA MODE</Text>
-          <Text style={styles.mockModeSubtext}>Simulated pose detection for testing</Text>
-        </View>
+        <View style={[StyleSheet.absoluteFill, styles.practiceBackground]} />
       )}
 
-      <PoseOverlay />
+      {showPoseOverlay !== false ? <PoseOverlay showAngles={showJointAngles} /> : null}
 
-      <View style={styles.topInfo}>
-        {useMockData && (
-          <View style={styles.mockBadge}>
-            <Text style={styles.mockBadgeText}>MOCK MODE</Text>
-          </View>
-        )}
-        <View style={styles.confidenceBadge}>
-          <Text style={styles.confidenceText}>
-            Confidence: {(confidence * 100).toFixed(0)}%
-          </Text>
-        </View>
-        {initError && (
-          <View style={styles.errorBadge}>
-            <Text style={styles.errorText}>{initError}</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.controls}>
-        {!isDetecting && !isExerciseActive ? (
-          <TouchableOpacity style={styles.startButton} onPress={startPoseDetection}>
-            <Text style={styles.buttonText}>Start Detection</Text>
-          </TouchableOpacity>
-        ) : isDetecting && !isExerciseActive ? (
-          <TouchableOpacity style={styles.stopButton} onPress={stopPoseDetection}>
-            <Text style={styles.buttonText}>Stop Detection</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-
-      {isInitialized && (
-        <ExerciseControls
-          isActive={isExerciseActive}
-          onStart={handleStartExercise}
-          onStop={handleStopExercise}
-          onPause={handlePauseExercise}
-          onReset={handleResetExercise}
-        />
-      )}
+      <ExerciseControls
+        media={
+          videoId ? (
+            <FollowAlongVideo videoId={videoId} start={parseYouTubeStart(videoLink)} />
+          ) : undefined
+        }
+        isActive={isExercising}
+        isPaused={isPaused}
+        practice={practice}
+        gate={
+          gate.phase === 'framing' || gate.phase === 'countdown' ? gate.phase : undefined
+        }
+        framing={gate.framing}
+        countdown={gate.countdown}
+        outOfView={outOfView}
+        onStart={() => beginSession(practice)}
+        onStop={handleStop}
+        onPause={() => {
+          // The session clock pauses too: pauses don't count as exercise time
+          dispatch(isPaused ? resumeExercise() : pauseExercise());
+          setIsPaused((p) => !p);
+        }}
+        onReset={backToChooser}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  message: {
-    color: '#FFF',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 100,
-    paddingHorizontal: 20,
-  },
-  mockButton: {
-    backgroundColor: '#FF9800',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 30,
-    marginTop: 40,
-    alignSelf: 'center',
-  },
-  mockButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  mockBackground: {
-    backgroundColor: '#1a1a2e',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mockModeText: {
-    color: '#FF9800',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  mockModeSubtext: {
-    color: '#AAA',
-    fontSize: 14,
-  },
-  topInfo: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-  },
-  confidenceBadge: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: 8,
-  },
-  confidenceText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  mockBadge: {
-    backgroundColor: 'rgba(255, 152, 0, 0.9)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  mockBadgeText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  errorBadge: {
-    backgroundColor: 'rgba(244, 67, 54, 0.9)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: 8,
-  },
-  errorText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  controls: {
-    position: 'absolute',
-    bottom: 100,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  startButton: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 30,
-  },
-  stopButton: {
-    backgroundColor: '#F44336',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 30,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '600',
-  },
+  flex: { flex: 1, backgroundColor: colors.background },
+  camera: { flex: 1, backgroundColor: '#000' },
+  practiceBackground: { backgroundColor: colors.text },
 });
 
 export default PoseDetectionScreen;

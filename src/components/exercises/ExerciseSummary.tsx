@@ -1,279 +1,451 @@
 /**
- * ExerciseSummary Component
- * Displays comprehensive summary of completed exercise session
- *
- * Version: 1.0 (Basic) - Form analysis and historical comparison deferred to v1.1
+ * ExerciseSummary: a calm, celebratory summary shown after the patient stops
+ * an exercise. Reps, time and form (in words), an optional 0-10 pain check,
+ * then "Done" and "Do another".
  */
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { AppText, Banner, BigButton, Card, Metric, Screen } from '../ui';
+import { colors, radii, spacing } from '../../theme';
+import { formatDuration } from './exerciseCatalog';
+import type { Completion } from '../../services/pose/routine';
+import PainScale from './PainScale';
+import RangeResult, { RangeResultProps } from './RangeResult';
+import { DemonstrationSaved, MovementFeedback } from './MovementFeedback';
+import type { Finding } from '../../services/movement/types';
+import type { MovementProfile } from '../../services/movement/analysis';
+
+/** Pain at or above this (0-10) asks the patient to tell their physio. */
+export const HIGH_PAIN = 7;
 
 export interface ExerciseSummaryProps {
   exercise?: string;
   reps?: number;
+  /** Seconds. */
   duration?: number;
+  /** 0–100. */
   score?: number;
+  /** 0–100. */
   formAccuracy?: number;
   calories?: number;
   targetReps?: number;
   previousBestScore?: number;
+  /** Shown as the main action ("Done"). */
+  onDone?: () => void;
+  /** Shown as the secondary action ("Do another"). */
+  onRepeat?: () => void;
+  /** The next exercise of today's routine: shown as the main action. */
+  next?: { title: string; onPress: () => void };
+  /** This session finished today's routine. */
+  routineDone?: boolean;
+  /** Practice mode: nothing was saved. */
+  practice?: boolean;
+  /**
+   * Asks "How much pain did you feel?" (0-10) when set. Answering is optional.
+   */
+  onPainSelect?: (score: number) => void;
+  /** Initial pain answer, if already given. */
+  painScore?: number | null;
+  /** Best range for the joint of interest vs the goal they were given. */
+  range?: RangeResultProps | null;
+  /** Things to work on, from the session analysis (null = not analysed). */
+  findings?: Finding[] | null;
+  comparedWithDemo?: boolean;
+  /** Set when this session was the physio's demonstration. */
+  demoSaved?: MovementProfile | null;
+  /** A message to show at the top (e.g. the demonstration couldn't be saved). */
+  notice?: string;
+  /** 'hold': a still exercise (heel prop), timed, not counted in repetitions. */
+  mode?: 'reps' | 'hold';
+  /** A still exercise's prescribed time (seconds). */
+  holdSeconds?: number;
+  /** How much of the prescribed exercise was done (unset: judged from repetitions). */
+  completion?: Completion;
+  /** "I did the whole exercise", when the camera couldn't count it. */
+  onConfirmCompleted?: () => void;
+  /**
+   * Whether enough movement was seen to judge technique. When not, an empty
+   * list of findings says nothing about how the patient moved.
+   */
+  assessed?: boolean;
 }
+
+/** The headline and one plain sentence for how much was done. */
+const completionWords = (
+  completion: Completion,
+  measured: boolean
+): { title: string; line: string } => {
+  switch (completion) {
+    case 'completed':
+      return {
+        title: 'Well done!',
+        line: measured
+          ? 'You completed the exercise.'
+          : 'You completed the exercise. We couldn’t measure it this time.',
+      };
+    case 'stopped_early':
+      return {
+        title: 'You stopped early',
+        line: 'Your attempt has been saved. Stopping when something doesn’t feel right is the right thing to do.',
+      };
+    default:
+      return {
+        title: 'Saved as an attempt',
+        line: 'The exercise wasn’t counted as done. If you did the whole exercise, tell us below.',
+      };
+  }
+};
+
+const formWords = (percent: number, reps: number) => {
+  if (reps === 0 && percent === 0) {
+    return 'Not measured';
+  }
+  return percent >= 80
+    ? 'Excellent form'
+    : percent >= 60
+      ? 'Good form'
+      : 'Keep practising';
+};
+
+const encouragement = (percent: number, reps: number, reachedGoal: boolean) => {
+  if (reps === 0) {
+    return 'No repetitions were counted this time. Check that your whole body is in view and try again when you are ready.';
+  }
+  if (reachedGoal) {
+    return 'You reached your goal. Rest for a minute before your next exercise.';
+  }
+  if (percent >= 80) {
+    return 'Your movements were smooth and steady. Keep it up.';
+  }
+  if (percent >= 60) {
+    return 'Good effort. Move slowly and keep your posture steady.';
+  }
+  return 'Every session helps. Take it slowly and focus on steady movements.';
+};
 
 const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   exercise = 'Exercise',
   reps = 0,
   duration = 0,
   score = 0,
-  formAccuracy = 0,
+  formAccuracy,
   calories = 0,
   targetReps,
   previousBestScore,
+  onDone,
+  onRepeat,
+  next,
+  routineDone,
+  practice,
+  onPainSelect,
+  painScore = null,
+  range,
+  findings,
+  comparedWithDemo,
+  demoSaved,
+  notice,
+  mode = 'reps',
+  holdSeconds,
+  completion,
+  onConfirmCompleted,
+  assessed,
 }) => {
-  const minutes = Math.floor(duration / 60);
-  const seconds = duration % 60;
-  const durationText = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
-
-  const scoreColor = score >= 80 ? '#4CAF50' : score >= 60 ? '#FF9800' : '#F44336';
-  const formColor =
-    formAccuracy >= 80 ? '#4CAF50' : formAccuracy >= 60 ? '#FF9800' : '#F44336';
-
+  const [confirmed, setConfirmed] = useState(false);
+  const [pain, setPain] = useState<number | null>(painScore);
+  const choosePain = (value: number) => {
+    setPain(value);
+    onPainSelect?.(value);
+  };
+  const percent = Math.round(formAccuracy ?? score);
+  const reachedGoal = !!targetReps && reps >= targetReps;
   const isPersonalBest = previousBestScore !== undefined && score > previousBestScore;
+  const didReps = reps > 0;
+  const status: Completion | undefined =
+    confirmed && completion === 'attempted' ? 'completed' : completion;
+  const words = status ? completionWords(status, Boolean(range)) : undefined;
+  const positive = status ? status === 'completed' : didReps;
+
+  const footer =
+    onDone || onRepeat || next ? (
+      <>
+        {next ? (
+          <BigButton
+            label={`Next: ${next.title}`}
+            icon="skip-next"
+            onPress={next.onPress}
+            testID="next-exercise-button"
+            accessibilityHint="Starts the next exercise of today's session"
+          />
+        ) : null}
+        {onDone ? (
+          <BigButton
+            label="Done"
+            icon="check"
+            variant={next ? 'secondary' : 'primary'}
+            onPress={onDone}
+            testID="done-button"
+          />
+        ) : null}
+        {onRepeat && !next ? (
+          <BigButton
+            label="Do another"
+            icon="replay"
+            variant="secondary"
+            onPress={onRepeat}
+            testID="retry-button"
+          />
+        ) : null}
+      </>
+    ) : undefined;
 
   return (
-    <ScrollView style={styles.scrollView}>
-      <View style={styles.container} testID="exercise-summary">
-        <Text style={styles.title}>{exercise} Complete!</Text>
-
-        {isPersonalBest && (
-          <View style={styles.badgeContainer}>
-            <Text style={styles.badge}>🎉 Personal Best!</Text>
-          </View>
-        )}
-
-        {/* Primary Stats */}
-        <View style={styles.primaryStats}>
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>Reps</Text>
-            <Text style={[styles.statValue, styles.large]}>{reps}</Text>
-            {targetReps && (
-              <Text style={styles.statSubtext}>
-                {reps >= targetReps ? `✓ Goal: ${targetReps}` : `Goal: ${targetReps}`}
-              </Text>
-            )}
-          </View>
-
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>Duration</Text>
-            <Text style={[styles.statValue, styles.large]}>{durationText}</Text>
-          </View>
-
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>Score</Text>
-            <Text style={[styles.statValue, styles.large, { color: scoreColor }]}>
-              {score}
-            </Text>
-            <Text style={styles.statSubtext}>/100</Text>
-          </View>
+    <Screen testID="exercise-summary" footer={footer}>
+      <View style={styles.hero}>
+        <View style={[styles.heroIcon, !positive && styles.heroIconNeutral]}>
+          <Icon
+            name={positive ? 'celebration' : 'self-improvement'}
+            size={44}
+            color={positive ? colors.success : colors.primary}
+          />
         </View>
+        <AppText
+          variant="display"
+          center
+          accessibilityRole="header"
+          testID="summary-title"
+        >
+          {words ? words.title : didReps ? 'Well done!' : 'Good try'}
+        </AppText>
+        <AppText variant="body" color={colors.textSecondary} center>
+          {words ? `${exercise}. ${words.line}` : `You finished: ${exercise}`}
+        </AppText>
+        {status === 'attempted' && onConfirmCompleted && !practice ? (
+          <BigButton
+            variant="secondary"
+            compact
+            icon="check"
+            label="I did the whole exercise"
+            onPress={() => {
+              setConfirmed(true);
+              onConfirmCompleted();
+            }}
+            testID="summary-confirm-completed"
+          />
+        ) : null}
+      </View>
 
-        {/* Secondary Stats */}
-        <View style={styles.secondaryStats}>
-          <View style={styles.statRow}>
-            <Text style={styles.statRowLabel}>Form Accuracy</Text>
-            <View style={styles.statRowValue}>
-              <View
-                style={[
-                  styles.progressBar,
-                  { width: '100%', backgroundColor: '#E0E0E0' },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.progressFill,
-                    { width: `${formAccuracy}%`, backgroundColor: formColor },
-                  ]}
+      {isPersonalBest ? <Banner tone="success" message="New personal best!" /> : null}
+
+      <Card style={styles.card}>
+        {mode === 'hold' ? (
+          <View style={styles.statsRow} testID="summary-hold">
+            <View style={styles.repsCol}>
+              <Metric
+                value={formatDuration(duration)}
+                label="resting still"
+                color={colors.primary}
+                testID="exercise-duration"
+              />
+            </View>
+            {holdSeconds ? (
+              <View style={styles.statsCol}>
+                <Stat
+                  icon="flag"
+                  label="Your physio’s plan"
+                  value={`Rest still for ${formatDuration(holdSeconds)}`}
+                  testID="summary-hold-goal"
                 />
               </View>
-              <Text style={[styles.percentage, { color: formColor }]}>
-                {formAccuracy}%
-              </Text>
-            </View>
+            ) : null}
           </View>
-
-          {calories > 0 && (
-            <View style={styles.statRow}>
-              <Text style={styles.statRowLabel}>Calories Burned</Text>
-              <Text style={styles.statRowText}>{calories} kcal</Text>
+        ) : (
+          <>
+            <View style={styles.statsRow}>
+              <View style={styles.repsCol}>
+                <Metric
+                  value={String(reps)}
+                  label={reps === 1 ? 'repetition' : 'repetitions'}
+                  color={colors.primary}
+                  testID="reps-completed"
+                />
+              </View>
+              <View style={styles.statsCol}>
+                <Stat
+                  icon="timer"
+                  label="Time"
+                  value={formatDuration(duration)}
+                  testID="exercise-duration"
+                />
+                <Stat
+                  icon="thumb-up"
+                  label="Form"
+                  value={formWords(percent, reps)}
+                  testID="form-accuracy"
+                />
+              </View>
             </View>
-          )}
 
-          {previousBestScore !== undefined && (
-            <View style={styles.statRow}>
-              <Text style={styles.statRowLabel}>Previous Best</Text>
-              <Text style={styles.statRowText}>{previousBestScore}/100</Text>
+            {targetReps ? (
+              <View style={[styles.goal, reachedGoal && styles.goalReached]}>
+                <Icon
+                  name={reachedGoal ? 'check-circle' : 'flag'}
+                  size={22}
+                  color={reachedGoal ? colors.success : colors.textSecondary}
+                />
+                <AppText
+                  variant="bodyStrong"
+                  color={reachedGoal ? colors.success : colors.textSecondary}
+                >
+                  {reachedGoal
+                    ? `Goal of ${targetReps} reached`
+                    : `Your goal: ${targetReps}`}
+                </AppText>
+              </View>
+            ) : null}
+          </>
+        )}
+        {calories > 0 ? (
+          <Stat icon="local-fire-department" label="Energy" value={`${calories} kcal`} />
+        ) : null}
+        {previousBestScore !== undefined ? (
+          <Stat
+            icon="emoji-events"
+            label="Previous best"
+            value={`${previousBestScore} / 100`}
+          />
+        ) : null}
+      </Card>
+
+      {notice ? <Banner tone="warning" message={notice} testID="summary-notice" /> : null}
+      {routineDone ? (
+        <Banner
+          tone="success"
+          message="That’s today’s session done. Well done."
+          testID="summary-routine-done"
+        />
+      ) : null}
+      {demoSaved ? <DemonstrationSaved profile={demoSaved} /> : null}
+      {range ? <RangeResult {...range} /> : null}
+      {findings ? (
+        <MovementFeedback
+          findings={findings}
+          comparedWithDemo={comparedWithDemo}
+          assessed={assessed}
+        />
+      ) : null}
+
+      {onPainSelect ? (
+        <Card style={styles.card} testID="pain-check">
+          <View>
+            <AppText variant="heading" accessibilityRole="header">
+              How much pain did you feel?
+            </AppText>
+            <AppText variant="body" color={colors.textSecondary}>
+              Tap a number. You can skip this.
+            </AppText>
+          </View>
+          <PainScale value={pain} onChange={choosePain} />
+          {pain !== null && pain >= HIGH_PAIN ? (
+            <Banner
+              tone="warning"
+              message="Please tell your physiotherapist about this pain before your next session."
+              testID="pain-warning"
+            />
+          ) : pain !== null ? (
+            <View style={styles.painSaved} testID="pain-saved">
+              <Icon name="check" size={22} color={colors.success} />
+              <AppText variant="bodyStrong" color={colors.success}>
+                Thank you. Pain {pain} out of 10{practice ? '' : ' saved'}.
+              </AppText>
             </View>
-          )}
-        </View>
+          ) : null}
+        </Card>
+      ) : null}
 
-        {/* Feedback Section */}
-        <View style={styles.feedbackSection}>
-          <Text style={styles.feedbackTitle}>Performance Feedback</Text>
-          {score >= 80 && (
-            <Text style={styles.feedbackText}>✨ Excellent form and execution!</Text>
-          )}
-          {score >= 60 && score < 80 && (
-            <Text style={styles.feedbackText}>
-              👍 Good effort! Focus on maintaining form.
-            </Text>
-          )}
-          {score < 60 && (
-            <Text style={styles.feedbackText}>
-              💪 Keep practicing! Your form will improve.
-            </Text>
-          )}
-          {targetReps && reps >= targetReps && (
-            <Text style={styles.feedbackText}>🎯 Target reps achieved!</Text>
-          )}
-        </View>
-
-        {/* Note about v1.1 features */}
-        <Text style={styles.versionNote}>
-          Advanced analytics (joint angle analysis, movement quality scoring) coming in
-          v1.1
-        </Text>
+      {practice ? (
+        <Banner tone="info" message="Practice mode: this session was not saved." />
+      ) : null}
+      <View style={styles.note} testID="summary-encouragement">
+        <Icon name="favorite-border" size={24} color={colors.warning} />
+        <AppText variant="body" style={styles.flex}>
+          {mode === 'hold' || status
+            ? 'Every session helps. Take your time, and rest before your next exercise.'
+            : encouragement(percent, reps, reachedGoal)}
+        </AppText>
       </View>
-    </ScrollView>
+    </Screen>
   );
 };
 
+const Stat: React.FC<{
+  icon: string;
+  label: string;
+  value: string;
+  testID?: string;
+}> = ({ icon, label, value, testID }) => (
+  <View
+    style={styles.stat}
+    accessible
+    accessibilityLabel={`${label}: ${value}`}
+    testID={testID}
+  >
+    <View style={styles.statIcon}>
+      <Icon name={icon} size={22} color={colors.primary} />
+    </View>
+    <View style={styles.flex}>
+      <AppText variant="caption" color={colors.textSecondary}>
+        {label}
+      </AppText>
+      <AppText variant="bodyStrong">{value}</AppText>
+    </View>
+  </View>
+);
+
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 8,
-    color: '#333',
-  },
-  badgeContainer: {
+  flex: { flex: 1 },
+  hero: { alignItems: 'center', gap: spacing.xs },
+  heroIcon: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: colors.successSoft,
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
-  badge: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#4CAF50',
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  primaryStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 24,
-    paddingVertical: 16,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-  },
-  stat: {
+  heroIconNeutral: { backgroundColor: colors.primarySoft },
+  card: { gap: spacing.md },
+  statsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  repsCol: { minWidth: 110, alignItems: 'center' },
+  statsCol: { flex: 1, gap: spacing.md },
+  stat: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.sm,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  statLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2196F3',
-  },
-  large: {
-    fontSize: 32,
-  },
-  statSubtext: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
-  },
-  secondaryStats: {
-    marginBottom: 24,
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  statRowLabel: {
-    fontSize: 16,
-    color: '#666',
-    flex: 1,
-  },
-  statRowValue: {
+  goal: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceMuted,
   },
-  statRowText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-    marginRight: 12,
-    overflow: 'hidden',
-    flex: 1,
-    maxWidth: 100,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  percentage: {
-    fontSize: 14,
-    fontWeight: '600',
-    minWidth: 40,
-    textAlign: 'right',
-  },
-  feedbackSection: {
-    backgroundColor: '#F0F7FF',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  feedbackTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
-  },
-  feedbackText: {
-    fontSize: 14,
-    color: '#555',
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  versionNote: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginTop: 8,
+  goalReached: { backgroundColor: colors.successSoft },
+  painSaved: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  note: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radii.lg,
+    backgroundColor: colors.accentSoft,
   },
 });
 

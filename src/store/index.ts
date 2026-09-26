@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
-import EncryptedStorage from 'react-native-encrypted-storage';
+import EncryptedStorage from './storage';
 import { combineReducers } from 'redux';
 
 import poseReducer from './slices/poseSlice';
@@ -15,9 +15,16 @@ const rootPersistConfig = {
   whitelist: ['user', 'settings'], // Only persist user and settings (HIPAA-compliant encrypted storage)
 };
 
+// Of the exercise slice only the session history is kept across launches
+const exercisePersistConfig = {
+  key: 'exercise',
+  storage: EncryptedStorage,
+  whitelist: ['history'],
+};
+
 export const rootReducer = combineReducers({
   pose: poseReducer,
-  exercise: exerciseReducer,
+  exercise: persistReducer(exercisePersistConfig, exerciseReducer),
   user: userReducer,
   settings: settingsReducer,
   network: networkReducer,

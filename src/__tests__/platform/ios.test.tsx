@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { View, Text } from 'react-native';
 import { render } from '@testing-library/react-native';
 
 // Mock React Native modules before importing
@@ -86,7 +87,7 @@ describe('iOS Platform Tests', () => {
   describe('iOS-Specific UI Components', () => {
     it('should render iOS-style navigation bar', () => {
       const IOSNavBar = () => (
-        <div
+        <View
           testID="ios-nav-bar"
           style={{
             height: 44,
@@ -95,8 +96,8 @@ describe('iOS Platform Tests', () => {
             borderBottomColor: '#c8c8c8',
           }}
         >
-          iOS Navigation Bar
-        </div>
+          <Text>iOS Navigation Bar</Text>
+        </View>
       );
 
       const { getByTestId } = render(<IOSNavBar />);
@@ -129,15 +130,15 @@ describe('iOS Platform Tests', () => {
       };
 
       const SafeAreaComponent = ({ insets }: any) => (
-        <div
+        <View
           testID="safe-area-wrapper"
           style={{
             paddingTop: insets.top,
             paddingBottom: insets.bottom,
           }}
         >
-          Content
-        </div>
+          <Text>Content</Text>
+        </View>
       );
 
       const { getByTestId } = render(<SafeAreaComponent insets={mockSafeAreaInsets} />);
