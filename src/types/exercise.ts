@@ -59,6 +59,11 @@ export interface ValidationResult {
   estimatedJoints?: string[];
   /** The joint went past the plan's safety limit on this frame. */
   overLimit?: boolean;
+  /**
+   * The joint angle isn't valid from this camera view (e.g. a knee bending
+   * towards the camera), so it was withheld: no number, no counting.
+   */
+  withheld?: boolean;
 }
 
 export interface RepetitionData {

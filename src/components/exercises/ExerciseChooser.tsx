@@ -17,7 +17,11 @@ import PlanEditor from './PlanEditor';
 import ExerciseVideo from '../video/ExerciseVideo';
 import { VideoLinkEditor } from '../video/VideoLinkEditor';
 import { parseYouTubeId, parseYouTubeStart } from '../../utils/youtube';
-import { ExercisePlan, jointLabel } from '../../services/pose/exercisePlan';
+import {
+  ExercisePlan,
+  jointLabel,
+  limitMovement,
+} from '../../services/pose/exercisePlan';
 
 interface ExerciseChooserProps {
   selectedKey: ExerciseKey;
@@ -38,11 +42,14 @@ interface ExerciseChooserProps {
   demoStatus?: string;
 }
 
-/** "Goal 120° · limit 140° · 10 times". */
+/** "Goal 120° · don't raise your arm past 140° · 10 times". */
 const planDetails = (plan: ExercisePlan) =>
   [
     plan.goalDegrees !== undefined && `Goal ${plan.goalDegrees}°`,
-    plan.limitDegrees !== undefined && `stay below ${plan.limitDegrees}°`,
+    plan.extensionGoalDegrees !== undefined &&
+      `straighten to within ${plan.extensionGoalDegrees}°`,
+    plan.limitDegrees !== undefined &&
+      `don't ${limitMovement(plan.joint)} past ${plan.limitDegrees}°`,
     plan.reps !== undefined && `${plan.reps} times`,
   ]
     .filter(Boolean)

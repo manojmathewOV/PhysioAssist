@@ -60,15 +60,12 @@ import {
   EXERCISE_OPTIONS,
   ExerciseKey,
   friendlyInstruction,
+  firstKeyFor,
+  keepOrFirstKey,
 } from '../../components/exercises/exerciseCatalog';
 import { AccessibilityIds } from '../../constants/accessibility';
 import type { MainTabParamList } from '../../navigation/types';
 import { colors } from '../../theme';
-
-/** First exercise that trains the plan's joint (falls back to the bicep curl). */
-const firstKeyFor = (plan?: ExercisePlan | null): ExerciseKey =>
-  EXERCISE_OPTIONS.find((o) => plan && o.exercise.primaryJoint === plan.joint)?.key ??
-  'bicepCurl';
 
 // Displayed joints: screen/overlay key -> goniometerService joint name
 const WEB_JOINTS: Record<string, string> = {
@@ -132,7 +129,9 @@ const WebPoseDetectionScreen: React.FC = () => {
   const changePlan = useCallback(
     (next: ExercisePlan) => {
       dispatch(setExercisePlan(next));
-      setSelectedKey(firstKeyFor(next));
+      // Keep the chosen exercise while it still fits the plan (saving a video
+      // or a demonstration mustn't jump back to the first exercise)
+      setSelectedKey((current) => keepOrFirstKey(current, next));
     },
     [dispatch]
   );

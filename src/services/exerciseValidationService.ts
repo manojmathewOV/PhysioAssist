@@ -11,8 +11,14 @@ import {
   getMeasurementLandmarks,
   getOutOfPlaneJoints,
 } from './pose/measurementLandmarks';
-import { clinicalAngle, goalDegreesOf, trackedJoint } from './pose/exercisePlan';
-import { movementOf } from './movement/exerciseMovement';
+import {
+  clinicalAngle,
+  goalDegreesOf,
+  limitMovement,
+  trackedJoint,
+} from './pose/exercisePlan';
+import { movementOf, rangeViewOf } from './movement/exerciseMovement';
+import { viewOf } from './movement/recorder';
 import type { MovementDirection } from './movement/types';
 
 /** Best range reached this session for the exercise's joint of interest. */
@@ -131,6 +137,24 @@ export class ExerciseValidationService {
       getMeasurementLandmarks(poseData)
     );
 
+    // A joint angle that isn't valid from this view (a knee bending towards
+    // the camera) is withheld here exactly as in the session analysis: no
+    // number, no "bend more", no counting; just how to set up
+    const rangeView = rangeViewOf(this.currentExercise.id);
+    if (rangeView === 'side' && viewOf(poseData) === 'front' && this.trackedJoint) {
+      const withheld: ValidationResult = {
+        isValid: false,
+        errors: [
+          `Turn side-on to the camera so your ${this.trackedJoint.replace(/_/g, ' ')} can be measured`,
+        ],
+        phase: this.currentPhase.name,
+        feedback: [],
+        withheld: true,
+      };
+      this.lastValidationResult = withheld;
+      return withheld;
+    }
+
     // Validate against current phase requirements
     const validation = this.validatePhaseRequirements(jointAngles, now);
 
@@ -190,8 +214,10 @@ export class ExerciseValidationService {
         errors.push(rangeInstruction(requirement.joint, angle > maxAngle));
       }
 
-      // Provide feedback on how close to target
-      if (targetAngle) {
+      // Provide feedback on how close to target (not for a posture guard,
+      // e.g. the arm at the side while the forearm rotates: that angle isn't
+      // what the exercise measures)
+      if (targetAngle && !this.measuresOtherQuantity()) {
         const difference = Math.abs(angle - targetAngle);
         if (difference < 5) {
           feedback.push(`Perfect ${requirement.joint} angle!`);
@@ -228,24 +254,41 @@ export class ExerciseValidationService {
     );
   }
 
+  /** The exercise measures something other than the joint's usual angle (rotation). */
+  private measuresOtherQuantity(): boolean {
+    return Boolean(this.currentExercise && movementOf(this.currentExercise.id).measure);
+  }
+
   /** Best range for the joint of interest, and the plan's safety limit. */
   private trackRange(validation: ValidationResult, jointAngles: Map<string, JointAngle>) {
     const kind = this.currentExercise?.primaryJoint;
     const angle = this.trackedJoint ? jointAngles.get(this.trackedJoint) : undefined;
     if (!kind || !angle?.isValid) return;
     const degrees = clinicalAngle(kind, angle.angle);
+    // (For rotation the session analysis owns the range; the limit below is
+    // still checked on the arm's height, which is what it limits)
+    if (!this.measuresOtherQuantity()) this.trackBest(degrees);
+    this.checkLimit(validation, degrees);
+  }
+
+  private trackBest(degrees: number) {
     // Best = furthest from neutral, or for straightening exercises closest to it
     this.bestDegrees =
       this.direction === 'toward'
         ? Math.min(this.bestDegrees ?? Infinity, degrees)
         : Math.max(this.bestDegrees ?? -Infinity, degrees);
+  }
+
+  private checkLimit(validation: ValidationResult, degrees: number) {
     const limit = this.currentExercise?.safetyLimit;
     if (limit && limit.joint === this.trackedJoint && degrees > limit.maxDegrees) {
       validation.overLimit = true;
       validation.isValid = false;
       // Safety first: this is the instruction the patient sees and hears
       validation.errors.unshift(
-        `Not so far: stay below ${Math.round(limit.maxDegrees)}°`
+        `Not so far: don't ${limitMovement(limit.kind)} past ${Math.round(
+          limit.maxDegrees
+        )}°`
       );
     }
   }

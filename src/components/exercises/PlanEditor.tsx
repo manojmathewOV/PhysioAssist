@@ -16,6 +16,7 @@ import {
   JOINT_KINDS,
   JointKind,
   hasExtendedSupport,
+  limitMovement,
 } from '../../services/pose/exercisePlan';
 
 const JOINT_ICONS: Record<JointKind, string> = {
@@ -23,6 +24,14 @@ const JOINT_ICONS: Record<JointKind, string> = {
   elbow: 'fitness-center',
   hip: 'airline-seat-recline-normal',
   knee: 'directions-walk',
+};
+
+/** What the goal is, per joint (the plan's bend or raise goal). */
+const GOAL_TITLE: Record<JointKind, string> = {
+  shoulder: 'Arm raise goal',
+  elbow: 'Elbow bend goal',
+  hip: 'Hip bend goal',
+  knee: 'Knee bend goal',
 };
 
 /** Sensible starting goals (clinical degrees) when the physio adds one. */
@@ -87,7 +96,13 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ value, onSave, onCancel }) => {
   const [side, setSide] = useState<BodySide>(value?.side ?? 'left');
   const [goal, setGoal] = useState<number | undefined>(value?.goalDegrees);
   const [limit, setLimit] = useState<number | undefined>(value?.limitDegrees);
+  const [extensionGoal, setExtensionGoal] = useState<number | undefined>(
+    value?.extensionGoalDegrees
+  );
   const [reps, setReps] = useState<number | undefined>(value?.reps);
+  // A goal beyond the limit is for the physio to resolve: the limit is never
+  // moved to fit the goal
+  const goalPastLimit = goal !== undefined && limit !== undefined && goal > limit;
 
   const chooseJoint = (kind: JointKind) => {
     setJoint(kind);
@@ -95,6 +110,7 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ value, onSave, onCancel }) => {
       // Goals are joint-specific
       setGoal(undefined);
       setLimit(undefined);
+      setExtensionGoal(undefined);
     }
   };
 
@@ -163,7 +179,7 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ value, onSave, onCancel }) => {
           <Card style={styles.card}>
             <ListRow
               icon="flag"
-              title="Goal to reach"
+              title={GOAL_TITLE[joint]}
               description="How far your physio wants you to move"
               toggle={{
                 value: goal !== undefined,
@@ -180,10 +196,7 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ value, onSave, onCancel }) => {
                 step={5}
                 min={10}
                 max={180}
-                onChange={(v) => {
-                  setGoal(v);
-                  if (limit !== undefined && limit < v) setLimit(v);
-                }}
+                onChange={setGoal}
                 testID="plan-goal"
               />
             ) : null}
@@ -191,7 +204,7 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ value, onSave, onCancel }) => {
           <Card style={styles.card}>
             <ListRow
               icon="do-not-disturb-on"
-              title="Don't go past"
+              title={`Don't ${limitMovement(joint)} past`}
               description="A safe limit, for example after surgery"
               toggle={{
                 value: limit !== undefined,
@@ -209,13 +222,51 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ value, onSave, onCancel }) => {
                 value={limit}
                 unit="degrees"
                 step={5}
-                min={Math.max(15, goal ?? 15)}
+                min={15}
                 max={180}
                 onChange={setLimit}
                 testID="plan-limit"
               />
             ) : null}
+            {goalPastLimit ? (
+              <AppText
+                variant="body"
+                color={colors.danger}
+                style={styles.warning}
+                accessibilityRole="alert"
+                testID="plan-goal-past-limit"
+              >
+                The goal is past the limit. Please check both with your physiotherapist.
+              </AppText>
+            ) : null}
           </Card>
+          {joint === 'knee' ? (
+            <Card style={styles.card}>
+              <ListRow
+                icon="straighten"
+                title="Straighten to within"
+                description="For straightening exercises: how close to straight (0°)"
+                toggle={{
+                  value: extensionGoal !== undefined,
+                  onChange: (on) => setExtensionGoal(on ? 5 : undefined),
+                  testID: 'plan-extension-toggle',
+                }}
+                last={extensionGoal === undefined}
+              />
+              {extensionGoal !== undefined ? (
+                <Stepper
+                  label="Straighten to within"
+                  value={extensionGoal}
+                  unit="degrees"
+                  step={1}
+                  min={0}
+                  max={45}
+                  onChange={setExtensionGoal}
+                  testID="plan-extension"
+                />
+              ) : null}
+            </Card>
+          ) : null}
           <Card style={styles.card}>
             <ListRow
               icon="repeat"
@@ -247,9 +298,23 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ value, onSave, onCancel }) => {
       <BigButton
         label="Save my plan"
         icon="check"
-        disabled={!joint}
+        disabled={!joint || goalPastLimit}
         onPress={() =>
-          joint && onSave({ joint, side, goalDegrees: goal, limitDegrees: limit, reps })
+          joint &&
+          !goalPastLimit &&
+          onSave({
+            // Keep everything else the plan holds (reference demonstration,
+            // exercise videos); a new joint or side makes the old reference
+            // not apply, so it is dropped then
+            ...(value && value.joint === joint && value.side === side ? value : {}),
+            joint,
+            side,
+            goalDegrees: goal,
+            limitDegrees: limit,
+            extensionGoalDegrees: joint === 'knee' ? extensionGoal : undefined,
+            reps,
+            videos: value?.videos,
+          })
         }
         testID="plan-save"
       />
@@ -266,6 +331,7 @@ const PlanEditor: React.FC<PlanEditorProps> = ({ value, onSave, onCancel }) => {
 };
 
 const styles = StyleSheet.create({
+  warning: { marginTop: spacing.sm },
   flex: { flex: 1 },
   editor: { gap: spacing.md },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },

@@ -43,9 +43,24 @@ export interface PlanReference extends MovementProfile {
 export interface ExercisePlan {
   joint: JointKind;
   side: BodySide;
-  /** Clinical degrees the patient should reach (e.g. shoulder flexion 120). */
+  /**
+   * Clinical degrees to reach when moving the joint away from neutral: arm
+   * raise for the shoulder, bend for the knee, elbow and hip (e.g. 120).
+   * Not used for straightening or rotation exercises.
+   */
   goalDegrees?: number;
-  /** Clinical degrees not to go past (post-operative precautions). */
+  /**
+   * Straightening exercises (seated knee extension, heel prop, short-arc
+   * quad): straighten to within this many degrees of straight. Kept apart
+   * from `goalDegrees`, a bend goal, so neither can stand in for the other.
+   */
+  extensionGoalDegrees?: number;
+  /**
+   * Clinical degrees not to go past (post-operative precautions), in the
+   * joint's usual measure: how far the arm is raised, or the knee, elbow or
+   * hip bent (see limitMovement). Not a rotation limit: rotation is only
+   * estimated, so the app doesn't pose as a safety boundary for it.
+   */
   limitDegrees?: number;
   reps?: number;
   holdSeconds?: number;
@@ -68,6 +83,10 @@ export const JOINT_KINDS: { kind: JointKind; label: string; movement: string }[]
  * tracking every joint gets.
  */
 export const EXTENDED_SUPPORT_JOINTS: JointKind[] = ['shoulder', 'knee'];
+
+/** What a plan's limit restricts, in the patient's words ("raise your arm"). */
+export const limitMovement = (kind: JointKind): string =>
+  kind === 'shoulder' ? 'raise your arm' : `bend your ${kind}`;
 
 export const hasExtendedSupport = (kind: JointKind) =>
   EXTENDED_SUPPORT_JOINTS.includes(kind);
@@ -145,17 +164,20 @@ export function applyPlan(exercise: Exercise, plan?: ExercisePlan | null): Exerc
     let requirement = req;
     let holdDuration = phase.holdDuration;
     if (prescribed && index === goalIndex && exercise.phases.length > 1) {
-      if (plan.goalDegrees !== undefined) {
-        const range = goalRange(
-          kind,
-          plan.goalDegrees,
-          plan.limitDegrees,
-          movementOf(exercise.id).direction
-        );
+      // Each goal applies only to its kind of exercise: a bend goal isn't a
+      // straightening goal, and neither applies to rotation
+      const movement = movementOf(exercise.id);
+      const goal = movement.measure
+        ? undefined
+        : movement.direction === 'toward'
+          ? plan.extensionGoalDegrees
+          : plan.goalDegrees;
+      if (goal !== undefined) {
+        const range = goalRange(kind, goal, plan.limitDegrees, movement.direction);
         requirement = {
           ...req,
           ...range,
-          targetAngle: interiorAngle(kind, plan.goalDegrees),
+          targetAngle: interiorAngle(kind, goal),
         };
       }
       if (plan.holdSeconds !== undefined) holdDuration = plan.holdSeconds * 1000;

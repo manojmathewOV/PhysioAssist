@@ -4,6 +4,7 @@
  */
 import { EXERCISES } from '../../constants/exercises';
 import type { Exercise } from '../../types/exercise';
+import type { ExercisePlan } from '../../services/pose/exercisePlan';
 
 export type ExerciseKey = keyof typeof EXERCISES;
 
@@ -102,6 +103,20 @@ export const EXERCISE_OPTIONS: ExerciseOption[] = [
     icon: 'self-improvement',
   },
 ];
+
+/** First exercise that trains the plan's joint (falls back to the bicep curl). */
+export const firstKeyFor = (plan?: ExercisePlan | null): ExerciseKey =>
+  EXERCISE_OPTIONS.find((o) => plan && o.exercise.primaryJoint === plan.joint)?.key ??
+  'bicepCurl';
+
+/**
+ * After the plan changes: keep the chosen exercise while it still trains the
+ * plan's joint (saving a video mustn't jump back to the first exercise).
+ */
+export const keepOrFirstKey = (current: ExerciseKey, plan: ExercisePlan): ExerciseKey =>
+  EXERCISE_OPTIONS.find((o) => o.key === current)?.exercise.primaryJoint === plan.joint
+    ? current
+    : firstKeyFor(plan);
 
 export const findExerciseOption = (idOrKey?: string | null): ExerciseOption | undefined =>
   EXERCISE_OPTIONS.find((o) => o.key === idOrKey || o.exercise.id === idOrKey);

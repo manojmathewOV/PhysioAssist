@@ -350,7 +350,7 @@ export const SCENARIOS: Scenario[] = [
       holdMs: 1500,
       restMs: 700,
     }),
-    plan: { joint: 'knee', side: 'left', goalDegrees: 10 },
+    plan: { joint: 'knee', side: 'left', extensionGoalDegrees: 10 },
     expect: { reps: 0, bestDegrees: 30 },
   },
   {
@@ -368,7 +368,7 @@ export const SCENARIOS: Scenario[] = [
       holdMs: 1500,
       restMs: 700,
     }),
-    plan: { joint: 'knee', side: 'left', goalDegrees: 30 },
+    plan: { joint: 'knee', side: 'left', extensionGoalDegrees: 30 },
     expect: { reps: 3, bestDegrees: 25 },
   },
   {
