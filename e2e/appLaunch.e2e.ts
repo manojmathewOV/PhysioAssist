@@ -16,13 +16,16 @@ const dismissAlertIfShown = async () => {
 };
 
 describe('App launch smoke test', () => {
+  // A cold simulator on a busy CI runner has taken up to about 2.5 minutes to
+  // install and launch the app (boot, data migration, first bundle load),
+  // past the 2-minute default for a hook, so the launch gets its own limit
   beforeAll(async () => {
     await device.launchApp({
       newInstance: true,
       delete: true,
       permissions: { camera: 'YES', microphone: 'YES' },
     });
-  });
+  }, 300000);
 
   it('shows onboarding on first launch', async () => {
     // Wait for what the patient sees (the container can sit under other views),
