@@ -16,7 +16,17 @@ import type { PrescribedExercise } from '../../services/pose/exercisePlan';
 import type { Completion } from '../../services/pose/routine';
 
 /** "10 times", "Rest still for 1 min": the prescription, else the exercise's default. */
-export const routineAmount = (item: PrescribedExercise): string => {
+export const routineAmount = (
+  item: PrescribedExercise & { occurrence?: number; timesPerDay?: number }
+): string => {
+  const base = amountOf(item);
+  // Several sessions a day: which one this is
+  return item.timesPerDay && item.timesPerDay > 1 && item.occurrence
+    ? `Session ${item.occurrence} of ${item.timesPerDay} · ${base}`
+    : base;
+};
+
+const amountOf = (item: PrescribedExercise): string => {
   const option = findExerciseOption(item.exerciseId);
   if (movementOf(item.exerciseId).mode === 'hold') {
     const ms = item.holdSeconds
@@ -57,7 +67,7 @@ export const TodaysRoutineCard: React.FC<{
           const isNext = item.exerciseId === routine.next;
           return (
             <Pressable
-              key={item.exerciseId}
+              key={item.key}
               style={({ pressed }) => [
                 styles.row,
                 i > 0 && styles.divider,

@@ -20,12 +20,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Vibration, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import {
   startExercise,
   stopExercise,
   clearExercise,
+  clockOf,
 } from '../../store/slices/exerciseSlice';
 import { RootState } from '../../store';
 import { AccessibilityIds } from '../../constants/accessibility';
@@ -35,6 +36,7 @@ import { CameraPanel } from '../ui/CameraPanel';
 import { RepRing } from '../ui/RepRing';
 import { movementOf } from '../../services/movement/exerciseMovement';
 import { liveCue } from '../../utils/liveCue';
+import { activeMs, seconds } from '../../services/session/sessionClock';
 import { colors, radii, spacing, touch } from '../../theme';
 import {
   EXERCISE_OPTIONS,
@@ -126,16 +128,17 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
     }
   }, [feedback, formScore, isActive, enableHaptics]);
 
-  // A still hold's clock: counts seconds of the session, not while paused
-  const startedAt = useSelector((state: RootState) => state.exercise.startedAt);
+  // A still hold's clock: the session clock's active time (pauses don't
+  // count), the same the summary, completion and history use
+  const clock = useSelector((state: RootState) => clockOf(state.exercise), shallowEqual);
   const holdActive = movementOf(currentExercise?.id).mode === 'hold' && isActive;
-  const [elapsed, setElapsed] = useState(0);
-  useEffect(() => setElapsed(0), [startedAt]);
+  const [, setTick] = useState(0);
   useEffect(() => {
     if (!holdActive || isPaused || gate) return undefined;
-    const timer = setInterval(() => setElapsed((e) => e + 1), 1000);
+    const timer = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(timer);
   }, [holdActive, isPaused, gate]);
+  const elapsed = seconds(activeMs(clock, Date.now()));
 
   const handleSelect = (key: (typeof EXERCISE_OPTIONS)[number]['key']) => {
     const exercise = EXERCISE_OPTIONS.find((o) => o.key === key)!.exercise;
@@ -358,9 +361,9 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
             display={
               isHold
                 ? {
-                    value: clock(elapsed),
-                    caption: holdSeconds ? `of ${clock(holdSeconds)}` : 'resting',
-                    spoken: `${clock(elapsed)} of ${clock(holdSeconds)} resting still`,
+                    value: clockText(elapsed),
+                    caption: holdSeconds ? `of ${clockText(holdSeconds)}` : 'resting',
+                    spoken: `${clockText(elapsed)} of ${clockText(holdSeconds)} resting still`,
                   }
                 : undefined
             }
@@ -440,8 +443,8 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
 };
 
 /** "0:42", "1:05". */
-const clock = (seconds: number) =>
-  `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+const clockText = (secs: number) =>
+  `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, '0')}`;
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },

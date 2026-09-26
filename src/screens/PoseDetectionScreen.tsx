@@ -24,12 +24,16 @@ import { RootState } from '@store/index';
 import { setExercisePlan } from '@store/slices/settingsSlice';
 import { ExercisePlan, applyPlan } from '@services/pose/exercisePlan';
 import { completionOf } from '@services/pose/routine';
+import { activeMs, seconds } from '@services/session/sessionClock';
 import { movementOf } from '@services/movement/exerciseMovement';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
 import {
   clearExercise,
+  clockOf,
   confirmLastSessionCompleted,
   isWorthKeeping,
+  pauseExercise,
+  resumeExercise,
   setLastSessionPain,
   startExercise,
   stopExercise,
@@ -271,7 +275,7 @@ const PoseDetectionScreen: React.FC = () => {
       return;
     }
     resetGate();
-    const { repetitionCount, formScore, startedAt, currentExercise } = exerciseState;
+    const { repetitionCount, formScore, currentExercise } = exerciseState;
     const sessionRange = exerciseValidationService.getSessionRange();
     exerciseValidationService.stopExercise();
     mockPoseDataSimulator?.stop();
@@ -285,12 +289,24 @@ const PoseDetectionScreen: React.FC = () => {
     if (outcome.planUpdate) {
       dispatch(setExercisePlan(outcome.planUpdate));
     }
-    const duration = startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0;
+    // Active time from the session clock: the same the live timer showed
+    const duration = seconds(activeMs(clockOf(exerciseState), Date.now()));
     const reps = outcome.summary.reps ?? repetitionCount;
     // How much of the prescribed exercise was done: separate from whether it
     // could be measured
     const completion = completionOf(plannedExercise, { reps, durationSeconds: duration });
-    const result = { ...(outcome.historyResult ?? sessionRange ?? {}), completion };
+    const recorded = outcome.historyResult ?? sessionRange ?? {};
+    const result = {
+      ...recorded,
+      // Always record the side worked on, even when nothing could be measured,
+      // so the session counts for the right limb (see todaysRoutine)
+      joint:
+        recorded.joint ??
+        (plan && plannedExercise.primaryJoint
+          ? `${plan.side}_${plannedExercise.primaryJoint}`
+          : undefined),
+      completion,
+    };
     const saved = !practice && !recordingDemo && isWorthKeeping(result, repetitionCount);
     // Practice sessions and demonstrations are not the patient's own history
     dispatch(practice || recordingDemo ? clearExercise() : stopExercise(result));
@@ -496,7 +512,11 @@ const PoseDetectionScreen: React.FC = () => {
         outOfView={outOfView}
         onStart={() => beginSession(practice)}
         onStop={handleStop}
-        onPause={() => setIsPaused((p) => !p)}
+        onPause={() => {
+          // The session clock pauses too: pauses don't count as exercise time
+          dispatch(isPaused ? resumeExercise() : pauseExercise());
+          setIsPaused((p) => !p);
+        }}
         onReset={backToChooser}
       />
     </View>

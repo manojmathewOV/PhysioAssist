@@ -1,6 +1,26 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Exercise, ValidationResult, ExerciseMetrics } from '../../types/exercise';
 import { liveCue } from '../../utils/liveCue';
+import {
+  SessionClock,
+  activeMs,
+  pause,
+  pausedMsOf,
+  resume,
+  seconds,
+  wallMs,
+} from '../../services/session/sessionClock';
+
+/** The session clock held in the exercise state. */
+export const clockOf = (s: {
+  startedAt: number | null;
+  pausedAt?: number | null;
+  pausedMs?: number;
+}): SessionClock => ({
+  startedAt: s.startedAt,
+  pausedAt: s.pausedAt ?? null,
+  pausedMs: s.pausedMs ?? 0,
+});
 
 export interface ExerciseHistory {
   id: string;
@@ -25,6 +45,9 @@ export interface ExerciseHistory {
   measured?: boolean;
   unavailableReason?: string;
   planVersion?: number;
+  /** From Go to Stop, and how much of it was paused (s); `duration` is active time. */
+  wallSeconds?: number;
+  pausedSeconds?: number;
   completion?: SessionResult['completion'];
   /** The patient said they did the whole exercise (the camera couldn't count it). */
   confirmedByPatient?: boolean;
@@ -75,10 +98,19 @@ interface ExerciseState {
   history: ExerciseHistory[];
   /** When the current exercise started (ms since epoch). */
   startedAt: number | null;
+  /** When the current pause began (see sessionClock). */
+  pausedAt: number | null;
+  /** Paused time before the current pause (ms). */
+  pausedMs: number;
 }
 
-/** Most recent sessions kept on the device. */
-const MAX_HISTORY = 200;
+/**
+ * Most recent sessions kept on the device. Several prescribed sessions a day
+ * add up (9 a day would fill 200 in about three weeks), and the baseline
+ * measurements must not be dropped that soon: 3000 is about a year at that
+ * rate. A proper retention/export policy is still to be decided.
+ */
+export const MAX_HISTORY = 3000;
 
 const initialState: ExerciseState = {
   currentExercise: null,
@@ -91,6 +123,8 @@ const initialState: ExerciseState = {
   metrics: null,
   history: [],
   startedAt: null,
+  pausedAt: null,
+  pausedMs: 0,
 };
 
 const exerciseSlice = createSlice({
@@ -105,6 +139,15 @@ const exerciseSlice = createSlice({
       state.formScore = 0;
       state.feedback = '';
       state.startedAt = Date.now();
+      state.pausedAt = null;
+      state.pausedMs = 0;
+    },
+    /** Pause and resume the session clock (the live timer, completion and history share it). */
+    pauseExercise: (state, action: PayloadAction<number | undefined>) => {
+      Object.assign(state, pause(clockOf(state), action.payload ?? Date.now()));
+    },
+    resumeExercise: (state, action: PayloadAction<number | undefined>) => {
+      Object.assign(state, resume(clockOf(state), action.payload ?? Date.now()));
     },
     stopExercise: (state, action: PayloadAction<SessionResult | undefined>) => {
       // Record the finished session so patients (and clinicians) can see progress
@@ -122,7 +165,10 @@ const exerciseSlice = createSlice({
           exerciseId: state.currentExercise.id,
           exerciseName: state.currentExercise.name,
           date: new Date(now).toISOString(),
-          duration: state.startedAt ? Math.round((now - state.startedAt) / 1000) : 0,
+          // Active time: pauses don't count towards the exercise
+          duration: seconds(activeMs(clockOf(state), now)),
+          wallSeconds: seconds(wallMs(clockOf(state), now)),
+          pausedSeconds: seconds(pausedMsOf(clockOf(state), now)),
           formScore: state.formScore,
           ...action.payload,
           reps,
@@ -132,6 +178,8 @@ const exerciseSlice = createSlice({
       state.isExercising = false;
       state.currentPhase = 'rest';
       state.startedAt = null;
+      state.pausedAt = null;
+      state.pausedMs = 0;
     },
     updateValidation: (state, action: PayloadAction<ValidationResult>) => {
       state.lastValidationResult = action.payload;
@@ -204,6 +252,8 @@ const exerciseSlice = createSlice({
       state.lastValidationResult = null;
       state.metrics = null;
       state.startedAt = null;
+      state.pausedAt = null;
+      state.pausedMs = 0;
     },
   },
 });
@@ -211,6 +261,8 @@ const exerciseSlice = createSlice({
 export const {
   startExercise,
   stopExercise,
+  pauseExercise,
+  resumeExercise,
   updateValidation,
   incrementReps,
   updateFormScore,

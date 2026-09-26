@@ -56,6 +56,8 @@ const session = (
   reps: 10,
   duration: 60,
   formScore: 0.8,
+  // Sessions record the side; one without it doesn't count for the routine
+  joint: 'left_knee',
   ...extra,
 });
 

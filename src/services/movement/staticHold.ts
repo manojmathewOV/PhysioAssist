@@ -63,8 +63,10 @@ export function measureStaticHold(
   };
   for (const f of frames) {
     const prev = segment[segment.length - 1];
-    if (f.angle === null || (prev && f.t - prev.t > HOLD_MAX_GAP_MS)) flush();
-    if (f.angle !== null) segment.push(f);
+    // A missing or non-numeric angle or time breaks the hold, as does a gap
+    const usable = f.angle !== null && Number.isFinite(f.angle) && Number.isFinite(f.t);
+    if (!usable || (prev && !(f.t - prev.t <= HOLD_MAX_GAP_MS && f.t >= prev.t))) flush();
+    if (usable) segment.push(f);
   }
   flush();
   return best;

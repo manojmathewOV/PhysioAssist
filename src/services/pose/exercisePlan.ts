@@ -48,6 +48,8 @@ export interface PlanReference extends MovementProfile {
  */
 export interface PrescribedExercise {
   exerciseId: string;
+  /** Separate sessions a day (default 1): each is its own occurrence. */
+  timesPerDay?: number;
   reps?: number;
   holdSeconds?: number;
   goalDegrees?: number;

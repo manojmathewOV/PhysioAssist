@@ -40,12 +40,12 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
   starting,
   notice,
 }) => {
-  const nextItem = routine.items.find((i) => i.exerciseId === routine.next);
+  const nextItem = routine.nextIndex >= 0 ? routine.items[routine.nextIndex] : undefined;
   const option = nextItem ? findExerciseOption(nextItem.exerciseId) : undefined;
   const total = routine.items.length;
   const videoLink = option ? plan.videos?.[option.exercise.id] : undefined;
   const videoId = parseYouTubeId(videoLink);
-  const position = nextItem ? routine.items.indexOf(nextItem) + 1 : 0;
+  const position = routine.nextIndex + 1;
 
   return (
     <Screen

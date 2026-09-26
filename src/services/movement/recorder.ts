@@ -122,6 +122,8 @@ export class MovementRecorder {
         estimated = true;
       }
     }
+    // A non-numeric reading (NaN, Infinity) is no reading
+    if (angle !== null && !Number.isFinite(angle)) angle = null;
     const frame: MovementFrame = {
       t: pose.timestamp,
       angle,

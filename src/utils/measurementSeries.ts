@@ -48,7 +48,9 @@ export function measurementSeries(
   const byKey = new Map<string, MeasurementSeries>();
   // History is newest first; build each series oldest first
   for (const h of [...history].reverse()) {
-    const attempted = h.bestDegrees !== undefined || h.measured === false;
+    const attempted =
+      (h.bestDegrees !== undefined && Number.isFinite(h.bestDegrees)) ||
+      h.measured === false;
     if (!h.joint || !attempted) continue;
     const key = `${h.exerciseId}:${h.joint}`;
     let s = byKey.get(key);
@@ -68,7 +70,10 @@ export function measurementSeries(
     }
     s.direction = h.direction ?? s.direction;
     s.measure = h.measure ?? s.measure;
-    const measured = h.measured !== false && h.bestDegrees !== undefined;
+    const measured =
+      h.measured !== false &&
+      h.bestDegrees !== undefined &&
+      Number.isFinite(h.bestDegrees);
     s.points.push({
       date: h.date,
       degrees: measured ? h.bestDegrees : undefined,
