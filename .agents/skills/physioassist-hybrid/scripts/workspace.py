@@ -161,7 +161,7 @@ def command_for(action: str, root: Path, cfg: dict, repo: Path, out: Path):
         'test': (jest + ['--maxWorkers=2', '--json', '--outputFile=' + str(out / 'tests.json')], repo, 300),
         'test-handles': (jest + ['--detectOpenHandles'], repo, 360),
         'prepush': (['sh', '.husky/pre-push'], repo, 180),
-        'pods': (['pod', 'install', '--deployment'], repo / 'ios', 600),
+        'pods': (['bash', 'scripts/ci/install-pods.sh'], repo, 600),
         'web-build': (['npm', 'run', 'build:web'], repo, 240),
         'ios-build': (['xcodebuild', '-workspace', 'ios/PhysioAssist.xcworkspace', '-scheme', 'PhysioAssist',
                       '-configuration', 'Release', '-sdk', 'iphonesimulator',

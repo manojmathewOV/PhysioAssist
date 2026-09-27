@@ -78,7 +78,10 @@ class WorkspaceTests(unittest.TestCase):
         cmd,_,_=w.command_for('test',self.root,self.cfg,self.repo,out);self.assertIn('--maxWorkers=2',cmd);self.assertNotIn('--forceExit',cmd)
         cmd,_,_=w.command_for('ios-build',self.root,self.cfg,self.repo,out);self.assertEqual(cmd[cmd.index('-jobs')+1],'2')
     def test_pods_frozen(self):
-        cmd,_,_=w.command_for('pods',self.root,self.cfg,self.repo,self.root);self.assertIn('--deployment',cmd)
+        cmd,cwd,_=w.command_for('pods',self.root,self.cfg,self.repo,self.root)
+        self.assertEqual(cmd, ['bash', 'scripts/ci/install-pods.sh'])
+        self.assertEqual(cwd, self.repo)
+        # Freeze and failure semantics are executed by scripts/ci/tests/test_install_pods.py.
     def test_unsupported_action_refused(self):
         with self.assertRaises(ValueError):w.command_for('shell-from-PR',self.root,self.cfg,self.repo,self.root)
 
