@@ -82,6 +82,30 @@ class WorkspaceTests(unittest.TestCase):
         self.assertEqual(cmd, ['bash', 'scripts/ci/install-pods.sh'])
         self.assertEqual(cwd, self.repo)
         # Freeze and failure semantics are executed by scripts/ci/tests/test_install_pods.py.
+    def test_simulator_signing_is_adhoc_only(self):
+        cmd,_,_=w.command_for('ios-build',self.root,self.cfg,self.repo,self.root)
+        self.assertIn('iphonesimulator',cmd)
+        self.assertIn('CODE_SIGN_IDENTITY=-',cmd)
+        self.assertIn('CODE_SIGNING_ALLOWED=YES',cmd)
+        self.assertNotIn('CODE_SIGNING_ALLOWED=NO',cmd)
+    def test_existing_ruby_configuration_is_reused(self):
+        (self.repo/'.nvmrc').write_text('18.17.0')
+        node=self.root/'RDC/toolchain/node-v18.17.0-darwin-arm64/bin'
+        node.mkdir(parents=True);(node/'node').touch()
+        ruby=self.root/'ruby-bin';ruby.mkdir();(ruby/'ruby').touch();(ruby/'bundle').touch()
+        gems=self.root/'existing-gems';gems.mkdir()
+        self.cfg.update(ruby_bin=str(ruby),gem_home=str(gems))
+        with patch.object(w.subprocess,'check_output',return_value='v18.17.0'):
+            env=w.environment(self.root,self.cfg,self.repo)
+        self.assertEqual(env['PATH'].split(':')[:2],[str(node),str(ruby)])
+        self.assertEqual(env['GEM_HOME'],str(gems))
+    def test_missing_configured_ruby_is_not_installed(self):
+        (self.repo/'.nvmrc').write_text('18.17.0')
+        node=self.root/'RDC/toolchain/node-v18.17.0-darwin-arm64/bin'
+        node.mkdir(parents=True);(node/'node').touch()
+        self.cfg['ruby_bin']=str(self.root/'absent-ruby')
+        with self.assertRaises(RuntimeError):w.environment(self.root,self.cfg,self.repo)
+        self.assertFalse((self.root/'absent-ruby').exists())
     def test_unsupported_action_refused(self):
         with self.assertRaises(ValueError):w.command_for('shell-from-PR',self.root,self.cfg,self.repo,self.root)
 

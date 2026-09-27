@@ -145,7 +145,19 @@ def environment(root: Path, cfg: dict, repo: Path) -> dict:
     if not (bindir / 'node').is_file():
         raise RuntimeError('Pinned Node is not provisioned; install once with verified source/checksum')
     env = os.environ.copy()
-    env.update({'PATH': str(bindir) + ':' + env.get('PATH', ''), 'CI': '1',
+    path_parts = [str(bindir)]
+    # Optional owner-configured existing Ruby/gems; never install or copy them here.
+    if cfg.get('ruby_bin'):
+        ruby_bin = Path(cfg['ruby_bin'])
+        if not ruby_bin.is_absolute() or not (ruby_bin / 'ruby').is_file() or not (ruby_bin / 'bundle').is_file():
+            raise RuntimeError('Configured Ruby/Bundler is unavailable; review local provisioning')
+        path_parts.append(str(ruby_bin))
+    if cfg.get('gem_home'):
+        gem_home = Path(cfg['gem_home'])
+        if not gem_home.is_absolute() or not gem_home.is_dir():
+            raise RuntimeError('Configured gem installation is unavailable')
+        env['GEM_HOME'] = str(gem_home)
+    env.update({'PATH': ':'.join(path_parts) + ':' + env.get('PATH', ''), 'CI': '1',
                 'LANG': 'en_US.UTF-8', 'LC_ALL': 'en_US.UTF-8', 'NO_FLIPPER': '1',
                 'NODE_OPTIONS': '--max-old-space-size=2048'})
     actual = subprocess.check_output([str(bindir / 'node'), '--version'], text=True, timeout=10).strip()
@@ -168,7 +180,7 @@ def command_for(action: str, root: Path, cfg: dict, repo: Path, out: Path):
                       '-derivedDataPath', str(contained(root, 'RDC/cache/DerivedData')),
                       '-resultBundlePath', str(out / 'build.xcresult'), '-jobs', '2',
                       'ARCHS=arm64', 'ONLY_ACTIVE_ARCH=YES', 'COMPILER_INDEX_STORE_ENABLE=NO',
-                      'CODE_SIGNING_ALLOWED=NO', 'build'], repo, 1200),
+                      'CODE_SIGNING_ALLOWED=YES', 'CODE_SIGN_IDENTITY=-', 'build'], repo, 1200),
     }
     if action not in choices:
         raise ValueError('Unknown action')

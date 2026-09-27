@@ -61,3 +61,9 @@ Use only currently authorised tool actions. A denial in one credential is not pe
 ## Pinned native toolchain (G01/I01)
 
 The repository now declares Ruby in `.ruby-version` and CocoaPods/JSON/Xcodeproj plus transitive dependencies in `Gemfile.lock`. Use `scripts/ci/install-pods.sh`; the guarded `pods` action delegates to it. It sets Bundler frozen mode, checks installed gems and preserves deployment mode and the Pod lock digest. Do not use the host-global `pod` directly. Provision once, reuse gems, and use the selected Ruby on PATH for native commands. An existing matching gem installation can be reused via local GEM_HOME without copying it or changing global defaults. Hosting uses ruby/setup-ruby with the committed bundle. Record local provisioning outside Git; a missing bundle is a prerequisite error, not permission to regenerate either lock.
+
+## Simulator storage parity
+
+The iOS build action targets only `iphonesimulator` and uses Xcode ad-hoc signing (`CODE_SIGN_IDENTITY=-`). It does not select a developer identity or provision/sign a device or distribution build. Disabling signing altogether can remove the simulator app entitlement used by Keychain; a running process alone therefore cannot qualify storage. Inspect the actual first-run screen and preserve unexpected recovery states as failures to investigate. Never treat a Keychain permission error as an absent record to get past the screen.
+
+Optional `ruby_bin` and `gem_home` in local workspace.json select an existing owner-approved Ruby/gem installation. They are absolute host paths in local metadata only, never committed. The runner validates their existence and the frozen install validates declared versions. Missing tooling blocks the command rather than causing a global installation.

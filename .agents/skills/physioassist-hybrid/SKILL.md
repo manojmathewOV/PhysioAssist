@@ -3,7 +3,7 @@ name: physioassist-hybrid
 description: Develop, test and review PhysioAssist through an authorised Mac via RDC and GitHub. Use for local setup, native iOS builds, regression tests, screenshot review, handovers and scoped cache maintenance.
 compatibility: Python 3.9+, Git, authorised RDC or local shell. Application checks require the repo-pinned Node; native checks require macOS, CocoaPods and Xcode. GitHub publication requires existing authorised access.
 metadata:
-  version: '1.0'
+  version: '1.1'
 ---
 
 # PhysioAssist hybrid workflow
