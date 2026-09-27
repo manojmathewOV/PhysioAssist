@@ -1,0 +1,5 @@
+    ✕ pause-aware displayed duration and completion must agree (279 ms)
+    Expected: true
+    Received: false
+Tests:       1 failed, 1 total
+Jest did not exit one second after the test run has completed.

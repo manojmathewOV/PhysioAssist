@@ -1,0 +1,11 @@
+    DUPLICATE_COMPLETION 2 [
+    NEXT_OCCURRENCE_AT_ONE_MINUTE arm-raise 1
+    ✓ blocks unconfirmed programme (2 ms)
+    ✓ allows confirmed frozen-shoulder programme (10 ms)
+    ✓ requires specialist approval for generic specialist knee pathway (1 ms)
+    ✓ unknown-side history does not complete the prescribed side (1 ms)
+    ✕ a replay of one completion must not fill a second occurrence (45 ms)
+    ✕ a q2-3-hour programme must not offer the next occurrence one minute later (2 ms)
+      19 |   console.log('DUPLICATE_COMPLETION',r.doneCount,r.items.map(i=>({key:i.key,status:i.status})));
+      25 |   console.log('NEXT_OCCURRENCE_AT_ONE_MINUTE',offered,r.nextIndex);
+Tests:       2 failed, 4 passed, 6 total

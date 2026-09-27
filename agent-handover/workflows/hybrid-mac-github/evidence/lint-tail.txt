@@ -1,0 +1,35 @@
+  126:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:5   warning  Unexpected console statement              no-console
+  132:1   warning  Unexpected console statement              no-console
+  144:5   warning  Unexpected console statement              no-console
+  147:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:5   warning  Unexpected console statement              no-console
+  152:1   warning  Unexpected console statement              no-console
+
+<HYBRID_WORKSPACE>/app/web-demo/server.js
+  26:3  warning  Unexpected console statement  no-console
+  54:3  warning  Unexpected console statement  no-console
+  55:3  warning  Unexpected console statement  no-console
+  56:3  warning  Unexpected console statement  no-console
+  57:3  warning  Unexpected console statement  no-console
+  58:3  warning  Unexpected console statement  no-console
+  59:3  warning  Unexpected console statement  no-console
+  60:3  warning  Unexpected console statement  no-console
+  61:3  warning  Unexpected console statement  no-console
+  62:3  warning  Unexpected console statement  no-console
+  63:3  warning  Unexpected console statement  no-console
+  64:3  warning  Unexpected console statement  no-console
+  65:3  warning  Unexpected console statement  no-console
+  66:3  warning  Unexpected console statement  no-console
+
+<HYBRID_WORKSPACE>/app/web-demo/visualization.js
+  375:14  warning  Unexpected use of '>>'        no-bitwise
+  376:14  warning  Unexpected use of '&'         no-bitwise
+  376:15  warning  Unexpected use of '>>'        no-bitwise
+  377:14  warning  Unexpected use of '&'         no-bitwise
+  481:1   warning  Unexpected console statement  no-console
+  482:1   warning  Unexpected console statement  no-console
+
+✖ 450 problems (0 errors, 450 warnings)
+  0 errors and 9 warnings potentially fixable with the `--fix` option.
+

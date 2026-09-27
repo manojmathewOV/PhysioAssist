@@ -1,0 +1,77 @@
+{
+  "scope": "portable iPhone patient MVP plan; no implementation acceptance",
+  "application_sha": "414b81b170a6205b9fcb3aca20f3cab89bb850a1",
+  "handover_parent": "9aea33a895fa9f529771bc697d3f54f8663ab21a",
+  "files": [
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/DECISIONS.md",
+      "sha256": "e5a9810e57e610f71ec98f60831219e88a652fa72e1ef77853b2004a733ae068",
+      "bytes": 4632
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/README.md",
+      "sha256": "75da0fd93a1fdcef92269eafa4c15671e56fa081ad0110212e91b6906199895f",
+      "bytes": 2560
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/RESEARCH.md",
+      "sha256": "8f96910bb87e575295d107af29fbddf5a41a4cca10ea42fe712463b9e8e42098",
+      "bytes": 4055
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/ROADMAP.cnp",
+      "sha256": "d3dc42ca3d99ec3220938b257cfab06ad47589e64c0b1b998176e9e4eda3f3c6",
+      "bytes": 30202
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/RUNBOOK.md",
+      "sha256": "662f78f901001a067b2df50b1d2ea45a8c8414114e988c1c66cce3209d92866f",
+      "bytes": 26378
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/STATUS.json",
+      "sha256": "98991aa34971167ddde90ca6040089bde1006dca14c925ab82646c6fe32c9870",
+      "bytes": 1038
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/TEST_MATRIX.md",
+      "sha256": "525dea2304364f4df38a8ed28cc50538286ee24e0e8aa185340dcdd48145f8ee",
+      "bytes": 4968
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/evidence/CCORE_TOOLING.md",
+      "sha256": "be13d000c92621d3f14552aaf0acd4d82e5c1432f51846ad60c97ab6a6472812",
+      "bytes": 3574
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/evidence/TOOL_EXECUTION.json",
+      "sha256": "25ce1c2c109442c034c560e0b00549f79277f84220fa606fdf5c0a83c059fda3",
+      "bytes": 2281
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/evidence/structural-check.json",
+      "sha256": "f29e1949f189fe1919ecca47ec4ee68b7913948c0861eeea8aa048846faef32f",
+      "bytes": 264
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/research.json",
+      "sha256": "0029012796530618a08a84c221051878d2b3dd054a0b0f63d9c974920c807c50",
+      "bytes": 10472
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/runbook.json",
+      "sha256": "f5ec1c35bf3ae8f18a368bf1a9d6645ea45d954341875043908095bf0a719883",
+      "bytes": 35130
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/tools/check_runbook.py",
+      "sha256": "a331046bbba4a1022cceb849238f10f63c38a707939b878ad530d085d0d8eb27",
+      "bytes": 7308
+    },
+    {
+      "path": "agent-handover/runbooks/ios-patient-mvp/tools/render_cnp.py",
+      "sha256": "2ea6f603dbbf7275fadf2cfd9a0fbbe7b51e1854bd0422515ed101470732e1b2",
+      "bytes": 3788
+    }
+  ]
+}

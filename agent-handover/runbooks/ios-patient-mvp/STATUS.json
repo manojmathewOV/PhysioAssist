@@ -1,0 +1,29 @@
+{
+  "schema": "physioassist-runbook-status/1",
+  "runbook_id": "ios-patient-mvp",
+  "runbook_revision": 1,
+  "current_gate": "G00",
+  "overall": "planned_not_implemented",
+  "implementation_sha": "414b81b170a6205b9fcb3aca20f3cab89bb850a1",
+  "gate_states": {
+    "G00": "planned",
+    "G01": "planned",
+    "G02": "planned",
+    "G03": "planned",
+    "G04": "planned",
+    "G05": "planned",
+    "G06": "planned",
+    "G07": "planned",
+    "G08": "planned",
+    "G09": "planned",
+    "G10": "planned"
+  },
+  "evidence": [],
+  "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
+  "next": "Reconcile current PR heads and resolve G00 decisions; independently retest 414b81b fixes before modifying them.",
+  "last_writer": "reviewer",
+  "limitations": [
+    "No new application suite, native simulator or patient validation was executed to create this plan.",
+    "CCore native operation results are recorded separately; document shape is not gate acceptance."
+  ]
+}

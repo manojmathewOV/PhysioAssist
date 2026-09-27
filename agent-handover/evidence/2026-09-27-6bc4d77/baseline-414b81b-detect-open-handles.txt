@@ -1,0 +1,41 @@
+268066:Jest has detected the following 6 open handles potentially keeping Jest from exiting:
+268067-
+268068-  ●  Timeout
+268069-
+268070-      238 |    */
+268071-      239 |   private startFlushTimer(): void {
+268072-    > 240 |     this.flushTimer = setInterval(() => {
+268073-          |                       ^
+268074-      241 |       this.flush();
+268075-      242 |     }, this.flushInterval);
+268076-      243 |   }
+268077-
+268078-      at TelemetryService.setInterval [as startFlushTimer] (src/features/videoComparison/services/telemetryService.ts:240:23)
+268079-      at new startFlushTimer (src/features/videoComparison/services/telemetryService.ts:91:10)
+268080-      at Function.getInstance (src/features/videoComparison/services/telemetryService.ts:96:35)
+268081-      at Object.getInstance (src/features/videoComparison/services/telemetryService.ts:278:50)
+268082-      at Object.require (src/features/videoComparison/services/youtubeQuotaManager.ts:8:1)
+268083-      at Object.require (src/features/videoComparison/__tests__/youtubeQuotaManager.test.ts:5:1)
+268084-
+268085-
+268086-  ●  Timeout
+268087-
+268088-      238 |    */
+268089-      239 |   private startFlushTimer(): void {
+268090-    > 240 |     this.flushTimer = setInterval(() => {
+268091-          |                       ^
+268092-      241 |       this.flush();
+268093-      242 |     }, this.flushInterval);
+268094-      243 |   }
+268095-
+268096-      at TelemetryService.setInterval [as startFlushTimer] (src/features/videoComparison/services/telemetryService.ts:240:23)
+268097-      at new startFlushTimer (src/features/videoComparison/services/telemetryService.ts:91:10)
+268098-      at Function.getInstance (src/features/videoComparison/services/telemetryService.ts:96:35)
+268099-      at Object.getInstance (src/features/videoComparison/services/telemetryService.ts:278:50)
+268100-      at Object.require (src/features/videoComparison/__tests__/integration.test.ts:8:1)
+268101-
+268102-
+268103-  ●  Timeout
+268104-
+268105-      238 |    */
+268106-      239 |   private startFlushTimer(): void {

@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-09-27",
+  "reviewed_application_sha": "c7ac7f3bdda47ab736553b25bdca6f4100a8f74b",
+  "latest_response": {
+    "path": "responses/2026-09-27-6bc4d77-claude-final-handover.md",
+    "application_sha": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
+    "independently_verified": false
+  },
+  "items": [
+    {
+      "id": "P01",
+      "priority": "high",
+      "kind": "reproduced_defect",
+      "status": "implemented_pending_review",
+      "title": "Replay-safe event and occurrence identity",
+      "acceptance": "One duplicated completion cannot finish another occurrence; conflicting payloads cannot silently replace an earlier event.",
+      "response": "responses/2026-09-27-414b81b-claude.md",
+      "implementation_sha": "414b81b170a6205b9fcb3aca20f3cab89bb850a1",
+      "note": "Conflicts now withhold credit (R01); occurrence bound at start."
+    },
+    {
+      "id": "P02",
+      "priority": "high",
+      "kind": "new_requirement",
+      "status": "implemented_pending_review",
+      "title": "Daytime interval scheduling and ranged repetitions",
+      "acceptance": "Respect the approved waking window, interval anchor and repetition range; no immediate next-round invitation or accumulated catch-up dose.",
+      "response": "responses/2026-09-27-414b81b-claude.md",
+      "implementation_sha": "414b81b170a6205b9fcb3aca20f3cab89bb850a1",
+      "note": "Schedule in version/confirmation (R02); time-aware UI (R03); blank-field editor; no clinical values; C05 open."
+    },
+    {
+      "id": "P03",
+      "priority": "high",
+      "kind": "architecture_requirement",
+      "status": "needs_source_approval",
+      "title": "Bind clinical programmes to approved source revisions",
+      "acceptance": "Trace each operative restriction and exercise instruction to an approved revision; preserve amendments and explicit unresolved fields."
+    },
+    {
+      "id": "P04",
+      "priority": "high",
+      "kind": "architecture_requirement",
+      "status": "not_implemented_at_review",
+      "title": "Exact exercise variants and conditional precautions",
+      "acceptance": "Posture, assistance, loading, brace state and associated procedure affect assignment; unsupported measurement does not erase a clinical restriction."
+    },
+    {
+      "id": "P05",
+      "priority": "high",
+      "kind": "product_requirement",
+      "status": "not_implemented_at_review",
+      "title": "Learn, Do and Check",
+      "acceptance": "Watching is not activity; activity is not automatically an assessment; only qualified compatible observations enter the assessment series."
+    },
+    {
+      "id": "P06",
+      "priority": "medium",
+      "kind": "validation_gap",
+      "status": "not_tested",
+      "title": "Approved reference-video journey",
+      "acceptance": "Exercise-matched asset plays, enlarges, pauses and recovers from network failure; wrong assets do not silently substitute."
+    },
+    {
+      "id": "P07",
+      "priority": "medium",
+      "kind": "validation_gap",
+      "status": "not_tested",
+      "title": "Native, enlarged-text and older-user usability",
+      "acceptance": "Record real device and assisted/unassisted workflow results; browser fixtures and axe results alone are insufficient."
+    },
+    {
+      "id": "P08",
+      "priority": "medium",
+      "kind": "engineering_gap",
+      "status": "verified_by_independent_reviewer",
+      "title": "Clean test-runner shutdown",
+      "acceptance": "The selected tests finish without forced exit or leaking timers; preserve actual exit status.",
+      "response": "responses/2026-09-27-6bc4d77-claude.md",
+      "implementation_sha": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
+      "note": "Causes: store created at import (redux-persist timeout) and telemetry interval from constructor. Full suite exit 0 in parallel, in-band and --detectOpenHandles modes, no forced worker; see evidence/2026-09-27-6bc4d77/. Independent 2026-09-27 retest on 6bc4d77: parallel and --detectOpenHandles each 1593 passed/4 skipped, no forced-worker or detected-handle warning; scope/environment in linked response.",
+      "independent_review": "responses/2026-09-27-5cc5d5a-hybrid-setup.md"
+    },
+    {
+      "id": "P09",
+      "priority": "high",
+      "kind": "clinical_decision",
+      "status": "blocked_clinical_decision",
+      "title": "Resolve source-version and terminology questions",
+      "acceptance": "Owner resolves the approval register without the agent averaging or guessing conflicting source instructions."
+    },
+    {
+      "id": "P10",
+      "priority": "medium",
+      "kind": "validation_gap",
+      "status": "not_tested",
+      "title": "Measurement repeatability and cohort evidence",
+      "acceptance": "Separate synthetic tests from independent reference measurement, repeatability and supervised clinical usability evidence."
+    },
+    {
+      "id": "P11",
+      "priority": "high",
+      "kind": "deployment_requirement",
+      "status": "requires_review",
+      "title": "Authenticated clinical authorization and patient-data governance",
+      "acceptance": "A setup toggle is not clinician identity; establish actual access control, consent, retention and authorized data delivery before clinical deployment."
+    }
+  ]
+}
