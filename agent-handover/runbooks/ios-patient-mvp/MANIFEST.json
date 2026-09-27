@@ -34,8 +34,8 @@
     },
     {
       "path": "STATUS.json",
-      "sha256": "31c6e3eb6899dcff0f6ad8d2a6be9f094e5cfd9487909e8f64630f5c575c9eac",
-      "bytes": 3172
+      "sha256": "97bc55aaf05e548d0c7c7a36703186dd07da3d1b87f00d653557e8e0e6ce4e39",
+      "bytes": 3333
     },
     {
       "path": "TEST_MATRIX.md",

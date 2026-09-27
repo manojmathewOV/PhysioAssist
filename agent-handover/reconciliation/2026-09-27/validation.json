@@ -26,5 +26,13 @@
   "criteria_checks": "passed",
   "structure_negative_cases": 7,
   "criteria_negative_cases": 14,
-  "typecheck": "passed"
+  "typecheck": "passed",
+  "publication": {
+    "successor_pr": 28,
+    "successor_branch": "agent/mvp-integration-20260927",
+    "predecessor_prs_closed": [25, 26, 27],
+    "archive_tags_verified": true,
+    "source_branches_deleted": false,
+    "main_merged": false
+  }
 }

@@ -6,7 +6,8 @@ Updated 2026-09-27. Scope: **iPhone patient-only, local-first MVP**. Surgeon/phy
 
 - Claude implementation is frozen at `6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84`. Its final handover is [here](responses/2026-09-27-6bc4d77-claude-final-handover.md). Claude is independent reviewer unless explicitly reassigned.
 - Receiving implementer: ChatGPT via the authorised hybrid Mac/RDC/GitHub workflow. One writer per task and source surface.
-- Active consolidation: `agent/mvp-integration-20260927`; exact predecessor refs and successor PR in [BRANCHES.json](BRANCHES.json).
+- Active consolidation: **draft PR #28**, `agent/mvp-integration-20260927`; exact predecessor refs and successor PR in [BRANCHES.json](BRANCHES.json).
+- PRs #25/#26/#27 are closed as superseded; their heads remain ancestry-contained and archive-tagged. No source branch was deleted.
 - `main` is **not changed or approved for release** by this reconciliation.
 - Reuse the owner's configured local landing `repo/` and `RDC/`. No extra clone/dependency install is needed.
 

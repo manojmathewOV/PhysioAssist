@@ -71,5 +71,7 @@
       "state": "implemented_web_only_pending_independent_journey",
       "basis": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84"
     }
-  }
+  },
+  "active_pr": 28,
+  "predecessor_prs": "25/26/27 closed-unmerged as superseded after checkpoint/ancestry verification"
 }
