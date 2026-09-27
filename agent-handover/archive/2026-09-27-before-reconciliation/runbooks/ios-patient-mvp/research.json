@@ -98,54 +98,6 @@
       "status": "observed_not_redistributed",
       "supports": "DoD outcomes, gates, scoped evidence, candidate-vs-admission distinction, source-bound Research and bounded tool claims",
       "limits": "Project Cosmos private internals are not copied; contracts are not evidence of successful PhysioAssist native author/ingest effects"
-    },
-    {
-      "id": "S13",
-      "kind": "frozen_final_handover",
-      "locator": "../../responses/2026-09-27-6bc4d77-claude-final-handover.md",
-      "status": "read",
-      "supports": "Frozen branch, durable helper scripts, P08 and reported storage/copy gaps",
-      "limits": "Claude private environment and scheduling status are author testimony; old reports are not new tests"
-    },
-    {
-      "id": "S14",
-      "kind": "independent_local_evidence",
-      "locator": "../../workflows/hybrid-mac-github/evidence/qualification.json",
-      "status": "historical_inspected",
-      "supports": "Hybrid execution proof on 414b81b",
-      "limits": "Superseded P08 result; use later frozen-app verification for teardown"
-    },
-    {
-      "id": "S15",
-      "kind": "hosted_failure",
-      "locator": "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36295560714",
-      "status": "observed_log",
-      "supports": "Install-pods failure at strict checksums; toolchain version differs",
-      "limits": "No native build or UI execution in this failed run; not proof of a camera defect"
-    },
-    {
-      "id": "S16",
-      "kind": "product_research",
-      "locator": "../../research/2026-09-27-accuracy-engagement-integration/README.md",
-      "status": "read",
-      "supports": "Measurement definition/endpoint bias, intuitive autonomous use, future surgeon/physio data seams",
-      "limits": "Synthetic experiments and external studies do not validate PhysioAssist"
-    },
-    {
-      "id": "S17",
-      "kind": "usability_research",
-      "locator": "../../research/2026-09-27-patient-experience/REVIEW.md",
-      "status": "read",
-      "supports": "EX01-EX08, phase/readiness distinctions and clear instructional design",
-      "limits": "Prototype/layout tests are not native/human acceptance"
-    },
-    {
-      "id": "S18",
-      "kind": "current_ccore_definition_contract",
-      "locator": "evidence/ccore-reconciliation.json",
-      "status": "tool_observation_record",
-      "supports": "Native definition-shape framework, graph/DoD/terminal declaration constraints",
-      "limits": "No TaskEpoch/native acceptance/clinical authority inferred"
     }
   ],
   "questions": [
@@ -177,9 +129,9 @@
     },
     {
       "id": "Q03",
-      "question": "Do the frozen 6bc4d77 paths close R01-R03 on the integrated candidate?",
-      "sources": ["S02", "S03", "S04", "S13"],
-      "status": "partial_independent_evidence_P08_only",
+      "question": "Does current 414b81b actually close the prior conflict, schedule approval and UI-clock findings?",
+      "sources": ["S02", "S03", "S04"],
+      "status": "author_claim_pending_independent_retest",
       "affects": ["G01"],
       "alternatives": [
         "Accept only after current production journey replay",
@@ -216,9 +168,9 @@
     },
     {
       "id": "Q06",
-      "question": "Can complete native patient journeys be reproduced in both appropriate lanes and their artifacts scrutinised?",
-      "sources": ["S02", "S04", "S14", "S15"],
-      "status": "first_launch_and_artifact_retrieval_observed_full_rehab_gap",
+      "question": "Can native cloud simulation artifacts actually be retrieved and visually reviewed?",
+      "sources": ["S02", "S04"],
+      "status": "execution_proof_required",
       "affects": ["G09"],
       "alternatives": [
         "Hosted macOS CI with deterministic native fixtures and image artifacts"
@@ -250,62 +202,8 @@
       ],
       "decision": "D08",
       "falsifier": "Synthetic fixtures or high landmark confidence are used as proof of clinical accuracy."
-    },
-    {
-      "id": "Q09",
-      "question": "Which toolchain pin yields identical local/hosted Pod metadata without weakening strict installation?",
-      "sources": ["S15"],
-      "status": "open_integration_blocker",
-      "affects": ["G01"],
-      "alternatives": [
-        "Pin and qualify the existing 1.16.2 toolchain",
-        "Deliberately migrate local and hosted locks to another reviewed toolchain"
-      ],
-      "decision": null,
-      "falsifier": "A clean runner modifies the lock or strict installation is bypassed."
-    },
-    {
-      "id": "Q10",
-      "question": "Does a failed storage read leave existing records intact through navigation/retry/restart?",
-      "sources": ["S13"],
-      "status": "reported_defect_to_reproduce",
-      "affects": ["G02"],
-      "alternatives": [
-        "Explicit hydration-error write barrier before migration",
-        "Transactional store with source-preserving migration and read recovery"
-      ],
-      "decision": "D03,D06",
-      "falsifier": "An errored read is treated as truly empty and new persistence destroys the original."
-    },
-    {
-      "id": "Q11",
-      "question": "Which endpoint policy balances meaningful ROM, selection bias, usable coverage and between-setup repeatability?",
-      "sources": ["S16"],
-      "status": "experiment_design_not_clinical_result",
-      "affects": ["G08", "G10"],
-      "alternatives": [
-        "best-valid endpoint",
-        "typical valid endpoint",
-        "standardized stable endpoint"
-      ],
-      "decision": "D08",
-      "falsifier": "More noisy observations create claimed improvement without a real change."
-    },
-    {
-      "id": "Q12",
-      "question": "Can the patient and later surgeon/physio interpret an export without a connected-care backend?",
-      "sources": ["S16", "S17"],
-      "status": "proposed_synthetic_interpretation_test",
-      "affects": ["G05", "G08", "G10"],
-      "alternatives": [
-        "Patient-owned appointment summary plus versioned small export",
-        "Defer remote linkage while preserving origin and units"
-      ],
-      "decision": null,
-      "falsifier": "Self-report becomes clinician-verified activity, unavailable becomes zero or the screen implies active monitoring."
     }
   ],
-  "native_research_body": "not_created; portable evidence register only; native tool outcomes in evidence/ccore-reconciliation.json",
-  "authority": "Sources inform decisions; this register approves neither treatment nor implementation.",
-  "revision": 2
+  "native_research_body": "not_claimed; see evidence/CCORE_TOOLING.md",
+  "authority": "Sources inform decisions; this register approves neither treatment nor implementation."
 }

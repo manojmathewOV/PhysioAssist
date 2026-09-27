@@ -2,13 +2,13 @@
 
 These are copies of scripts used by the implementation agent in its temporary cloud container. They are published here so they survive that container. Absolute paths have been replaced by arguments and environment variables. **No media is included.** They are test aids, not application code. A passing run is not clinical, native or accessibility acceptance.
 
-| Script                     | What it does                                                                                                                                                                                                                                                                                           | Used for                                |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
-| `jest-clean-exit.sh`       | Runs typecheck, lint and the full Jest suite three ways: parallel, `--runInBand` and `--detectOpenHandles`. It never uses `--forceExit`. It reports exit status and counts of forced-worker, "did not exit", late-logging and open-handle warnings. With `PER_SUITE=1` it also runs every suite alone. | P08 evidence at 6bc4d77                 |
-| `web-screenshots.js`       | Seeds a **synthetic** local profile, plan and history into the production web build's localStorage, walks the listed tabs/steps and takes screenshots. Optionally runs axe-core.                                                                                                                       | Patient-view and Progress layout checks |
-| `web-fake-camera-focus.js` | Starts a routine exercise with a fake camera, captures the focus view, presses the Focus/Plain switch and captures the plain view.                                                                                                                                                                     | EX06 check at 6bc4d77                   |
-| `make-fake-camera.py`      | Converts a video into the `.y4m` file that Chromium's fake camera plays.                                                                                                                                                                                                                               | Input for the script above              |
-| `commons_license.py`       | Searches Wikimedia Commons for videos and prints licence, author and URL metadata for chosen files.                                                                                                                                                                                                    | Provenance of public test clips         |
+| Script | What it does | Used for |
+|---|---|---|
+| `jest-clean-exit.sh` | Runs typecheck, lint and the full Jest suite three ways: parallel, `--runInBand` and `--detectOpenHandles`. It never uses `--forceExit`. It reports exit status and counts of forced-worker, "did not exit", late-logging and open-handle warnings. With `PER_SUITE=1` it also runs every suite alone. | P08 evidence at 6bc4d77 |
+| `web-screenshots.js` | Seeds a **synthetic** local profile, plan and history into the production web build's localStorage, walks the listed tabs/steps and takes screenshots. Optionally runs axe-core. | Patient-view and Progress layout checks |
+| `web-fake-camera-focus.js` | Starts a routine exercise with a fake camera, captures the focus view, presses the Focus/Plain switch and captures the plain view. | EX06 check at 6bc4d77 |
+| `make-fake-camera.py` | Converts a video into the `.y4m` file that Chromium's fake camera plays. | Input for the script above |
+| `commons_license.py` | Searches Wikimedia Commons for videos and prints licence, author and URL metadata for chosen files. | Provenance of public test clips |
 
 ## Rules for use
 

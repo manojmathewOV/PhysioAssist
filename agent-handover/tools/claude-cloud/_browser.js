@@ -28,17 +28,8 @@ async function routeMediapipe(page) {
   await page.route('https://cdn.jsdelivr.net/npm/@mediapipe/pose/**', (route) => {
     const file = path.join(dir, route.request().url().split('/').pop().split('?')[0]);
     if (!fs.existsSync(file)) return route.fulfill({ status: 404 });
-    const type = file.endsWith('.wasm')
-      ? 'application/wasm'
-      : file.endsWith('.js')
-        ? 'text/javascript'
-        : 'application/octet-stream';
-    return route.fulfill({
-      status: 200,
-      body: fs.readFileSync(file),
-      contentType: type,
-      headers: { 'access-control-allow-origin': '*' },
-    });
+    const type = file.endsWith('.wasm') ? 'application/wasm' : file.endsWith('.js') ? 'text/javascript' : 'application/octet-stream';
+    return route.fulfill({ status: 200, body: fs.readFileSync(file), contentType: type, headers: { 'access-control-allow-origin': '*' } });
   });
 }
 
@@ -46,32 +37,14 @@ async function routeMediapipe(page) {
 async function seed(page, settingsPatch, history) {
   await page.goto(BASE_URL);
   await page.waitForTimeout(2500);
-  const root = JSON.parse(
-    await page.evaluate(() => localStorage.getItem('persist:root'))
-  );
-  const user = {
-    currentUser: { id: 'demo', name: 'Demo Patient', email: 'demo@example.com' },
-    isAuthenticated: true,
-    hasCompletedOnboarding: true,
-    isLoading: false,
-    error: null,
-  };
+  const root = JSON.parse(await page.evaluate(() => localStorage.getItem('persist:root')));
+  const user = { currentUser: { id: 'demo', name: 'Demo Patient', email: 'demo@example.com' }, isAuthenticated: true, hasCompletedOnboarding: true, isLoading: false, error: null };
   root.user = JSON.stringify(user);
   root.settings = JSON.stringify({ ...JSON.parse(root.settings), ...settingsPatch });
-  await page.evaluate(
-    ([r, hist]) => {
-      localStorage.setItem('persist:root', r);
-      if (hist)
-        localStorage.setItem(
-          'persist:exercise',
-          JSON.stringify({
-            history: JSON.stringify(hist),
-            _persist: JSON.stringify({ version: -1, rehydrated: true }),
-          })
-        );
-    },
-    [JSON.stringify(root), history || null]
-  );
+  await page.evaluate(([r, hist]) => {
+    localStorage.setItem('persist:root', r);
+    if (hist) localStorage.setItem('persist:exercise', JSON.stringify({ history: JSON.stringify(hist), _persist: JSON.stringify({ version: -1, rehydrated: true }) }));
+  }, [JSON.stringify(root), history || null]);
   await page.reload();
   await page.waitForTimeout(2500);
 }

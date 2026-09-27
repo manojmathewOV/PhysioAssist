@@ -1,43 +1,93 @@
-# Evidence matrix — test the real boundary
+# Validation matrix — planned versus observed
 
-This is a plan for tests, not their result. Synthetic numeric values represent test fixtures, not clinical prescriptions. Run narrow affected tests during a delta; run integrated/full checks at material gate joins. Preserve the original archived tests; adapt superseded APIs separately.
+83 named scenarios. All entries are planned for this runbook revision unless an exact evidence reference explicitly records a result. This count is not a count of executed application tests.
 
-| Layer                             | What it can establish                                              | Required evidence                                                                  | What it cannot establish                                                |
-| --------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Pure/property simulation          | Specified event, schedule, clock and comparison invariants         | Deterministic seed, independent expectation, actual failures/shrink cases          | Camera accuracy or clinical suitability                                 |
-| Production reducer/hook/component | Domain result reaches stored and displayed state                   | Exact implementation imports; fake-clock lifecycle; visual/speech/store assertions | Native device layout or real sensor behaviour                           |
-| Native iOS simulator              | Actual app navigation, native UI/persistence integration           | App SHA + OS/device + screenshot/video manifest; images actually inspected         | Physical camera/thermal/battery performance or older-user comprehension |
-| Physical iPhone                   | Resource use, permissions, interruption and camera pipeline        | Release build, supported device, controlled script and actual measurements         | Broad clinical generalisation from one device/person                    |
-| Reference measurement study       | Accuracy, coverage, abstention and repeatability for defined modes | Independent reference definition, participant-disjoint design, held-out evidence   | Healing/phase clearance or modes absent from the study                  |
-| Supervised user study             | Whether intended patients complete/recover/understand tasks        | Task outcomes, assistance given, errors and clinician workload                     | Measurement validity by preference alone                                |
+| ID | Gate | Evidence class | Required scenario |
+|---|---|---|---|
+| G00.V01 | G00 | repository_structure | Fresh checkout can navigate all local links and identify absent private evidence honestly. |
+| G00.V02 | G00 | repository_structure | An agent resuming after context loss reconstructs next gate and blockers using this folder alone. |
+| G00.V03 | G00 | repository_structure | A changing PR head invalidates only affected evidence, not the whole history. |
+| G00.V04 | G00 | repository_structure | All three frozen input heads are ancestors of the published integration candidate; protected source/history blobs are unchanged. |
+| G00.V05 | G00 | repository_structure | Exactly one active consolidation PR is designated; predecessor PRs point to it and retained checkpoints restore all original heads. |
+| G00.V06 | G00 | repository_structure | No unresolved clinical decision is relabelled approved during document consolidation. |
+| G01.V01 | G01 | logic_and_hosted_native | Exact replay counts once; reversed conflicting inputs produce identical withheld credit; an explicit correction restores only intended credit. |
+| G01.V02 | G01 | logic_and_hosted_native | Schedule-only edits require new prescription revision and applicable local confirmation; equivalent serialisation does not. |
+| G01.V03 | G01 | logic_and_hosted_native | Mounted screen updates at due/window/midnight boundaries, foreground refreshes, Start rechecks and unmount removes timers. |
+| G01.V04 | G01 | logic_and_hosted_native | Five seconds active, seventy paused, three active yields eight active seconds consistently in ring, completion and history. |
+| G01.V05 | G01 | logic_and_hosted_native | Full relevant Jest suite exits naturally with no force-killed worker, unexplained timer or skipped new coverage. |
+| G01.V06 | G01 | logic_and_hosted_native | Fresh hosted native dependency install preserves the approved lock and completes build/smoke/selected Detox; capture Ruby, CocoaPods, Node, Xcode and input hashes. |
+| G01.V07 | G01 | logic_and_hosted_native | A deliberately failing Pod command remains a failing job despite log piping; changed lock or missing tool version refuses. |
+| G01.V08 | G01 | logic_and_hosted_native | Old reviewer failures are mapped to actual replacement coverage or reopened; wording-only and superseded assumptions are not restored. |
+| G02.V01 | G02 | fault_injection_and_native_files | Restart and force-termination at every migration boundary leave either a valid prior store or fully committed new store, without duplicate records. |
+| G02.V02 | G02 | fault_injection_and_native_files | Stress fixture with 10,000 synthetic history records: only requested pages/aggregates enter app state; compare startup, memory and writes against baseline. |
+| G02.V03 | G02 | fault_injection_and_native_files | Two local profiles never see each other records; sign-out/account changes cannot silently reassign the database. |
+| G02.V04 | G02 | fault_injection_and_native_files | Disk-full and corrupt-record injection give recoverable errors and preserve unaffected records. |
+| G02.V05 | G02 | fault_injection_and_native_files | Enumerate actual files after writes to verify protection, backup disposition and absence of raw video. |
+| G02.V06 | G02 | fault_injection_and_native_files | Seed existing history then reject its read: no empty overwrite occurs on navigation, retry, app background or another update; the original bytes remain recoverable. |
+| G02.V07 | G02 | fault_injection_and_native_files | Power-loss/write-error at each migration step preserves either the old store or committed new store; a repeated recovery is idempotent. |
+| G02.V08 | G02 | fault_injection_and_native_files | Commit acknowledgement occurs only after durability; a failed write is visible and never counted as saved. |
+| G03.V01 | G03 | native_identity_journey | Onboard, restart in airplane mode, complete an activity and recover its record. |
+| G03.V02 | G03 | native_identity_journey | Cancelled sign-in, revoked credential, hidden email, account change and repeated login do not expose or silently transfer another profile data. |
+| G03.V03 | G03 | native_identity_journey | Deletion removes the approved local assets/notifications and, only if accounts exist, performs the documented account deletion path. |
+| G03.V04 | G03 | native_identity_journey | The screen never promises cloud recovery or monitoring which the MVP does not implement. |
+| G03.V05 | G03 | native_identity_journey | No clinician assigned: patient can use approved independent features without a false waiting/monitoring claim. |
+| G03.V06 | G03 | native_identity_journey | Sign-in cancellation or identity change cannot reassign another local database; same email alone never merges owners. |
+| G04.V01 | G04 | synthetic_policy_and_source_approval | Frozen-shoulder sleeper variant never leaks into a disallowing protected-repair programme. |
+| G04.V02 | G04 | synthetic_policy_and_source_approval | Isolated MPFL and MPFL with TTO do not collapse into one knee permission; assistance and loaded/unloaded/braced distinctions survive import/export. |
+| G04.V03 | G04 | synthetic_policy_and_source_approval | A changed reference or package cannot silently change an active patient prescription. |
+| G04.V04 | G04 | synthetic_policy_and_source_approval | Missing/contradictory source or unknown procedure yields explanation plus safe available functions, never invented permissions. |
+| G04.V05 | G04 | synthetic_policy_and_source_approval | Changing only dose preserves comparable observation identity; changing assistance/posture/estimator separates incompatible series. |
+| G04.V06 | G04 | synthetic_policy_and_source_approval | Passing a calendar date does not satisfy a clinical milestone; missing prerequisite remains unknown, not met. |
+| G04.V07 | G04 | synthetic_policy_and_source_approval | Expired/suspended programme has appropriate education/records/review route without indefinite treatment continuation or guessed replacement. |
+| G04.V08 | G04 | synthetic_policy_and_source_approval | Therapist-only tasks and manual force/load escalation cannot become patient self-instructions through template import. |
+| G05.V01 | G05 | native_patient_journey | Learn -> Do -> interrupted Do -> incomplete Check -> valid Check -> later compatible comparison, using the same profile/episode. |
+| G05.V02 | G05 | native_patient_journey | Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not treated as failed rehabilitation. |
+| G05.V03 | G05 | native_patient_journey | Dose/schedule changes preserve compatible methods; assistance/method changes separate comparison or mark incompatibility. |
+| G05.V04 | G05 | native_patient_journey | Goal, clinical restriction and demonstrator endpoint remain three separate quantities. |
+| G05.V05 | G05 | native_patient_journey | Watching or a simulated demonstration never becomes completed treatment or a clinical measurement. |
+| G05.V06 | G05 | native_patient_journey | Patient-confirmed completion is labelled self-reported, not camera-observed or clinician-supervised. |
+| G05.V07 | G05 | native_patient_journey | Appointment summary identifies episode, source/version, method, support, date, unmeasured attempts and questions without implying notification of a care team. |
+| G05.V08 | G05 | native_patient_journey | Reaching a demonstration's maximum never silently substitutes for a lower prescribed target or relaxes a precaution. |
+| G06.V01 | G06 | clock_and_native_notifications | Due time changes without history edits; foreground after a missed boundary; midnight and timezone/DST transitions. |
+| G06.V02 | G06 | clock_and_native_notifications | Notification denied, delayed, duplicated or tapped after a plan change: in-app truth stays correct and no record is completed. |
+| G06.V03 | G06 | clock_and_native_notifications | A 2-3 synthetic repetition range accepts its lower bound; a missed mini-session does not add later repetitions. |
+| G06.V04 | G06 | clock_and_native_notifications | Old notifications disappear after schedule revision or profile deletion; one device state does not count repeated notifications as exercise. |
+| G06.V05 | G06 | clock_and_native_notifications | Morning mobility, separate strength and evening group cannot complete or schedule one another accidentally. |
+| G06.V06 | G06 | clock_and_native_notifications | Review/correction/reorder/profile switch cannot reassign a previous event's execution-time occurrence. |
+| G06.V07 | G06 | clock_and_native_notifications | Device clock/timezone moves backward or forward: record chronology and no duplicate completion; policy-bound eligibility recomputes. |
+| G07.V01 | G07 | native_media_accessibility_and_human | Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback. |
+| G07.V02 | G07 | native_media_accessibility_and_human | Speech identifies the next movement and dose without forcing a floor-exercising patient to reach for the phone. |
+| G07.V03 | G07 | native_media_accessibility_and_human | Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. |
+| G07.V04 | G07 | native_media_accessibility_and_human | Camera problem plus precaution plus praise selects one correct visual/spoken message consistently. |
+| G07.V05 | G07 | native_media_accessibility_and_human | Corrupt, missing, wrong-variant or unavailable video cannot silently substitute another movement; approved text/audio fallback is clear. |
+| G07.V06 | G07 | native_media_accessibility_and_human | Dynamic Type, VoiceOver and Voice Control traverse a complete native routine with reachable Stop/Pause. |
+| G07.V07 | G07 | native_media_accessibility_and_human | All important props/helper context remain legible in selected focus/plain fixtures; person tracking transfer withholds/reconfirms rather than silently measuring a helper. |
+| G07.V08 | G07 | native_media_accessibility_and_human | Meaningful audio and captions remain correct through calls, mute, pause and resume without queued contradictory praise. |
+| G08.V01 | G08 | reference_measurement_and_physical_device | Thirty synthetic open/start/pause/stop/close cycles as a stress fixture: no sustained retained-memory growth; include background/memory pressure. |
+| G08.V02 | G08 | reference_measurement_and_physical_device | Cold offline first use with required model/media present; low-storage model failure returns honest unmeasured state. |
+| G08.V03 | G08 | reference_measurement_and_physical_device | Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. |
+| G08.V04 | G08 | reference_measurement_and_physical_device | A method change cannot silently present the same measurement-method version or turn simulation success into clinical accuracy. |
+| G08.V05 | G08 | reference_measurement_and_physical_device | More noisy repetitions without changed true endpoints cannot justify an automatic improvement claim; report selection policy and sample basis. |
+| G08.V06 | G08 | reference_measurement_and_physical_device | Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. |
+| G08.V07 | G08 | reference_measurement_and_physical_device | Chosen endpoint with poor tracking is withheld even if the rest of the session has high visibility. |
+| G08.V08 | G08 | reference_measurement_and_physical_device | Thirty repeated camera cycles release resources; memory/low-storage/model failure gives an honest safe fallback, not another app reload loop. |
+| G08.V09 | G08 | reference_measurement_and_physical_device | Structured synthetic appointment export round-trips meaning, units, unknowns, correction links and version; unavailable is not zero. |
+| G09.V01 | G09 | native_artifact_review | Cloud build -> simulator -> authored journey -> screenshot/video artifacts -> image retrieval -> recorded visual review is demonstrated end-to-end. |
+| G09.V02 | G09 | native_artifact_review | Local profile, routine preparation, reference, live exercise, paused state, unmeasured result and progress all appear in the artifact manifest. |
+| G09.V03 | G09 | native_artifact_review | Restart simulator and re-open local records; large text and smaller-device states are not replaced by web screenshots. |
+| G09.V04 | G09 | native_artifact_review | All artifact links are durable or explicitly expire; public artifacts contain synthetic/non-identifying material only. |
+| G09.V05 | G09 | native_artifact_review | Each native image/video is tied to exact tested source, dependency/toolchain, fixture, screen state and reviewer finding. |
+| G09.V06 | G09 | native_artifact_review | Native required journey cannot pass using a web image, an old artifact or an unexecuted UI-test specification. |
+| G09.V07 | G09 | native_artifact_review | Clean simulator run and persisted-session restart both exercise the intended paths, without consuming unrelated personal device data. |
+| G10.V01 | G10 | claim_traceability_and_pilot | Trace each release claim to matching version-bound evidence and clinical approval; missing human/device evidence cannot be marked passed by a software model. |
+| G10.V02 | G10 | claim_traceability_and_pilot | Independent patient completes approved offline workflow after setup without selecting camera geometry or editing clinical phase. |
+| G10.V03 | G10 | claim_traceability_and_pilot | Deletion/reinstall/lost-device information matches actual recovery capability; Sign in with Apple alone is never described as clinical backup. |
+| G10.V04 | G10 | claim_traceability_and_pilot | Audit build and network/file outputs: no unexpected clinical upload, tracking, public identifiable media or unapproved iCloud health-data backup. |
+| G10.V05 | G10 | claim_traceability_and_pilot | No open high-severity safety, data-loss, identity or privacy defect at the selected endpoint; other residuals require an explicit owner and scoped disposition. |
+| G10.V06 | G10 | claim_traceability_and_pilot | An older/low-digital-confidence user completes the permitted journey and explains its outcome; supervised human evidence is recorded separately from simulation. |
+| G10.V07 | G10 | claim_traceability_and_pilot | Surgeon and physiotherapist independently interpret synthetic appointment summaries correctly without needing future portal infrastructure. |
+| G10.V08 | G10 | claim_traceability_and_pilot | Distribution uses the then-current required signing/SDK/policy checks; a legacy local simulator pass never substitutes. |
 
-## High-value adversarial scenarios
+Required evidence: source SHA, criterion ID, fixture/protocol identity, command or observed task, result, evidence type, recorder and limits. Native and human evidence have additional fields in `validation-matrix.json`.
 
-| ID  | Scenario                                                                     | Required invariant                                                   | Gate        |
-| --- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------- |
-| T01 | Same event twice, conflict in reversed order, later resolution               | Replay once; conflict withheld; authorised resolution only           | G01/G02     |
-| T02 | Same procedure but a new operation/episode; legacy unknown identity          | No accidental credit or relabelling                                  | G01/G04     |
-| T03 | 5 s active / 70 s pause / 3 s active                                         | 8 active everywhere; observation continuity remains separate         | G01/G05     |
-| T04 | Due boundary, window closure, midnight, foreground and time-zone change      | Current eligibility recomputed and rechecked at Start                | G01/G06     |
-| T05 | Schedule only changes; stale notification opens old plan                     | New approval/version where required; no obsolete action              | G01/G06     |
-| T06 | Camera failure and no exercise versus completed exercise with no measurement | Attempt/early stop/completion and measurement are independent        | G05         |
-| T07 | Pose unavailable plus warning plus praise/rep event                          | One appropriate warning; no contradictory screen/speech              | G05/G07     |
-| T08 | Long recorded plateau with missing frames                                    | No fabricated continuous hold                                        | G05/G08     |
-| T09 | Crash or full disk during save/migration; repeat on restart                  | Transaction integrity, recoverable prior data, no duplicated events  | G02         |
-| T10 | Large synthetic history at cold start                                        | No full history hydration; footprint measured, not assumed           | G02/G08     |
-| T11 | Sign-out/reinstall/revocation/second user                                    | Ownership explicit; no cross-profile leakage or false backup promise | G03         |
-| T12 | Reference absent, corrupt, wrong version, offline                            | Correct instructions or honest unavailability; no unsafe substitute  | G04/G07     |
-| T13 | New model/posture/assistance with old measurement key                        | Different identity or explicit validated compatibility               | G04/G05/G08 |
-| T14 | Repeated camera opens; background; low memory                                | Buffers/resources released; effects degrade before controls          | G08         |
-| T15 | Native small screen, accessibility text, VoiceOver, one-handed/floor use     | Essential content/Stop/Pause usable                                  | G07/G09     |
-| T16 | Independent user with no surgeon or physio                                   | No fictitious monitoring, no permanent awaiting-clinician dead end   | G03/G05     |
-
-## Existing command anchors
-
-At the pinned application baseline, package.json declares `npm run type-check`, `npm run lint`, `npm test`, `npm run build:web` and `npm run test:e2e:ios:release`. Read the current package, lockfile and workflows before execution. Dependency installation can trigger model downloads. No command printed here was executed merely by creating this document.
-
-P08 investigation candidate: `npx jest --runInBand --detectOpenHandles` on the narrow affected suite before the full clean-exit run. `--forceExit`, exit zero after a killed worker, a silent run, or zero selected tests is not clean evidence.
-
-## Every run record
-
-Record: application SHA; data/source/method revisions; command; exit and worker status; pass/fail/skip counts; environment; device or synthetic source; expected invariant; actual observation; artifact paths + SHA-256; reviewer; known limitations. Keep names and raw health data out of logs. The structural runbook checker tests this plan's consistency only.
+An unavailable/opt-in dataset does not validate a clinical endpoint. A method/endpoint change reopens affected observation comparisons. Historical evidence stays pinned rather than being copied into new pass states.

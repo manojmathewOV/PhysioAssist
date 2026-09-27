@@ -91,14 +91,14 @@ def main() -> int:
     # Check the CNP declaration projects the same declared gate identities.
     phases={}
     for line in (root/'ROADMAP.cnp').read_text().splitlines():
-        if line.startswith('phase '):
+        if line.startswith('run.node '):
             fields=dict(token.split('=',1) for token in shlex.split(line)[1:])
             phases[fields['id']]=fields
     if set(phases) != {g['id'] for g in manifest['gates']}: errors.append('CNP phase set drift')
     for g in manifest['gates']:
         if g['id'] in phases:
             p=phases[g['id']]
-            if p['title'] != g['title'] or p['deps'] != ('|'.join(g['depends_on']) or 'none'):
+            if p['name'] != g['title'] or p['after'] != 'none':
                 errors.append(g['id']+': CNP title/dependency drift')
     # Links outside this folder are checked after integration in the actual repo.
     missing=[]

@@ -1,13 +1,13 @@
 {
   "schema": "physioassist-runbook-status/1",
   "runbook_id": "ios-patient-mvp",
-  "runbook_revision": 1,
-  "current_gate": "G00",
-  "overall": "planned_not_implemented",
-  "implementation_sha": "414b81b170a6205b9fcb3aca20f3cab89bb850a1",
+  "runbook_revision": 2,
+  "current_gate": "G01",
+  "overall": "integration_candidate_blocked_on_native_portability",
+  "implementation_sha": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
   "gate_states": {
-    "G00": "planned",
-    "G01": "planned",
+    "G00": "implemented_pending_review",
+    "G01": "blocked",
     "G02": "planned",
     "G03": "planned",
     "G04": "planned",
@@ -20,10 +20,56 @@
   },
   "evidence": [],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
-  "next": "Reconcile current PR heads and resolve G00 decisions; independently retest 414b81b fixes before modifying them.",
-  "last_writer": "reviewer",
+  "next": "G00 independent reconciliation review in parallel with G01.W1 native dependency portability diagnosis. G02 read-error containment can be prepared from frozen input; no gate closure inherited.",
+  "last_writer": "receiving_agent",
   "limitations": [
-    "No new application suite, native simulator or patient validation was executed to create this plan.",
-    "CCore native operation results are recorded separately; document shape is not gate acceptance."
-  ]
+    "No implementation gate accepted by this planning update.",
+    "P08 was independently verified on the frozen app; it is not the current failure.",
+    "Full hosted native run of PR27 failed at Install pods; local success is a narrower observation.",
+    "No new clinical, physical-device or approved-media validation claimed."
+  ],
+  "integration_basis": "88918e77162a8491beb06c3e7615419a40b30630",
+  "blockers": [
+    {
+      "id": "I01",
+      "gate": "G01",
+      "status": "open",
+      "owner": "native_build_owner",
+      "observed": "Hosted CocoaPods 1.17.0 rejects spec checksums from local 1.16.2 lock; build/UI tests skipped. Cause of every checksum difference still requires controlled comparison.",
+      "evidence": "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36295560714",
+      "wake": "Fresh hosted strict install/build/selected UI run passes on chosen pinned toolchain."
+    },
+    {
+      "id": "DATA-READ-ERROR",
+      "gate": "G02",
+      "status": "reported_pending_reproduction",
+      "owner": "storage_owner",
+      "observed": "Claude final handover reports a rejected encrypted read can lead to empty-state overwrite.",
+      "wake": "Failing regression reproduced then fixed with original bytes preserved and independent review."
+    },
+    {
+      "id": "D-C-DECISIONS",
+      "gate": "G04",
+      "status": "open_feature_scoped",
+      "owner": "Manoj",
+      "observed": "C01-C08 and D01-D08 unresolved; initial variant/source and measurement choices are not approved.",
+      "wake": "Named scoped decisions recorded; no blanket completion needed for unrelated reversible work."
+    }
+  ],
+  "observed_subitems": {
+    "P08": {
+      "state": "independently_verified_on_frozen_basis",
+      "basis": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
+      "evidence": ".agents/skills/physioassist-hybrid/evidence/verification.json",
+      "ceiling": "test teardown only; not whole product acceptance"
+    },
+    "R01_R03": {
+      "state": "implemented_pending_targeted_independent_review",
+      "basis": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84"
+    },
+    "EX06": {
+      "state": "implemented_web_only_pending_independent_journey",
+      "basis": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84"
+    }
+  }
 }

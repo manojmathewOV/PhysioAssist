@@ -2,12 +2,12 @@
 
 These are historical observations, not current CI status.
 
-| Application | Existing suite          | Independent review                                 | Later disposition                                                                                                                                        |
-| ----------- | ----------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 06e77dd     | 1,465 passed; 4 skipped | 2 controls passed; 7 checks failed                 | Measurement fallback, discontinuous holds, framing and media preservation were subsequently addressed; the rotation-limit assumption was refined.        |
-| 29e6e14     | 1,502 passed; 4 skipped | 12 passed; 7 failed                                | Warning precedence, side/completion, static prescription propagation, wording and Progress were addressed by later changes; reverify at the current SHA. |
-| b06be91     | 1,524 passed; 4 skipped | Pause/display-versus-completion integration failed | Subsequent implementation introduced one shared clock. The old test reconstructs the old wall-time calculation.                                          |
-| c7ac7f3     | 1,550 passed; 4 skipped | Protocol-fit: 4 passed; 2 failed                   | Replay handling and interval scheduling remain open in the pinned review.                                                                                |
+| Application | Existing suite | Independent review | Later disposition |
+|---|---|---|---|
+| 06e77dd | 1,465 passed; 4 skipped | 2 controls passed; 7 checks failed | Measurement fallback, discontinuous holds, framing and media preservation were subsequently addressed; the rotation-limit assumption was refined. |
+| 29e6e14 | 1,502 passed; 4 skipped | 12 passed; 7 failed | Warning precedence, side/completion, static prescription propagation, wording and Progress were addressed by later changes; reverify at the current SHA. |
+| b06be91 | 1,524 passed; 4 skipped | Pause/display-versus-completion integration failed | Subsequent implementation introduced one shared clock. The old test reconstructs the old wall-time calculation. |
+| c7ac7f3 | 1,550 passed; 4 skipped | Protocol-fit: 4 passed; 2 failed | Replay handling and interval scheduling remain open in the pinned review. |
 
 The b06be91 cloud review also recorded 14,008 actual-module cases (14,000 pass, 8 fail), a proposed policy model with 36,878 passing cases and 13 detected omitted-guard mutations, and 29 refined checks. Those full models and logs are not part of this public transfer. Counts do not establish clinical correctness; they are retained here only as reported historical scope.
 

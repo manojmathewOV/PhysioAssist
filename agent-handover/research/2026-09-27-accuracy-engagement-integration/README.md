@@ -60,14 +60,14 @@ SMART supplies OAuth/launch patterns, not professional verification, blanket pat
 
 ## Research acceptance work and existing gates
 
-| Requirement                                  | Existing gates | Next evidence                                                           |
-| -------------------------------------------- | -------------- | ----------------------------------------------------------------------- |
-| PRD-R01 Qualified observation/endpoint       | G04–G05        | Contributing-interval provenance and predeclared aggregation comparison |
-| PRD-R02 Repeatable Check separate from Do    | G05, G09–G10   | Same-setup, repositioning and between-day assessment studies            |
-| PRD-R03 Accessible confidence-first teaching | G05, G07, G09  | Approved-video/audio tasks; novice/familiar/older-user observation      |
-| PRD-R04 Resilient resource-efficient history | G02, G08       | Save failure, migration, low storage, bounded memory/cache tests        |
-| PRD-R05 Portable clinical semantics          | G02–G04        | Patient summary comprehension and loss-aware translation tests          |
-| PRD-R06 Source and stage authority           | G04, G10       | Reviewed source/amendment rules; no inferred clinical milestone         |
+| Requirement | Existing gates | Next evidence |
+|---|---|---|
+| PRD-R01 Qualified observation/endpoint | G04–G05 | Contributing-interval provenance and predeclared aggregation comparison |
+| PRD-R02 Repeatable Check separate from Do | G05, G09–G10 | Same-setup, repositioning and between-day assessment studies |
+| PRD-R03 Accessible confidence-first teaching | G05, G07, G09 | Approved-video/audio tasks; novice/familiar/older-user observation |
+| PRD-R04 Resilient resource-efficient history | G02, G08 | Save failure, migration, low storage, bounded memory/cache tests |
+| PRD-R05 Portable clinical semantics | G02–G04 | Patient summary comprehension and loss-aware translation tests |
+| PRD-R06 Source and stage authority | G04, G10 | Reviewed source/amendment rules; no inferred clinical milestone |
 
 For measurement studies report bias, error distribution/limits of agreement, coverage, false warnings and cross-day repeatability with participant-level uncertainty. Freeze methods before untouched validation. For usability measure comprehension, phone touches, setup/repositioning burden and interruption recovery, not only satisfaction. For future integration ask surgeons and physiotherapists to interpret synthetic records independently, then test whether translation loses any clinical distinction. Pilot feasibility does not establish outcome superiority or patient safety.
 

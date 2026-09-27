@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "date": "2026-09-27",
+  "active_branch": "agent/mvp-integration-20260927",
+  "active_pr": "to_be_filled_after_publication",
+  "main_sha_unchanged": "d045d460800a9d50db30ab3df4b836e99406a0dd",
+  "state": "consolidation_candidate_not_release",
+  "predecessors": [
+    {
+      "role": "application",
+      "branch": "claude/task-b828413-details-f3cmpw",
+      "sha": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
+      "original_pr": 25,
+      "archive_tag": "archive/20260927/application",
+      "disposition": "preserved_frozen_predecessor_after_successor_publication",
+      "all_commits_in_integration": true,
+      "deletion": "none; read-only by workflow convention, no protection rule changed"
+    },
+    {
+      "role": "handover",
+      "branch": "review/agent-handover-20260927",
+      "sha": "510e799c0676ced95de333dd55a59fbe26333f64",
+      "original_pr": 26,
+      "archive_tag": "archive/20260927/handover",
+      "disposition": "preserved_frozen_predecessor_after_successor_publication",
+      "all_commits_in_integration": true,
+      "deletion": "none; read-only by workflow convention, no protection rule changed"
+    },
+    {
+      "role": "infrastructure",
+      "branch": "agent/hybrid-skill-20260927",
+      "sha": "0ca6dbe166df2cdba36477f8bae316fe56308aae",
+      "original_pr": 27,
+      "archive_tag": "archive/20260927/infrastructure",
+      "disposition": "preserved_frozen_predecessor_after_successor_publication",
+      "all_commits_in_integration": true,
+      "deletion": "none; read-only by workflow convention, no protection rule changed"
+    }
+  ],
+  "unrelated_historical_branches": "Not evaluated; not deleted or renamed. Never assume title/date implies redundancy.",
+  "local_unpublished_old_hybrid_branch": "Retained until exact patch/permission-refusal provenance can be reconciled; not an active work entry.",
+  "publication_order": [
+    "Validate ancestry and protected-file hashes",
+    "Publish successor branch and archive checkpoint tags",
+    "Record successor PR and make it the only active consolidation request",
+    "Close predecessor PRs as superseded without deleting refs",
+    "Do not merge main until integrated checks/review and owner decision"
+  ]
+}

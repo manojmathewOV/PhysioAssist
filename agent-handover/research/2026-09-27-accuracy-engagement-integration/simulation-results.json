@@ -10,81 +10,24 @@
     "no_real_patient_data": true
   },
   "projection": [
-    { "true_deg": 60, "yaw_deg": 0, "projected_deg": 60.0 },
-    { "true_deg": 60, "yaw_deg": 15, "projected_deg": 59.133 },
-    { "true_deg": 60, "yaw_deg": 30, "projected_deg": 56.31 },
-    { "true_deg": 60, "yaw_deg": 45, "projected_deg": 50.768 },
-    { "true_deg": 60, "yaw_deg": 60, "projected_deg": 40.893 }
+    {"true_deg":60,"yaw_deg":0,"projected_deg":60.0},
+    {"true_deg":60,"yaw_deg":15,"projected_deg":59.133},
+    {"true_deg":60,"yaw_deg":30,"projected_deg":56.31},
+    {"true_deg":60,"yaw_deg":45,"projected_deg":50.768},
+    {"true_deg":60,"yaw_deg":60,"projected_deg":40.893}
   ],
   "constant_hold_noise": [
-    {
-      "noise_autocorrelation": 0.0,
-      "samples_per_constant_hold": 30,
-      "synthetic_trials": 2000,
-      "mean_maximum_error_deg": 4.093,
-      "mean_median_error_deg": 0.019,
-      "median_estimator_rmse_deg": 0.455
-    },
-    {
-      "noise_autocorrelation": 0.0,
-      "samples_per_constant_hold": 300,
-      "synthetic_trials": 2000,
-      "mean_maximum_error_deg": 5.722,
-      "mean_median_error_deg": -0.002,
-      "median_estimator_rmse_deg": 0.14
-    },
-    {
-      "noise_autocorrelation": 0.0,
-      "samples_per_constant_hold": 1800,
-      "synthetic_trials": 2000,
-      "mean_maximum_error_deg": 6.84,
-      "mean_median_error_deg": 0.001,
-      "median_estimator_rmse_deg": 0.06
-    },
-    {
-      "noise_autocorrelation": 0.9,
-      "samples_per_constant_hold": 30,
-      "synthetic_trials": 2000,
-      "mean_maximum_error_deg": 2.706,
-      "mean_median_error_deg": 0.015,
-      "median_estimator_rmse_deg": 1.374
-    },
-    {
-      "noise_autocorrelation": 0.9,
-      "samples_per_constant_hold": 300,
-      "synthetic_trials": 2000,
-      "mean_maximum_error_deg": 5.029,
-      "mean_median_error_deg": 0.002,
-      "median_estimator_rmse_deg": 0.503
-    },
-    {
-      "noise_autocorrelation": 0.9,
-      "samples_per_constant_hold": 1800,
-      "synthetic_trials": 2000,
-      "mean_maximum_error_deg": 6.387,
-      "mean_median_error_deg": -0.001,
-      "median_estimator_rmse_deg": 0.214
-    }
+    {"noise_autocorrelation":0.0,"samples_per_constant_hold":30,"synthetic_trials":2000,"mean_maximum_error_deg":4.093,"mean_median_error_deg":0.019,"median_estimator_rmse_deg":0.455},
+    {"noise_autocorrelation":0.0,"samples_per_constant_hold":300,"synthetic_trials":2000,"mean_maximum_error_deg":5.722,"mean_median_error_deg":-0.002,"median_estimator_rmse_deg":0.14},
+    {"noise_autocorrelation":0.0,"samples_per_constant_hold":1800,"synthetic_trials":2000,"mean_maximum_error_deg":6.84,"mean_median_error_deg":0.001,"median_estimator_rmse_deg":0.06},
+    {"noise_autocorrelation":0.9,"samples_per_constant_hold":30,"synthetic_trials":2000,"mean_maximum_error_deg":2.706,"mean_median_error_deg":0.015,"median_estimator_rmse_deg":1.374},
+    {"noise_autocorrelation":0.9,"samples_per_constant_hold":300,"synthetic_trials":2000,"mean_maximum_error_deg":5.029,"mean_median_error_deg":0.002,"median_estimator_rmse_deg":0.503},
+    {"noise_autocorrelation":0.9,"samples_per_constant_hold":1800,"synthetic_trials":2000,"mean_maximum_error_deg":6.387,"mean_median_error_deg":-0.001,"median_estimator_rmse_deg":0.214}
   ],
   "repetition_endpoint_noise": [
-    {
-      "endpoint_count": 2,
-      "synthetic_trials": 10000,
-      "mean_best_endpoint_error_deg": 1.153,
-      "mean_typical_endpoint_error_deg": 0.019
-    },
-    {
-      "endpoint_count": 3,
-      "synthetic_trials": 10000,
-      "mean_best_endpoint_error_deg": 1.694,
-      "mean_typical_endpoint_error_deg": -0.0
-    },
-    {
-      "endpoint_count": 10,
-      "synthetic_trials": 10000,
-      "mean_best_endpoint_error_deg": 3.079,
-      "mean_typical_endpoint_error_deg": -0.0
-    }
+    {"endpoint_count":2,"synthetic_trials":10000,"mean_best_endpoint_error_deg":1.153,"mean_typical_endpoint_error_deg":0.019},
+    {"endpoint_count":3,"synthetic_trials":10000,"mean_best_endpoint_error_deg":1.694,"mean_typical_endpoint_error_deg":-0.0},
+    {"endpoint_count":10,"synthetic_trials":10000,"mean_best_endpoint_error_deg":3.079,"mean_typical_endpoint_error_deg":-0.0}
   ],
   "median_with_setup_offset_rmse_deg": 3.0,
   "interpretation": [

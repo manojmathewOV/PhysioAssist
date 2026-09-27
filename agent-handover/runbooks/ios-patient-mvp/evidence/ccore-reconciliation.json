@@ -1,0 +1,37 @@
+{
+  "scope": "native declaration inspection, not native task admission or clinical acceptance",
+  "inspected_tool": "ccore.runbook.compile",
+  "mode": "inspect_definition",
+  "source": "ROADMAP.cnp",
+  "source_sha256": "62ce4efc8022cce4cf2752350b0888afacf3967eb3231e5fc1b43987593968eb",
+  "declaration_grammar": "mu_runbook0.4",
+  "grammar_basis": "installed RunbookCompilerPolicy.ccore definition grammar; exact source lookup 4284dfbd302d5887ea1c7c734ab68abffdc32a71",
+  "ccore_provider": "cc8b5d2e7e05b516c4394348ee35951a37f2e339d372f1b550f850cb5adf0595",
+  "native_observation": {
+    "disposition": "DefinitionTopologyReadmissionRequired",
+    "assurance_posture": "DefinitionAssuranceContractReadyForOwnerBinding",
+    "blocked_axes": "0",
+    "dod_axes": "121",
+    "epoch_contract_members": "11",
+    "epoch_contract_posture": "DefinitionEpochContractReadyForOwnerBinding",
+    "epoch_contract_root": "sha256:134d9218fc9b198f440cdba61b8c0355f6655fe8b7e5d48c95b78730c241e5c2",
+    "epoch_frozen": "false",
+    "mutation_authorized": "false",
+    "owner_root": "sha256:d3e8e91f564987beed39d63d8a0ad3cf969dba11786ac172d3aa6eb59a9807a7",
+    "refs_bound": "false",
+    "structure_errors": "0",
+    "structure_posture": "DefinitionStructureReadyForOwnerBinding"
+  },
+  "claim_ceiling": "context_preflight_only_no_epoch_or_acceptance_authority",
+  "interpretation": "All 11 gates have 11 DoD axes structurally declared; 83 predicates bound to validation requests with canonical roots. Actual project-context/topology readmission, native authoring TaskEpoch and evidence acceptance are not established. R3/semantic_authority are required schema tokens, not an upgrade of clinical or implementation evidence.",
+  "earlier_attempts": [
+    "old dialect refused @:auth",
+    "corrected dialect exposed incorrect predicate tile hashes",
+    "canonical predicate/request hash binding corrected",
+    "graph endpoints and acceptance-only predecessor projection corrected"
+  ],
+  "native_research": "No native Research body created; portable source/uncertainty register retained. Query call refused unrecognised query field.",
+  "native_author": "Assist did not create a TaskEpoch/seed; no authority minted.",
+  "no_Cosmos_source_changes": true,
+  "no_native_runtime_admission": true
+}

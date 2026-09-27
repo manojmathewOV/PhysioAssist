@@ -12,7 +12,7 @@
       "id": "P01",
       "priority": "high",
       "kind": "reproduced_defect",
-      "status": "implemented_pending_targeted_review",
+      "status": "implemented_pending_review",
       "title": "Replay-safe event and occurrence identity",
       "acceptance": "One duplicated completion cannot finish another occurrence; conflicting payloads cannot silently replace an earlier event.",
       "response": "responses/2026-09-27-414b81b-claude.md",
@@ -23,7 +23,7 @@
       "id": "P02",
       "priority": "high",
       "kind": "new_requirement",
-      "status": "implemented_pending_targeted_review",
+      "status": "implemented_pending_review",
       "title": "Daytime interval scheduling and ranged repetitions",
       "acceptance": "Respect the approved waking window, interval anchor and repetition range; no immediate next-round invitation or accumulated catch-up dose.",
       "response": "responses/2026-09-27-414b81b-claude.md",
@@ -74,12 +74,12 @@
       "id": "P08",
       "priority": "medium",
       "kind": "engineering_gap",
-      "status": "independently_verified",
+      "status": "verified_by_independent_reviewer",
       "title": "Clean test-runner shutdown",
       "acceptance": "The selected tests finish without forced exit or leaking timers; preserve actual exit status.",
       "response": "responses/2026-09-27-6bc4d77-claude.md",
       "implementation_sha": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
-      "note": "Independent Mac parallel and detectOpenHandles runs are recorded; integration must preserve this. No blanket approval of other changes.",
+      "note": "Causes: store created at import (redux-persist timeout) and telemetry interval from constructor. Full suite exit 0 in parallel, in-band and --detectOpenHandles modes, no forced worker; see evidence/2026-09-27-6bc4d77/. Independent 2026-09-27 retest on 6bc4d77: parallel and --detectOpenHandles each 1593 passed/4 skipped, no forced-worker or detected-handle warning; scope/environment in linked response.",
       "independent_review": "responses/2026-09-27-5cc5d5a-hybrid-setup.md"
     },
     {
@@ -102,39 +102,9 @@
       "id": "P11",
       "priority": "high",
       "kind": "deployment_requirement",
-      "status": "split_local_vs_future",
+      "status": "requires_review",
       "title": "Authenticated clinical authorization and patient-data governance",
-      "acceptance": "A setup toggle is not clinician identity; establish actual access control, consent, retention and authorized data delivery before clinical deployment.",
-      "note": "Local programme origin, disputed-record correction authority, profile isolation and privacy remain G02/G03/G04/G10. Remote clinician identity/portal/monitoring are deferred, not MVP prerequisites."
-    },
-    {
-      "id": "I01",
-      "priority": "high",
-      "kind": "observed_integration_failure",
-      "status": "open",
-      "title": "Portable strict native dependency installation",
-      "gate": "G01",
-      "acceptance": "Fresh local/hosted installation uses the agreed toolchain, preserves lock, passes build and selected native tests; no deployment/pipefail bypass."
-    },
-    {
-      "id": "I02",
-      "priority": "high",
-      "kind": "reported_data_loss_risk",
-      "status": "needs_reproduction",
-      "title": "Encrypted-storage read error must not overwrite history",
-      "gate": "G02",
-      "acceptance": "Existing bytes survive rejected reads, retries and subsequent app updates; explicit error/recovery state before migration."
-    },
-    {
-      "id": "I03",
-      "priority": "medium",
-      "kind": "product_scope_mismatch",
-      "status": "open",
-      "title": "Patient-only copy without invented clinician relationship",
-      "gate": "G03/G05",
-      "acceptance": "Independent patient is not promised monitoring or trapped waiting for an unconnected clinician; restrictions remain enforced."
+      "acceptance": "A setup toggle is not clinician identity; establish actual access control, consent, retention and authorized data delivery before clinical deployment."
     }
-  ],
-  "active_runbook": "runbooks/ios-patient-mvp/runbook.json",
-  "scope": "iPhone patient-only local-first; clinician/surgeon platform deferred"
+  ]
 }

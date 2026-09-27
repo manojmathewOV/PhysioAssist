@@ -1,0 +1,12 @@
+
+# Preserve byte-bound historical evidence and deterministic generated views.
+agent-handover/archive/**
+agent-handover/reviews/**
+agent-handover/responses/**
+agent-handover/tools/**
+agent-handover/tests/**
+agent-handover/research/**
+agent-handover/evidence/**
+agent-handover/runbooks/ios-patient-mvp/RUNBOOK.md
+agent-handover/runbooks/ios-patient-mvp/TEST_MATRIX.md
+agent-handover/runbooks/ios-patient-mvp/ROADMAP.cnp

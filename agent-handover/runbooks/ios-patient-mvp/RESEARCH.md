@@ -1,3 +1,5 @@
+> **Revision 2 reconciliation:** Q09-Q12 and S13-S18 capture the hosted native failure, separate storage-read-error risk, endpoint research and future surgeon/physio seams. Old Q03/Q06 states are superseded by `research.json`; tests and approvals remain separate.
+
 # Research: decisions, alternatives and blind spots
 
 This is the portable evidence register for the runbook, not a new CCore Research runtime store. [research.json](research.json) binds sources, support limits, open questions and affected gates. [CCore evidence](evidence/CCORE_TOOLING.md) states whether native Research effects actually succeeded.

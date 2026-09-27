@@ -1,0 +1,30 @@
+{
+  "scope": "reconciled candidate, not release or clinical validation",
+  "application_basis": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
+  "tested_merge_parent": "88918e77162a8491beb06c3e7615419a40b30630",
+  "candidate_diff_sha256": "a15bb6bbf6a94d2ab572314559fca82aa2b185c6b4f29c3789128e6b09b08891",
+  "application_suite": {
+    "passed": 1593,
+    "skipped": 4,
+    "suites_passed": 87,
+    "exit": 0,
+    "forceExit": false,
+    "teardown_warning": false,
+    "seconds": 35.56
+  },
+  "source_note": "Uncommitted orientation/runbook changes under test. Clinical/application source not changed by this reconciliation.",
+  "native_definition": {
+    "structure_errors": 0,
+    "dod_axes": 121,
+    "blocked_axes": 0,
+    "native_epoch_frozen": false,
+    "owner_binding": "not_complete"
+  },
+  "remaining": "I01 hosted native dependency failure remains; I02 failed-read data loss needs reproduction; no native simulator or patient study rerun",
+  "protected_source_and_history_equal": true,
+  "structure_checks": "passed",
+  "criteria_checks": "passed",
+  "structure_negative_cases": 7,
+  "criteria_negative_cases": 14,
+  "typecheck": "passed"
+}

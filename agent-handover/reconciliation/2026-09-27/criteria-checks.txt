@@ -1,0 +1,26 @@
+Three generated views match manifest/matrix. This is not native or clinical acceptance.
+{
+  "status": "passed",
+  "scope": "plan and archive consistency only",
+  "gates": 11,
+  "criteria": 83,
+  "matrix_negative_mutations_detected": 14,
+  "mutations": [
+    "duplicate criterion",
+    "missing criterion",
+    "orphan gate",
+    "wrong gate",
+    "missing scenario",
+    "missing evidence class",
+    "matrix revision",
+    "unearned criterion",
+    "self acceptance",
+    "synthetic substituted for human",
+    "unknown source",
+    "unearned gate",
+    "DoD axis removed",
+    "cyclic dependencies"
+  ],
+  "archive_bytes_verified": true,
+  "accepted_gates": 0
+}

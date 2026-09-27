@@ -3,25 +3,7 @@
   "application_sha": "c7ac7f3bdda47ab736553b25bdca6f4100a8f74b",
   "evidence_type": "prior independently executed synthetic production-code probes",
   "findings": [
-    {
-      "id": "P01",
-      "classification": "reproduced_defect",
-      "status": "open_at_review",
-      "test_member": "c7ac7f3/review.protocols.test.ts",
-      "test_title": "a replay of one completion must not fill a second occurrence",
-      "observed": "Same record supplied twice: doneCount was 2.",
-      "expected": "doneCount remains 1.",
-      "limitations": "Injected duplicate; no real sync incident or patient evidence."
-    },
-    {
-      "id": "P02",
-      "classification": "new_requirement",
-      "status": "not_implemented_at_review",
-      "test_member": "c7ac7f3/review.protocols.test.ts",
-      "test_title": "a q2-3-hour programme must not offer the next occurrence one minute later",
-      "observed": "nextAfter returned arm-raise at one minute.",
-      "expected": "A future interval-aware scheduler should return no due activity for that next round.",
-      "limitations": "Current fixture and schema express daily frequency only. Add explicit schedule parameters; do not hide this gap by suppressing all next activities."
-    }
+    {"id":"P01","classification":"reproduced_defect","status":"open_at_review","test_member":"c7ac7f3/review.protocols.test.ts","test_title":"a replay of one completion must not fill a second occurrence","observed":"Same record supplied twice: doneCount was 2.","expected":"doneCount remains 1.","limitations":"Injected duplicate; no real sync incident or patient evidence."},
+    {"id":"P02","classification":"new_requirement","status":"not_implemented_at_review","test_member":"c7ac7f3/review.protocols.test.ts","test_title":"a q2-3-hour programme must not offer the next occurrence one minute later","observed":"nextAfter returned arm-raise at one minute.","expected":"A future interval-aware scheduler should return no due activity for that next round.","limitations":"Current fixture and schema express daily frequency only. Add explicit schedule parameters; do not hide this gap by suppressing all next activities."}
   ]
 }

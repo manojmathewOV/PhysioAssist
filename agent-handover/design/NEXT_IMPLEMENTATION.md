@@ -1,3 +1,5 @@
+> **Historical design guidance.** Current scope/order/status are in `agent-handover/CURRENT.md` and the existing iPhone MVP runbook v2. Preserve useful design reasoning; do not execute superseded priority or clinician-backend instructions.
+
 # Next implementation: precise underneath, simple for the patient
 
 This is an engineering proposal derived from the prior review and the owner's stated goals. It is not a clinical prescription or approval to change patient care.

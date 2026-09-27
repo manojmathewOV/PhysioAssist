@@ -1,3 +1,5 @@
+> **Historical initial qualification.** The revision-2 [CCore inspection](ccore-reconciliation.json) supersedes the initial declaration-format refusal below: structural errors and blocked DoD axes are now zero; native topology/TaskEpoch binding and acceptance remain unestablished.
+
 # CCore authoring and research tooling — execution boundary
 
 Tool session: 2026-09-27, authorised Remote Desktop Commander connection. The SDK is Project Cosmos; the target is a separate PhysioAssist snapshot. No Cosmos source, existing runbook, peer task or clinical protocol was changed.
