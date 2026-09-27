@@ -3,30 +3,58 @@
   "previous_sha": "a47ba14cf7fb015fb66b891a3b62058baaa0c002",
   "review_addressed": "reviews/2026-09-27-a47ba14-source-review/REVIEW.md (R01-R03 and listed limits)",
   "author": "implementation agent (Claude, cloud session); author-reported, not an independent retest",
-  "environment": { "os": "Linux container (cloud session)", "node": "v22.22.2", "jest": "29.7.0", "typescript": "5.3.3" },
+  "environment": {
+    "os": "Linux container (cloud session)",
+    "node": "v22.22.2",
+    "jest": "29.7.0",
+    "typescript": "5.3.3"
+  },
   "evidence_layer": "synthetic production logic, reducer and rendered React Native components under Jest (fake timers, mocked AppState for foreground return); no native device, real camera, recorded RGB or people",
   "runs": [
     {
       "id": "regressions",
       "command": "./node_modules/.bin/jest --runTestsByPath src/services/pose/__tests__/routineIdentity.test.tsx src/components/__tests__/scheduleIntegrity.test.tsx --runInBand --watchman=false --verbose",
-      "exit": 0, "passed": 35, "failed": 0, "skipped": 0, "log": "regressions.txt",
+      "exit": 0,
+      "passed": 35,
+      "failed": 0,
+      "skipped": 0,
+      "log": "regressions.txt",
       "note": "Jest printed 'did not exit one second after the test run has completed' (P08)."
     },
     {
       "id": "full-suite",
       "command": "./node_modules/.bin/jest --ci",
-      "exit": 0, "passed": 1585, "failed": 0, "skipped": 4, "suites": "86 passed, 4 skipped", "log": "full-suite.txt",
+      "exit": 0,
+      "passed": 1585,
+      "failed": 0,
+      "skipped": 4,
+      "suites": "86 passed, 4 skipped",
+      "log": "full-suite.txt",
       "note": "Without --forceExit. Exit 0, but Jest force-exited a worker that failed to exit gracefully (P08 open)."
     },
     {
       "id": "typecheck-lint",
       "command": "npx eslint src --quiet ; npx tsc --noEmit -p . ; npx tsc --noEmit --project tsconfig.prepush.json",
-      "exit": 0, "log": null,
+      "exit": 0,
+      "log": null,
       "note": "The repository pre-push hook also passed on push."
+    },
+    {
+      "id": "ci-pr25",
+      "application_sha": "414b81b170a6205b9fcb3aca20f3cab89bb850a1",
+      "command": "GitHub Actions on PR #25 (read 2026-09-27T01:55Z)",
+      "exit": 0,
+      "result": "checks: success (runs 36284789391, 36284786456); ios-simulator incl. Detox E2E launch test: success (runs 36284789393, 36284786457)",
+      "links": [
+        "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36284789391",
+        "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36284786456",
+        "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36284789393",
+        "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36284786457"
+      ],
+      "note": "CI runs the repository's Jest suite and an iOS simulator smoke/Detox first-run flow; it does not exercise the R01-R03 patient journey on a device."
     }
   ],
   "exclusions": [
-    "CI for 414b81b not yet recorded here.",
     "Archived reviewer tests were not re-run at this SHA (unchanged areas since a47ba14 except routine conflicts; see the response).",
     "No native simulator, device, real camera or human testing; the foreground test mocks AppState."
   ]
