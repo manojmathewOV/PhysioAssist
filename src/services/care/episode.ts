@@ -9,6 +9,7 @@
  */
 import type { ExercisePlan } from '../pose/exercisePlan';
 import { PHASES, PhaseId, Pathway, pathwayOf } from './pathways';
+import { canonicalSchedule } from '../pose/schedule';
 
 export interface CareEpisode {
   /**
@@ -86,6 +87,30 @@ export function setEpisode(
   };
 }
 
+/**
+ * A new episode of the same pathway (e.g. a second operation of the same
+ * kind): new identity, back to the first phase, confirmation (and any
+ * specialist approval) needed again. Earlier sessions stay with the old
+ * episode and don't count towards the new one.
+ */
+export function startNewEpisode(
+  plan: ExercisePlan,
+  now: number = Date.now()
+): ExercisePlan {
+  const pathway = pathwayOf(plan.episode?.pathway);
+  if (!plan.episode || !pathway) return plan;
+  return {
+    ...plan,
+    episode: {
+      id: `${pathway.id}-${now.toString(36)}`,
+      pathway: pathway.id,
+      phase: pathway.phases[0],
+      confirmedAt: undefined,
+      specialistApproved: undefined,
+    },
+  };
+}
+
 /** The clinician confirms the programme for the current pathway and phase. */
 export function confirmProgramme(
   plan: ExercisePlan,
@@ -138,6 +163,8 @@ const confirmedContent = (plan: ExercisePlan) =>
     plan.reps,
     plan.holdSeconds,
     plan.routine ?? [],
+    // When the exercises are done is part of what was confirmed
+    canonicalSchedule(plan.schedule),
   ]);
 
 /**

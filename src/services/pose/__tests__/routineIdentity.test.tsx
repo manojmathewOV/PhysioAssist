@@ -21,7 +21,7 @@ import { rootReducer } from '../../../store';
 import type { ExerciseHistory } from '../../../store/slices/exerciseSlice';
 import { applyPlan, ExercisePlan } from '../exercisePlan';
 import { completionOf, nextAfter, occurrenceFor, todaysRoutine } from '../routine';
-import { roundState, validSchedule } from '../schedule';
+import { IntervalSchedule, roundState, validSchedule } from '../schedule';
 import { EXERCISES } from '../../../constants/exercises';
 import TodayPrep from '../../../components/exercises/TodayPrep';
 import TodaysRoutineCard from '../../../components/exercises/TodaysRoutineCard';
@@ -66,10 +66,64 @@ describe('P01: replay-safe event and occurrence identity', () => {
     expect(r.doneCount).toBe(2);
   });
 
-  it('the same event id with different contents is surfaced, not counted twice', () => {
-    const r = todaysRoutine(plan, [rec({}), rec({ reps: 1, date: iso(11) })], at(12));
-    expect(r.doneCount).toBe(1);
+  // R01 (review 2026-09-27-a47ba14-source-review): a disputed id earns no
+  // credit in either arrival order; replaced the earlier expectation that the
+  // first-arrived record kept counting
+  it.each([
+    ['completed first', [rec({}), rec({ completion: 'attempted', reps: 0 })]],
+    ['attempted first', [rec({ completion: 'attempted', reps: 0 }), rec({})]],
+  ])('R01: a completed/attempted conflict earns nothing (%s)', (_, history) => {
+    const r = todaysRoutine(plan, history as ExerciseHistory[], at(12));
+    expect(r.doneCount).toBe(0);
+    expect(r.items[0].status).toBeUndefined();
     expect(r.conflicts).toEqual(['event-1']);
+  });
+
+  it('R01: the same id across different occurrences or episodes is a conflict too', () => {
+    const occ = todaysRoutine(
+      plan,
+      [rec({ occurrenceKey: 'arm-raise#1' }), rec({ occurrenceKey: 'arm-raise#2' })],
+      at(12)
+    );
+    expect(occ.doneCount).toBe(0);
+    expect(occ.conflicts).toEqual(['event-1']);
+    const ep = todaysRoutine(
+      plan,
+      [rec({ episodeId: 'a' }), rec({ episodeId: 'b' })],
+      at(12)
+    );
+    expect(ep.conflicts).toEqual(['event-1']);
+  });
+
+  it('R01: exact replay stays idempotent alongside a conflict elsewhere', () => {
+    const r = todaysRoutine(
+      plan,
+      [rec({}), rec({}), rec({ id: 'x' }), rec({ id: 'x', reps: 1 })],
+      at(12)
+    );
+    expect(r.doneCount).toBe(1);
+    expect(r.conflicts).toEqual(['x']);
+  });
+
+  it('R01: a correction record settles a conflict and earns only its own credit', () => {
+    const disputed = [rec({}), rec({ completion: 'attempted', reps: 0 })];
+    const attempted = todaysRoutine(
+      plan,
+      [
+        ...disputed,
+        rec({ id: 'fix', resolves: 'event-1', completion: 'attempted', reps: 0 }),
+      ],
+      at(12)
+    );
+    expect(attempted.conflicts).toEqual([]);
+    expect(attempted.doneCount).toBe(0);
+    expect(attempted.items[0].status).toBe('attempted');
+    const completed = todaysRoutine(
+      plan,
+      [...disputed, rec({ id: 'fix', resolves: 'event-1' })],
+      at(12)
+    );
+    expect(completed.doneCount).toBe(1);
   });
 
   it('attribution is fixed when done: reordering the routine does not move it', () => {
@@ -192,13 +246,16 @@ describe('P02: interval schedule contract (synthetic values)', () => {
     expect(todaysRoutine(plan, [], at(21)).restOfDay).toBe(true);
   });
 
-  it('a round already begun can be finished even if the window is closing', () => {
-    const r = todaysRoutine(
-      plan,
-      [rec({ id: 'a', occurrenceKey: 'arm-raise#1', date: iso(19, 58) })],
-      at(20, 5)
+  // Begun rounds: finishable while the window is open, closed after it
+  // (replaces the earlier open-ended exemption; review limit on abandonment)
+  it('a round begun late can be finished before the window closes, not after', () => {
+    const begun = [rec({ id: 'a', occurrenceKey: 'arm-raise#1', date: iso(19, 50) })];
+    expect(todaysRoutine(plan, begun, at(19, 59)).next).toBe(
+      'shoulder-external-rotation'
     );
-    expect(r.next).toBe('shoulder-external-rotation');
+    const after = todaysRoutine(plan, begun, at(20, 5));
+    expect(after.next).toBeUndefined();
+    expect(after.restOfDay).toBe(true);
   });
 
   it('the lower bound of a repetition range completes the dose', () => {
@@ -220,7 +277,7 @@ describe('P02: interval schedule contract (synthetic values)', () => {
   });
 
   it('roundState: the next round is due minHours after the previous ended, inside the window', () => {
-    const s = plan.schedule!;
+    const s = plan.schedule as IntervalSchedule;
     expect(roundState(s, at(10), at(9))).toEqual({ due: false, from: at(11) });
     expect(roundState(s, at(11), at(9))).toEqual({ due: true });
   });

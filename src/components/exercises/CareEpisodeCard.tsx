@@ -16,6 +16,7 @@ import {
   episodeStatus,
   setEpisode,
   setSpecialistApproved,
+  startNewEpisode,
 } from '../../services/care/episode';
 
 const Choice: React.FC<{
@@ -131,6 +132,15 @@ export const CareEpisodeCard: React.FC<{
             />
           ) : null}
 
+          <BigButton
+            variant="ghost"
+            compact
+            icon="add-circle-outline"
+            label="New episode (e.g. another operation)"
+            onPress={() => onChange(startNewEpisode(plan))}
+            testID="episode-new"
+            accessibilityHint="Starts a new episode of this pathway; earlier sessions don't count towards it"
+          />
           {status === 'ready' && episode.confirmedAt ? (
             <Banner
               tone="success"

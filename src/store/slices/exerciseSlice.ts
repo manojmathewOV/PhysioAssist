@@ -48,6 +48,7 @@ export interface ExerciseHistory {
   method?: string;
   occurrenceKey?: string;
   episodeId?: string;
+  resolves?: string;
   /** From Go to Stop, and how much of it was paused (s); `duration` is active time. */
   wallSeconds?: number;
   pausedSeconds?: number;
@@ -81,6 +82,11 @@ export interface SessionResult {
   occurrenceKey?: string;
   /** The care episode it belongs to (see CareEpisode.id). */
   episodeId?: string;
+  /**
+   * A correction: the disputed event id this record settles (see
+   * todaysRoutine). Adding one is a clinical decision, not an automatic step.
+   */
+  resolves?: string;
   /** How much of the prescribed exercise was done (see completionOf). */
   completion?: 'completed' | 'stopped_early' | 'attempted';
 }
@@ -111,6 +117,11 @@ interface ExerciseState {
   pausedAt: number | null;
   /** Paused time before the current pause (ms). */
   pausedMs: number;
+  /**
+   * What the current session is for, bound when it was started from the
+   * routine: its occurrence and care episode. Cleared when it ends.
+   */
+  sessionContext: { occurrenceKey?: string; episodeId?: string } | null;
 }
 
 /**
@@ -134,6 +145,7 @@ const initialState: ExerciseState = {
   startedAt: null,
   pausedAt: null,
   pausedMs: 0,
+  sessionContext: null,
 };
 
 const exerciseSlice = createSlice({
@@ -150,6 +162,13 @@ const exerciseSlice = createSlice({
       state.startedAt = Date.now();
       state.pausedAt = null;
       state.pausedMs = 0;
+    },
+    /** Binds the next session to its routine occurrence and episode (at start). */
+    setSessionContext: (
+      state,
+      action: PayloadAction<{ occurrenceKey?: string; episodeId?: string } | null>
+    ) => {
+      state.sessionContext = action.payload;
     },
     /** Pause and resume the session clock (the live timer, completion and history share it). */
     pauseExercise: (state, action: PayloadAction<number | undefined>) => {
@@ -191,6 +210,7 @@ const exerciseSlice = createSlice({
       state.startedAt = null;
       state.pausedAt = null;
       state.pausedMs = 0;
+      state.sessionContext = null;
     },
     updateValidation: (state, action: PayloadAction<ValidationResult>) => {
       state.lastValidationResult = action.payload;
@@ -265,6 +285,7 @@ const exerciseSlice = createSlice({
       state.startedAt = null;
       state.pausedAt = null;
       state.pausedMs = 0;
+      state.sessionContext = null;
     },
   },
 });
@@ -272,6 +293,7 @@ const exerciseSlice = createSlice({
 export const {
   startExercise,
   stopExercise,
+  setSessionContext,
   pauseExercise,
   resumeExercise,
   updateValidation,

@@ -2,7 +2,7 @@
  * Today's routine on the Exercise screens (native and web): what's done, start
  * the next exercise, and the physio adding or removing exercises.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import type { RootState } from '../../store';
@@ -11,9 +11,12 @@ import type { ExercisePlan } from '../../services/pose/exercisePlan';
 import {
   inRoutine,
   nextAfter,
+  occurrenceFor,
   todaysRoutine,
   toggleRoutine,
 } from '../../services/pose/routine';
+import { setSessionContext } from '../../store/slices/exerciseSlice';
+import { useRoutineClock } from './useRoutineClock';
 import { ExerciseKey, findExerciseOption } from './exerciseCatalog';
 
 export function useRoutineFlow({
@@ -28,7 +31,10 @@ export function useRoutineFlow({
 }) {
   const dispatch = useDispatch();
   const history = useSelector((s: RootState) => s.exercise.history);
-  const routine = useMemo(() => todaysRoutine(plan, history), [plan, history]);
+  // Kept current as time passes (a round becoming due, the window, midnight)
+  const { routine, refresh } = useRoutineClock(plan, history);
+  const historyRef = useRef(history);
+  historyRef.current = history;
 
   // Select, then start once the selection has rendered (start uses it)
   const [pending, setPending] = useState(false);
@@ -45,15 +51,30 @@ export function useRoutineFlow({
     (exerciseId: string) => {
       const option = findExerciseOption(exerciseId);
       if (!option) return;
+      // Bind the session to its occurrence and episode now, at the start
+      const fresh = todaysRoutine(plan, historyRef.current, Date.now());
+      dispatch(
+        setSessionContext({
+          occurrenceKey: occurrenceFor(fresh, exerciseId),
+          episodeId: plan?.episode?.id,
+        })
+      );
       setSelectedKey(option.key);
       setPending(true);
     },
-    [setSelectedKey]
+    [dispatch, plan, setSelectedKey]
   );
 
   const startRoutine = useCallback(() => {
-    if (routine.next) startExercise(routine.next);
-  }, [routine.next, startExercise]);
+    // Re-check eligibility at the moment Start is pressed: the screen may
+    // have been showing an older state
+    const fresh = todaysRoutine(plan, historyRef.current, Date.now());
+    if (!fresh.next) {
+      refresh();
+      return;
+    }
+    startExercise(fresh.next);
+  }, [plan, refresh, startExercise]);
 
   const toggle = useCallback(
     (exerciseId: string) => {

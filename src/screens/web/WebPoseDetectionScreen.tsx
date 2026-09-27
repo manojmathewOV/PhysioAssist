@@ -430,11 +430,11 @@ const WebPoseDetectionScreen: React.FC = () => {
       completion,
       // Fixed now: the routine occurrence this session was for, and the care
       // episode, so replays, reorders or a later operation can't move it
-      occurrenceKey: occurrenceFor(
-        todaysRoutine(plan, exerciseState.history),
-        plannedExercise.id
-      ),
-      episodeId: plan?.episode?.id,
+      // (bound at the start when begun from the routine; otherwise now)
+      occurrenceKey:
+        exerciseState.sessionContext?.occurrenceKey ??
+        occurrenceFor(todaysRoutine(plan, exerciseState.history), plannedExercise.id),
+      episodeId: exerciseState.sessionContext?.episodeId ?? plan?.episode?.id,
     };
     const saved = !practice && !recordingDemo && isWorthKeeping(result, repetitionCount);
     // Practice sessions and demonstrations are not the patient's own history

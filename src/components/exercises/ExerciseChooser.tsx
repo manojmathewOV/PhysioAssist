@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-import { AppText, BigButton, Card, ListRow, Screen } from '../ui';
+import { AppText, Banner, BigButton, Card, ListRow, Screen } from '../ui';
 import { colors, radii, spacing } from '../../theme';
 import type { MainTabParamList } from '../../navigation/types';
 import ExerciseSelector from './ExerciseSelector';
@@ -21,6 +21,7 @@ import PlanEditor, { Stepper } from './PlanEditor';
 import TodaysRoutineCard from './TodaysRoutineCard';
 import TodayPrep, { ProgrammeWaiting } from './TodayPrep';
 import CareEpisodeCard from './CareEpisodeCard';
+import ScheduleCard from './ScheduleCard';
 import { episodeStatus, exercisesAllowed } from '../../services/care/episode';
 import type { TodaysRoutine } from '../../services/pose/routine';
 import {
@@ -234,8 +235,22 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
       }
     >
       {notice}
+      {setup && routine?.conflicts.length ? (
+        <Banner
+          tone="warning"
+          message={`${routine.conflicts.length} session record${
+            routine.conflicts.length === 1 ? ' disagrees' : 's disagree'
+          } with another copy and ${
+            routine.conflicts.length === 1 ? 'isn’t' : 'aren’t'
+          } counted until reviewed.`}
+          testID="routine-conflicts"
+        />
+      ) : null}
       {setup && plan && onPlanChange ? (
         <CareEpisodeCard plan={plan} onChange={onPlanChange} />
+      ) : null}
+      {setup && plan && onPlanChange ? (
+        <ScheduleCard plan={plan} onChange={onPlanChange} />
       ) : null}
       {setup && hasRoutine && routine ? <TodaysRoutineCard routine={routine} /> : null}
       {setup && plan ? (

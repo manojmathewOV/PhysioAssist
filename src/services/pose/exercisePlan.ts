@@ -23,7 +23,7 @@ import type {
 
 import type { MovementProfile } from '../movement/analysis';
 import type { CareEpisode } from '../care/episode';
-import type { IntervalSchedule } from './schedule';
+import type { ScheduleDraft } from './schedule';
 import { movementOf } from '../movement/exerciseMovement';
 import type { MovementDirection } from '../movement/types';
 
@@ -103,7 +103,7 @@ export interface ExercisePlan {
   /** What is being treated, the phase, and whether the programme is confirmed. */
   episode?: CareEpisode;
   /** Mini-sessions spread through the day (see schedule.ts); none = times per day. */
-  schedule?: IntervalSchedule;
+  schedule?: ScheduleDraft;
 }
 
 export const JOINT_KINDS: { kind: JointKind; label: string; movement: string }[] = [

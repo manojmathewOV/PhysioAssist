@@ -8,7 +8,13 @@ import { dayKey, localDay } from '../../utils/progressSummary';
 import type { Exercise } from '../../types/exercise';
 import { movementOf } from '../movement/exerciseMovement';
 import type { ExercisePlan, PrescribedExercise } from './exercisePlan';
-import { RoundState, roundState, validSchedule } from './schedule';
+import {
+  RoundState,
+  canonicalSchedule,
+  roundState,
+  validSchedule,
+  windowToday,
+} from './schedule';
 
 /** What the physio prescribes; a change to any of these starts a new version. */
 const PRESCRIPTION_KEYS = [
@@ -21,10 +27,15 @@ const PRESCRIPTION_KEYS = [
   'holdSeconds',
   'routine',
   'episode',
+  'schedule',
 ] as const;
 
 const prescriptionOf = (plan: ExercisePlan) =>
-  JSON.stringify(PRESCRIPTION_KEYS.map((k) => plan[k] ?? null));
+  JSON.stringify(
+    PRESCRIPTION_KEYS.map((k) =>
+      k === 'schedule' ? canonicalSchedule(plan.schedule) : plan[k] ?? null
+    )
+  );
 
 /**
  * The plan to store: its version goes up when the prescription changed (a new
@@ -175,8 +186,9 @@ export interface TodaysRoutine {
    */
   scheduleInvalid?: boolean;
   /**
-   * Records ignored because another record had the same event id but
-   * different contents. Surfaced, never silently resolved.
+   * Event ids used by records with different contents. None of those records
+   * earns credit until a correction record (`resolves`) settles it; listed
+   * here so the clinician sees it, never silently resolved.
    */
   conflicts: string[];
 }
@@ -187,7 +199,7 @@ type RoutineRecord = Pick<
   ExerciseHistory,
   'id' | 'exerciseId' | 'date' | 'joint' | 'reps' | 'completion'
 > &
-  Partial<Pick<ExerciseHistory, 'occurrenceKey' | 'episodeId'>>;
+  Partial<Pick<ExerciseHistory, 'occurrenceKey' | 'episodeId' | 'resolves'>>;
 
 /** What must match for a repeated event id to be the same event. */
 const payloadOf = (h: RoutineRecord) =>
@@ -202,32 +214,48 @@ const payloadOf = (h: RoutineRecord) =>
   ]);
 
 /**
- * One record per event: an exact repeat (same id and contents, e.g. a
- * replayed sync) counts once; the same id with different contents is a
- * conflict, surfaced and not counted.
+ * One record per event.
+ *
+ * - An exact repeat (same id and contents, e.g. a replayed sync) counts once.
+ * - The same id with different contents is a conflict. No record carrying a
+ *   disputed id earns credit, whatever order they arrived in: arrival order
+ *   is not clinical truth. The conflict is listed until it is resolved.
+ * - A resolution is a separate correction record with its own id and
+ *   `resolves` naming the disputed id; only the correction earns credit (and
+ *   only as it itself records). The disputed originals stay withheld.
  */
 function dedupe(history: RoutineRecord[]): {
   records: RoutineRecord[];
   conflicts: string[];
 } {
-  const seen = new Map<string, string>();
+  const payloads = new Map<string, Set<string>>();
+  for (const h of history) {
+    if (!h.id) continue;
+    const set = payloads.get(h.id) ?? new Set<string>();
+    set.add(payloadOf(h));
+    payloads.set(h.id, set);
+  }
+  const disputed = new Set(
+    [...payloads].filter(([, set]) => set.size > 1).map(([id]) => id)
+  );
+  const resolved = new Set(
+    history.map((h) => h.resolves).filter((id): id is string => Boolean(id))
+  );
+  const seen = new Set<string>();
   const records: RoutineRecord[] = [];
-  const conflicts: string[] = [];
   for (const h of history) {
     if (!h.id) {
       records.push(h);
       continue;
     }
-    const payload = payloadOf(h);
-    const first = seen.get(h.id);
-    if (first === undefined) {
-      seen.set(h.id, payload);
-      records.push(h);
-    } else if (first !== payload && !conflicts.includes(h.id)) {
-      conflicts.push(h.id);
-    }
+    if (disputed.has(h.id) || seen.has(h.id)) continue;
+    seen.add(h.id);
+    records.push(h);
   }
-  return { records, conflicts };
+  return {
+    records,
+    conflicts: [...disputed].filter((id) => !resolved.has(id)),
+  };
 }
 
 /** `exerciseId#n` -> n, when it names this exercise. */
@@ -356,9 +384,14 @@ export function todaysRoutine(
             ...routine.map((p) => finishedAt.get(p.exerciseId)?.get(round - 1) ?? 0)
           )
         : undefined;
-    // A round already begun can be finished; a new one waits until it's due
+    // A round already begun can be finished while the waking window is open;
+    // once it closes, an unfinished round is left (not carried on
+    // indefinitely). A new round waits until it's due.
+    const windowOpen = now <= windowToday(schedule, now).end;
     const state: RoundState = started
-      ? { due: true }
+      ? windowOpen
+        ? { due: true }
+        : { due: false, restOfDay: true }
       : roundState(schedule, now, lastEnd);
     return {
       ...summary(items, state.due),

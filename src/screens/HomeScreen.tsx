@@ -27,9 +27,9 @@ import {
   repsToday,
   weeklyHighlight,
 } from '../utils/progressSummary';
-import { todaysRoutine } from '../services/pose/routine';
 import { exercisesAllowed } from '../services/care/episode';
 import { waitingWords } from '../components/exercises/TodayPrep';
+import { useRoutineClock } from '../components/exercises/useRoutineClock';
 import {
   findExerciseOption,
   formatDuration,
@@ -49,7 +49,8 @@ const HomeScreen: React.FC = () => {
   const goal = useSelector((s: RootState) => s.settings.dailyRepGoal ?? 30);
   const plan = useSelector((s: RootState) => s.settings.exercisePlan);
   // The physio's routine, when one is set, is what "today" means
-  const routine = todaysRoutine(plan, history);
+  // Kept current as time passes (a mini-session becoming due, midnight)
+  const { routine } = useRoutineClock(plan, history);
   const hasRoutine = routine.items.length > 0;
   // Not confirmed for this stage of recovery: no exercises offered
   const waiting = !exercisesAllowed(plan);
