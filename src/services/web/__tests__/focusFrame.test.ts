@@ -1,6 +1,6 @@
 /**
- * The 'focus' camera picture: the room dimmed (and blurred where the browser
- * can), the person cut out by the segmentation mask on top at full brightness.
+ * The 'focus' camera picture: the room dimmed but still legible, the person
+ * cut out by the segmentation mask on top at full brightness.
  */
 import { BACKGROUND_FILTER, drawCameraFrame } from '../focusFrame';
 
@@ -71,5 +71,13 @@ describe('camera picture', () => {
     drawCameraFrame(ctx, image, null, 100, 100, 'focus', scratchOf(recorder(false).ctx));
     expect(calls[1]).toBe('draw frame filter=- op=source-over');
     expect(calls[2]).toMatch(/^fill rgba/);
+  });
+
+  it('the room is receded, not hidden: no blur, and not dimmed below 50%', () => {
+    // A stick, a helper's hand or a brace outside the person's outline can
+    // matter to the exercise; it must stay readable.
+    expect(BACKGROUND_FILTER).not.toMatch(/blur/);
+    const brightness = Number(/brightness\(([\d.]+)\)/.exec(BACKGROUND_FILTER)?.[1]);
+    expect(brightness).toBeGreaterThanOrEqual(0.5);
   });
 });

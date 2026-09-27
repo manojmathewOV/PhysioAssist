@@ -39,7 +39,7 @@ import {
   updateValidation,
 } from '../../store/slices/exerciseSlice';
 import type { RootState } from '../../store';
-import { setExercisePlan } from '../../store/slices/settingsSlice';
+import { setExercisePlan, updateSettings } from '../../store/slices/settingsSlice';
 import { ExercisePlan, applyPlan } from '../../services/pose/exercisePlan';
 import { completionOf, occurrenceFor, todaysRoutine } from '../../services/pose/routine';
 import { coachingOf } from '../../services/care/episode';
@@ -371,6 +371,13 @@ const WebPoseDetectionScreen: React.FC = () => {
     cameraFocus,
   ]);
 
+  // Switching between the focus and the plain picture takes effect at once
+  useEffect(() => {
+    if (cameraState === 'live') {
+      webPoseDetectionService.setVideoStyle(cameraFocus ? 'focus' : 'natural');
+    }
+  }, [cameraFocus, cameraState]);
+
   // Stop the camera when leaving the screen
   useEffect(
     () => () => {
@@ -691,6 +698,14 @@ const WebPoseDetectionScreen: React.FC = () => {
           setIsPaused((p) => !p);
         }}
         onReset={backToChooser}
+        focusPicture={
+          practice
+            ? undefined
+            : {
+                on: cameraFocus,
+                onChange: (on) => dispatch(updateSettings({ cameraFocus: on })),
+              }
+        }
       />
     </View>
   );

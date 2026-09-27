@@ -19,6 +19,9 @@ describe('Integration Tests', () => {
 
   afterEach(() => {
     deviceHealthMonitor.stopMonitoring();
+    // Events left queued by a test are not sent after it
+    telemetryService.stopFlushTimer();
+    telemetryService.clear();
   });
 
   describe('Telemetry + Analytics Integration', () => {

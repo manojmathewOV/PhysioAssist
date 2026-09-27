@@ -173,4 +173,25 @@ describe('TelemetryService', () => {
       expect(service.getPendingCount()).toBe(eventTypes.length);
     });
   });
+
+  describe('Flush timer lifecycle', () => {
+    afterEach(() => jest.useRealTimers());
+
+    it('runs no timer while nothing is queued', () => {
+      jest.useFakeTimers();
+      service.stopFlushTimer();
+      expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it('sends queued events once, shortly after, then stops', async () => {
+      jest.useFakeTimers();
+      service.trackQuotaUsed(1, 99);
+      service.trackQuotaUsed(1, 98);
+      // One timer for the batch, not one per event
+      expect(jest.getTimerCount()).toBe(1);
+      await jest.advanceTimersByTimeAsync(5000);
+      expect(service.getPendingCount()).toBe(0);
+      expect(jest.getTimerCount()).toBe(0);
+    });
+  });
 });

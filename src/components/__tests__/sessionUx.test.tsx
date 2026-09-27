@@ -202,3 +202,40 @@ describe('Pain check', () => {
     expect(state.history).toHaveLength(0);
   });
 });
+
+describe('ExerciseControls picture switch (focus view)', () => {
+  it.each([
+    ['getting into position', { gate: 'framing' as const }],
+    ['counting', {}],
+  ])('while %s, one press switches to the plain camera and back', (_, props) => {
+    const onChange = jest.fn();
+    const ui = render(
+      <Provider store={activeStore(0)}>
+        <ExerciseControls isActive {...props} focusPicture={{ on: true, onChange }} />
+      </Provider>
+    );
+    const toggle = ui.getByTestId('camera-focus-switch');
+    expect(toggle.props.accessibilityRole).toBe('switch');
+    expect(toggle.props.accessibilityState).toEqual({ checked: true });
+    fireEvent.press(toggle);
+    expect(onChange).toHaveBeenCalledWith(false);
+
+    ui.rerender(
+      <Provider store={activeStore(0)}>
+        <ExerciseControls isActive {...props} focusPicture={{ on: false, onChange }} />
+      </Provider>
+    );
+    expect(ui.getByTestId('camera-focus-switch')).toHaveTextContent(/Plain/);
+    fireEvent.press(ui.getByTestId('camera-focus-switch'));
+    expect(onChange).toHaveBeenLastCalledWith(true);
+  });
+
+  it('is not offered where there is no camera picture (practice)', () => {
+    const ui = render(
+      <Provider store={activeStore(0)}>
+        <ExerciseControls isActive practice />
+      </Provider>
+    );
+    expect(ui.queryByTestId('camera-focus-switch')).toBeNull();
+  });
+});

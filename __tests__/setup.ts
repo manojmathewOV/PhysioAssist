@@ -169,6 +169,17 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
+// Telemetry a test left queued is not sent after the test file has finished
+// (its flush is a one-shot timer that runs only while events are waiting)
+afterAll(() => {
+  // The real service (the one that schedules timers), even where a test mocks it
+  const { telemetryService } = jest.requireActual(
+    '../src/features/videoComparison/services/telemetryService'
+  );
+  telemetryService.stopFlushTimer();
+  telemetryService.clear();
+});
+
 // Allow async cleanup before exit
 afterAll((done) => {
   setTimeout(done, 100);

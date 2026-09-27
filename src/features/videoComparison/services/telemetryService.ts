@@ -85,11 +85,10 @@ export class TelemetryService {
   private eventQueue: TelemetryEvent[] = [];
   private batchSize = 10;
   private flushInterval = 5000; // 5 seconds
-  private flushTimer: NodeJS.Timeout | null = null;
+  private flushTimer: ReturnType<typeof setTimeout> | null = null;
 
-  private constructor() {
-    this.startFlushTimer();
-  }
+  // No timer runs while nothing is waiting to be sent (see scheduleFlush)
+  private constructor() {}
 
   static getInstance(): TelemetryService {
     if (!TelemetryService.instance) {
@@ -104,9 +103,11 @@ export class TelemetryService {
   emit(event: TelemetryEvent): void {
     this.eventQueue.push(event);
 
-    // Flush if batch size reached
+    // Flush if batch size reached; otherwise send what's waiting shortly
     if (this.eventQueue.length >= this.batchSize) {
       this.flush();
+    } else {
+      this.scheduleFlush();
     }
   }
 
@@ -234,20 +235,25 @@ export class TelemetryService {
   }
 
   /**
-   * Start automatic flush timer
+   * Flushes once, flushInterval after the first queued event. Nothing is
+   * scheduled while the queue is empty, so an idle app has no timer waking it.
    */
-  private startFlushTimer(): void {
-    this.flushTimer = setInterval(() => {
-      this.flush();
+  private scheduleFlush(): void {
+    if (this.flushTimer) return;
+    this.flushTimer = setTimeout(async () => {
+      this.flushTimer = null;
+      await this.flush();
+      // Events re-queued after a failed send are retried later
+      if (this.eventQueue.length > 0) this.scheduleFlush();
     }, this.flushInterval);
   }
 
   /**
-   * Stop automatic flush timer
+   * Cancel a scheduled flush (queued events stay queued)
    */
   stopFlushTimer(): void {
     if (this.flushTimer) {
-      clearInterval(this.flushTimer);
+      clearTimeout(this.flushTimer);
       this.flushTimer = null;
     }
   }

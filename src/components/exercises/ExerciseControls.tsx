@@ -78,6 +78,11 @@ interface ExerciseControlsProps {
   countdown?: number | null;
   /** Mid-session: the patient has stepped out of the frame. */
   outOfView?: boolean;
+  /**
+   * Switch between the focused picture (room dimmed) and the plain camera,
+   * available at any moment without leaving the exercise.
+   */
+  focusPicture?: { on: boolean; onChange: (on: boolean) => void };
 }
 
 const ExerciseControls: React.FC<ExerciseControlsProps> = ({
@@ -94,6 +99,7 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
   framing = INITIAL_FRAMING,
   countdown = null,
   outOfView = false,
+  focusPicture,
 }) => {
   const dispatch = useDispatch();
   const {
@@ -257,6 +263,27 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
             Practice
           </AppText>
         </View>
+      ) : null}
+      {focusPicture ? (
+        <Pressable
+          onPress={() => focusPicture.onChange(!focusPicture.on)}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: focusPicture.on }}
+          aria-checked={focusPicture.on}
+          accessibilityLabel="Focus on me"
+          accessibilityHint="Dims the room behind you. Turn off for the plain camera picture."
+          style={({ pressed }) => [styles.pictureSwitch, pressed && styles.optionPressed]}
+          testID="camera-focus-switch"
+        >
+          <Icon
+            name={focusPicture.on ? 'center-focus-strong' : 'crop-free'}
+            size={20}
+            color={ON_DARK}
+          />
+          <AppText variant="caption" color={ON_DARK}>
+            {focusPicture.on ? 'Focus' : 'Plain'}
+          </AppText>
+        </Pressable>
       ) : null}
       {showDetails ? (
         <View
@@ -478,6 +505,15 @@ const styles = StyleSheet.create({
   pill: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+    borderRadius: radii.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  pictureSwitch: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
     borderRadius: radii.pill,
     backgroundColor: 'rgba(255, 255, 255, 0.18)',
   },

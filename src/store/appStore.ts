@@ -1,0 +1,22 @@
+/**
+ * The app's store: persisted state (encrypted storage on iOS/Android) that is
+ * rehydrated at launch. Only App imports this; see ./index for the reducers.
+ */
+import { configureStore } from '@reduxjs/toolkit';
+import { persistStore } from 'redux-persist';
+
+import { persistedReducer } from './index';
+
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
+    }),
+});
+
+export const persistor = persistStore(store);
+
+export type AppDispatch = typeof store.dispatch;

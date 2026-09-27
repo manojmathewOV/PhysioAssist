@@ -1,20 +1,23 @@
 /**
  * How the camera picture is drawn behind the pose overlay (web).
  *
- * 'focus': the room is dimmed, desaturated and softly blurred, and the person
- * (from MediaPipe's segmentation mask) is drawn at full brightness on top, so
- * the patient and the angle overlay stand out and other people or objects in
- * the room recede. Without a mask (no person found yet) the whole picture is
- * dimmed. 'natural': the camera picture as it is.
+ * 'focus': the room is dimmed and muted, and the person (from MediaPipe's
+ * segmentation mask) is drawn at full brightness on top, so the patient and
+ * the angle overlay stand out. The room stays sharp and readable: a stick, a
+ * helper's hand, a chair, pillow or brace can matter to the exercise and the
+ * mask may not include them, so they are receded, never blurred or erased.
+ * This is presentation only, not identification or anonymisation. Without a
+ * mask (no person found yet) the whole picture is dimmed. 'natural': the
+ * camera picture as it is.
  */
 export type VideoStyle = 'natural' | 'focus';
 
-/** The room behind the patient in 'focus'. */
-export const BACKGROUND_FILTER = 'grayscale(0.7) brightness(0.35) blur(8px)';
+/** The room behind the patient in 'focus': quieter, but still legible (no blur). */
+export const BACKGROUND_FILTER = 'saturate(0.5) brightness(0.6)';
 /** Softens the mask's edge so the person isn't cut out with a hard line. */
 const MASK_EDGE_FILTER = 'blur(3px)';
 /** Fallback dimming where canvas filters aren't supported (older Safari). */
-const DIM = 'rgba(8, 14, 24, 0.62)';
+const DIM = 'rgba(8, 14, 24, 0.4)';
 
 type Drawable = CanvasImageSource;
 
@@ -34,7 +37,7 @@ export function drawCameraFrame(
   }
   // (Typed as always present, but older Safari lacks canvas filters)
   const filters = typeof (ctx as { filter?: unknown }).filter === 'string';
-  // The room: dimmed (and blurred where supported)
+  // The room: dimmed and muted
   if (filters) ctx.filter = BACKGROUND_FILTER;
   ctx.drawImage(image, 0, 0, width, height);
   if (filters) ctx.filter = 'none';
