@@ -6,6 +6,8 @@ Application reviewed: `c7ac7f3bdda47ab736553b25bdca6f4100a8f74b`.
 Active implementation PR: #25.
 Implementation branch at handover: `claude/task-b828413-details-f3cmpw`.
 
+> **Current pointer (final Claude implementation handover, 2026-09-27):** application **`6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84`** on `claude/task-b828413-details-f3cmpw` (PR #25). That branch is **frozen**; the Claude cloud agent now acts only as an independent reviewer unless reassigned. Read [responses/2026-09-27-6bc4d77-claude-final-handover.md](responses/2026-09-27-6bc4d77-claude-final-handover.md) first. It gives the exact commit, checks, CI, open failures (including PR #27's hosted iOS "Install pods" failure, an open integration issue), unfinished features, open C/D decisions and reusable scripts ([tools/claude-cloud/](tools/claude-cloud/README.md)). No gate accepted; not merged; not clinical approval or an App Store release. The sections below are history; the pinned SHAs above this note are superseded by it.
+
 This file consolidates earlier SHA-bound reviews. Creating the handover is not a new full application test run. Read the current branch before carrying forward any status.
 
 ## Implemented at the reviewed baseline
@@ -87,3 +89,16 @@ See [responses/2026-09-27-5cc5d5a-hybrid-setup.md](responses/2026-09-27-5cc5d5a-
 ## CI permission resolution — 2026-09-27
 
 The initial Mac OAuth workflow-scope refusal was resolved using the already-connected GitHub app, which had separately authorised workflow-write access. It published the exact two-line CI change in `343a400c115f347f7fcd46a97ac3a8953883cea5`; PR #27 now has head `0ca6dbe166df2cdba36477f8bae316fe56308aae`. No account scope or credential was changed. CI uses frozen Pod installation and pipefail. A controlled failing-Pod pipeline returned 7 with pipefail and 0 without it. The API workflow commit did not run local Git hooks at publication; the main patch and following docs commit did, including the 21 Integration tests. The earlier inactive patch was retired. These results do not claim hosted native CI has completed. This resolution note was published via a contents-API documentation update.
+
+## Final implementation handover: 2026-09-27 (6bc4d77, branch frozen)
+
+[responses/2026-09-27-6bc4d77-claude-final-handover.md](responses/2026-09-27-6bc4d77-claude-final-handover.md).
+
+- The implementation branch is frozen at 6bc4d77, with no uncommitted work. CI is green for 6bc4d77.
+- PR #27's hosted iOS "Install pods" failure remains an open integration issue for the receiving agent.
+- Newly recorded:
+  - the storage read-error overwrite path (G02);
+  - patient-facing wording that implies a clinician relationship (listed by file).
+- Cleaned-up reusable scripts are published under [tools/claude-cloud/](tools/claude-cloud/README.md).
+- None of this agent's scheduled actions remain enabled.
+
