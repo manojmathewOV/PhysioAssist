@@ -96,6 +96,7 @@ const PoseDetectionScreen: React.FC = () => {
   const [selectedKey, setSelectedKey] = useState<ExerciseKey>(() => firstKeyFor(plan));
   const [permission, setPermission] = useState<Permission>('unknown');
   const [isPaused, setIsPaused] = useState(false);
+  const [referenceShown, setReferenceShown] = useState(false);
   const [practice, setPractice] = useState(false);
   const [summary, setSummary] = useState<
     (ExerciseSummaryProps & { saved: boolean; exerciseId: string }) | null
@@ -506,9 +507,15 @@ const PoseDetectionScreen: React.FC = () => {
       {showPoseOverlay !== false ? <PoseOverlay showAngles={showJointAngles} /> : null}
 
       <ExerciseControls
+        mediaVisible={referenceShown}
         media={
           videoId ? (
-            <FollowAlongVideo videoId={videoId} start={parseYouTubeStart(videoLink)} />
+            <FollowAlongVideo
+              videoId={videoId}
+              onShownChange={setReferenceShown}
+              start={parseYouTubeStart(videoLink)}
+              paused={isPaused || outOfView}
+            />
           ) : undefined
         }
         isActive={isExercising}

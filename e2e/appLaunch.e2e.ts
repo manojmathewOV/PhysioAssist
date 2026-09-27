@@ -23,7 +23,7 @@ describe('App launch smoke test', () => {
     await device.launchApp({
       newInstance: true,
       delete: true,
-      permissions: { camera: 'YES', microphone: 'YES' },
+      permissions: { camera: 'YES' },
     });
   }, 300000);
 

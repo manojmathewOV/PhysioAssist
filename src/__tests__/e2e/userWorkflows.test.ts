@@ -42,7 +42,7 @@ function runE2ETests() {
     beforeAll(async () => {
       await device.launchApp({
         newInstance: true,
-        permissions: { camera: 'YES', microphone: 'YES' },
+        permissions: { camera: 'YES' },
         launchArgs: {
           detoxPrintBusyIdleResources: 'YES',
           clearAsyncStorage: 'YES',

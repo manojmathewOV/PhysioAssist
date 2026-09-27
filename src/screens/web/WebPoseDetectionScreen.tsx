@@ -128,6 +128,7 @@ const WebPoseDetectionScreen: React.FC = () => {
   const [cameraState, setCameraState] = useState<CameraState>('starting');
   const [practice, setPractice] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [referenceShown, setReferenceShown] = useState(false);
   const [summary, setSummary] = useState<
     (ExerciseSummaryProps & { saved: boolean; exerciseId: string }) | null
   >(null);
@@ -673,9 +674,15 @@ const WebPoseDetectionScreen: React.FC = () => {
       </View>
 
       <ExerciseControls
+        mediaVisible={referenceShown}
         media={
           videoId ? (
-            <FollowAlongVideo videoId={videoId} start={parseYouTubeStart(videoLink)} />
+            <FollowAlongVideo
+              videoId={videoId}
+              onShownChange={setReferenceShown}
+              start={parseYouTubeStart(videoLink)}
+              paused={isPaused || gate.outOfView}
+            />
           ) : undefined
         }
         isActive={exerciseState.isExercising || cameraState === 'starting'}

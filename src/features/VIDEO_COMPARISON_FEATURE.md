@@ -1,3 +1,5 @@
+> Historical design, not the active player. The downloader was retired in S1. Use src/components/video and the current handover for supported playback; comparison/telemetry helpers retained below are not all wired into patient screens.
+
 # YouTube Video Comparison Feature Implementation
 
 ## 📹 Feature Overview

@@ -17,7 +17,13 @@
  * Used standalone (no callbacks) it drives the Redux exercise slice itself.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Vibration, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Vibration,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
@@ -60,6 +66,7 @@ const ON_DARK_SOFT = 'rgba(255, 255, 255, 0.82)';
 interface ExerciseControlsProps {
   /** Shown above the bottom panel while counting, e.g. the physio's video. */
   media?: React.ReactNode;
+  mediaVisible?: boolean;
   isActive?: boolean;
   isPaused?: boolean;
   onStart?: () => void;
@@ -87,6 +94,7 @@ interface ExerciseControlsProps {
 
 const ExerciseControls: React.FC<ExerciseControlsProps> = ({
   media,
+  mediaVisible = false,
   isActive: propIsActive,
   isPaused = false,
   onStart: propOnStart,
@@ -102,6 +110,8 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
   focusPicture,
 }) => {
   const dispatch = useDispatch();
+  const { height: screenHeight } = useWindowDimensions();
+  const compactMedia = mediaVisible && screenHeight < 740;
   const {
     isExercising,
     repetitionCount,
@@ -311,7 +321,12 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
         pointerEvents="box-none"
         testID="exercise-controls"
       >
-        <CameraPanel style={styles.topPanel}>
+        <CameraPanel
+          style={[
+            styles.topPanel,
+            compactMedia && { padding: spacing.sm, gap: spacing.xs },
+          ]}
+        >
           {header}
           <AppText
             variant="title"
@@ -357,10 +372,15 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
       pointerEvents="box-none"
       testID="exercise-controls"
     >
-      <CameraPanel style={styles.topPanel}>
+      <CameraPanel
+        style={[
+          styles.topPanel,
+          compactMedia && { padding: spacing.sm, gap: spacing.xs },
+        ]}
+      >
         {header}
         <AppText
-          variant="title"
+          variant={compactMedia ? 'bodyStrong' : 'title'}
           color={ON_DARK}
           testID={AccessibilityIds.exercise.feedbackText}
           accessibilityLiveRegion="polite"
@@ -377,76 +397,99 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
         ) : null}
       </CameraPanel>
 
-      {outOfView && !isPaused ? (
-        <FramingGuide inFrame={false} />
-      ) : media ? (
-        <View style={[styles.flex, styles.media]} pointerEvents="box-none">
+      {outOfView && !isPaused ? <FramingGuide inFrame={false} /> : null}
+      {media ? (
+        <View
+          style={[
+            styles.flex,
+            styles.media,
+            outOfView && !isPaused && { display: 'none' },
+          ]}
+          pointerEvents="box-none"
+        >
           {media}
         </View>
       ) : (
         <View style={styles.flex} pointerEvents="none" />
       )}
 
-      <CameraPanel style={styles.bottomPanel}>
-        <View style={styles.statsRow}>
-          <RepRing
-            value={isHold ? elapsed : repetitionCount}
-            target={isHold ? holdSeconds || undefined : target}
-            display={
-              isHold
-                ? {
-                    value: clockText(elapsed),
-                    caption: holdSeconds ? `of ${clockText(holdSeconds)}` : 'resting',
-                    spoken: `${clockText(elapsed)} of ${clockText(holdSeconds)} resting still`,
-                  }
-                : undefined
-            }
-            size={116}
-            strokeWidth={12}
-            testID="rep-ring"
-            valueTestID={AccessibilityIds.exercise.repCounter}
-          />
-          <View style={styles.statsText}>
-            {isHold ? (
-              <AppText variant="bodyStrong" color={ON_DARK} testID="exercise-hold-status">
-                {holdSeconds && elapsed >= holdSeconds
-                  ? 'Time’s up. Press Stop when you’re ready.'
-                  : 'Resting still'}
-              </AppText>
-            ) : target && repetitionCount >= target ? (
-              <AppText variant="bodyStrong" color={colors.poseGood}>
-                Goal reached!
-              </AppText>
-            ) : null}
-            {showForm ? (
-              <View style={styles.formRow}>
-                <Icon
-                  name={formScore >= POOR_FORM_THRESHOLD ? 'thumb-up' : 'info-outline'}
-                  size={20}
-                  color={
-                    formScore >= POOR_FORM_THRESHOLD ? colors.skeleton : colors.accent
-                  }
-                />
+      <CameraPanel
+        style={[
+          styles.bottomPanel,
+          compactMedia && { padding: spacing.sm, gap: spacing.xs },
+        ]}
+      >
+        {compactMedia ? (
+          <AppText variant="caption" color={ON_DARK}>
+            {isHold
+              ? `${clockText(elapsed)} of ${clockText(holdSeconds)}`
+              : `${repetitionCount} of ${target ?? '?'} repetitions`}
+          </AppText>
+        ) : (
+          <View style={styles.statsRow}>
+            <RepRing
+              value={isHold ? elapsed : repetitionCount}
+              target={isHold ? holdSeconds || undefined : target}
+              display={
+                isHold
+                  ? {
+                      value: clockText(elapsed),
+                      caption: holdSeconds ? `of ${clockText(holdSeconds)}` : 'resting',
+                      spoken: `${clockText(elapsed)} of ${clockText(holdSeconds)} resting still`,
+                    }
+                  : undefined
+              }
+              size={116}
+              strokeWidth={12}
+              testID="rep-ring"
+              valueTestID={AccessibilityIds.exercise.repCounter}
+            />
+            <View style={styles.statsText}>
+              {isHold ? (
                 <AppText
                   variant="bodyStrong"
                   color={ON_DARK}
-                  testID={AccessibilityIds.exercise.formQuality}
+                  testID="exercise-hold-status"
                 >
-                  {formInWords(formScore)}
+                  {holdSeconds && elapsed >= holdSeconds
+                    ? 'Time’s up. Press Stop when you’re ready.'
+                    : 'Resting still'}
                 </AppText>
-              </View>
-            ) : null}
-            {isHold ? null : (
-              <AppText
-                variant="caption"
-                color={ON_DARK_SOFT}
-                testID="exercise-phase-indicator"
-              >
-                Step: {currentPhase}
-              </AppText>
-            )}
+              ) : target && repetitionCount >= target ? (
+                <AppText variant="bodyStrong" color={colors.poseGood}>
+                  Goal reached!
+                </AppText>
+              ) : null}
+              {showForm ? (
+                <View style={styles.formRow}>
+                  <Icon
+                    name={formScore >= POOR_FORM_THRESHOLD ? 'thumb-up' : 'info-outline'}
+                    size={20}
+                    color={
+                      formScore >= POOR_FORM_THRESHOLD ? colors.skeleton : colors.accent
+                    }
+                  />
+                  <AppText
+                    variant="bodyStrong"
+                    color={ON_DARK}
+                    testID={AccessibilityIds.exercise.formQuality}
+                  >
+                    {formInWords(formScore)}
+                  </AppText>
+                </View>
+              ) : null}
+              {isHold ? null : (
+                <AppText
+                  variant="caption"
+                  color={ON_DARK_SOFT}
+                  testID="exercise-phase-indicator"
+                >
+                  Step: {currentPhase}
+                </AppText>
+              )}
+            </View>
           </View>
-        </View>
+        )}
 
         <View style={styles.buttons}>
           <Pressable
