@@ -1,0 +1,39 @@
+PASS src/components/__tests__/scheduleIntegrity.test.tsx
+    ✓ changing only the minimum interval needs a new version and re-confirmation (5 ms)
+    ✓ changing only the maximum interval needs a new version and re-confirmation (2 ms)
+    ✓ changing only the window start needs a new version and re-confirmation (1 ms)
+    ✓ changing only the window end needs a new version and re-confirmation (1 ms)
+    ✓ removing the schedule needs a new version and re-confirmation (1 ms)
+    ✓ an incomplete schedule needs a new version and re-confirmation (1 ms)
+    ✓ adding a schedule to a plan without one is a change too (1 ms)
+    ✓ a semantically unchanged schedule (other field order) is not a revision (1 ms)
+    ✓ one minute before due, then due, without any plan/history change (312 ms)
+    ✓ back in the foreground after the due time, the round is offered (12 ms)
+    ✓ the window closing ends the day; midnight starts a new one (59 ms)
+    ✓ a stale screen cannot start a round that is no longer due (7 ms)
+    ✓ starting from the routine binds its occurrence and episode (6 ms)
+    ✓ a new episode of the same pathway gets a new identity; old sessions do not count
+    ✓ starts blank; incomplete timing is saved but offers nothing (18 ms)
+PASS src/services/pose/__tests__/routineIdentity.test.tsx
+    ✓ the reviewer case: the same completed record twice counts once (1 ms)
+    ✓ a second real session (its own event) fills the second occurrence (1 ms)
+    ✓ R01: a completed/attempted conflict earns nothing (completed first) (1 ms)
+    ✓ R01: a completed/attempted conflict earns nothing (attempted first) (1 ms)
+    ✓ R01: the same id across different occurrences or episodes is a conflict too (1 ms)
+    ✓ R01: exact replay stays idempotent alongside a conflict elsewhere
+    ✓ R01: a correction record settles a conflict and earns only its own credit (1 ms)
+    ✓ attribution is fixed when done: reordering the routine does not move it (1 ms)
+    ✓ the occurrence a session is for is the first not finished; none when nothing is due
+    ✓ a session from another care episode (before an operation) does not count (1 ms)
+    ✓ within a round, the next movement is offered (1 ms)
+    ✓ one minute after a round, nothing is offered; the next is due 2 h after it ended
+    ✓ when due, the next round is offered (1 ms)
+    ✓ missed rounds are not made up: hours later, only one round is due (1 ms)
+    ✓ nothing outside the waking window; a round that would fall after it waits until tomorrow
+    ✓ a round begun late can be finished before the window closes, not after (1 ms)
+    ✓ the lower bound of a repetition range completes the dose (1 ms)
+    ✓ an incomplete schedule offers nothing and never falls back to another rhythm
+    ✓ roundState: the next round is due minHours after the previous ended, inside the window (1 ms)
+    ✓ the patient sees when the next mini-session is, and the range (49 ms)
+Tests:       35 passed, 35 total
+Jest did not exit one second after the test run has completed.

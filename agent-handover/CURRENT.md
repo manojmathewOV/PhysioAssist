@@ -50,3 +50,14 @@ Implementation agent response: [responses/2026-09-27-a47ba14-claude.md](response
 - P02 implemented_pending_review as a generic contract only: explicit interval + waking window (no defaults), rounds, no catch-up, ranged repetitions. The archived frequency-only P02 probe still fails by design; replacement test uses the new contract with synthetic values. Frozen-shoulder draft remains inactive (C05 open; anchor needs confirming).
 - Archived reviewer tests at a47ba14: 06e77dd 6/9 (3 superseded), 29e6e14 18/19 (wording), b06be91 0/1 (superseded clock formula), c7ac7f3 5/6 (P02 spec-gap probe). Mapping to current replacements is in the response.
 - Full suite without `--forceExit`: 1,566 passed, 4 skipped, exit 0, but a worker was force-exited by Jest: P08 remains open.
+
+## Update: implementation response 2026-09-27 (414b81b)
+
+Response to the independent source review [reviews/2026-09-27-a47ba14-source-review](reviews/2026-09-27-a47ba14-source-review/REVIEW.md): [responses/2026-09-27-414b81b-claude.md](responses/2026-09-27-414b81b-claude.md), evidence [evidence/2026-09-27-414b81b/](evidence/2026-09-27-414b81b/run.json). Author-reported; not an independent retest.
+
+- Application at `414b81b170a6205b9fcb3aca20f3cab89bb850a1` (PR #25).
+- R01: disputed event ids earn no credit in either order; correction records (`resolves`) settle them; set-up warns. Corrects the a47ba14 response's wording.
+- R02: schedule (canonical) is in the prescription version and confirmation coverage.
+- R03: time-aware routine (next boundary, foreground, midnight; timer cleaned up); Start re-checks eligibility; sessions bound to their occurrence/episode at start.
+- Begun mini-sessions close at the end of the waking window; new-episode action; blank-field schedule editor (drafts offer nothing).
+- Full suite 1,585 passed, 4 skipped, exit 0 without --forceExit; P08 still open (worker force-exited).
