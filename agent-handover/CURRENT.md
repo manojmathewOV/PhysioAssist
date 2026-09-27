@@ -15,7 +15,7 @@ Updated 2026-09-28. Scope: **iPhone patient-only, local-first MVP**. Surgeon/phy
 
 [Claude's owner-relayed review](reviews/2026-09-28-owner-relayed-claude/REVIEW.md) accepts merged S1 code with two nonblocking follow-ups and corroborates PR29 no-camera code. It is not a new GitHub approval submitted by Claude. His independent 1,649-test run is reviewer-reported; storage containment still lacks independent review and formal safety acceptance is not fabricated. Prior PR29 hosted Checks/iOS are verified green at 970e98c.
 
-The compact-progress accessibility follow-up and Android identity comment are receiving-agent changes requiring their own tests/review. S2/G05.W1 is the next implementation pickup: camera-optional, source-aware shoulder Do. Manoj's bedside elevation/sleeper and foot-end ER directions are in runbook.json `shoulder_capture`; sleeper has no internal-rotation number and visibility is per output. This neither approves an estimator/dose nor accepts S1's missing native-live cases.
+The [compact-progress accessibility follow-up and Android identity note](responses/2026-09-28-review-shoulder.md) are implemented at 4c8b20d: 1,661 passing/four skipped tests and 22 real-web checks. Independent review and physical VoiceOver observation remain open. S2/G05.W1 is the next implementation pickup: camera-optional, source-aware shoulder Do. Manoj's bedside elevation/sleeper and foot-end ER directions are in runbook.json `shoulder_capture`; sleeper has no internal-rotation number and visibility is per output. This neither approves an estimator/dose nor accepts S1's missing native-live cases.
 
 ## What is genuinely established
 

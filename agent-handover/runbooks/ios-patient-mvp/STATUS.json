@@ -4,7 +4,7 @@
   "runbook_revision": 4,
   "current_gate": "G05",
   "overall": "review_reconciled_shoulder_camera_optional_delivery_next",
-  "implementation_sha": "7d717f92e4e3b31663a9516a4a8087b7664da151",
+  "implementation_sha": "4c8b20d14cf923d1501e54f2700376f9fcb9870d",
   "gate_states": {
     "G00": "implemented_pending_review",
     "G01": "in_progress",
@@ -22,7 +22,8 @@
     "../../evidence/2026-09-27-g01-g02/run.json",
     "../../evidence/2026-09-27-reference-safety/run.json",
     "../../evidence/2026-09-27-reference-controls/run.json",
-    "../../evidence/2026-09-27-reference-controls/pickup.json"
+    "../../evidence/2026-09-27-reference-controls/pickup.json",
+    "../../evidence/2026-09-28-review-shoulder/run.json"
   ],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
   "next": "Implement source-aware camera-optional shoulder Do with truthful activity recording and per-variant bedside/foot-end guidance. Do not activate unvalidated angle/drift detection; finish native live reference checks through that real patient route.",
@@ -115,6 +116,13 @@
       "basis": "7d717f92e4e3b31663a9516a4a8087b7664da151",
       "evidence": "../../evidence/2026-09-28-main-integration/no-camera.json",
       "scope": "Actual Release no-camera explanation and Back action; no full live reference pass"
+    },
+    "compact_progress": {
+      "state": "implemented_pending_independent_and_physical_accessibility_review",
+      "basis": "4c8b20d14cf923d1501e54f2700376f9fcb9870d",
+      "criteria": ["G07.V06", "G07.V08"],
+      "evidence": "../../evidence/2026-09-28-review-shoulder/run.json",
+      "scope": "Native API contract tests and actual web semantics; no physical VoiceOver test"
     }
   },
   "active_pr": 29,
@@ -157,6 +165,12 @@
       "record": "../../responses/2026-09-28-no-camera-recovery.md",
       "review_record": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md",
       "review_basis": "970e98c07933d78e02a7b03a07c1508864207447"
+    },
+    {
+      "subject": "compact_accessibility_followup",
+      "basis": "4c8b20d14cf923d1501e54f2700376f9fcb9870d",
+      "status": "implemented_pending_independent_review",
+      "record": "../../responses/2026-09-28-review-shoulder.md"
     }
   ],
   "hosted_observation": {

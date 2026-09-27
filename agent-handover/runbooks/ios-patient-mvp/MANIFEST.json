@@ -4,8 +4,8 @@
   "files": [
     {
       "path": "ACTIVE.md",
-      "sha256": "00dcf6caa9dafba56acacd0bbe89cb1003ed51cdd9e082bf0f4227a5482c2e15",
-      "bytes": 4927
+      "sha256": "d58622eeba840a79a4347305ce2912890d2dbfa43bcedb10a0a00f53f5a66b33",
+      "bytes": 5000
     },
     {
       "path": "DECISIONS.md",
@@ -19,8 +19,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "174804cb503514e3b5b35682f53f074a3c4ef8138892c556b3e89516806f3de8",
-      "bytes": 2576
+      "sha256": "95d31835fd64732b87c32e753b878777c9f70e767b419ec73d7e1ea9a2d2bb7a",
+      "bytes": 2592
     },
     {
       "path": "RESEARCH.md",
@@ -39,8 +39,8 @@
     },
     {
       "path": "STATUS.json",
-      "sha256": "0b7ed3caa72946f3abb4e43e0b73fd9261712838a4e68a6312b961a49928dd63",
-      "bytes": 8417
+      "sha256": "d7ae04739b9a8dab32c95c9254e9ab4fcd4b47a78d3df09b2854db168f51db6a",
+      "bytes": 9106
     },
     {
       "path": "TEST_MATRIX.md",

@@ -8,7 +8,7 @@ Generated from `runbook.json` and `STATUS.json`; do not edit this view. This is 
 
 **Next action:** Implement source-aware camera-optional shoulder Do with truthful activity recording and per-variant bedside/foot-end guidance. Do not activate unvalidated angle/drift detection; finish native live reference checks through that real patient route.
 
-**Evidence basis:** implementation `7d717f9`; hosted `970e98c` success. Review queue: reference_safety (reviewer_reports_acceptance_formal_record_pending), storage_read_containment (independent_review_pending), reference_controls (accepted_with_nonblocking_followups_owner_relay), native_no_camera_recovery (code_corroborated_owner_relay). Do not redo established fixes without fresh contrary evidence.
+**Evidence basis:** implementation `4c8b20d`; hosted `970e98c` success. Review queue: reference_safety (reviewer_reports_acceptance_formal_record_pending), storage_read_containment (independent_review_pending), reference_controls (accepted_with_nonblocking_followups_owner_relay), native_no_camera_recovery (code_corroborated_owner_relay), compact_accessibility_followup (implemented_pending_independent_review). Do not redo established fixes without fresh contrary evidence.
 
 ## Execute in small reviewable steps
 

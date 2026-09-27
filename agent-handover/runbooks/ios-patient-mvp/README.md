@@ -8,7 +8,7 @@ The manifest is [runbook.json](runbook.json); criteria are [validation-matrix.js
 
 ## No false authority
 
-A framework receipt can validate declaration shape, not patient utility, clinical accuracy or release readiness. See [current tool inspection](evidence/convergence-20260927.json) and the historical [CCore reconciliation](evidence/ccore-reconciliation.json) for exact tools/results. No native execution epoch or Research offer is invented. The patient application does not depend on Project Cosmos.
+A framework receipt can validate declaration shape, not patient utility, clinical accuracy or release readiness. See [current tool inspection](../../evidence/2026-09-28-review-shoulder/run.json) and the historical [CCore reconciliation](evidence/ccore-reconciliation.json) for exact tools/results. No native execution epoch or Research offer is invented. The patient application does not depend on Project Cosmos.
 
 ## Regenerate and check
 
