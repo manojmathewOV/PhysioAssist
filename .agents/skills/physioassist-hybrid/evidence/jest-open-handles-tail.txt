@@ -1,0 +1,25 @@
+PASS __tests__/auth/userSlice.test.ts
+PASS src/utils/__tests__/youtube.test.ts
+PASS src/types/__tests__/biomechanics.test.ts
+PASS src/services/movement/__tests__/view.test.ts
+PASS src/utils/__tests__/progressSummary.test.ts
+PASS __tests__/smoke/tensorflow.test.ts
+PASS src/types/__tests__/pose.test.ts
+PASS src/services/pose/__tests__/mediapipeLandmarks.test.ts
+PASS src/components/exercises/__tests__/referenceFor.test.ts
+PASS src/services/web/__tests__/focusFrame.test.ts
+PASS src/components/__tests__/framingRequirement.test.ts
+PASS src/services/pose/__tests__/measurementLandmarks.test.ts
+PASS src/services/pose/__tests__/exercisePlan.test.ts
+PASS __tests__/smoke/rnfs.test.ts
+PASS __tests__/smoke/ytdl.test.ts
+PASS __tests__/smoke/mediapipe.test.ts
+PASS src/services/pose/__tests__/adaptiveModel.test.ts
+PASS src/services/__tests__/audioCuePacing.test.ts
+
+Test Suites: 4 skipped, 87 passed, 87 of 91 total
+Tests:       4 skipped, 1593 passed, 1597 total
+Snapshots:   0 total
+Time:        62.437 s
+Ran all test suites.
+Test results written to: ../RDC/runs/20260927-landing-fixes/jest-open-handles.json

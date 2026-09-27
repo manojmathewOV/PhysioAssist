@@ -1,0 +1,96 @@
+{
+  "date": "2026-09-27T04:36:49.199538+00:00",
+  "application_basis": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
+  "scope": "hybrid landing, resource policy and native reproducibility; no clinical or UX feature changes",
+  "tests": {
+    "typecheck": "passed",
+    "lint": {
+      "exit": 0,
+      "errors": 0,
+      "warnings": 450,
+      "seconds_after_excluding_generated_trees": 16.11
+    },
+    "application_runs": {
+      "jest-parallel": {
+        "passed": 1593,
+        "skipped": 4,
+        "passed_suites": 87,
+        "exit": 0,
+        "forceExit": false,
+        "forced_worker_warning": false,
+        "detected_open_handles": false
+      },
+      "jest-open-handles": {
+        "passed": 1593,
+        "skipped": 4,
+        "passed_suites": 87,
+        "exit": 0,
+        "forceExit": false,
+        "forced_worker_warning": false,
+        "detected_open_handles": false
+      }
+    },
+    "skill_tests": {
+      "cloud": 22,
+      "mac": 22,
+      "scope": "synthetic runner/guard tests"
+    }
+  },
+  "native": {
+    "pods_deployment_exit": 0,
+    "lock_sha256": "c620a4ab4a9ae36c553164752255f2e1a052154c380534ac7a68dec2f7a0d87a",
+    "build_exit": 0,
+    "build_state": "passed",
+    "seconds": 352.71,
+    "candidate_diff_sha256": "efe48948ee26446b97152f6a1bffeb2884d8ce080874d95c2eb909b09994d263",
+    "toolchain": "Xcode16.2; iOS simulator18.2 SDK; older runtime qualification only",
+    "launch": {
+      "state": "passed",
+      "observed_running_after_seconds": 10,
+      "screenshot_inspected": "native-new-root.png",
+      "scope": "actual native onboarding, not full rehab journey",
+      "owned_simulator_shutdown_exit": 0
+    },
+    "second_deployment_install": {
+      "state": "passed",
+      "seconds": 10.39,
+      "lock_unchanged": true
+    }
+  },
+  "storage": {
+    "migrated_not_recloned": true,
+    "old_dependency_trees_removed": 4,
+    "obsolete_build_cache_removed": 1,
+    "old_allocated_bytes_removed": 5690802176,
+    "allocation_is_not_unique_APFS_free_space": true,
+    "source_and_unique_evidence_preserved": true
+  },
+  "limits": {
+    "managed_jobs": 1,
+    "test_workers": 2,
+    "compiler_jobs": 2,
+    "node_heap_MiB_per_process": 2048,
+    "preflight_free_disk_GiB": 20,
+    "preflight_cache_budget_GiB": 8,
+    "command_log_MiB": 50,
+    "permanent_daemon": false
+  },
+  "not_established": [
+    "independent review of this infrastructure patch",
+    "new full native Detox rehab journeys",
+    "current App Store submission toolchain",
+    "real-camera/physical-device/clinical validation",
+    "guaranteed automatic skill discovery in every host"
+  ],
+  "previous_failures_preserved": [
+    "unscoped lint walked generated Pods and was deliberately stopped",
+    "old native lock refused deployment mode before reconciliation"
+  ],
+  "publication_boundary": {
+    "blocked_local_commit": "4e52c5995290f9f0c28f1ea3238793abfeb09c73",
+    "workflow_file_changed_in_published_patch": false,
+    "ci_hardening": "permission blocked; proposal retained, not executed",
+    "ordinary_precommit_and_prepush": "used; initial push refused after checks passed",
+    "native_plist": "semantically identical generated key order retained to avoid repeated dirty worktree"
+  }
+}

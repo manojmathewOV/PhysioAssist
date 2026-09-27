@@ -9,3 +9,11 @@ src/components/coaching/CoachingOverlay.tsx
 docs/examples/screens/PoseDetectionScreenPatientCentric.example.tsx
 # JS twin of validate-modular-architecture.ts (run by npm run validate:architecture); tsc shadows it
 scripts/validate-modular-architecture.js
+
+# Generated dependency/build trees are not authored application code.
+ios/Pods/
+ios/build/
+android/build/
+android/app/build/
+dist/
+coverage/

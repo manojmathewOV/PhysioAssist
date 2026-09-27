@@ -1,0 +1,25 @@
+test_bad_marker_refused (__main__.WorkspaceTests) ... ok
+test_changed_digest_refused (__main__.WorkspaceTests) ... ok
+test_commands_have_resource_limits (__main__.WorkspaceTests) ... ok
+test_dirty_refused (__main__.WorkspaceTests) ... ok
+test_dry_run_preserves_cache (__main__.WorkspaceTests) ... ok
+test_failure_recorded (__main__.WorkspaceTests) ... ok
+test_fingerprint_changes (__main__.WorkspaceTests) ... ok
+test_lock_released (__main__.WorkspaceTests) ... ok
+test_pods_frozen (__main__.WorkspaceTests) ... ok
+test_second_job_lock_refused (__main__.WorkspaceTests) ... ok
+test_success_recorded (__main__.WorkspaceTests) ... ok
+test_symlink_refused (__main__.WorkspaceTests) ... ok
+test_timeout_recorded (__main__.WorkspaceTests) ... ok
+test_tracked_cache_refused (__main__.WorkspaceTests) ... ok
+test_traversal_refused (__main__.WorkspaceTests) ... ok
+test_unique_run_records (__main__.WorkspaceTests) ... ok
+test_unsupported_action_refused (__main__.WorkspaceTests) ... ok
+test_valid_marker (__main__.WorkspaceTests) ... ok
+test_warning_is_not_clean_success (__main__.WorkspaceTests) ... ok
+test_wrong_head_refused (__main__.WorkspaceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 3.608s
+
+OK
