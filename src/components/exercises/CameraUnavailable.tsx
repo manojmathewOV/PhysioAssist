@@ -57,6 +57,33 @@ const CameraUnavailable: React.FC<CameraUnavailableProps> = ({
   </Screen>
 );
 
+/** The text and available action share one source: no Release-only promise of a demo. */
+export const NoCameraAvailable: React.FC<{
+  onBack: () => void;
+  practiceAction?: Action;
+}> = ({ onBack, practiceAction }) => {
+  const back = {
+    label: 'Back to exercises',
+    onPress: onBack,
+    testID: 'camera-help-back',
+    icon: 'arrow-back',
+  };
+  return (
+    <CameraUnavailable
+      testID="no-camera"
+      icon="no-photography"
+      title="No camera found"
+      message={
+        practiceAction
+          ? "This device doesn't seem to have a front camera. You can try the exercise screen with a pretend body in practice mode. Practice does not record a completed exercise."
+          : "This device doesn't seem to have a front camera. Camera tracking is unavailable here. Go back to your exercises to read your programme's instructions."
+      }
+      primary={practiceAction ?? back}
+      secondary={practiceAction ? back : undefined}
+    />
+  );
+};
+
 const styles = StyleSheet.create({
   body: {
     alignItems: 'center',

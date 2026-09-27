@@ -63,7 +63,9 @@ import {
 import ExerciseSummary, {
   ExerciseSummaryProps,
 } from '@components/exercises/ExerciseSummary';
-import CameraUnavailable from '@components/exercises/CameraUnavailable';
+import CameraUnavailable, {
+  NoCameraAvailable,
+} from '@components/exercises/CameraUnavailable';
 import { FRAMING_MESSAGE, useSessionGate } from '@components/exercises/useSessionGate';
 import {
   EXERCISE_OPTIONS,
@@ -457,16 +459,7 @@ const PoseDetectionScreen: React.FC = () => {
       );
     }
     if (!device) {
-      return (
-        <CameraUnavailable
-          testID="no-camera"
-          icon="no-photography"
-          title="No camera found"
-          message="This device doesn't seem to have a front camera. You can still try the exercise screen in practice mode, with a pretend body."
-          primary={practiceAction ?? { ...back, icon: 'arrow-back' }}
-          secondary={practiceAction ? back : undefined}
-        />
-      );
+      return <NoCameraAvailable onBack={backToChooser} practiceAction={practiceAction} />;
     }
     // Permission still being asked
     return (
