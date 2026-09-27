@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, AppState, Platform } from 'react-native';
 import { NavigationContext } from '@react-navigation/native';
+import { audioFeedbackService } from '../../services/audioFeedbackService';
 
 /** iOS has no accessibilityLiveRegion. Keep count access when app speech is off.
  * App speech already announces reps when on: never add a competing count voice.
@@ -20,6 +21,10 @@ export function useAccessibleRepCount({
   const navigation = useContext(NavigationContext);
   const [reader, setReader] = useState(false);
   const previous = useRef(value);
+  // Apply the persisted setting on entry, not only after opening Settings.
+  useEffect(() => {
+    audioFeedbackService.updateConfig({ enableSpeech: appSpeechEnabled });
+  }, [appSpeechEnabled]);
   useEffect(() => {
     if (Platform.OS !== 'ios' || appSpeechEnabled) {
       setReader(false);

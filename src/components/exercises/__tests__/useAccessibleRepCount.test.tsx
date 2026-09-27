@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { AccessibilityInfo, AppState, Platform } from 'react-native';
+import { audioFeedbackService } from '../../../services/audioFeedbackService';
 import { useAccessibleRepCount } from '../useAccessibleRepCount';
 
 const initial = {
@@ -13,6 +14,7 @@ const originalAppState = AppState.currentState;
 let changed: (enabled: boolean) => void;
 let announce: jest.SpyInstance;
 beforeEach(() => {
+  jest.spyOn(audioFeedbackService, 'updateConfig').mockImplementation(() => {});
   jest.replaceProperty(Platform, 'OS', 'ios');
   AppState.currentState = 'active';
   announce = jest
@@ -43,6 +45,9 @@ it('announces a new count on iOS with VoiceOver and app speech off, not on mount
   const view = renderHook(useAccessibleRepCount, { initialProps: initial });
   await settle();
   expect(announce).not.toHaveBeenCalled();
+  expect(audioFeedbackService.updateConfig).toHaveBeenLastCalledWith({
+    enableSpeech: false,
+  });
   view.rerender({ ...initial, value: 3, text: '3 of 10 repetitions' });
   expect(announce).toHaveBeenCalledTimes(1);
   expect(announce).toHaveBeenLastCalledWith('3 of 10 repetitions');

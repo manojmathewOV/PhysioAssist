@@ -19,7 +19,7 @@ try {
   await page.evaluate(()=>{
     const root=JSON.parse(localStorage.getItem('persist:root'));
     root.user=JSON.stringify({currentUser:{id:'video-audit',name:'Synthetic audit',email:'audit@example.com'},isAuthenticated:true,hasCompletedOnboarding:true,isLoading:false,error:null});
-    root.settings=JSON.stringify({...JSON.parse(root.settings),exercisePlan:{joint:'shoulder',side:'left',version:1,routine:[{exerciseId:'arm-raise',reps:2}],videos:{'arm-raise':'https://www.youtube.com/watch?v=M7lc1UVf-VE&t=8s'}}});
+    root.settings=JSON.stringify({...JSON.parse(root.settings),enableSpeech:false,exercisePlan:{joint:'shoulder',side:'left',version:1,routine:[{exerciseId:'arm-raise',reps:2}],videos:{'arm-raise':'https://www.youtube.com/watch?v=M7lc1UVf-VE&t=8s'}}});
     localStorage.setItem('persist:root',JSON.stringify(root));localStorage.setItem('persist:exercise',JSON.stringify({history:'[]',_persist:JSON.stringify({version:-1,rehydrated:true})}));
   });
   await page.reload();await page.getByTestId('tab-exercises').click();await waitPlayer();
@@ -49,6 +49,10 @@ try {
     const viewport=await page.getByTestId("reference-player-viewport").boundingBox();const instruction=await page.getByTestId("exercise-feedback").boundingBox();report[`layout${size.width}`]={viewport,instruction};check(`player does not cover instruction ${size.width}`,viewport.y>=instruction.y+instruction.height);
     check(`pause control on screen ${size.width}`,pauseRect.y>=0&&pauseRect.y+pauseRect.height<=size.height);
   }
+  const progress = page.getByTestId('exercise-compact-progress');
+  check('compact count exposes a progressbar', await progress.getAttribute('role')==='progressbar');
+  check('compact count exposes meaningful value', /repetitions?/.test(await progress.getAttribute('aria-valuetext')));
+  check('compact count has polite live updates with app speech off', await progress.getAttribute('aria-live')==='polite');
   await page.setViewportSize({width:390,height:844});
   await page.route('https://www.youtube.com/iframe_api', route=>route.abort());
   await page.reload();await page.getByTestId('tab-exercises').click();

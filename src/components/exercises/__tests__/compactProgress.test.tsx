@@ -39,6 +39,9 @@ it('retains accessible progress semantics when media replaces the ring', () => {
     </Provider>
   );
   expect(queryByTestId('rep-ring')).toBeNull();
+  expect(getByTestId('exercise-compact-progress').props['aria-valuetext']).toBe(
+    getByTestId('exercise-compact-progress').props.accessibilityValue.text
+  );
   expect(getByTestId('exercise-compact-progress').props.accessibilityLiveRegion).toBe(
     'polite'
   );

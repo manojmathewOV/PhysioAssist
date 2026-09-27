@@ -261,6 +261,9 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
     ? Math.round((currentExercise?.phases[0]?.holdDuration ?? 0) / 1000)
     : 0;
   const exerciseName = option?.title ?? currentExercise?.name ?? 'Exercise';
+  const progressText = isHold
+    ? `${elapsed} seconds${holdSeconds ? ` of ${holdSeconds} seconds` : ''} resting still`
+    : countText;
 
   const isEstimate =
     (lastValidationResult?.estimatedJoints?.length ?? 0) > 0 ||
@@ -453,11 +456,8 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
             accessible
             accessibilityRole="progressbar"
             accessibilityLabel={isHold ? 'Hold time' : 'Repetition count'}
-            accessibilityValue={{
-              text: isHold
-                ? `${elapsed} seconds${holdSeconds ? ` of ${holdSeconds} seconds` : ''} resting still`
-                : countText,
-            }}
+            accessibilityValue={{ text: progressText }}
+            aria-valuetext={progressText}
             accessibilityLiveRegion={
               canAnnounceProgress && !appSpeechEnabled ? 'polite' : 'none'
             }
