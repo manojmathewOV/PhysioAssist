@@ -69,6 +69,32 @@ def validate(manifest: dict, state: dict, research: dict) -> list[str]:
         if not question.get('falsifier'): errors.append('research question missing falsifier')
     return errors
 
+def validate_delivery(manifest, state):
+    errors=[];delivery=manifest.get('delivery',{});slices=delivery.get('slices',[])
+    by_id={x.get('id'):x for x in slices};gates={g['id']:g for g in manifest['gates']}
+    criteria={v for g in manifest['gates'] for v in g.get('validation_ids',[])}
+    if not slices or len(by_id)!=len(slices):errors.append('missing/duplicate delivery slice')
+    if state.get('active_delivery_slice') not in by_id:errors.append('unknown active delivery slice')
+    for d in slices:
+        if any(k in d for k in ['state','status','acceptance']):errors.append('parallel delivery acceptance store')
+        if d.get('primary_gate') not in gates:errors.append('unknown delivery gate')
+        if not d.get('criteria') or not set(d['criteria']).issubset(criteria):errors.append('unknown delivery criterion')
+        if d.get('return_to')!=d.get('primary_gate'):errors.append('missing delivery return')
+        if not set(d.get('after',[])).issubset(by_id) or d['id'] in d.get('after',[]):errors.append('invalid delivery predecessor')
+    active=by_id.get(state.get('active_delivery_slice'),{})
+    if active.get('primary_gate')!=state.get('current_gate'):errors.append('active delivery/gate drift')
+    g=gates.get(state.get('current_gate'),{})
+    if state.get('active_work_item')!=g.get('next_work_item',{}).get('id'):errors.append('active work item drift')
+    seen=set();visiting=set()
+    def visit(i):
+        if i in visiting:errors.append('delivery cycle');return
+        if i in seen or i not in by_id:return
+        visiting.add(i)
+        for d in by_id[i].get('after',[]):visit(d)
+        visiting.remove(i);seen.add(i)
+    for i in by_id:visit(i)
+    return errors
+
 def self_test(manifest: dict, state: dict, research: dict) -> int:
     cases = []
     m=copy.deepcopy(manifest);m['gates'][0]['depends_on']=['G10'];cases.append(('cycle',m,state,research))
@@ -82,12 +108,29 @@ def self_test(manifest: dict, state: dict, research: dict) -> int:
         if not validate(m,s,r): raise AssertionError('Mutant not caught: '+name)
     return len(cases)
 
+def delivery_self_test(manifest,state):
+    cases=[]
+    m=copy.deepcopy(manifest);m['delivery']['slices'][0]['criteria']=['G99.V99'];cases.append((m,state))
+    m=copy.deepcopy(manifest);m['delivery']['slices'][0]['after']=['S2'];cases.append((m,state))
+    m=copy.deepcopy(manifest);m['delivery']['slices'][0]['acceptance']='accepted';cases.append((m,state))
+    m=copy.deepcopy(manifest);m['delivery']['slices'].append(copy.deepcopy(m['delivery']['slices'][0]));cases.append((m,state))
+    s=copy.deepcopy(state);s['active_delivery_slice']='S99';cases.append((manifest,s))
+    s=copy.deepcopy(state);s['active_work_item']='G01.W1';cases.append((manifest,s))
+    for m,s in cases:
+        if not validate_delivery(m,s):raise AssertionError('Undetected delivery mutation')
+    return len(cases)
+
 def main() -> int:
     root=Path(__file__).resolve().parents[1]
     manifest=json.loads((root/'runbook.json').read_text())
     state=json.loads((root/'STATUS.json').read_text())
     research=json.loads((root/'research.json').read_text())
-    errors=validate(manifest,state,research)
+    errors=validate(manifest,state,research)+validate_delivery(manifest,state)
+    active=(root/'ACTIVE.md').read_text()
+    if len(active.encode())>7500:errors.append('active view exceeds 7500-byte presentation budget')
+    flow=next(line for line in (root/'ROADMAP.cnp').read_text().splitlines() if line.startswith('summary.flow '))
+    f=dict(t.split('=',1) for t in shlex.split(flow)[1:])
+    if f.get('focus')!=state['current_gate'] or f.get('next')!=state['active_work_item']:errors.append('stale CNP frontier')
     # Check the CNP declaration projects the same declared gate identities.
     phases={}
     for line in (root/'ROADMAP.cnp').read_text().splitlines():
@@ -116,7 +159,7 @@ def main() -> int:
       'gates':len(manifest['gates']),
       'acceptance_scenarios':sum(len(g['acceptance_tests']) for g in manifest['gates']),
       'dod_axes':len(AXES),'research_questions':len(research['questions']),
-      'negative_mutations_detected':mutants,'accepted_implementation_gates':sum(v == 'accepted' for v in state['gate_states'].values())},indent=2))
+      'negative_mutations_detected':mutants,'delivery_negative_mutations_detected':delivery_self_test(manifest,state),'active_view_bytes':len(active.encode()),'accepted_implementation_gates':sum(v == 'accepted' for v in state['gate_states'].values())},indent=2))
     return 0
 
 if __name__=='__main__':

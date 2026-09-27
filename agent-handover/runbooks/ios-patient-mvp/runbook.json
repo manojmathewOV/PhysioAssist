@@ -1,7 +1,7 @@
 {
   "schema": "physioassist-portable-runbook/1",
   "id": "ios-patient-mvp",
-  "revision": 2,
+  "revision": 3,
   "prepared_date": "2026-09-27",
   "claim": "declaration_only_no_implementation_or_clinical_acceptance",
   "authority": {
@@ -92,7 +92,7 @@
         "endpoint_rule": "All mandatory criteria for this gate, exact input basis, no unresolved critical defects, independent decision, recovery and reopen path."
       },
       "remaining_work": [
-        "Record one integration candidate with ancestry from frozen app, infrastructure and handover. Preserve main and exact archive refs; no unreviewed feature continuation by the frozen agent.",
+        "Review the already consolidated scope and entry points; preserve prior ancestry/archive evidence, and change only contradicted current facts.",
         "Make CURRENT the concise present tense and archive obsolete state snapshots. Keep original findings/response evidence immutable.",
         "Approve planning scope independently; leave feature-specific D/C decisions at the gates they affect, not as a blanket stop on unrelated engineering."
       ],
@@ -108,7 +108,7 @@
         "id": "G00.W1",
         "start_when": "Frozen input, task ownership and relevant source interfaces are known; unresolved decisions block only irreversible/clinical activation in their scope.",
         "stop_when": "Candidate evidence submitted or a named blocker with wake condition recorded; no indefinite retry.",
-        "candidate_action": "Record one integration candidate with ancestry from frozen app, infrastructure and handover. Preserve main and exact archive refs; no unreviewed feature continuation by the frozen agent.",
+        "candidate_action": "Review the already consolidated scope and entry points; preserve prior ancestry/archive evidence, and change only contradicted current facts.",
         "after_success": "Independent acceptance review, then eligible successors; do not stop only because unit tests are green."
       }
     },
@@ -122,9 +122,9 @@
       "implementation": [
         "Retest the current R01 conflict-resolution, R02 schedule-approval and R03 eligibility-refresh changes against the actual current reducers/hooks/screens.",
         "Inspect same-operation new episode, unidentified legacy episode, malformed or duplicate IDs and mid-session prescription changes.",
-        "Investigate P08 with focused open-handle detection. Dispose timers, subscriptions, audio and camera mocks; do not hide leaks with force-exit or relaxed timeouts.",
+        "Preserve independently verified P08; use focused open-handle detection only on fresh teardown regression. Dispose timers, subscriptions, audio and camera mocks; do not hide leaks with force-exit or relaxed timeouts.",
         "Bind records to the start-time profile, episode, prescription and occurrence; separate activity, pause, wall and continuously observed time.",
-        "I01: explain the observed CocoaPods 1.16.2 local versus 1.17.0 hosted checksum difference using a clean-install comparison; select a reproducible toolchain and pin it through the appropriate supported mechanism. Do not remove deployment mode or pipefail.",
+        "Review remaining correctness evidence and the latest 74fe884 hosted success. Native portability and P08 are established on their pinned bases; investigate only a new counterexample, not the retired failure.",
         "Retain P08 independently observed clean on 6bc4d77; rerun after integration, do not redo Claude's fix without a fresh counterexample.",
         "Classify the four opt-in skipped suites individually. Native first-run Detox is not full rehabilitation coverage; absent datasets are not a measured pass."
       ],
@@ -176,7 +176,7 @@
         "endpoint_rule": "All mandatory criteria for this gate, exact input basis, no unresolved critical defects, independent decision, recovery and reopen path."
       },
       "remaining_work": [
-        "I01: explain the observed CocoaPods 1.16.2 local versus 1.17.0 hosted checksum difference using a clean-install comparison; select a reproducible toolchain and pin it through the appropriate supported mechanism. Do not remove deployment mode or pipefail.",
+        "Review remaining correctness evidence and the latest 74fe884 hosted success. Native portability and P08 are established on their pinned bases; investigate only a new counterexample, not the retired failure.",
         "Retain P08 independently observed clean on 6bc4d77; rerun after integration, do not redo Claude's fix without a fresh counterexample.",
         "Classify the four opt-in skipped suites individually. Native first-run Detox is not full rehabilitation coverage; absent datasets are not a measured pass."
       ],
@@ -194,7 +194,7 @@
         "id": "G01.W1",
         "start_when": "Frozen input, task ownership and relevant source interfaces are known; unresolved decisions block only irreversible/clinical activation in their scope.",
         "stop_when": "Candidate evidence submitted or a named blocker with wake condition recorded; no indefinite retry.",
-        "candidate_action": "Diagnose and pin the native dependency toolchain using the hosted checksum failure; preserve strict failure propagation.",
+        "candidate_action": "Review remaining correctness evidence and the latest 74fe884 hosted success. Native portability and P08 are established on their pinned bases; investigate only a new counterexample, not the retired failure.",
         "after_success": "Independent acceptance review, then eligible successors; do not stop only because unit tests are green."
       }
     },
@@ -265,7 +265,7 @@
         "endpoint_rule": "All mandatory criteria for this gate, exact input basis, no unresolved critical defects, independent decision, recovery and reopen path."
       },
       "remaining_work": [
-        "First containment: failed storage read must never enable persisting the empty initial state over existing records. Distinguish loading, read-error, recovered and truly-empty states; retry/export/recovery must not destroy the source.",
+        "Independently review published read-error containment, then implement durable write acknowledgement and recoverable local storage without removing the guard.",
         "Design transactional local migration separately from that containment fix; choose storage under D03/D06 before irreversible conversion.",
         "Provide immutable event identity, corrections, profile/episode separation, save acknowledgement and history paging; do not default unknown source/side/assistance to current values."
       ],
@@ -283,7 +283,7 @@
         "id": "G02.W1",
         "start_when": "Frozen input, task ownership and relevant source interfaces are known; unresolved decisions block only irreversible/clinical activation in their scope.",
         "stop_when": "Candidate evidence submitted or a named blocker with wake condition recorded; no indefinite retry.",
-        "candidate_action": "Reproduce and contain encrypted-storage read-error overwrite before the wider transactional migration.",
+        "candidate_action": "Independently review published read-error containment, then implement durable write acknowledgement and recoverable local storage without removing the guard.",
         "after_success": "Independent acceptance review, then eligible successors; do not stop only because unit tests are green."
       }
     },
@@ -521,7 +521,7 @@
         "endpoint_rule": "All mandatory criteria for this gate, exact input basis, no unresolved critical defects, independent decision, recovery and reopen path."
       },
       "remaining_work": [
-        "Remove relationship-implying patient copy listed in the final handover while keeping established safety restrictions. Use separate plan-origin labels instead of pretending a clinician is monitoring.",
+        "Preserve c3d4b7b reference/comfort safety while delivering camera-optional Do, truthful participation and a separate Check in the source-aware shoulder journey.",
         "Learn records viewing only; Do records activity with provenance; Check records qualified standardized observations. Camera-off Do remains possible only for an otherwise permitted activity.",
         "Use patient-owned Today/My recovery/Help experience, concise first-use versus familiar-use guidance and appointment summary; do not build a clinician dashboard."
       ],
@@ -539,7 +539,7 @@
         "id": "G05.W1",
         "start_when": "Frozen input, task ownership and relevant source interfaces are known; unresolved decisions block only irreversible/clinical activation in their scope.",
         "stop_when": "Candidate evidence submitted or a named blocker with wake condition recorded; no indefinite retry.",
-        "candidate_action": "Remove relationship-implying patient copy listed in the final handover while keeping established safety restrictions. Use separate plan-origin labels instead of pretending a clinician is monitoring.",
+        "candidate_action": "Preserve c3d4b7b reference/comfort safety while delivering camera-optional Do, truthful participation and a separate Check in the source-aware shoulder journey.",
         "after_success": "Independent acceptance review, then eligible successors; do not stop only because unit tests are green."
       }
     },
@@ -645,7 +645,7 @@
         "Design readable large-text reflow with screen reader focus, motor/one-handed access and no colour-only signal. Do not equate default-size screenshots with elderly usability."
       ],
       "acceptance_tests": [
-        "Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback.",
+        "Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback. App Pause also pauses the player; Hide/Show preserves position; the viewport and native identity satisfy the selected provider contract; unavailable/blocked/autoplay-denied states recover truthfully. Separately qualify the three reference paths and forbid YouTube-frame extraction.",
         "Speech identifies the next movement and dose without forcing a floor-exercising patient to reach for the phone.",
         "Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning.",
         "Camera problem plus precaution plus praise selects one correct visual/spoken message consistently.",
@@ -692,7 +692,8 @@
         "endpoint_rule": "All mandatory criteria for this gate, exact input basis, no unresolved critical defects, independent decision, recovery and reopen path."
       },
       "remaining_work": [
-        "Test an actual approved matching asset; caption and speech transitions carry movement/support/dose meaning. Preserve stop/pause accessibility and user-paced setup.",
+        "Audit/retire the disconnected downloader and unused capabilities, then repair recorded Pause/Resume, Hide/Show, sizing and failure recovery with native playback evidence.",
+        "Qualify streaming YouTube, camera-recorded reference and uploaded local-file reference separately; the embedded player is never the analysed numerical source. Clinical applicability and content rights are separate from successful playback.",
         "For focus/plain display retain clinically relevant stick, helper hand, support and brace. Native focus implementation is separately qualified; plain mode may be the approved MVP fallback.",
         "Design readable large-text reflow with screen reader focus, motor/one-handed access and no colour-only signal. Do not equate default-size screenshots with elderly usability."
       ],
@@ -710,7 +711,7 @@
         "id": "G07.W1",
         "start_when": "Frozen input, task ownership and relevant source interfaces are known; unresolved decisions block only irreversible/clinical activation in their scope.",
         "stop_when": "Candidate evidence submitted or a named blocker with wake condition recorded; no indefinite retry.",
-        "candidate_action": "Test an actual approved matching asset; caption and speech transitions carry movement/support/dose meaning. Preserve stop/pause accessibility and user-paced setup.",
+        "candidate_action": "Audit/retire the disconnected downloader and unused capabilities, then repair recorded Pause/Resume, Hide/Show, sizing and failure recovery with native playback evidence.",
         "after_success": "Independent acceptance review, then eligible successors; do not stop only because unit tests are green."
       }
     },
@@ -1083,7 +1084,7 @@
     "V": "salience and risk determine the next bounded attention slice",
     "G": "claims link to sources, owners, exact evidence and contradictory observations",
     "D": "closure dependencies and explicit child-task return paths",
-    "Z": "CURRENT -> gate -> criterion/DoD -> exact receipt/log/source",
+    "Z": "CURRENT -> generated ACTIVE.md (current gate/work item + horizon) -> existing gate/criterion -> exact evidence/source. STATUS.json supplies live orientation; no hardcoded old next action.",
     "eleven_axes": [
       "material_invariants",
       "consequence",
@@ -1099,5 +1100,179 @@
     ],
     "native_tools": "See evidence/ccore-reconciliation.json; declaration inspection is not execution/admission.",
     "no_new_runtime_dependency": true
+  },
+  "delivery": {
+    "purpose": "A delivery view of existing gate criteria, not another roadmap or acceptance store. One complete shoulder journey is the next product milestone.",
+    "basis": "74fe884cc090ff4a5813ad47e36415186316abba",
+    "limits": {
+      "implementation_wip": 1,
+      "independent_review_wip": 1,
+      "attempts_without_new_evidence": 2,
+      "diagnostic_review_minutes": 30,
+      "meaning": "Review checkpoints, not promises that a whole gate or iOS build completes in 30 minutes. Stop duplicate heavy retries; decompose the next discriminating task."
+    },
+    "slices": [
+      {
+        "id": "S1",
+        "title": "Dependable reference and protected feedback",
+        "primary_gate": "G07",
+        "outcome": "A patient can watch, enlarge, pause, hide/show and return to the reference without losing place or receiving advice beyond the programme.",
+        "criteria": [
+          "G05.V04",
+          "G05.V08",
+          "G07.V01",
+          "G07.V04",
+          "G07.V05",
+          "G07.V08",
+          "G03.V04"
+        ],
+        "work": [
+          "Keep the c3d4b7b correction; request independent review of that delta. Do not redo the already corroborated native dependency fix.",
+          "Audit and retire only the disconnected YouTube downloader and unused dependencies/permissions; retain used local-upload, recorded-reference and comparison helpers. Update only affected locks and run the relevant frozen install.",
+          "Repair Pause/Resume, Hide/Show position preservation, readable compliant player viewport, load/error state and native app identity. Keep streaming YouTube separate from analysable permission-cleared local media.",
+          "One shared user intent coordinates exercise clock and player. Player loading or failure never fabricates activity, completed dose or numerical reference. Preserve warning precedence.",
+          "Test the real player on web and native iOS; use separately approved content for the patient journey. Technical sample playback is not clinical-content approval."
+        ],
+        "activation_decisions": [
+          "D04 supported native device/display",
+          "D05 only for actual clinical reference content"
+        ],
+        "after": [],
+        "done": "Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.",
+        "return_to": "G07"
+      },
+      {
+        "id": "S2",
+        "title": "One complete source-aware shoulder journey",
+        "primary_gate": "G05",
+        "outcome": "An appropriate local programme can be learned, performed without compulsory camera tracking, interrupted, recorded durably and revisited on an iPhone.",
+        "criteria": [
+          "G02.V06",
+          "G02.V08",
+          "G03.V01",
+          "G03.V04",
+          "G03.V05",
+          "G04.V01",
+          "G04.V03",
+          "G04.V04",
+          "G04.V06",
+          "G04.V07",
+          "G05.V01",
+          "G05.V02",
+          "G05.V05",
+          "G05.V06",
+          "G06.V03",
+          "G07.V02",
+          "G07.V03",
+          "G09.V01",
+          "G09.V02"
+        ],
+        "work": [
+          "Candidate content: owner-selected frozen-shoulder variants, not standing arm raise relabelled as supine assisted elevation/rotation. Preserve the latest repetition/interval intent; unresolved hold, rest, position, symptoms and interval anchor stay explicit.",
+          "Deliver Learn -> camera-optional Do -> Pause/Stop -> acknowledged local record -> reopen -> next eligible session -> My recovery. Keep first-use teaching separate from familiar-use shortcuts.",
+          "Implement minimum required durable write/error acknowledgement and source-safe local ownership with the read-recovery guard intact. Do not call an in-memory update saved. Full G02 migration and scale criteria still gate E1.",
+          "Keep activity versus Check identities explicit. An unsupported numerical Check is visibly unavailable/guided-only; it is neither zero nor an acceptance pass. Preserve historical observations with their original basis.",
+          "Remove false monitoring/waiting-for-a-physio promises without removing programme permissions. Sign-in is not a backup; local setup is not authenticated clinician approval.",
+          "Run actual native screenshots and inspect after pause, missing media, camera denial, storage retry and large text. Physical-iPhone evidence is separately required for a patient-ready claim."
+        ],
+        "activation_decisions": [
+          "D01 identity semantics",
+          "D03 recovery/deletion",
+          "D05/C05 exact approved shoulder variant and asset",
+          "D07/C05 schedule",
+          "D08 only for numerical outputs"
+        ],
+        "after": ["S1"],
+        "done": "Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.",
+        "return_to": "G05"
+      },
+      {
+        "id": "S3",
+        "title": "Reuse for the selected knee programme and useful history",
+        "primary_gate": "G05",
+        "outcome": "The same shell supports a selected knee routine and patient-owned appointment summary without another app flow or clinician backend.",
+        "criteria": [
+          "G02.V01",
+          "G02.V02",
+          "G02.V03",
+          "G02.V04",
+          "G02.V05",
+          "G02.V07",
+          "G04.V02",
+          "G04.V05",
+          "G05.V03",
+          "G05.V07",
+          "G06.V05",
+          "G06.V06",
+          "G06.V07",
+          "G09.V02"
+        ],
+        "work": [
+          "Select the approved knee programme/variants with the clinical owner. Holds, repetitions, assistance and braced/loaded restrictions must keep their meaning.",
+          "Finish transactional migration, profile isolation and paged history on the chosen local store. Exercise 10,000 synthetic records without loading them all into UI state.",
+          "Reuse session groups and timers; no catch-up dose or credits crossing sides, episodes or occurrences. Existing activity measurements never silently become standardised Checks.",
+          "Give the patient an appointment summary with source/version, what was done, symptoms, compatible observations and unavailable results; no sent/reviewed or monitoring claim.",
+          "Save bounded best/typical endpoint provenance and contributor identity without changing the estimator or retrospectively filling unknown history. Both are summaries, not reference truth."
+        ],
+        "activation_decisions": [
+          "D03",
+          "D05 exact knee programme",
+          "D06 selected storage/resource budget"
+        ],
+        "after": ["S2"],
+        "done": "Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.",
+        "return_to": "G05"
+      },
+      {
+        "id": "S4",
+        "title": "Qualify measurement and patient usability separately",
+        "primary_gate": "G08",
+        "outcome": "Only supported variant/method results are claimed; actual patients and clinicians can interpret and use the delivered journey.",
+        "criteria": [
+          "G08.V01",
+          "G08.V02",
+          "G08.V03",
+          "G08.V04",
+          "G08.V05",
+          "G08.V06",
+          "G07.V06",
+          "G07.V07",
+          "G09.V01"
+        ],
+        "work": [
+          "Restore a small fixed licensed benchmark slice only when it answers a named gap. Do not bulk-download; retain participant-disjoint splits, hashes and method/coverage/error results.",
+          "Evaluate standardised endpoint-hold candidates only where prescribed; do not assume a median eliminates selection/setup bias or import synthetic error numbers as production accuracy.",
+          "Actual variants, helper/prop occlusion, restricted movement and self-positioning between days have priority over more generic clips. No benchmark recording substitutes for approved teaching media.",
+          "Time-box accessible hands-on competitor inspection to outstanding questions; then prioritise our own supervised task tests. The suggested 5-8-user or 10-15-volunteer rounds are proposals, not validated sample sizes or consent.",
+          "Record physical-device memory/power/latency, enlarged text and assistive-control results separately from desktop/simulator/healthy-volunteer outcomes."
+        ],
+        "activation_decisions": [
+          "D02 intended use/study oversight",
+          "D04 devices",
+          "D05 permissions/consent",
+          "D08 assessment/reference protocol"
+        ],
+        "after": ["S2"],
+        "done": "Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.",
+        "return_to": "G08"
+      },
+      {
+        "id": "S5",
+        "title": "Pilot and distribution decision",
+        "primary_gate": "G10",
+        "outcome": "The owner has a traceable, scoped basis for a pilot or release, with recovery/support and appropriate claim boundaries.",
+        "criteria": ["G10.V01", "G10.V02", "G10.V03", "G10.V04", "G10.V05"],
+        "work": [
+          "Use E0-E4 independently; a merge is a development baseline, not a clinical or distribution approval.",
+          "Assemble only the evidence required for intended content and claims; no unsupported measurement activated to complete a feature list.",
+          "Keep surgeon/physio connection future-ready through stable identities/provenance and interfaces, not portals, monitored alerts, cloud health sync or FHIR implementation now."
+        ],
+        "activation_decisions": ["D02 release/pilot scope and named acceptors"],
+        "after": ["S3", "S4"],
+        "done": "Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.",
+        "return_to": "G10"
+      }
+    ],
+    "completion_policy": "Slices organise execution only. Formal gate acceptance still requires every mandatory criterion. S4 study design may begin alongside S1/S2; review and owner-content work do not grant a second code writer."
   }
 }

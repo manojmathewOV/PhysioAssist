@@ -1,12 +1,86 @@
 # iPhone patient MVP — remaining execution roadmap
 
-Revision 2. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
+Revision 3. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
 
-## Order and end points
+## Delivery first; gate details on demand
 
-G00 coordination and evidence -> G01 trustworthy integrated baseline -> G02 local data safety -> G03 registration/ownership + G04 programme meaning -> G05 patient journey -> G06 schedules + G07 media/accessibility -> G08 measured capabilities + G09 native journeys -> G10 pilot/release decision.
+Start at [ACTIVE.md](ACTIVE.md). Delivery slices group existing criteria without creating new gates: dependable reference -> complete shoulder journey -> knee reuse and durable history -> scoped measurement/usability qualification -> pilot/release decision. Review and study preparation can proceed alongside implementation; only one code writer is active.
 
 Dependencies govern acceptance, not all safe preparatory work. Use [PROGRESSION.md](PROGRESSION.md) for states, start/stop rules, recovery and independent acceptance.
+
+### S1 — Dependable reference and protected feedback
+
+A patient can watch, enlarge, pause, hide/show and return to the reference without losing place or receiving advice beyond the programme.
+
+**Work:**
+- Keep the c3d4b7b correction; request independent review of that delta. Do not redo the already corroborated native dependency fix.
+- Audit and retire only the disconnected YouTube downloader and unused dependencies/permissions; retain used local-upload, recorded-reference and comparison helpers. Update only affected locks and run the relevant frozen install.
+- Repair Pause/Resume, Hide/Show position preservation, readable compliant player viewport, load/error state and native app identity. Keep streaming YouTube separate from analysable permission-cleared local media.
+- One shared user intent coordinates exercise clock and player. Player loading or failure never fabricates activity, completed dose or numerical reference. Preserve warning precedence.
+- Test the real player on web and native iOS; use separately approved content for the patient journey. Technical sample playback is not clinical-content approval.
+
+**Existing criteria:** G05.V04, G05.V08, G07.V01, G07.V04, G07.V05, G07.V08, G03.V04.
+**Activation decisions:** D04 supported native device/display, D05 only for actual clinical reference content.
+**Return:** G07. Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.
+
+### S2 — One complete source-aware shoulder journey
+
+An appropriate local programme can be learned, performed without compulsory camera tracking, interrupted, recorded durably and revisited on an iPhone.
+
+**Work:**
+- Candidate content: owner-selected frozen-shoulder variants, not standing arm raise relabelled as supine assisted elevation/rotation. Preserve the latest repetition/interval intent; unresolved hold, rest, position, symptoms and interval anchor stay explicit.
+- Deliver Learn -> camera-optional Do -> Pause/Stop -> acknowledged local record -> reopen -> next eligible session -> My recovery. Keep first-use teaching separate from familiar-use shortcuts.
+- Implement minimum required durable write/error acknowledgement and source-safe local ownership with the read-recovery guard intact. Do not call an in-memory update saved. Full G02 migration and scale criteria still gate E1.
+- Keep activity versus Check identities explicit. An unsupported numerical Check is visibly unavailable/guided-only; it is neither zero nor an acceptance pass. Preserve historical observations with their original basis.
+- Remove false monitoring/waiting-for-a-physio promises without removing programme permissions. Sign-in is not a backup; local setup is not authenticated clinician approval.
+- Run actual native screenshots and inspect after pause, missing media, camera denial, storage retry and large text. Physical-iPhone evidence is separately required for a patient-ready claim.
+
+**Existing criteria:** G02.V06, G02.V08, G03.V01, G03.V04, G03.V05, G04.V01, G04.V03, G04.V04, G04.V06, G04.V07, G05.V01, G05.V02, G05.V05, G05.V06, G06.V03, G07.V02, G07.V03, G09.V01, G09.V02.
+**Activation decisions:** D01 identity semantics, D03 recovery/deletion, D05/C05 exact approved shoulder variant and asset, D07/C05 schedule, D08 only for numerical outputs.
+**Return:** G05. Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.
+
+### S3 — Reuse for the selected knee programme and useful history
+
+The same shell supports a selected knee routine and patient-owned appointment summary without another app flow or clinician backend.
+
+**Work:**
+- Select the approved knee programme/variants with the clinical owner. Holds, repetitions, assistance and braced/loaded restrictions must keep their meaning.
+- Finish transactional migration, profile isolation and paged history on the chosen local store. Exercise 10,000 synthetic records without loading them all into UI state.
+- Reuse session groups and timers; no catch-up dose or credits crossing sides, episodes or occurrences. Existing activity measurements never silently become standardised Checks.
+- Give the patient an appointment summary with source/version, what was done, symptoms, compatible observations and unavailable results; no sent/reviewed or monitoring claim.
+- Save bounded best/typical endpoint provenance and contributor identity without changing the estimator or retrospectively filling unknown history. Both are summaries, not reference truth.
+
+**Existing criteria:** G02.V01, G02.V02, G02.V03, G02.V04, G02.V05, G02.V07, G04.V02, G04.V05, G05.V03, G05.V07, G06.V05, G06.V06, G06.V07, G09.V02.
+**Activation decisions:** D03, D05 exact knee programme, D06 selected storage/resource budget.
+**Return:** G05. Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.
+
+### S4 — Qualify measurement and patient usability separately
+
+Only supported variant/method results are claimed; actual patients and clinicians can interpret and use the delivered journey.
+
+**Work:**
+- Restore a small fixed licensed benchmark slice only when it answers a named gap. Do not bulk-download; retain participant-disjoint splits, hashes and method/coverage/error results.
+- Evaluate standardised endpoint-hold candidates only where prescribed; do not assume a median eliminates selection/setup bias or import synthetic error numbers as production accuracy.
+- Actual variants, helper/prop occlusion, restricted movement and self-positioning between days have priority over more generic clips. No benchmark recording substitutes for approved teaching media.
+- Time-box accessible hands-on competitor inspection to outstanding questions; then prioritise our own supervised task tests. The suggested 5-8-user or 10-15-volunteer rounds are proposals, not validated sample sizes or consent.
+- Record physical-device memory/power/latency, enlarged text and assistive-control results separately from desktop/simulator/healthy-volunteer outcomes.
+
+**Existing criteria:** G08.V01, G08.V02, G08.V03, G08.V04, G08.V05, G08.V06, G07.V06, G07.V07, G09.V01.
+**Activation decisions:** D02 intended use/study oversight, D04 devices, D05 permissions/consent, D08 assessment/reference protocol.
+**Return:** G08. Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.
+
+### S5 — Pilot and distribution decision
+
+The owner has a traceable, scoped basis for a pilot or release, with recovery/support and appropriate claim boundaries.
+
+**Work:**
+- Use E0-E4 independently; a merge is a development baseline, not a clinical or distribution approval.
+- Assemble only the evidence required for intended content and claims; no unsupported measurement activated to complete a feature list.
+- Keep surgeon/physio connection future-ready through stable identities/provenance and interfaces, not portals, monitored alerts, cloud health sync or FHIR implementation now.
+
+**Existing criteria:** G10.V01, G10.V02, G10.V03, G10.V04, G10.V05.
+**Activation decisions:** D02 release/pilot scope and named acceptors.
+**Return:** G10. Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.
 
 **E0 — Integrated engineering baseline:** One reproducible reviewed development baseline; no patient/release claim.
 
@@ -24,10 +98,10 @@ Dependencies govern acceptance, not all safe preparatory work. Use [PROGRESSION.
 
 **Closure requires:** No prior gate. **Executor:** implementation_lead. **Acceptor:** reviewer.
 
-**Next bounded work:** Record one integration candidate with ancestry from frozen app, infrastructure and handover. Preserve main and exact archive refs; no unreviewed feature continuation by the frozen agent.
+**Next bounded work:** Review the already consolidated scope and entry points; preserve prior ancestry/archive evidence, and change only contradicted current facts.
 
 **Remaining work:**
-- Record one integration candidate with ancestry from frozen app, infrastructure and handover. Preserve main and exact archive refs; no unreviewed feature continuation by the frozen agent.
+- Review the already consolidated scope and entry points; preserve prior ancestry/archive evidence, and change only contradicted current facts.
 - Make CURRENT the concise present tense and archive obsolete state snapshots. Keep original findings/response evidence immutable.
 - Approve planning scope independently; leave feature-specific D/C decisions at the gates they affect, not as a blanket stop on unrelated engineering.
 
@@ -55,10 +129,10 @@ Dependencies govern acceptance, not all safe preparatory work. Use [PROGRESSION.
 
 **Closure requires:** G00. **Executor:** implementation_lead. **Acceptor:** independent_engineering_reviewer.
 
-**Next bounded work:** Diagnose and pin the native dependency toolchain using the hosted checksum failure; preserve strict failure propagation.
+**Next bounded work:** Review remaining correctness evidence and the latest 74fe884 hosted success. Native portability and P08 are established on their pinned bases; investigate only a new counterexample, not the retired failure.
 
 **Remaining work:**
-- I01: explain the observed CocoaPods 1.16.2 local versus 1.17.0 hosted checksum difference using a clean-install comparison; select a reproducible toolchain and pin it through the appropriate supported mechanism. Do not remove deployment mode or pipefail.
+- Review remaining correctness evidence and the latest 74fe884 hosted success. Native portability and P08 are established on their pinned bases; investigate only a new counterexample, not the retired failure.
 - Retain P08 independently observed clean on 6bc4d77; rerun after integration, do not redo Claude's fix without a fresh counterexample.
 - Classify the four opt-in skipped suites individually. Native first-run Detox is not full rehabilitation coverage; absent datasets are not a measured pass.
 
@@ -88,10 +162,10 @@ Dependencies govern acceptance, not all safe preparatory work. Use [PROGRESSION.
 
 **Closure requires:** G01. **Executor:** storage_implementer. **Acceptor:** independent_engineering_reviewer.
 
-**Next bounded work:** Reproduce and contain encrypted-storage read-error overwrite before the wider transactional migration.
+**Next bounded work:** Independently review published read-error containment, then implement durable write acknowledgement and recoverable local storage without removing the guard.
 
 **Remaining work:**
-- First containment: failed storage read must never enable persisting the empty initial state over existing records. Distinguish loading, read-error, recovered and truly-empty states; retry/export/recovery must not destroy the source.
+- Independently review published read-error containment, then implement durable write acknowledgement and recoverable local storage without removing the guard.
 - Design transactional local migration separately from that containment fix; choose storage under D03/D06 before irreversible conversion.
 - Provide immutable event identity, corrections, profile/episode separation, save acknowledgement and history paging; do not default unknown source/side/assistance to current values.
 
@@ -185,10 +259,10 @@ Dependencies govern acceptance, not all safe preparatory work. Use [PROGRESSION.
 
 **Closure requires:** G02, G03, G04. **Executor:** patient_experience_implementer. **Acceptor:** independent_usability_reviewer.
 
-**Next bounded work:** Remove relationship-implying patient copy listed in the final handover while keeping established safety restrictions. Use separate plan-origin labels instead of pretending a clinician is monitoring.
+**Next bounded work:** Preserve c3d4b7b reference/comfort safety while delivering camera-optional Do, truthful participation and a separate Check in the source-aware shoulder journey.
 
 **Remaining work:**
-- Remove relationship-implying patient copy listed in the final handover while keeping established safety restrictions. Use separate plan-origin labels instead of pretending a clinician is monitoring.
+- Preserve c3d4b7b reference/comfort safety while delivering camera-optional Do, truthful participation and a separate Check in the source-aware shoulder journey.
 - Learn records viewing only; Do records activity with provenance; Check records qualified standardized observations. Camera-off Do remains possible only for an otherwise permitted activity.
 - Use patient-owned Today/My recovery/Help experience, concise first-use versus familiar-use guidance and appointment summary; do not build a clinician dashboard.
 
@@ -250,15 +324,16 @@ Dependencies govern acceptance, not all safe preparatory work. Use [PROGRESSION.
 
 **Closure requires:** G03, G04, G05. **Executor:** patient_experience_implementer. **Acceptor:** independent_reviewer_and_target_users.
 
-**Next bounded work:** Test an actual approved matching asset; caption and speech transitions carry movement/support/dose meaning. Preserve stop/pause accessibility and user-paced setup.
+**Next bounded work:** Audit/retire the disconnected downloader and unused capabilities, then repair recorded Pause/Resume, Hide/Show, sizing and failure recovery with native playback evidence.
 
 **Remaining work:**
-- Test an actual approved matching asset; caption and speech transitions carry movement/support/dose meaning. Preserve stop/pause accessibility and user-paced setup.
+- Audit/retire the disconnected downloader and unused capabilities, then repair recorded Pause/Resume, Hide/Show, sizing and failure recovery with native playback evidence.
+- Qualify streaming YouTube, camera-recorded reference and uploaded local-file reference separately; the embedded player is never the analysed numerical source. Clinical applicability and content rights are separate from successful playback.
 - For focus/plain display retain clinically relevant stick, helper hand, support and brace. Native focus implementation is separately qualified; plain mode may be the approved MVP fallback.
 - Design readable large-text reflow with screen reader focus, motor/one-handed access and no colour-only signal. Do not equate default-size screenshots with elderly usability.
 
 **Required validation:**
-- **G07.V01** Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback.
+- **G07.V01** Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback. App Pause also pauses the player; Hide/Show preserves position; the viewport and native identity satisfy the selected provider contract; unavailable/blocked/autoplay-denied states recover truthfully. Separately qualify the three reference paths and forbid YouTube-frame extraction.
 - **G07.V02** Speech identifies the next movement and dose without forcing a floor-exercising patient to reach for the phone.
 - **G07.V03** Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning.
 - **G07.V04** Camera problem plus precaution plus praise selects one correct visual/spoken message consistently.

@@ -10,7 +10,7 @@ The independent acceptor checks the exact implementation/evidence version. The i
 
 `depends_on` constrains gate closure. Nonmutating research, test design and reversible candidate slices may start earlier when their named inputs are known. That does not grant acceptance or activate clinical content. Unresolved D/C decisions block only their dependent irreversible/clinical behaviour, not every unrelated task. G00 can establish the scope and decision register without pretending D01-D08 are answered.
 
-At pickup, reconcile head/dirty jobs, read STATUS, select one next_work_item, state its input basis and failure case, and stop when it is submitted or genuinely blocked. A green test is a checkpoint; continue to the defined outcome or hard blocker. More than two attempts with no new discriminating evidence requires RCA/replanning, not another identical heavy build.
+At pickup, reconcile head/dirty jobs, read ACTIVE/STATUS, select the named active_work_item, state its input basis and failure case, and stop when it is submitted or genuinely blocked. A green test is a checkpoint; continue to the defined outcome or hard blocker. More than two attempts with no new discriminating evidence requires RCA/replanning, not another identical heavy build.
 
 ## Eleven-axis DoD
 
@@ -37,3 +37,13 @@ No acceptance with missing mandatory evidence, failing criteria, unresolved crit
 Preserve the last exact passing input and counterexample. A storage migration retains recoverable source bytes. Source-version conflicts return to the clinical owner. A native toolchain drift returns to G01. A measurement-method change reopens the affected G08/G09 evidence, not unrelated old events. Private source/dataset access is not repaired by publishing identifying files.
 
 A child investigation must have a bounded question, responsible owner, return gate and assimilation outcome. Do not start a second permanent roadmap or state store for each research idea. Keep one concise current record and immutable evidence references; archive stale orientation text.
+
+## Delivery without another control plane
+
+S1-S5 in runbook.json group existing criterion IDs into visible product increments. They carry no pass/fail state; STATUS supplies the active slice, gate and work item. ACTIVE.md and the CNP frontier are regenerated from those records. Do not edit the generated view or add a second progress log. Whole gates and E0-E4 retain their original required acceptance boundaries.
+
+Keep one code-writing slice plus one independent review. Use a 30-minute diagnostic review checkpoint and at most two attempts without new evidence; these are prompts to narrow/repair a question, not gate deadlines or permission to suppress a failure. A blocked content decision should expose its safe engineering alternative and return condition.
+
+Every research task needs one question, a gap it closes, permitted inputs, a discriminating observation and a return criterion. Reuse existing findings; prefer hands-on patient-journey evidence over another broad literature/app-review pass. Benchmark footage, approved instructional media and real patient/study evidence are separate assets and permissions.
+
+A slice is delivered only at its stated scope after exact-source tests, applicable native visual evidence and independent review. A Check without qualified measurements remains unavailable/guided-only, not accepted numerical validation. Full data-safety and supported-device requirements still apply before E1 or real patient use.

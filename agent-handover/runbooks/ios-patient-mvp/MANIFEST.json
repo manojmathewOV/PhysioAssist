@@ -1,7 +1,12 @@
 {
-  "revision": 2,
+  "revision": 3,
   "role": "portable plan files, not implementation evidence acceptance",
   "files": [
+    {
+      "path": "ACTIVE.md",
+      "sha256": "8076732c1bf9e89a055c8c8b57e0ea6534051b83b456f5ef4a6572fe63b58582",
+      "bytes": 3968
+    },
     {
       "path": "DECISIONS.md",
       "sha256": "44d475d23987e2905d912c5b231996e14bcc74910b121736dcd90712fa1646a0",
@@ -9,13 +14,13 @@
     },
     {
       "path": "PROGRESSION.md",
-      "sha256": "e9e6ce1cf6486e97c0fb803202b567290a4cc07bde6ec91cfdd458a91da7addb",
-      "bytes": 4391
+      "sha256": "25b94905b0550bad8dcca4163fe62b07f40f1a6e4cc45de3ccf9a0c0b6b93bbd",
+      "bytes": 5863
     },
     {
       "path": "README.md",
-      "sha256": "5ee13c5483102f30605380f827529b463b3e82fa667f563b9da31af9fcbb910d",
-      "bytes": 2108
+      "sha256": "0cef41322d07b4233de08a5ad57eef358f0aebee94aa0779f568260a9c03d48b",
+      "bytes": 2489
     },
     {
       "path": "RESEARCH.md",
@@ -24,23 +29,23 @@
     },
     {
       "path": "ROADMAP.cnp",
-      "sha256": "62ce4efc8022cce4cf2752350b0888afacf3967eb3231e5fc1b43987593968eb",
-      "bytes": 102221
+      "sha256": "12a2df149f3ca1c2d1d117f300c368cd1144101a8f06880b3087c632de971e9f",
+      "bytes": 102491
     },
     {
       "path": "RUNBOOK.md",
-      "sha256": "f9c87c336645f4882ae9b319e6d47ff7d83227e650000f2d72bbd1dc8bea99ba",
-      "bytes": 32998
+      "sha256": "d5948e66248456112b716681a9aeee564a4822c6dbcb91c04b21a58f28e964d6",
+      "bytes": 41221
     },
     {
       "path": "STATUS.json",
-      "sha256": "783a53f280db99b769b5aedc7e18115dae095340484b56aacf122cabb3e16f0e",
-      "bytes": 4680
+      "sha256": "59182e153af8cbb539df899ebdc1509f52227e17cf4f8a06bc3108cf50e8625e",
+      "bytes": 5626
     },
     {
       "path": "TEST_MATRIX.md",
-      "sha256": "5914f7b62e2ca88c4918c65cf7b160a912e095bda2da27aae814430a563db5c8",
-      "bytes": 15465
+      "sha256": "3e74c83056d96d249f92ae660400509ae7f5fd421cf8726f8f9979dbaf3adae9",
+      "bytes": 15747
     },
     {
       "path": "evidence/CCORE_TOOLING.md",
@@ -63,6 +68,11 @@
       "bytes": 2279
     },
     {
+      "path": "evidence/convergence-20260927.json",
+      "sha256": "d3fe6c96089fa789d708d457138aa936e421bd5b16bad67ff9ba041b9d7ceff2",
+      "bytes": 3700
+    },
+    {
       "path": "evidence/structural-check.json",
       "sha256": "f29e1949f189fe1919ecca47ec4ee68b7913948c0861eeea8aa048846faef32f",
       "bytes": 264
@@ -74,28 +84,28 @@
     },
     {
       "path": "runbook.json",
-      "sha256": "51ed53d1580800017109291e3f91fe1c6962ede3ee9190c2e092fa91d2fe81bf",
-      "bytes": 70702
+      "sha256": "385eecbc8c0589ab7a0d012a2ef72b4b09539981614d070fbe3628635bcbaca8",
+      "bytes": 81815
     },
     {
       "path": "tools/check_matrix.py",
-      "sha256": "ac662798a82d49dc2eba1c7138d3b6927eb682b5ebdb8a1c335dabc6bd19665f",
-      "bytes": 4851
+      "sha256": "3d6e1ea8952574cd6c738bdbf356c063f6819e2b2519a292dce0b4513113911e",
+      "bytes": 4983
     },
     {
       "path": "tools/check_runbook.py",
-      "sha256": "c1f41ae513cde2ff2b29dbaf91be0b44c73a8be8dc626c55a1e57fec9505f3ad",
-      "bytes": 7280
+      "sha256": "2ddae3fb0e799845bde6d7d2bb41537c3cba3311603490f53c111dafaa78b715",
+      "bytes": 10368
     },
     {
       "path": "tools/render_cnp.py",
-      "sha256": "adaeddf6c1e373a25ae9f6be9bcc800c44c26fea14763822323fe0d592971995",
-      "bytes": 9691
+      "sha256": "dd4aa80bc00603a74a55ff86b40954702cd9d408f0c99e04b251b2e4f0fe143f",
+      "bytes": 13216
     },
     {
       "path": "validation-matrix.json",
-      "sha256": "a157c13ee8d9d73ee9ac10f955557b8a64b3ba0eb2946ad65bf9329f42b7ec9d",
-      "bytes": 73361
+      "sha256": "555a588c390fbe029815a49955e16307bb71449d8053ee4712d9ab6b0082879b",
+      "bytes": 73643
     }
   ]
 }

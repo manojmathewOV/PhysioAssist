@@ -1,0 +1,86 @@
+{
+  "date": "2026-09-27",
+  "basis_sha": "74fe884cc090ff4a5813ad47e36415186316abba",
+  "scope": "Runbook revision 3 and generated-view integrity only; no app feature, clinical decision or gate acceptance",
+  "source_inputs": [
+    "../../responses/2026-09-27-reference-safety.md",
+    "../../reviews/2026-09-27-video-benchmark-audit/REVIEW.md",
+    "../../responses/2026-09-27-independent-review-reconciliation.md"
+  ],
+  "observed_CI": {
+    "source_sha": "74fe884cc090ff4a5813ad47e36415186316abba",
+    "checks": {
+      "run": 36316922628,
+      "conclusion": "success"
+    },
+    "ios": {
+      "run": 36316922623,
+      "conclusion": "success"
+    },
+    "scope": "Hosted job conclusions read, no new native journey or screenshot inspection in this task"
+  },
+  "ccore": {
+    "transport": "Installed Project Cosmos CLI MCP through authorised RDC, foreign repo_root PhysioAssist",
+    "calls": [
+      "ccore.starbase.handshake",
+      "ccore.registry.describe",
+      "ccore.filelens.amalgamate.preview",
+      "ccore.runbook.compile",
+      "ccore.runbook.next"
+    ],
+    "runbook_definition_before": {
+      "structure_errors": 0,
+      "blocked_axes": 0,
+      "dod_axes": 121,
+      "members": 11,
+      "candidate_hash": "62ce4efc8022cce4cf2752350b0888afacf3967eb3231e5fc1b43987593968eb"
+    },
+    "runbook_definition_after": {
+      "structure_errors": 0,
+      "blocked_axes": 0,
+      "dod_axes": 121,
+      "members": 11,
+      "candidate_hash": "12a2df149f3ca1c2d1d117f300c368cd1144101a8f06880b3087c632de971e9f",
+      "disposition": "DefinitionTopologyReadmissionRequired",
+      "effect": "response_only",
+      "writer": "no_writer",
+      "refs_bound": false,
+      "mutation_authorized": false
+    },
+    "native_next_attempt": "Rejected unknown caller field state_mutations; no field silently stripped and no epoch or acceptance created. Portable current-state projection is not native runbook.next.",
+    "amalgamate": "Initial z0 output exceeded budget; narrower z1 call returned partial CNP coverage. JSON was not semantically covered; no full overlap/preservation conclusion inferred. Exact source reads and portable validators used for those facts.",
+    "interpretation": "Tools check contracts/structure and expose missing owner binding; the receiving agent chose the delivery order. No native optimiser/clinical approval claim.",
+    "raw_after_sha256": "609089300c88751b692c54f7b29996d4ebc0f929dacd3ff0872a1db9c039a040"
+  },
+  "changes": [
+    "Generated frontier no longer hardcodes retired Pod failure",
+    "Five delivery slices reference existing criterion IDs; no separate slice acceptance store",
+    "Single active work item from STATUS projected into ACTIVE.md and CNP",
+    "Latest CI distinguished from pending independent safety/storage review",
+    "Criterion validator now reads canonical state instead of unused status; missing-evidence accepted mutant previously passed and now fails",
+    "Existing gate/criterion identities, sources, reviews and archives retained"
+  ],
+  "portable_checks": {
+    "gate_count": 11,
+    "criterion_count": 83,
+    "DoD_axes": 121,
+    "structural_mutants": 7,
+    "matrix_mutants": 14,
+    "delivery_mutants": 6,
+    "accepted_gates": 0
+  },
+  "resource_use": {
+    "new_clone": false,
+    "dependency_install": false,
+    "native_build": false,
+    "dataset_download": false,
+    "application_source_changed": false,
+    "permanent_service": false
+  },
+  "limits": [
+    "Native execution context/topology still unbound",
+    "No independent acceptance of author-written safety/storage patch",
+    "No new clinical/video/physical-device validation",
+    "Scope and protocol decision gaps remain feature-scoped"
+  ]
+}

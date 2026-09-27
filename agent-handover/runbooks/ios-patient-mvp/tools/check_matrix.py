@@ -2,11 +2,11 @@
 """Validate prospective criteria and reject unearned acceptance; not an app test."""
 from pathlib import Path
 import copy, hashlib, json, re, subprocess, sys
-from check_runbook import validate as validate_runbook
+from check_runbook import validate as validate_runbook, validate_delivery
 
 
 def validate(manifest, state, research, matrix):
-    errors = validate_runbook(manifest, state, research)
+    errors = validate_runbook(manifest, state, research) + validate_delivery(manifest, state)
     gates = {g['id']: g for g in manifest['gates']}
     criteria = matrix.get('criteria', [])
     ids = [c.get('id') for c in criteria]
@@ -19,14 +19,15 @@ def validate(manifest, state, research, matrix):
         if c.get('id') not in gates[c['gate']]['validation_ids']: errors.append('wrong gate assignment')
         for key in ['scenario', 'evidence_class', 'executor', 'acceptor', 'fixture_policy']:
             if not c.get(key): errors.append('missing criterion '+key)
-        if c.get('status') == 'accepted':
+        if 'status' in c: errors.append('ambiguous legacy criterion status key')
+        if c.get('state') == 'accepted':
             if not c.get('evidence_refs'): errors.append('accepted criterion lacks evidence')
             if c.get('acceptor') == c.get('executor'): errors.append('criterion self-acceptance')
             if c.get('evidence_class') in ['human_usability', 'physical_device', 'clinical_reference'] and c.get('observed_evidence_class') == 'synthetic':
                 errors.append('synthetic evidence substituted for human or physical evidence')
     for g in gates.values():
         if state['gate_states'][g['id']] == 'accepted':
-            if any(c.get('status') != 'accepted' for c in criteria if c['gate'] == g['id']):
+            if any(c.get('state') != 'accepted' for c in criteria if c['gate'] == g['id']):
                 errors.append('gate accepted with unaccepted criteria')
     return errors
 
@@ -48,9 +49,9 @@ def main():
     mutant('missing scenario', lambda a,b,c,d: d['criteria'][0].update(scenario=''))
     mutant('missing evidence class', lambda a,b,c,d: d['criteria'][0].update(evidence_class=''))
     mutant('matrix revision', lambda a,b,c,d: d.update(revision=-1))
-    mutant('unearned criterion', lambda a,b,c,d: d['criteria'][0].update(status='accepted'))
-    mutant('self acceptance', lambda a,b,c,d: d['criteria'][0].update(status='accepted',evidence_refs=['synthetic-test'],acceptor=d['criteria'][0]['executor']))
-    mutant('synthetic substituted for human', lambda a,b,c,d: d['criteria'][0].update(status='accepted',evidence_refs=['synthetic-test'],evidence_class='human_usability',observed_evidence_class='synthetic'))
+    mutant('unearned criterion', lambda a,b,c,d: d['criteria'][0].update(state='accepted'))
+    mutant('self acceptance', lambda a,b,c,d: d['criteria'][0].update(state='accepted',evidence_refs=['synthetic-test'],acceptor=d['criteria'][0]['executor']))
+    mutant('synthetic substituted for human', lambda a,b,c,d: d['criteria'][0].update(state='accepted',evidence_refs=['synthetic-test'],evidence_class='human_usability',observed_evidence_class='synthetic'))
     mutant('unknown source', lambda a,b,c,d: c['questions'][0].update(sources=['UNKNOWN']))
     mutant('unearned gate', lambda a,b,c,d: b['gate_states'].update(G00='accepted'))
     mutant('DoD axis removed', lambda a,b,c,d: a['definition_of_done_defaults'].pop('unknown_policy'))

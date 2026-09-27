@@ -55,7 +55,7 @@
 | G06.V05 | G06 | clock_and_native_notifications | Morning mobility, separate strength and evening group cannot complete or schedule one another accidentally. |
 | G06.V06 | G06 | clock_and_native_notifications | Review/correction/reorder/profile switch cannot reassign a previous event's execution-time occurrence. |
 | G06.V07 | G06 | clock_and_native_notifications | Device clock/timezone moves backward or forward: record chronology and no duplicate completion; policy-bound eligibility recomputes. |
-| G07.V01 | G07 | native_media_accessibility_and_human | Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback. |
+| G07.V01 | G07 | native_media_accessibility_and_human | Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback. App Pause also pauses the player; Hide/Show preserves position; the viewport and native identity satisfy the selected provider contract; unavailable/blocked/autoplay-denied states recover truthfully. Separately qualify the three reference paths and forbid YouTube-frame extraction. |
 | G07.V02 | G07 | native_media_accessibility_and_human | Speech identifies the next movement and dose without forcing a floor-exercising patient to reach for the phone. |
 | G07.V03 | G07 | native_media_accessibility_and_human | Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. |
 | G07.V04 | G07 | native_media_accessibility_and_human | Camera problem plus precaution plus praise selects one correct visual/spoken message consistently. |

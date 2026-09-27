@@ -1,6 +1,6 @@
 {
   "schema": "physioassist-validation-matrix/1",
-  "revision": 2,
+  "revision": 3,
   "runbook_id": "ios-patient-mvp",
   "evidence_schema": {
     "required": [
@@ -749,7 +749,7 @@
       "id": "G07.V01",
       "gate": "G07",
       "required_for_gate": true,
-      "scenario": "Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback.",
+      "scenario": "Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback. App Pause also pauses the player; Hide/Show preserves position; the viewport and native identity satisfy the selected provider contract; unavailable/blocked/autoplay-denied states recover truthfully. Separately qualify the three reference paths and forbid YouTube-frame extraction.",
       "expected": "The stated invariant holds in both positive and contrary/invalid-input controls; exact observations are retained.",
       "evidence_class": "native_media_accessibility_and_human",
       "executor": "patient_experience_owner",
