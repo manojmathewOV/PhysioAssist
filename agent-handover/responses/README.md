@@ -11,3 +11,5 @@ Responses so far:
 - [2026-09-27-6bc4d77-claude.md](2026-09-27-6bc4d77-claude.md): EX01–EX08 compared with the code and mapped to gates; EX06 focus-context and P08 clean exits implemented pending review (application 6bc4d77, PR #25); redux-persist timeout data-loss hazard fixed.
 
 A response is not an independent verification. Responses should use stable Pxx/Cxx IDs and link commits, regression tests and actual evidence. After a response, a reviewer records a separate SHA-bound retest.
+
+- [Permanent landing, hybrid skill and independent P08 verification](2026-09-27-5cc5d5a-hybrid-setup.md) — PR #27; native-hygiene candidate and explicit CI permission limitation.
