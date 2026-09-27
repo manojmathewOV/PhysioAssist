@@ -1,0 +1,18 @@
+[
+  {
+    "path": "src/features/videoComparison/services/youtubeService.ts",
+    "sha256": "bde9b0b4285a270cc2bf161c87226e22e84701de00e3eafa794d3487701a0c9e"
+  },
+  {
+    "path": "src/features/videoComparison/__tests__/youtubeService.test.ts",
+    "sha256": "9ea6f6fb22bb81df583e1fa2edae1b1bda97c42d8e497a67b8a26cf76ac7eedd"
+  },
+  {
+    "path": "src/types/react-native-ytdl.d.ts",
+    "sha256": "c01469a912f63888d4bb6d75043ac8252e7686a09a7c3f8ed97e9f7bd8a2e85f"
+  },
+  {
+    "path": "__tests__/smoke/ytdl.test.ts",
+    "sha256": "009f673eb891ca23f80b86ac31486795b5ab1f7b3d9c7019a1bfe0b302ebb4d2"
+  }
+]

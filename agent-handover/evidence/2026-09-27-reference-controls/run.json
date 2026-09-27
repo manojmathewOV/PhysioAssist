@@ -1,0 +1,213 @@
+{
+  "recorded_at": "2026-09-27T14:32:41.229542+00:00",
+  "basis": "158a1aa4c171cecf6249ab929bc4b2d3d88634c1",
+  "implementation": "0024f8771a02ab8519b32dd84407e829ec6bb7b7",
+  "scope": "S1 reference-controls implementation awaiting independent review; no whole gate/clinical/release acceptance",
+  "commits": [
+    "2ca6c76dbb1150ee5f8d43b317fb984bc55b5299",
+    "0024f8771a02ab8519b32dd84407e829ec6bb7b7"
+  ],
+  "tests": {
+    "passed": 1645,
+    "failed": 0,
+    "skipped": 4,
+    "suites_passed": 92,
+    "exit": 0,
+    "forced_exit": false,
+    "teardown_warning": false,
+    "raw_log_sha256": "86f472fd0f363c59cca3f506165e013f9c86055aa057e6564b863c9c5500f89a",
+    "new_tests": 32,
+    "retired_downloader_tests": 13
+  },
+  "dependencies": {
+    "removed_packages": 7,
+    "retained_package_versions_changed": 0,
+    "new_packages": 0,
+    "install_mode": "offline scoped uninstall, not npm ci",
+    "frozen_pods": "passed after audited CameraRoll lock removal",
+    "package_lock_sha256": "ac3b00447f6a16982b9c9354f781f40d5fa887c1ded3ff65f333ae2d18bf1857",
+    "pod_lock_sha256": "c54178903a2711ced8919416272c9657e7ff0b50e5aecbaf3ecb0e1c062ca419"
+  },
+  "native_build": {
+    "basis": "0024f8771a02ab8519b32dd84407e829ec6bb7b7",
+    "state": "passed",
+    "exit": 0,
+    "seconds": 315.21,
+    "log_sha256": "b5af486ce87cce60e70b64e0795ed420ec4ef582eed4ea8d68b0aa67b12795f1",
+    "toolchain": "Xcode16.2 / Release arm64 simulator with ad-hoc signing; not current distribution qualification"
+  },
+  "native_url_bug": {
+    "observed": "Native app crashed when saving URL; native log reports URL.hostname is not implemented in parseYouTubeId (Hermes)",
+    "reproduction_tests_before": 3,
+    "reproduction_failures_before": 3,
+    "fix": "allowlisted runtime-independent parser and string encoder; no URL polyfill package",
+    "independent_review": "pending"
+  },
+  "native_ui": {
+    "basis": "0024f8771a02ab8519b32dd84407e829ec6bb7b7",
+    "scope": "Actual native setup/reference player on a dedicated synthetic iPhone simulator; not full patient Do/Check journey",
+    "commands": [
+      {
+        "name": "boot",
+        "exit": 0,
+        "seconds": 4.95
+      },
+      {
+        "name": "bootstatus",
+        "exit": 0,
+        "seconds": 4.17
+      },
+      {
+        "name": "install",
+        "exit": 0,
+        "seconds": 3.11
+      },
+      {
+        "name": "ui-test",
+        "exit": 0,
+        "seconds": 62.6
+      },
+      {
+        "name": "final-screen",
+        "exit": 0,
+        "seconds": 0.46
+      },
+      {
+        "name": "shutdown",
+        "exit": 0,
+        "seconds": 6.0
+      }
+    ],
+    "state": "passed",
+    "driver_sha256": "464fd220a6e7fcd8ab06f87378aaa94e6e962a0c528363bd51c23fde6eb35b05",
+    "earlier_attempts": [
+      {
+        "attempt": 1,
+        "result": "driver scrolled away from a target; no playback conclusion"
+      },
+      {
+        "attempt": 2,
+        "result": "application URL.hostname crash; native diagnostic retained locally"
+      }
+    ],
+    "visual_review": "Both exported playing and paused/enlarged screenshots opened and inspected. The scrolled setup page clips the player top; no ideal patient layout claim.",
+    "screenshots": [
+      {
+        "name": "7E92CB4B-C59E-46DB-AE15-E0469A455B4B.png",
+        "sha256": "3965bc76e30ff43bac09729eb4d4e89f409f8ca6c4e4d9088d6361b4d5c2f3da",
+        "publication": "omitted: third-party people/content"
+      },
+      {
+        "name": "8DB95D27-DD78-4FAD-A5AF-5527F274166B.png",
+        "sha256": "dab85e48bb55e127b1ca22877cb424c83a8f1a5fb0b41bfa1f0b6795bb8f7557",
+        "publication": "omitted: third-party people/content"
+      }
+    ]
+  },
+  "browser": {
+    "basis": "0024f8771a02ab8519b32dd84407e829ec6bb7b7",
+    "scope": "production web / real official player / synthetic practice, no native or clinical validation",
+    "checks": [
+      "real preparation playback",
+      "enlarge retains player",
+      "viewport at 320 >=200 both axes",
+      "viewport at 390 >=200 both axes",
+      "follow-along does not load before requested",
+      "app Pause stops reference",
+      "app Resume restarts previously playing reference",
+      "hide/show retains mounted player",
+      "hide/show does not restart",
+      "manual video pause survives hide/show",
+      "player does not cover instruction 390",
+      "pause control on screen 390",
+      "player does not cover instruction 320",
+      "pause control on screen 320",
+      "no app runtime errors"
+    ],
+    "errors": [],
+    "pause": {
+      "pause1": {
+        "t": 8.354964,
+        "paused": true
+      },
+      "pause2": {
+        "t": 8.354964,
+        "paused": true
+      }
+    },
+    "hiddenSnapshot": {
+      "t": 8.446159,
+      "paused": true
+    },
+    "position": {
+      "hidden": {
+        "t": 8.446159,
+        "paused": true
+      },
+      "shown": {
+        "t": 8.509022,
+        "paused": false
+      }
+    },
+    "pauseControl390": {
+      "x": 40,
+      "y": 664,
+      "width": 88,
+      "height": 64
+    },
+    "layout390": {
+      "viewport": {
+        "x": 16,
+        "y": 223,
+        "width": 358,
+        "height": 201
+      },
+      "instruction": {
+        "x": 40,
+        "y": 76,
+        "width": 310,
+        "height": 82
+      }
+    },
+    "pauseControl320": {
+      "x": 24,
+      "y": 404,
+      "width": 88,
+      "height": 64
+    },
+    "layout320": {
+      "viewport": {
+        "x": 16,
+        "y": 88,
+        "width": 288,
+        "height": 200
+      },
+      "instruction": {
+        "x": 24,
+        "y": 56,
+        "width": 272,
+        "height": 26
+      }
+    },
+    "status": "passed",
+    "visual_review": "Final 320px live screenshot opened and inspected; instruction and Pause/Stop visible without player overlap."
+  },
+  "limits": [
+    "Technical YouTube sample is not approved clinical content",
+    "No real patient, physical iPhone, pose-accuracy or complete native rehab journey validation",
+    "Android native identity/player not qualified",
+    "General patient-only copy, durable storage migration and full shoulder journey remain open",
+    "No claim that package removal measured lower runtime RAM",
+    "Native compiler jobs limited to two, but Metro spawned its own worker pool; bounding that pool remains a resource follow-up"
+  ],
+  "resources": {
+    "new_clone": false,
+    "new_dataset": false,
+    "global_upgrade": false,
+    "reused_app_dependencies": true,
+    "reused_main_Xcode_cache": true,
+    "local_UI_driver_generated": true,
+    "public_people_video_or_screenshots": false,
+    "duplicate_diagnostic_export_removed": "165 MiB allocated export removed after retaining/hashing source result bundle and app-specific error evidence; not a measured physical free-space change"
+  }
+}

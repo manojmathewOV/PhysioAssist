@@ -1,0 +1,79 @@
+FAIL src/components/video/__tests__/playerDocument.test.ts
+  official player control contract (synthetic API)
+    ✓ does not autoplay or turn readiness into activity (2 ms)
+    ✓ applies Pause before readiness without a late start
+    ✓ pauses and resumes at the same point without loading or seeking again
+    ✓ does not restart a manually paused video on show or resume (1 ms)
+    ✓ blocks Play and Replay during app pause (1 ms)
+    ✓ replays only on explicit action and uses the linked start
+    ✓ backgrounding pauses; app pause prevents foreground restart (1 ms)
+    ✓ rejects foreign-window, foreign-origin and wrong-channel commands (1 ms)
+    ✓ reports actual errors and autoplay denial instead of a successful play
+    ✓ releases its timer and ignores commands once the document exits (1 ms)
+    ✓ does not shrink player height below 200 at width 200
+    ✓ does not shrink player height below 200 at width 224
+    ✓ does not shrink player height below 200 at width 294
+    ✓ does not shrink player height below 200 at width 390
+    ✓ does not shrink player height below 200 at width 820
+    ✓ rejects malformed identity and cross-instance bridge results (7 ms)
+  retry and overlapping interruptions
+    ✕ resumes a retry at the last observation but replays from the assigned start (1 ms)
+    ✕ remembers playing intent across app pause followed by backgrounding (1 ms)
+    ✕ duplicate hidden observations cannot clear a pending resume
+
+  ● retry and overlapping interruptions › resumes a retry at the last observation but replays from the assigned start
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 31
+    Received: 8
+
+      207 |     const h = harness(playerDocument(ID, 8, ORIGIN, 'test', 31));
+      208 |     h.ready();
+    > 209 |     expect(h.options().playerVars.start).toBe(31);
+          |                                          ^
+      210 |     h.command({ type: 'suspend', value: false });
+      211 |     h.command({ type: 'replay' });
+      212 |     expect(h.player.seekTo).toHaveBeenCalledWith(8, true);
+
+      at Object.toBe (src/components/video/__tests__/playerDocument.test.ts:209:42)
+
+  ● retry and overlapping interruptions › remembers playing intent across app pause followed by backgrounding
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 2
+    Received number of calls: 1
+
+      221 |     expect(h.player.playVideo).toHaveBeenCalledTimes(1);
+      222 |     h.command({ type: 'suspend', value: false });
+    > 223 |     expect(h.player.playVideo).toHaveBeenCalledTimes(2);
+          |                                ^
+      224 |   });
+      225 |   it('duplicate hidden observations cannot clear a pending resume', () => {
+      226 |     const h = harness(); h.ready();
+
+      at Object.toHaveBeenCalledTimes (src/components/video/__tests__/playerDocument.test.ts:223:32)
+
+  ● retry and overlapping interruptions › duplicate hidden observations cannot clear a pending resume
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 2
+    Received number of calls: 1
+
+      228 |     h.document.hidden = true; h.visibility(); h.visibility();
+      229 |     h.document.hidden = false; h.visibility();
+    > 230 |     expect(h.player.playVideo).toHaveBeenCalledTimes(2);
+          |                                ^
+      231 |   });
+      232 | });
+      233 |
+
+      at Object.toHaveBeenCalledTimes (src/components/video/__tests__/playerDocument.test.ts:230:32)
+
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 16 passed, 19 total
+Snapshots:   0 total
+Time:        0.607 s, estimated 1 s
+Ran all test suites within paths "src/components/video/__tests__/playerDocument.test.ts".

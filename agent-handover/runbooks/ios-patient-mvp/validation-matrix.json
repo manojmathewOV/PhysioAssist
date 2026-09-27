@@ -600,8 +600,8 @@
       "executor": "patient_app_owner",
       "acceptor": "independent_usability_reviewer",
       "fixture_policy": "synthetic unless explicitly approved reference/human evidence is required; source approvals never fabricated",
-      "state": "not_run_in_this_revision",
-      "evidence_refs": [],
+      "state": "partial_evidence_pending_review",
+      "evidence_refs": ["../../evidence/2026-09-27-reference-controls/pickup.json"],
       "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair."
     },
     {
@@ -755,8 +755,8 @@
       "executor": "patient_experience_owner",
       "acceptor": "independent_reviewer_and_target_users",
       "fixture_policy": "synthetic unless explicitly approved reference/human evidence is required; source approvals never fabricated",
-      "state": "not_run_in_this_revision",
-      "evidence_refs": [],
+      "state": "partial_evidence_pending_review",
+      "evidence_refs": ["../../evidence/2026-09-27-reference-controls/pickup.json"],
       "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair."
     },
     {
@@ -811,8 +811,8 @@
       "executor": "patient_experience_owner",
       "acceptor": "independent_reviewer_and_target_users",
       "fixture_policy": "synthetic unless explicitly approved reference/human evidence is required; source approvals never fabricated",
-      "state": "not_run_in_this_revision",
-      "evidence_refs": [],
+      "state": "partial_evidence_pending_review",
+      "evidence_refs": ["../../evidence/2026-09-27-reference-controls/pickup.json"],
       "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair."
     },
     {
@@ -853,8 +853,8 @@
       "executor": "patient_experience_owner",
       "acceptor": "independent_reviewer_and_target_users",
       "fixture_policy": "synthetic unless explicitly approved reference/human evidence is required; source approvals never fabricated",
-      "state": "not_run_in_this_revision",
-      "evidence_refs": [],
+      "state": "partial_evidence_pending_review",
+      "evidence_refs": ["../../evidence/2026-09-27-reference-controls/pickup.json"],
       "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair."
     },
     {

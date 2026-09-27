@@ -4,8 +4,8 @@
   "files": [
     {
       "path": "ACTIVE.md",
-      "sha256": "8076732c1bf9e89a055c8c8b57e0ea6534051b83b456f5ef4a6572fe63b58582",
-      "bytes": 3968
+      "sha256": "0b7152b1cd6a1923408c4adb57564582432c40d49d5524edb885a3a72f3a3c3d",
+      "bytes": 4218
     },
     {
       "path": "DECISIONS.md",
@@ -29,18 +29,18 @@
     },
     {
       "path": "ROADMAP.cnp",
-      "sha256": "12a2df149f3ca1c2d1d117f300c368cd1144101a8f06880b3087c632de971e9f",
+      "sha256": "5ce101551a693abcd2af4f792c1052755df1ca7cab4128395cc8724621298668",
       "bytes": 102491
     },
     {
       "path": "RUNBOOK.md",
-      "sha256": "d5948e66248456112b716681a9aeee564a4822c6dbcb91c04b21a58f28e964d6",
-      "bytes": 41221
+      "sha256": "c23fe45d3223fdafe73880d874a87a3b7aafd3f3752c25cec5832bf9ce291dcb",
+      "bytes": 41538
     },
     {
       "path": "STATUS.json",
-      "sha256": "59182e153af8cbb539df899ebdc1509f52227e17cf4f8a06bc3108cf50e8625e",
-      "bytes": 5626
+      "sha256": "19f6f1bc0433edf5b0ee2a1c355e915e298d6e1aca924c98ebd8b4d3de115e0e",
+      "bytes": 7169
     },
     {
       "path": "TEST_MATRIX.md",
@@ -84,8 +84,8 @@
     },
     {
       "path": "runbook.json",
-      "sha256": "385eecbc8c0589ab7a0d012a2ef72b4b09539981614d070fbe3628635bcbaca8",
-      "bytes": 81815
+      "sha256": "908b88ec2a32de63dea4757a6da7daede7dc62ae006bd15786a318dec908f5fe",
+      "bytes": 82132
     },
     {
       "path": "tools/check_matrix.py",
@@ -104,8 +104,8 @@
     },
     {
       "path": "validation-matrix.json",
-      "sha256": "555a588c390fbe029815a49955e16307bb71449d8053ee4712d9ab6b0082879b",
-      "bytes": 73643
+      "sha256": "a7030cf61f1b1787c0f06d79727ef4bab706786506676549e173df024cecdc8e",
+      "bytes": 73903
     }
   ]
 }

@@ -14,8 +14,8 @@ A patient can watch, enlarge, pause, hide/show and return to the reference witho
 
 **Work:**
 - Keep the c3d4b7b correction; request independent review of that delta. Do not redo the already corroborated native dependency fix.
-- Audit and retire only the disconnected YouTube downloader and unused dependencies/permissions; retain used local-upload, recorded-reference and comparison helpers. Update only affected locks and run the relevant frozen install.
-- Repair Pause/Resume, Hide/Show position preservation, readable compliant player viewport, load/error state and native app identity. Keep streaming YouTube separate from analysable permission-cleared local media.
+- Downloader and unused packages/permission declarations retired in 2ca6c76; preserve local-upload and recorded comparison helpers. Review the exact usage audit and locked dependency evidence, not a new cleanup pass.
+- Reference controls and native URL parsing implemented in 2ca6c76/0024f87 with interruption refinements in 18f0139. Preserve 19 passed real-web checks; native preparation works but full native live controls remain untested because Release has no synthetic practice. Resolve that test-input boundary explicitly.
 - One shared user intent coordinates exercise clock and player. Player loading or failure never fabricates activity, completed dose or numerical reference. Preserve warning precedence.
 - Test the real player on web and native iOS; use separately approved content for the patient journey. Technical sample playback is not clinical-content approval.
 
@@ -324,10 +324,10 @@ The owner has a traceable, scoped basis for a pilot or release, with recovery/su
 
 **Closure requires:** G03, G04, G05. **Executor:** patient_experience_implementer. **Acceptor:** independent_reviewer_and_target_users.
 
-**Next bounded work:** Audit/retire the disconnected downloader and unused capabilities, then repair recorded Pause/Resume, Hide/Show, sizing and failure recovery with native playback evidence.
+**Next bounded work:** Independent review of published reference controls; qualify native live Pause/Hide/Show using an isolated test lane or camera-optional Do, correct Release no-camera wording and prep visibility, then complete the source-aware shoulder journey. Do not repeat the retired downloader audit.
 
 **Remaining work:**
-- Audit/retire the disconnected downloader and unused capabilities, then repair recorded Pause/Resume, Hide/Show, sizing and failure recovery with native playback evidence.
+- Independent review of published reference controls; qualify native live Pause/Hide/Show using an isolated test lane or camera-optional Do, correct Release no-camera wording and prep visibility, then complete the source-aware shoulder journey. Do not repeat the retired downloader audit.
 - Qualify streaming YouTube, camera-recorded reference and uploaded local-file reference separately; the embedded player is never the analysed numerical source. Clinical applicability and content rights are separate from successful playback.
 - For focus/plain display retain clinically relevant stick, helper hand, support and brace. Native focus implementation is separately qualified; plain mode may be the approved MVP fallback.
 - Design readable large-text reflow with screen reader focus, motor/one-handed access and no colour-only signal. Do not equate default-size screenshots with elderly usability.

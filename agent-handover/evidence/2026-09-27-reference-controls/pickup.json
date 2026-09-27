@@ -1,0 +1,255 @@
+{
+  "recorded_at": "2026-09-27T15:07:29.240684+00:00",
+  "basis_public": "158a1aa4c171cecf6249ab929bc4b2d3d88634c1",
+  "recovered_local_commits": [
+    "2ca6c76dbb1150ee5f8d43b317fb984bc55b5299",
+    "0024f8771a02ab8519b32dd84407e829ec6bb7b7"
+  ],
+  "implementation": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
+  "new_commits": [
+    "18f01391006222d3241c4da28e0a01c9822fc5ee",
+    "12a4814d677d7033c58f78b0eba6de5e8f234fda"
+  ],
+  "scope": "S1 reference implementation and receiving-agent verification; no independent review or whole-gate/clinical acceptance",
+  "source_preservation": "Incoming documentation/evidence preserved; no other active workspace process found; application changes were committed before testing, documentation remained dirty",
+  "new_counterexamples": {
+    "document_cases_failed_before": 3,
+    "react_retry_case_failed_before": 1,
+    "cases_pass_after": 4,
+    "focused_related_tests_passed": 48,
+    "fixes": [
+      "Retry recovery position is distinct from assigned Replay origin",
+      "Aggregate app/visibility pause transitions preserve prior playing intent",
+      "Repeated hidden observations cannot cancel pending resume",
+      "Manually paused display says paused, not ready"
+    ]
+  },
+  "dependency_audit": {
+    "removed": [
+      "node_modules/@react-native-camera-roll/camera-roll",
+      "node_modules/querystring",
+      "node_modules/react-native-ytdl",
+      "node_modules/react-native-ytdl/node_modules/html-entities",
+      "node_modules/react-native-ytdl/node_modules/query-string",
+      "node_modules/url",
+      "node_modules/url/node_modules/punycode"
+    ],
+    "retained_version_changes": [],
+    "new": [],
+    "definition": "package lock entries, not measured RAM savings"
+  },
+  "native_build": {
+    "source_sha": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
+    "state": "passed",
+    "seconds": 41.24,
+    "exit_code": 0,
+    "log_sha256": "a8a9af0f02cb0e87b9e84a9ef4a2e6310796950f0900e5cc338f1aeb65c77daa",
+    "toolchain": "Existing Xcode16.2, Release arm64 simulator, ad-hoc signing; not current distribution qualification"
+  },
+  "native_build_failed_attempt": {
+    "source_sha": "18f01391006222d3241c4da28e0a01c9822fc5ee",
+    "state": "failed",
+    "exit_code": 65,
+    "seconds": 276.59,
+    "observation": "Owned bundler made no progress for over three minutes; verified exact process terminated. Project-scoped Watchman disabled on next revision; no global watch was changed. Faster subsequent build also reused caches; no causal performance improvement claimed."
+  },
+  "native_ui": {
+    "basis": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
+    "scope": "native official-player setup and live synthetic practice; not clinical content, real camera or patient validation",
+    "commands": [
+      {
+        "name": "make-driver",
+        "exit": 0,
+        "seconds": 0.4
+      },
+      {
+        "name": "boot",
+        "exit": 0,
+        "seconds": 1.42
+      },
+      {
+        "name": "bootstatus",
+        "exit": 0,
+        "seconds": 4.24
+      },
+      {
+        "name": "install",
+        "exit": 0,
+        "seconds": 3.72
+      },
+      {
+        "name": "ui-test",
+        "exit": 65,
+        "seconds": 93.08
+      },
+      {
+        "name": "final-screen",
+        "exit": 0,
+        "seconds": 0.61
+      },
+      {
+        "name": "shutdown",
+        "exit": 0,
+        "seconds": 0.6
+      }
+    ],
+    "state": "blocked",
+    "error": "ui-test failed: 65",
+    "failure_class": "Test requested __DEV__-only practice in Release, after native preparation playback passed its assertions; not a YouTube playback failure",
+    "visual_review": {
+      "opened": [
+        "native-reference-playing",
+        "native-reference-paused-enlarged",
+        "no-camera final state"
+      ],
+      "scope": "Actual images opened; no live exercise reached",
+      "screenshots_not_published": "Third-party people/content retained locally; hashes only"
+    },
+    "driver_sha256": "53d67ece786f3efefa23c545c7f6059364e91921c47def52d823bac3084bfe40",
+    "screenshot_hashes": [
+      {
+        "name": "native-reference-paused-enlarged_0_EC26716E-395B-49A5-956C-B6269070AF81.png",
+        "sha256": "3fba4f910958fad648eafb671ffee2cef11cc9e8ec238b48d5815a0088e81da4",
+        "publication": "local only"
+      },
+      {
+        "name": "native-reference-playing_0_BC2317C1-458F-4072-B673-CB043C0B61D5.png",
+        "sha256": "225e8ce066a16f092e899024eb2a060bd72ee9d2a01c3b81b14cc343f8c2bfcb",
+        "publication": "local only"
+      }
+    ]
+  },
+  "browser": {
+    "basis": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
+    "scope": "production web / real official player / synthetic practice, no native or clinical validation",
+    "checks": [
+      "real preparation playback",
+      "enlarge retains player",
+      "viewport at 320 >=200 both axes",
+      "viewport at 390 >=200 both axes",
+      "follow-along does not load before requested",
+      "app Pause stops reference",
+      "app Resume restarts previously playing reference",
+      "hide/show retains mounted player",
+      "hide/show does not restart",
+      "manual video pause survives hide/show",
+      "player does not cover instruction 390",
+      "pause control on screen 390",
+      "player does not cover instruction 320",
+      "pause control on screen 320",
+      "blocked player script gives an explicit retry",
+      "failed player is removed, not shown as ready",
+      "watching, practice and load failure saved no treatment",
+      "retry restores real player when network access returns",
+      "no app runtime errors"
+    ],
+    "errors": [],
+    "pause": {
+      "pause1": {
+        "t": 8.359832,
+        "paused": true
+      },
+      "pause2": {
+        "t": 8.359832,
+        "paused": true
+      }
+    },
+    "hiddenSnapshot": {
+      "t": 8.434696,
+      "paused": true
+    },
+    "position": {
+      "hidden": {
+        "t": 8.434696,
+        "paused": true
+      },
+      "shown": {
+        "t": 8.490667,
+        "paused": false
+      }
+    },
+    "pauseControl390": {
+      "x": 40,
+      "y": 664,
+      "width": 88,
+      "height": 64
+    },
+    "layout390": {
+      "viewport": {
+        "x": 16,
+        "y": 223,
+        "width": 358,
+        "height": 201
+      },
+      "instruction": {
+        "x": 40,
+        "y": 76,
+        "width": 310,
+        "height": 82
+      }
+    },
+    "pauseControl320": {
+      "x": 24,
+      "y": 404,
+      "width": 88,
+      "height": 64
+    },
+    "layout320": {
+      "viewport": {
+        "x": 16,
+        "y": 88,
+        "width": 288,
+        "height": 200
+      },
+      "instruction": {
+        "x": 24,
+        "y": 56,
+        "width": 272,
+        "height": 26
+      }
+    },
+    "status": "passed",
+    "visual_review": "Opened actual 320px live frame and 390px unavailable-video screen. Live controls/instruction remained visible; media depicts technical sample, not an approved clinical exercise."
+  },
+  "resources": {
+    "new_repository_clone": false,
+    "new_dependency_install_this_pickup": false,
+    "new_benchmark_download": false,
+    "reused_native_cache": true,
+    "metro_maxWorkers": 2,
+    "worker_bound_scope": "Per Metro worker pool, not total process memory",
+    "project_watchman": false,
+    "prepush": "CI, no-Watchman, maxWorkers2, exact non-empty Integration test path",
+    "global_system_changes": false,
+    "managed_native_and_browser_jobs_finished": true,
+    "dedicated_simulator_shutdown": true
+  },
+  "limitations": [
+    "Native expanded UI test FAILED waiting for Release-excluded practice option; native live pause/hide/time continuity remain unqualified",
+    "Native preparation playback/control screenshots inspected but upper player clipped by setup scroll; not ideal patient layout",
+    "No approved clinical demonstration, real camera, physical iPhone or patient validation",
+    "No clinician login/monitoring/backend added; independent review remains pending",
+    "Existing Release no-camera copy promises practice although no practice button exists; record for source-aware camera-optional Do work",
+    "No new numerical measurement or clinical permission was implemented"
+  ],
+  "tests": {
+    "source_sha": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
+    "passed": 1649,
+    "failed": 0,
+    "skipped": 4,
+    "suites": 92,
+    "exit_code": 0,
+    "seconds": 46.57,
+    "forceExit": false,
+    "teardown_warning": false,
+    "raw_log_sha256": "21969694ef2ea1ad68053bce2f4f9030f05de80cb7066a453e0e31781578a553",
+    "source_posture": "Application code committed; recorded documentation and browser-test additions still dirty; no clean-whole-checkout assertion"
+  },
+  "frozen_pods": {
+    "source_sha": "18f01391006222d3241c4da28e0a01c9822fc5ee",
+    "passed": true,
+    "seconds": 14.22,
+    "lock_unchanged": true,
+    "scope": "Same locked dependencies as final12a4814 source; later changes only player logic, scripts and Metro config"
+  }
+}

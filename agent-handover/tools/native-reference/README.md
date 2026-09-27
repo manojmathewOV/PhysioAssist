@@ -19,3 +19,7 @@ xcodebuild -project "$RUN/native-reference/VideoProbe.xcodeproj" \
 Export attachments with `xcrun xcresulttool export attachments`, then actually inspect them. In the recorded native screenshots the page was scrolled toward the controls and part of the player was above the viewport: these establish playback/control observation, not an ideal fully-visible patient layout. Do not publish screenshots containing third-party people/media. Shut down only the owned simulator. Full native live-session Pause/Hide/Show, error recovery, physical-device accessibility and clinician-approved media remain separate criteria.
 
 The receiving-agent pickup adds a synthetic native live session with app Pause/Resume, Hide/Show, manual-pause retention and ending at the summary. See the subsequent pickup evidence for whether those cases ran; their presence is not a pass. No camera footage or treatment is recorded.
+
+## Current expanded-run result
+
+At application `12a4814`, the expanded source ran and **failed** at `use-practice-mode` after the native preparation playback assertions. Release excludes the mock body; this is an unmet test-input prerequisite, not a passed live journey. The failure and screenshots are retained in the S1 pickup evidence. Do not rerun this command against the same Release setup expecting a different result, enable fake input in production, or skip the assertion and claim live coverage. Qualify a deliberately separate debug/test lane or camera-optional Do first. No global simulator reset is appropriate.

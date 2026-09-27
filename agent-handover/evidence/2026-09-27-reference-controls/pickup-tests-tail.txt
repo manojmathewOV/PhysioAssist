@@ -1,0 +1,15 @@
+PASS src/types/__tests__/pose.test.ts
+PASS src/services/pose/__tests__/mediapipeLandmarks.test.ts
+PASS __tests__/smoke/tensorflow.test.ts
+PASS src/services/web/__tests__/focusFrame.test.ts
+PASS src/services/pose/__tests__/adaptiveModel.test.ts
+PASS __tests__/smoke/mediapipe.test.ts
+PASS __tests__/smoke/rnfs.test.ts
+PASS src/services/__tests__/audioCuePacing.test.ts
+
+Test Suites: 4 skipped, 92 passed, 92 of 96 total
+Tests:       4 skipped, 1649 passed, 1653 total
+Snapshots:   0 total
+Time:        43.941 s
+Ran all test suites.
+Test results written to: ../RDC/runs/20260927T150640Z-test-c3c7fd2c/tests.json

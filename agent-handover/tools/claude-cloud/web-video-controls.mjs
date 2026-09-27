@@ -49,6 +49,19 @@ try {
     const viewport=await page.getByTestId("reference-player-viewport").boundingBox();const instruction=await page.getByTestId("exercise-feedback").boundingBox();report[`layout${size.width}`]={viewport,instruction};check(`player does not cover instruction ${size.width}`,viewport.y>=instruction.y+instruction.height);
     check(`pause control on screen ${size.width}`,pauseRect.y>=0&&pauseRect.y+pauseRect.height<=size.height);
   }
+  await page.setViewportSize({width:390,height:844});
+  await page.route('https://www.youtube.com/iframe_api', route=>route.abort());
+  await page.reload();await page.getByTestId('tab-exercises').click();
+  await page.getByTestId('reference-player-state').filter({hasText:'Video unavailable'}).waitFor();
+  check('blocked player script gives an explicit retry',await page.getByTestId('reference-retry').isVisible());
+  check('failed player is removed, not shown as ready',await page.getByTestId('reference-webview').count()===0);
+  const history=await page.evaluate(()=>JSON.parse(JSON.parse(localStorage.getItem('persist:exercise')).history));
+  check('watching, practice and load failure saved no treatment',history.length===0);
+  await page.screenshot({path:path.join(output,'unavailable-390.png')});
+  await page.unroute('https://www.youtube.com/iframe_api');
+  await page.getByTestId('reference-retry').click();await waitPlayer();
+  await page.getByTestId('reference-play-pause').click();await playing();
+  check('retry restores real player when network access returns',true);
   check('no app runtime errors',report.errors.length===0);report.status='passed';
 }catch(error){report.status='failed';report.failure=String(error.stack || error);await page.screenshot({path:path.join(output,'failure.png')}).catch(()=>{});}
 finally {fs.writeFileSync(path.join(output,'observations.json'),JSON.stringify(report,null,2));await browser.close();console.log(JSON.stringify(report,null,2));}
