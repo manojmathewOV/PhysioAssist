@@ -18,3 +18,5 @@ A response is not an independent verification. Responses should use stable Pxx/C
 
 - [G01/G02 implementation and recovery evidence](2026-09-27-g01-g02-receiving-agent.md): pinned hosted/local native build plus failed-read containment.
 - [Latest independent-review reconciliation](2026-09-27-independent-review-reconciliation.md): reviewer scope, filtered-extreme caveat and product-first next batch.
+
+- [Reference authority and summary comfort policy](2026-09-27-reference-safety.md): reproduced safety issue and tested implementation; not independent acceptance.

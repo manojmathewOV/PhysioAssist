@@ -34,8 +34,8 @@
     },
     {
       "path": "STATUS.json",
-      "sha256": "36d73af4dd32c0d498501c43373f08070821ab075e4fe41e9b24f279ae61aff4",
-      "bytes": 4333
+      "sha256": "783a53f280db99b769b5aedc7e18115dae095340484b56aacf122cabb3e16f0e",
+      "bytes": 4680
     },
     {
       "path": "TEST_MATRIX.md",
@@ -94,8 +94,8 @@
     },
     {
       "path": "validation-matrix.json",
-      "sha256": "7061ec88ea929a1e231ba207e9fd8695b7843ae638b42e06416d4354b1932c65",
-      "bytes": 72907
+      "sha256": "a157c13ee8d9d73ee9ac10f955557b8a64b3ba0eb2946ad65bf9329f42b7ec9d",
+      "bytes": 73361
     }
   ]
 }

@@ -585,9 +585,10 @@
       "executor": "patient_app_owner",
       "acceptor": "independent_usability_reviewer",
       "fixture_policy": "synthetic unless explicitly approved reference/human evidence is required; source approvals never fabricated",
-      "state": "not_run_in_this_revision",
-      "evidence_refs": [],
-      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair."
+      "state": "partial_evidence_pending_review",
+      "evidence_refs": ["../../evidence/2026-09-27-reference-safety/run.json"],
+      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair.",
+      "evidence_scope": "Supplied-goal authority and stage-aware summary tested in production code/web; no native/patient evidence or complete criterion acceptance."
     },
     {
       "id": "G05.V05",
@@ -641,9 +642,10 @@
       "executor": "patient_app_owner",
       "acceptor": "independent_usability_reviewer",
       "fixture_policy": "synthetic unless explicitly approved reference/human evidence is required; source approvals never fabricated",
-      "state": "not_run_in_this_revision",
-      "evidence_refs": [],
-      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair."
+      "state": "partial_evidence_pending_review",
+      "evidence_refs": ["../../evidence/2026-09-27-reference-safety/run.json"],
+      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair.",
+      "evidence_scope": "Supplied-goal authority and stage-aware summary tested in production code/web; no native/patient evidence or complete criterion acceptance."
     },
     {
       "id": "G06.V01",

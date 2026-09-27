@@ -40,3 +40,7 @@ Latest reconciliation evidence: [record](reconciliation/2026-09-27/RECONCILIATIO
 - [Original reviewer tests](tests/README.md): historical tests are not blindly installed in current Jest discovery.
 - Private protocols, identifying videos and Claude's raw scratch logs were deliberately not published. Source inventory is not source approval.
 - No inherited Claude schedules are active according to his final handover; this agent does not infer an unattended background worker.
+
+## Latest bounded safety correction
+
+See [reference/comfort response](responses/2026-09-27-reference-safety.md). Claude’s new review reproduced: demonstration-derived goals and missing summary-phase policy. Implementation `c3d4b7b` uses supplied goals only, preserves numeric observations and filters progression-seeking feedback in comfort stages. New wrong-view/hidden-side tests also withhold unsupported range advice. Full tests and synthetic browser evidence are recorded; independent/native review remains open. Existing video-control defects and legacy downloader retirement are next; no extra roadmap or bulk dataset acquisition.

@@ -2,25 +2,28 @@
   "schema": "physioassist-runbook-status/1",
   "runbook_id": "ios-patient-mvp",
   "runbook_revision": 2,
-  "current_gate": "G02",
-  "overall": "foundation_fixes_implemented_pending_review",
-  "implementation_sha": "1c539a566d18ff53f8388e505afb1904b730c6d3",
+  "current_gate": "G05",
+  "overall": "reference_safety_implemented_pending_review",
+  "implementation_sha": "c3d4b7bda383a75fd6d70209a7ee73d2f888acc6",
   "gate_states": {
     "G00": "implemented_pending_review",
     "G01": "in_progress",
     "G02": "in_progress",
     "G03": "planned",
     "G04": "planned",
-    "G05": "planned",
+    "G05": "in_progress",
     "G06": "planned",
     "G07": "planned",
     "G08": "planned",
     "G09": "planned",
     "G10": "planned"
   },
-  "evidence": ["../../evidence/2026-09-27-g01-g02/run.json"],
+  "evidence": [
+    "../../evidence/2026-09-27-g01-g02/run.json",
+    "../../evidence/2026-09-27-reference-safety/run.json"
+  ],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
-  "next": "Latest combined-source hosted CI and independent storage review; then small privacy/copy cleanup and one complete source-aware shoulder journey. Retain safe storage/migration requirements without additional roadmap work.",
+  "next": "Independent review/current hosted CI for the reference target and comfort-summary correction; then existing video controls and one source-aware shoulder journey. G02 migration/write acknowledgement and clinical approvals remain open.",
   "last_writer": "receiving_agent",
   "limitations": [
     "No gate independently accepted by this implementation update.",
@@ -81,6 +84,12 @@
       "state": "implemented_pending_review",
       "basis": "1c539a566d18ff53f8388e505afb1904b730c6d3",
       "evidence": "../../evidence/2026-09-27-g01-g02/run.json#I02"
+    },
+    "reference_safety": {
+      "state": "implemented_pending_independent_review",
+      "basis": "c3d4b7bda383a75fd6d70209a7ee73d2f888acc6",
+      "criteria": ["G05.V04", "G05.V08"],
+      "evidence": "../../evidence/2026-09-27-reference-safety/run.json"
     }
   },
   "active_pr": 28,
