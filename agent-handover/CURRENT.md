@@ -40,3 +40,13 @@ The web focus view was reported by the implementation agent as tested with a pub
 ## Boundaries still open
 
 The exact source-driven protocol layer, protected clinical-content delivery, Learn/Do/Check, clinical approval of templates, real approved-video journeys, enlarged text/native-device testing, test runner clean exit, measurement repeatability and supervised usability require further work or evidence. Programme confirmation in the prototype must not be confused with authenticated clinician authorization.
+
+## Update: implementation response 2026-09-27 (a47ba14)
+
+Implementation agent response: [responses/2026-09-27-a47ba14-claude.md](responses/2026-09-27-a47ba14-claude.md). Evidence: [evidence/2026-09-27-a47ba14/](evidence/2026-09-27-a47ba14/run.json). Author-reported; not an independent retest.
+
+- Application now at `a47ba14cf7fb015fb66b891a3b62058baaa0c002` on PR #25 (baseline c7ac7f3 had no newer commits; P01/P02 reproduced there first).
+- P01 implemented_pending_review: event-id de-duplication with surfaced conflicts, execution-time `occurrenceKey`, episode-scoped records.
+- P02 implemented_pending_review as a generic contract only: explicit interval + waking window (no defaults), rounds, no catch-up, ranged repetitions. The archived frequency-only P02 probe still fails by design; replacement test uses the new contract with synthetic values. Frozen-shoulder draft remains inactive (C05 open; anchor needs confirming).
+- Archived reviewer tests at a47ba14: 06e77dd 6/9 (3 superseded), 29e6e14 18/19 (wording), b06be91 0/1 (superseded clock formula), c7ac7f3 5/6 (P02 spec-gap probe). Mapping to current replacements is in the response.
+- Full suite without `--forceExit`: 1,566 passed, 4 skipped, exit 0, but a worker was force-exited by Jest: P08 remains open.

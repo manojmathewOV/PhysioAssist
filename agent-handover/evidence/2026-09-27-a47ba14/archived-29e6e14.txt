@@ -1,0 +1,22 @@
+    ✓ continuous hold works at 10 frames per second (3 ms)
+    ✓ continuous hold works at 15 frames per second (1 ms)
+    ✓ continuous hold works at 30 frames per second (2 ms)
+    ✓ two samples five seconds apart are now rejected
+    ✓ missing-angle frames break the hold
+    ✓ front knee measurement stays unavailable through summary (18 ms)
+    ✓ incomplete heel prop stays unavailable through summary (3 ms)
+    ✓ rotation no longer gets arm-elevation praise or a false elevation range (12 ms)
+    ✓ working wrist is required for shoulder framing (1 ms)
+    ✓ shoulder framing no longer requires the feet (1 ms)
+    ✓ saving an unchanged plan preserves its video (237 ms)
+    ✓ 100 deterministic sequences reject two sub-second segments across dropout (9 ms)
+    ✓ the other knee does not complete today's prescribed knee exercise (14 ms)
+    ✓ an immediate unmeasured stop is an attempt, not completed prescribed activity (2 ms)
+    ✓ a newly changed plan with no measured result has no current-plan baseline (1 ms)
+    ✓ a per-exercise heel-prop duration reaches the actual exercise (1 ms)
+    ✓ a prescribed heel-prop goal can be recovered for analysis (1 ms)
+    ✕ today card displays the prescribed hold rather than the catalogue default (4 ms)
+    ✓ a safety limit takes priority over praise in the exact live-screen cue selection (30 ms)
+    Received: null
+Tests:       1 failed, 18 passed, 19 total
+Jest did not exit one second after the test run has completed.
