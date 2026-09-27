@@ -324,10 +324,10 @@ The owner has a traceable, scoped basis for a pilot or release, with recovery/su
 
 **Closure requires:** G03, G04, G05. **Executor:** patient_experience_implementer. **Acceptor:** independent_reviewer_and_target_users.
 
-**Next bounded work:** Independent review of published reference controls; qualify native live Pause/Hide/Show using an isolated test lane or camera-optional Do, correct Release no-camera wording and prep visibility, then complete the source-aware shoulder journey. Do not repeat the retired downloader audit.
+**Next bounded work:** Review the small native no-camera correction in PR #29; then camera-optional source-aware Do and native live reference coverage. No more unpublished integration chain or re-investigation of retired fixes.
 
 **Remaining work:**
-- Independent review of published reference controls; qualify native live Pause/Hide/Show using an isolated test lane or camera-optional Do, correct Release no-camera wording and prep visibility, then complete the source-aware shoulder journey. Do not repeat the retired downloader audit.
+- Review the small native no-camera correction in PR #29; then camera-optional source-aware Do and native live reference coverage. No more unpublished integration chain or re-investigation of retired fixes.
 - Qualify streaming YouTube, camera-recorded reference and uploaded local-file reference separately; the embedded player is never the analysed numerical source. Clinical applicability and content rights are separate from successful playback.
 - For focus/plain display retain clinically relevant stick, helper hand, support and brace. Native focus implementation is separately qualified; plain mode may be the approved MVP fallback.
 - Design readable large-text reflow with screen reader focus, motor/one-handed access and no colour-only signal. Do not equate default-size screenshots with elderly usability.

@@ -3,8 +3,8 @@
   "runbook_id": "ios-patient-mvp",
   "runbook_revision": 3,
   "current_gate": "G07",
-  "overall": "reference_controls_web_verified_native_preparation_observed_live_gap_open",
-  "implementation_sha": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
+  "overall": "main_consolidated_native_recovery_followup_pending_review",
+  "implementation_sha": "7d717f92e4e3b31663a9516a4a8087b7664da151",
   "gate_states": {
     "G00": "implemented_pending_review",
     "G01": "in_progress",
@@ -25,7 +25,7 @@
     "../../evidence/2026-09-27-reference-controls/pickup.json"
   ],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
-  "next": "Independent review of published reference controls; qualify native live Pause/Hide/Show using an isolated test lane or camera-optional Do, correct Release no-camera wording and prep visibility, then complete the source-aware shoulder journey. Do not repeat the retired downloader audit.",
+  "next": "Review the small native no-camera correction in PR #29; then camera-optional source-aware Do and native live reference coverage. No more unpublished integration chain or re-investigation of retired fixes.",
   "last_writer": "receiving_agent",
   "limitations": [
     "No gate independently accepted by this implementation update.",
@@ -33,7 +33,7 @@
     "Four opt-in suites remain skipped; historical source and approvals are unchanged.",
     "74fe884 hosted Checks and iOS succeeded; c3d4b7b safety and newer storage still await independent review. Playback/patient journey, real camera and physical-device evidence remain separate."
   ],
-  "integration_basis": "88918e77162a8491beb06c3e7615419a40b30630",
+  "integration_basis": "aebfa1b7832a9de314c19d69d494339f82eea5bf",
   "blockers": [
     {
       "id": "I01",
@@ -66,7 +66,7 @@
       "gate": "G07",
       "status": "open_test_input_boundary",
       "owner": "receiving_agent",
-      "observed": "Actual Release native test reaches video playback then no-camera screen; simulated practice is compiled out. Full live reference journey has not run. No-camera copy inaccurately promises practice.",
+      "observed": "Full native live reference has not run: Release excludes fake practice and the simulator has no camera. Misleading practice copy is corrected separately in PR29 with actual native no-camera/Back evidence; no test-input bypass.",
       "wake": "A deliberately isolated qualified test lane or completed camera-optional Do, plus reachable native presentation; no production fake-input bypass.",
       "evidence": "../../evidence/2026-09-27-reference-controls/pickup.json"
     }
@@ -108,9 +108,15 @@
       "criteria": ["G07.V01", "G07.V05", "G05.V05"],
       "evidence": "../../evidence/2026-09-27-reference-controls/pickup.json",
       "scope": "Real web 19 checks; native prep observed but expanded native test failed before live mode, which is excluded in Release; independent review pending"
+    },
+    "native_no_camera_copy": {
+      "state": "implemented_pending_independent_review",
+      "basis": "7d717f92e4e3b31663a9516a4a8087b7664da151",
+      "evidence": "../../evidence/2026-09-28-main-integration/no-camera.json",
+      "scope": "Actual Release no-camera explanation and Back action; no full live reference pass"
     }
   },
-  "active_pr": 28,
+  "active_pr": 29,
   "predecessor_prs": "25/26/27 closed-unmerged as superseded after checkpoint/ancestry verification",
   "review_received": {
     "reviewer": "Claude",
@@ -139,14 +145,21 @@
       "basis": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
       "status": "independent_review_pending",
       "record": "../../responses/2026-09-27-reference-controls.md"
+    },
+    {
+      "subject": "native_no_camera_recovery",
+      "basis": "7d717f92e4e3b31663a9516a4a8087b7664da151",
+      "status": "independent_review_pending",
+      "record": "../../responses/2026-09-28-no-camera-recovery.md"
     }
   ],
   "hosted_observation": {
-    "basis": "74fe884cc090ff4a5813ad47e36415186316abba",
-    "checks_run": 36316922628,
-    "ios_run": 36316922623,
+    "basis": "d910a8cbee07169e28a2b8c0014932f67d4a6c3f",
+    "checks_run": 36328792890,
+    "ios_run": 36328792889,
     "conclusion": "success",
-    "scope": "Build/selected hosted tests only; not independent review or complete clinical native journey",
-    "record": "evidence/convergence-20260927.json"
-  }
+    "scope": "Parent baseline hosted tests; not full native patient journey or follow-up hosted acceptance",
+    "record": "../../evidence/2026-09-28-main-integration/merge.json"
+  },
+  "active_branch": "agent/native-camera-recovery-20260928"
 }

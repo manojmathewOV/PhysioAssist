@@ -1,14 +1,14 @@
 # Current PhysioAssist work — read this, not the historical state log
 
-Updated 2026-09-27. Scope: **iPhone patient-only, local-first MVP**. Surgeon/physio backend, monitoring and clinical cloud sync remain future scope.
+Updated 2026-09-28. Scope: **iPhone patient-only, local-first MVP**. Surgeon/physio backend, monitoring and clinical cloud sync remain future scope.
 
 ## Ownership and basis
 
 - Claude implementation is frozen at `6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84`. Its final handover is [here](responses/2026-09-27-6bc4d77-claude-final-handover.md). Claude is independent reviewer unless explicitly reassigned.
 - Receiving implementer: ChatGPT via the authorised hybrid Mac/RDC/GitHub workflow. One writer per task and source surface.
-- Active consolidation: **draft PR #28**, `agent/mvp-integration-20260927`; exact predecessor refs and successor PR in [BRANCHES.json](BRANCHES.json).
+- **Main is consolidated:** PR #28 merged at `aebfa1b7832a9de314c19d69d494339f82eea5bf`, preserving the exact application commits. Active follow-up: **PR #29**, `agent/native-camera-recovery-20260928`; see [BRANCHES.json](BRANCHES.json).
 - PRs #25/#26/#27 are closed as superseded; their heads remain ancestry-contained and archive-tagged. No source branch was deleted.
-- `main` is **not changed or approved for release** by this reconciliation.
+- The owner authorised this development merge. Main is **not approved for patient use or release**; independent scoped review and unfinished acceptance criteria remain open.
 - Reuse the owner's configured local landing `repo/` and `RDC/`. No extra clone/dependency install is needed.
 
 ## What is genuinely established
@@ -50,3 +50,9 @@ See [reference/comfort response](responses/2026-09-27-reference-safety.md). Clau
 Implemented at `2ca6c76` and `0024f87`; see [response](responses/2026-09-27-reference-controls.md) and [evidence](evidence/2026-09-27-reference-controls/run.json). The downloader/seven unused packages are removed; active local-upload and recorded comparisons remain. Real browser Pause/Hide/Show tests pass. Native setup/reference Play, Pause, Enlarge and Replay passed after reproducing/fixing a Hermes URL.hostname crash. Final committed suite: 1,645 passed/four opt-in skipped, clean exit. This is not full native treatment/Check, approved clinical content, physical-phone validation or independent acceptance. Continue with those bounded gaps, not another downloader audit.
 
 Latest receiving pickup: `18f0139` fixes retry/overlapping interruptions; `12a4814` bounds Metro and avoids this project using machine-wide Watchman. Fresh tests: 1,649 passed/four opt-in skipped, clean exit. Real web controls plus blocked-script/retry/no-credit journey: 19 checks passed. Native preparation playback observed, but expanded live test failed at the missing Release-only practice entry; no live native or clinical pass is claimed. See [pickup evidence](evidence/2026-09-27-reference-controls/pickup.json). The first stalled native build is retained; the later project-configured build passed. Independent review, source-aware camera-optional Do, approved media and full native patient use remain open.
+
+## Main integration and small native recovery follow-up
+
+[Merge evidence](evidence/2026-09-28-main-integration/merge.json) records exact ancestry, fresh clean baseline tests and green hosted Checks/iOS. The older 0024f87 source remains unchanged in history; later retry/tooling changes are separate commits. No force, reset, branch deletion or fabricated independent approval was used.
+
+PR #29 corrects the Release screen promising unavailable practice. [Response](responses/2026-09-28-no-camera-recovery.md) records 1,651 passing tests/four opt-in skipped and an actual native no-camera/Back test plus inspected screenshot. This does not complete camera-optional Do or the still-blocked full native live reference test. Claude may review the published safety, storage and player deltas now; the implementing agent has not accepted its own gates.

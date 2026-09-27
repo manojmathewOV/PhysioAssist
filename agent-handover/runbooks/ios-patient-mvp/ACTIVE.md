@@ -6,9 +6,9 @@ Generated from `runbook.json` and `STATUS.json`; do not edit this view. This is 
 
 **Outcome:** A patient can watch, enlarge, pause, hide/show and return to the reference without losing place or receiving advice beyond the programme.
 
-**Next action:** Independent review of published reference controls; qualify native live Pause/Hide/Show using an isolated test lane or camera-optional Do, correct Release no-camera wording and prep visibility, then complete the source-aware shoulder journey. Do not repeat the retired downloader audit.
+**Next action:** Review the small native no-camera correction in PR #29; then camera-optional source-aware Do and native live reference coverage. No more unpublished integration chain or re-investigation of retired fixes.
 
-**Evidence basis:** implementation `12a4814`; hosted `74fe884` success. Review queue: reference_safety (independent_review_pending), storage_read_containment (independent_review_pending), reference_controls (independent_review_pending). Do not redo established fixes without fresh contrary evidence.
+**Evidence basis:** implementation `7d717f9`; hosted `d910a8c` success. Review queue: reference_safety (independent_review_pending), storage_read_containment (independent_review_pending), reference_controls (independent_review_pending), native_no_camera_recovery (independent_review_pending). Do not redo established fixes without fresh contrary evidence.
 
 ## Execute in small reviewable steps
 
