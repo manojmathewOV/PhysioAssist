@@ -1,8 +1,0 @@
-diff --git a/.github/workflows/ios-simulator.yml b/.github/workflows/ios-simulator.yml
-index cd45378..bf54968 100644
---- a/.github/workflows/ios-simulator.yml
-+++ b/.github/workflows/ios-simulator.yml
-@@ -95 +95,2 @@ jobs:
--          cd ios && pod install 2>&1 | tee "$OUT_DIR/pod-install.log"
-+          set -o pipefail
-+          cd ios && pod install --deployment 2>&1 | tee "$OUT_DIR/pod-install.log"

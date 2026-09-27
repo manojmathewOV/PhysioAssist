@@ -92,5 +92,16 @@
     "ci_hardening": "permission blocked; proposal retained, not executed",
     "ordinary_precommit_and_prepush": "used; initial push refused after checks passed",
     "native_plist": "semantically identical generated key order retained to avoid repeated dirty worktree"
+  },
+  "publication_resolution": {
+    "workflow_commit": "343a400c115f347f7fcd46a97ac3a8953883cea5",
+    "route": "existing authorised GitHub app contents API",
+    "Mac_credential_scope_changed": false,
+    "workflow_hardening_now_published": true,
+    "local_hooks_run_for_API_commit": false,
+    "syntax_check": "passed",
+    "controlled_failure_exit_with_pipefail": 7,
+    "control_exit_without_pipefail": 0,
+    "hosted_native_CI_retest": "not yet established by this record"
   }
 }
