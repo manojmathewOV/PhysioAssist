@@ -32,7 +32,7 @@
 | G03.V04 | G03 | native_identity_journey | The screen never promises cloud recovery or monitoring which the MVP does not implement. |
 | G03.V05 | G03 | native_identity_journey | No clinician assigned: patient can use approved independent features without a false waiting/monitoring claim. |
 | G03.V06 | G03 | native_identity_journey | Sign-in cancellation or identity change cannot reassign another local database; same email alone never merges owners. |
-| G04.V01 | G04 | synthetic_policy_and_source_approval | Frozen-shoulder sleeper variant never leaks into a disallowing protected-repair programme. |
+| G04.V01 | G04 | synthetic_policy_and_source_approval | Frozen-shoulder sleeper variant never leaks into a disallowing protected-repair programme. The ER elbow-at-side rule never leaks into sleeper setup; lying assisted variants never use standing-activity identities. |
 | G04.V02 | G04 | synthetic_policy_and_source_approval | Isolated MPFL and MPFL with TTO do not collapse into one knee permission; assistance and loaded/unloaded/braced distinctions survive import/export. |
 | G04.V03 | G04 | synthetic_policy_and_source_approval | A changed reference or package cannot silently change an active patient prescription. |
 | G04.V04 | G04 | synthetic_policy_and_source_approval | Missing/contradictory source or unknown procedure yields explanation plus safe available functions, never invented permissions. |
@@ -41,7 +41,7 @@
 | G04.V07 | G04 | synthetic_policy_and_source_approval | Expired/suspended programme has appropriate education/records/review route without indefinite treatment continuation or guessed replacement. |
 | G04.V08 | G04 | synthetic_policy_and_source_approval | Therapist-only tasks and manual force/load escalation cannot become patient self-instructions through template import. |
 | G05.V01 | G05 | native_patient_journey | Learn -> Do -> interrupted Do -> incomplete Check -> valid Check -> later compatible comparison, using the same profile/episode. |
-| G05.V02 | G05 | native_patient_journey | Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not treated as failed rehabilitation. |
+| G05.V02 | G05 | native_patient_journey | Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not treated as failed rehabilitation. Sleeper offers no internal-rotation number; a stable but wrong initial position is not correct technique, and occlusion is unassessable rather than zero drift. |
 | G05.V03 | G05 | native_patient_journey | Dose/schedule changes preserve compatible methods; assistance/method changes separate comparison or mark incompatibility. |
 | G05.V04 | G05 | native_patient_journey | Goal, clinical restriction and demonstrator endpoint remain three separate quantities. |
 | G05.V05 | G05 | native_patient_journey | Watching or a simulated demonstration never becomes completed treatment or a clinical measurement. |
@@ -60,15 +60,15 @@
 | G07.V03 | G07 | native_media_accessibility_and_human | Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. |
 | G07.V04 | G07 | native_media_accessibility_and_human | Camera problem plus precaution plus praise selects one correct visual/spoken message consistently. |
 | G07.V05 | G07 | native_media_accessibility_and_human | Corrupt, missing, wrong-variant or unavailable video cannot silently substitute another movement; approved text/audio fallback is clear. |
-| G07.V06 | G07 | native_media_accessibility_and_human | Dynamic Type, VoiceOver and Voice Control traverse a complete native routine with reachable Stop/Pause. |
+| G07.V06 | G07 | native_media_accessibility_and_human | Dynamic Type, VoiceOver and Voice Control traverse a complete native routine with reachable Stop/Pause. Compact counts retain accessible role/value; iOS requires its native announcement route, not Android liveRegion alone. Test app speech on/off, warnings, pause/background, listener cleanup and no per-second hold chatter. |
 | G07.V07 | G07 | native_media_accessibility_and_human | All important props/helper context remain legible in selected focus/plain fixtures; person tracking transfer withholds/reconfirms rather than silently measuring a helper. |
 | G07.V08 | G07 | native_media_accessibility_and_human | Meaningful audio and captions remain correct through calls, mute, pause and resume without queued contradictory praise. |
 | G08.V01 | G08 | reference_measurement_and_physical_device | Thirty synthetic open/start/pause/stop/close cycles as a stress fixture: no sustained retained-memory growth; include background/memory pressure. |
 | G08.V02 | G08 | reference_measurement_and_physical_device | Cold offline first use with required model/media present; low-storage model failure returns honest unmeasured state. |
-| G08.V03 | G08 | reference_measurement_and_physical_device | Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. |
+| G08.V03 | G08 | reference_measurement_and_physical_device | Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims. |
 | G08.V04 | G08 | reference_measurement_and_physical_device | A method change cannot silently present the same measurement-method version or turn simulation success into clinical accuracy. |
 | G08.V05 | G08 | reference_measurement_and_physical_device | More noisy repetitions without changed true endpoints cannot justify an automatic improvement claim; report selection policy and sample basis. |
-| G08.V06 | G08 | reference_measurement_and_physical_device | Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. |
+| G08.V06 | G08 | reference_measurement_and_physical_device | Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. Include stand movement, mattress compression, mirrored sides, initial prescribed roll, assistance and partial occlusion; rebaseline camera movement rather than label it patient drift. |
 | G08.V07 | G08 | reference_measurement_and_physical_device | Chosen endpoint with poor tracking is withheld even if the rest of the session has high visibility. |
 | G08.V08 | G08 | reference_measurement_and_physical_device | Thirty repeated camera cycles release resources; memory/low-storage/model failure gives an honest safe fallback, not another app reload loop. |
 | G08.V09 | G08 | reference_measurement_and_physical_device | Structured synthetic appointment export round-trips meaning, units, unknowns, correction links and version; unavailable is not zero. |

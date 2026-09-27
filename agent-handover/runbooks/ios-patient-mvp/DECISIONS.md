@@ -28,3 +28,7 @@ Use durable local profile, episode, programme-revision, session, occurrence, eve
 ## Decisions and disagreement
 
 Record decision ID, actor, date, alternatives, selected option, source/evidence, scope and reopen condition. An implementation agent may choose reversible code organisation; it may not choose missing clinical doses, source authority, data-publication permissions or release claims. Missing inputs block the affected feature/activation, not unrelated admitted work.
+
+## Owner clarification: lying-shoulder capture (2026-09-28)
+
+D05/D08 are partially specified: slightly raised bedside camera for supine assisted elevation and sleeper position drift; foot-end, slightly raised for supine stick-assisted ER with the affected elbow close to the body. No overhead rig is required. See `shoulder_capture` in runbook.json and its generated roadmap section. This is a capture-design direction, not validation, a new dose or permission to perform an exercise. Exact sleeper starting variant, hold/rest, schedule/window and symptom rules remain open.

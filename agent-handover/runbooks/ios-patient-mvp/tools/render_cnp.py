@@ -53,6 +53,11 @@ def markdown(m,vm,state):
  tests={x['id']:x for x in vm['criteria']};lines=['# iPhone patient MVP — remaining execution roadmap','',f"Revision {m['revision']}. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).",'', '## Delivery first; gate details on demand','', 'Start at [ACTIVE.md](ACTIVE.md). Delivery slices group existing criteria without creating new gates: dependable reference -> complete shoulder journey -> knee reuse and durable history -> scoped measurement/usability qualification -> pilot/release decision. Review and study preparation can proceed alongside implementation; only one code writer is active.','', 'Dependencies govern acceptance, not all safe preparatory work. Use [PROGRESSION.md](PROGRESSION.md) for states, start/stop rules, recovery and independent acceptance.','']
  for d in m['delivery']['slices']:
   lines+=['### '+d['id']+' — '+d['title'],'',d['outcome'],'', '**Work:**']+['- '+w for w in d['work']]+['','**Existing criteria:** '+', '.join(d['criteria'])+'.', '**Activation decisions:** '+', '.join(d['activation_decisions'])+'.', '**Return:** '+d['return_to']+'. '+d['done'],'']
+ capture=m.get('shoulder_capture')
+ if capture:
+  lines+=['## Shoulder capture — owner direction, qualification still required','',capture['scope'],'','| Variant | Candidate camera placement | Intended observation | Output boundary |','|---|---|---|---|']
+  for x in capture['variants']:lines+=['| '+' | '.join(x[k].replace('|',' / ') for k in ['variant','position','intent','output'])+' |']
+  lines+=['']+['- '+x for x in capture['common']]+['']
  for ep in m['endpoints']:lines+=['**'+ep['id']+' — '+ep['name']+':** '+ep['meaning'],'']
  for g in m['gates']:
   lines+=['## '+g['id']+' — '+g['title'],'','**Outcome:** '+g['outcome'],'','**Closure requires:** '+(', '.join(g['depends_on']) or 'No prior gate')+'. **Executor:** '+g['owner']+'. **Acceptor:** '+g['acceptance']['acceptor']+'.','', '**Next bounded work:** '+g['next_work_item']['candidate_action'],'','**Remaining work:**']

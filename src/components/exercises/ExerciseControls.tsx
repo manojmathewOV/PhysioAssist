@@ -41,6 +41,7 @@ import { AppText, BigButton } from '../ui';
 import { CameraPanel } from '../ui/CameraPanel';
 import { RepRing } from '../ui/RepRing';
 import { movementOf } from '../../services/movement/exerciseMovement';
+import { useAccessibleRepCount } from './useAccessibleRepCount';
 import { liveCue } from '../../utils/liveCue';
 import { coachingOf } from '../../services/care/episode';
 import { activeMs, seconds } from '../../services/session/sessionClock';
@@ -129,6 +130,9 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
   const comfort = useSelector(
     (state: RootState) => coachingOf(state.settings.exercisePlan) === 'comfort'
   );
+  const appSpeechEnabled = useSelector(
+    (state: RootState) => state.settings.enableSpeech !== false
+  );
   const showJointAngles = useSelector(
     (state: RootState) => state.settings.showJointAngles
   );
@@ -159,6 +163,25 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
     return () => clearInterval(timer);
   }, [holdActive, isPaused, gate]);
   const elapsed = seconds(activeMs(clock, Date.now()));
+  const target = currentExercise?.targetRepetitions;
+  const countText =
+    target && target > 0
+      ? `${repetitionCount} of ${target} repetitions`
+      : `${repetitionCount} ${repetitionCount === 1 ? 'repetition' : 'repetitions'}`;
+  const canAnnounceProgress =
+    isActive &&
+    !isPaused &&
+    !gate &&
+    !outOfView &&
+    !holdActive &&
+    !lastValidationResult?.overLimit &&
+    !lastValidationResult?.withheld;
+  useAccessibleRepCount({
+    value: repetitionCount,
+    text: countText,
+    enabled: compactMedia && Boolean(canAnnounceProgress),
+    appSpeechEnabled,
+  });
 
   const handleSelect = (key: (typeof EXERCISE_OPTIONS)[number]['key']) => {
     const exercise = EXERCISE_OPTIONS.find((o) => o.key === key)!.exercise;
@@ -238,7 +261,6 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
     ? Math.round((currentExercise?.phases[0]?.holdDuration ?? 0) / 1000)
     : 0;
   const exerciseName = option?.title ?? currentExercise?.name ?? 'Exercise';
-  const target = currentExercise?.targetRepetitions;
 
   const isEstimate =
     (lastValidationResult?.estimatedJoints?.length ?? 0) > 0 ||
@@ -424,10 +446,23 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
         ]}
       >
         {compactMedia ? (
-          <AppText variant="caption" color={ON_DARK}>
-            {isHold
-              ? `${clockText(elapsed)} of ${clockText(holdSeconds)}`
-              : `${repetitionCount} of ${target ?? '?'} repetitions`}
+          <AppText
+            variant="caption"
+            color={ON_DARK}
+            testID="exercise-compact-progress"
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel={isHold ? 'Hold time' : 'Repetition count'}
+            accessibilityValue={{
+              text: isHold
+                ? `${elapsed} seconds${holdSeconds ? ` of ${holdSeconds} seconds` : ''} resting still`
+                : countText,
+            }}
+            accessibilityLiveRegion={
+              canAnnounceProgress && !appSpeechEnabled ? 'polite' : 'none'
+            }
+          >
+            {isHold ? `${clockText(elapsed)} of ${clockText(holdSeconds)}` : countText}
           </AppText>
         ) : (
           <View style={styles.statsRow}>

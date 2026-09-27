@@ -1,6 +1,6 @@
 # iPhone patient MVP — remaining execution roadmap
 
-Revision 3. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
+Revision 4. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
 
 ## Delivery first; gate details on demand
 
@@ -13,7 +13,7 @@ Dependencies govern acceptance, not all safe preparatory work. Use [PROGRESSION.
 A patient can watch, enlarge, pause, hide/show and return to the reference without losing place or receiving advice beyond the programme.
 
 **Work:**
-- Keep the c3d4b7b correction; request independent review of that delta. Do not redo the already corroborated native dependency fix.
+- Owner-relayed Claude accepts merged S1 code with nonblocking Android/compact-accessibility follow-ups; preserve exact reviewed bases and the unexecuted native-live boundary. Storage review remains separate.
 - Downloader and unused packages/permission declarations retired in 2ca6c76; preserve local-upload and recorded comparison helpers. Review the exact usage audit and locked dependency evidence, not a new cleanup pass.
 - Reference controls and native URL parsing implemented in 2ca6c76/0024f87 with interruption refinements in 18f0139. Preserve 19 passed real-web checks; native preparation works but full native live controls remain untested because Release has no synthetic practice. Resolve that test-input boundary explicitly.
 - One shared user intent coordinates exercise clock and player. Player loading or failure never fabricates activity, completed dose or numerical reference. Preserve warning precedence.
@@ -28,7 +28,8 @@ A patient can watch, enlarge, pause, hide/show and return to the reference witho
 An appropriate local programme can be learned, performed without compulsory camera tracking, interrupted, recorded durably and revisited on an iPhone.
 
 **Work:**
-- Candidate content: owner-selected frozen-shoulder variants, not standing arm raise relabelled as supine assisted elevation/rotation. Preserve the latest repetition/interval intent; unresolved hold, rest, position, symptoms and interval anchor stay explicit.
+- Use the owner-described lying variants and two candidate camera positions in shoulder_capture. No standing substitution; sleeper is drift-only, not internal-rotation degrees. Doses and remaining clinical choices stay source-bound.
+- Separate per-output view checks from treatment eligibility. Keep props/helper and affected-side instructions; do not force phone repositioning for every approved mini-session. See shoulder_capture for observable/unassessable rules.
 - Deliver Learn -> camera-optional Do -> Pause/Stop -> acknowledged local record -> reopen -> next eligible session -> My recovery. Keep first-use teaching separate from familiar-use shortcuts.
 - Implement minimum required durable write/error acknowledgement and source-safe local ownership with the read-recovery guard intact. Do not call an in-memory update saved. Full G02 migration and scale criteria still gate E1.
 - Keep activity versus Check identities explicit. An unsupported numerical Check is visibly unavailable/guided-only; it is neither zero nor an acceptance pass. Preserve historical observations with their original basis.
@@ -59,6 +60,7 @@ The same shell supports a selected knee routine and patient-owned appointment su
 Only supported variant/method results are claimed; actual patients and clinicians can interpret and use the delivered journey.
 
 **Work:**
+- Test shoulder_capture on both sides/mirrors, camera height/pitch, prescribed initial roll vs drift, helper/stick occlusion, bed compression and camera nudges. Report false cues and unassessable coverage; no synthetic error is clinical accuracy.
 - Restore a small fixed licensed benchmark slice only when it answers a named gap. Do not bulk-download; retain participant-disjoint splits, hashes and method/coverage/error results.
 - Evaluate standardised endpoint-hold candidates only where prescribed; do not assume a median eliminates selection/setup bias or import synthetic error numbers as production accuracy.
 - Actual variants, helper/prop occlusion, restricted movement and self-positioning between days have priority over more generic clips. No benchmark recording substitutes for approved teaching media.
@@ -81,6 +83,23 @@ The owner has a traceable, scoped basis for a pilot or release, with recovery/su
 **Existing criteria:** G10.V01, G10.V02, G10.V03, G10.V04, G10.V05.
 **Activation decisions:** D02 release/pilot scope and named acceptors.
 **Return:** G10. Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.
+
+## Shoulder capture — owner direction, qualification still required
+
+Owner-selected design direction; no estimator, dose, threshold or clinical activation approved by this declaration.
+
+| Variant | Candidate camera placement | Intended observation | Output boundary |
+|---|---|---|---|
+| Supine assisted forward elevation | Beside bed, slightly above mattress | Candidate upper-arm elevation relative to trunk; retain assisting arm and any prescribed support. Not hand height or isolated glenohumeral ROM. | Guided Do first; numerical Check only with method-specific qualification. |
+| Supine stick-assisted external rotation | Foot end, slightly above mattress | Affected elbow close to body. Forearm rotation and elbow-position observability are separate; foreshortening or occlusion is not proof the elbow is correctly positioned. Elbow-flexion angle is not shoulder rotation. | Guidance plus qualified observable proxies; no rotation safety boundary or substituted standing method. |
+| Sleeper stretch | Raised bedside compromise; no required overhead rig | Relative torso roll, elbow migration/upper-arm repositioning and changed elbow bend only where visible. Confirm initial variant separately; prescribed initial roll is not drift and stillness is not correct setup. | Position-drift observations only if qualified. No internal-rotation number, scapular-fixation, humeral-head, capsule-tension or force claim. |
+
+- Use two optional capture positions, not two mandatory camera calibrations each mini-session. Preserve prescription order and support; never change the movement to satisfy the lens.
+- Camera-optional Do does not create synthetic poses or measured results. Patient confirmation stays self-reported; no automatic completion from watching or elapsed time alone.
+- Visibility is per output. Available, possible drift, no drift detected in observable intervals, and unassessable are distinct. Never convert missing/occluded intervals to zero drift or good technique.
+- Camera/stand movement invalidates the baseline. Detectability and robust rebaselining require testing; no fixed pixel or generic anatomical threshold selected here.
+- Compact record: variant, side, assistance, view, method, observation basis and coverage. No routine raw video or all-frame retention; incompatible methods remain separate.
+- D05/D08 camera direction is partially resolved, not clinical method approval. Sleeper exact starting variant, hold/rest, interval anchor/window and symptom policy remain explicitly open.
 
 **E0 — Integrated engineering baseline:** One reproducible reviewed development baseline; no patient/release claim.
 
@@ -234,7 +253,7 @@ The owner has a traceable, scoped basis for a pilot or release, with recovery/su
 - Keep protected/unapproved clinical source content local; public tests use abstract synthetic restrictions. No private dose/permission table is copied into the public repo.
 
 **Required validation:**
-- **G04.V01** Frozen-shoulder sleeper variant never leaks into a disallowing protected-repair programme.
+- **G04.V01** Frozen-shoulder sleeper variant never leaks into a disallowing protected-repair programme. The ER elbow-at-side rule never leaks into sleeper setup; lying assisted variants never use standing-activity identities.
 - **G04.V02** Isolated MPFL and MPFL with TTO do not collapse into one knee permission; assistance and loaded/unloaded/braced distinctions survive import/export.
 - **G04.V03** A changed reference or package cannot silently change an active patient prescription.
 - **G04.V04** Missing/contradictory source or unknown procedure yields explanation plus safe available functions, never invented permissions.
@@ -259,16 +278,16 @@ The owner has a traceable, scoped basis for a pilot or release, with recovery/su
 
 **Closure requires:** G02, G03, G04. **Executor:** patient_experience_implementer. **Acceptor:** independent_usability_reviewer.
 
-**Next bounded work:** Preserve c3d4b7b reference/comfort safety while delivering camera-optional Do, truthful participation and a separate Check in the source-aware shoulder journey.
+**Next bounded work:** Implement source-aware camera-optional shoulder Do with truthful activity recording and per-variant bedside/foot-end guidance. Do not activate unvalidated angle/drift detection; finish native live reference checks through that real patient route.
 
 **Remaining work:**
-- Preserve c3d4b7b reference/comfort safety while delivering camera-optional Do, truthful participation and a separate Check in the source-aware shoulder journey.
+- Implement source-aware camera-optional shoulder Do with truthful activity recording and per-variant bedside/foot-end guidance. Do not activate unvalidated angle/drift detection; finish native live reference checks through that real patient route.
 - Learn records viewing only; Do records activity with provenance; Check records qualified standardized observations. Camera-off Do remains possible only for an otherwise permitted activity.
 - Use patient-owned Today/My recovery/Help experience, concise first-use versus familiar-use guidance and appointment summary; do not build a clinician dashboard.
 
 **Required validation:**
 - **G05.V01** Learn -> Do -> interrupted Do -> incomplete Check -> valid Check -> later compatible comparison, using the same profile/episode.
-- **G05.V02** Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not treated as failed rehabilitation.
+- **G05.V02** Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not treated as failed rehabilitation. Sleeper offers no internal-rotation number; a stable but wrong initial position is not correct technique, and occlusion is unassessable rather than zero drift.
 - **G05.V03** Dose/schedule changes preserve compatible methods; assistance/method changes separate comparison or mark incompatibility.
 - **G05.V04** Goal, clinical restriction and demonstrator endpoint remain three separate quantities.
 - **G05.V05** Watching or a simulated demonstration never becomes completed treatment or a clinical measurement.
@@ -324,7 +343,7 @@ The owner has a traceable, scoped basis for a pilot or release, with recovery/su
 
 **Closure requires:** G03, G04, G05. **Executor:** patient_experience_implementer. **Acceptor:** independent_reviewer_and_target_users.
 
-**Next bounded work:** Review the small native no-camera correction in PR #29; then camera-optional source-aware Do and native live reference coverage. No more unpublished integration chain or re-investigation of retired fixes.
+**Next bounded work:** Verify compact progress follow-up on real assistive technology; S1 code review is relayed/recorded. Preserve the remaining native live and approved-asset boundary, not a new downloader or parser rewrite.
 
 **Remaining work:**
 - Review the small native no-camera correction in PR #29; then camera-optional source-aware Do and native live reference coverage. No more unpublished integration chain or re-investigation of retired fixes.
@@ -338,7 +357,7 @@ The owner has a traceable, scoped basis for a pilot or release, with recovery/su
 - **G07.V03** Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning.
 - **G07.V04** Camera problem plus precaution plus praise selects one correct visual/spoken message consistently.
 - **G07.V05** Corrupt, missing, wrong-variant or unavailable video cannot silently substitute another movement; approved text/audio fallback is clear.
-- **G07.V06** Dynamic Type, VoiceOver and Voice Control traverse a complete native routine with reachable Stop/Pause.
+- **G07.V06** Dynamic Type, VoiceOver and Voice Control traverse a complete native routine with reachable Stop/Pause. Compact counts retain accessible role/value; iOS requires its native announcement route, not Android liveRegion alone. Test app speech on/off, warnings, pause/background, listener cleanup and no per-second hold chatter.
 - **G07.V07** All important props/helper context remain legible in selected focus/plain fixtures; person tracking transfer withholds/reconfirms rather than silently measuring a helper.
 - **G07.V08** Meaningful audio and captions remain correct through calls, mute, pause and resume without queued contradictory praise.
 
@@ -369,10 +388,10 @@ The owner has a traceable, scoped basis for a pilot or release, with recovery/su
 **Required validation:**
 - **G08.V01** Thirty synthetic open/start/pause/stop/close cycles as a stress fixture: no sustained retained-memory growth; include background/memory pressure.
 - **G08.V02** Cold offline first use with required model/media present; low-storage model failure returns honest unmeasured state.
-- **G08.V03** Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions.
+- **G08.V03** Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims.
 - **G08.V04** A method change cannot silently present the same measurement-method version or turn simulation success into clinical accuracy.
 - **G08.V05** More noisy repetitions without changed true endpoints cannot justify an automatic improvement claim; report selection policy and sample basis.
-- **G08.V06** Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change.
+- **G08.V06** Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. Include stand movement, mattress compression, mirrored sides, initial prescribed roll, assistance and partial occlusion; rebaseline camera movement rather than label it patient drift.
 - **G08.V07** Chosen endpoint with poor tracking is withheld even if the rest of the session has high visibility.
 - **G08.V08** Thirty repeated camera cycles release resources; memory/low-storage/model failure gives an honest safe fallback, not another app reload loop.
 - **G08.V09** Structured synthetic appointment export round-trips meaning, units, unknowns, correction links and version; unavailable is not zero.

@@ -11,6 +11,12 @@ Updated 2026-09-28. Scope: **iPhone patient-only, local-first MVP**. Surgeon/phy
 - The owner authorised this development merge. Main is **not approved for patient use or release**; independent scoped review and unfinished acceptance criteria remain open.
 - Reuse the owner's configured local landing `repo/` and `RDC/`. No extra clone/dependency install is needed.
 
+## Latest scoped review and next delivery
+
+[Claude's owner-relayed review](reviews/2026-09-28-owner-relayed-claude/REVIEW.md) accepts merged S1 code with two nonblocking follow-ups and corroborates PR29 no-camera code. It is not a new GitHub approval submitted by Claude. His independent 1,649-test run is reviewer-reported; storage containment still lacks independent review and formal safety acceptance is not fabricated. Prior PR29 hosted Checks/iOS are verified green at 970e98c.
+
+The compact-progress accessibility follow-up and Android identity comment are receiving-agent changes requiring their own tests/review. S2/G05.W1 is the next implementation pickup: camera-optional, source-aware shoulder Do. Manoj's bedside elevation/sleeper and foot-end ER directions are in runbook.json `shoulder_capture`; sleeper has no internal-rotation number and visibility is per output. This neither approves an estimator/dose nor accepts S1's missing native-live cases.
+
 ## What is genuinely established
 
 P08 was independently retested on 6bc4d77: 1,593 passed/four opt-in skipped, parallel and open-handle runs exited cleanly. Preserve the fix. R01-R03 and web EX06 have implementation evidence; not all have independent end-to-end acceptance. Native focus and complete patient journeys remain open.
@@ -25,7 +31,7 @@ The four skipped suites are recorded individually in Claude's final handover: on
 
 Latest [review reconciliation](responses/2026-09-27-independent-review-reconciliation.md) distinguishes filtered extrema from raw-frame noise experiments and records privacy/copy/CI-trigger findings. Four production characterisation tests cover the actual five-frame median and away/toward selection; they do not validate clinical accuracy.
 
-**Next product slice:** [ACTIVE](runbooks/ios-patient-mvp/ACTIVE.md) identifies G07.W1/S1: independent safety/player review and remaining native live coverage, then one complete source-aware shoulder journey. Keep only the active work item's acceptance cases in view; no additional roadmap or CCore execution project. Preserve data safety, exact variants and source approval. Clinical/owner C01-C08 and D01-D08 remain unresolved only where relevant.
+**Next product slice:** [ACTIVE](runbooks/ios-patient-mvp/ACTIVE.md) names S2/G05.W1. Implement the real camera-optional shoulder activity path and use it to qualify native reference controls; do not add fake production pose input. Keep approved content, exact assistance and durable-save acknowledgement explicit. No new roadmap or bulk data acquisition.
 
 ## One roadmap and evidence ledger
 

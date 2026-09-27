@@ -1,9 +1,9 @@
 {
   "schema": "physioassist-runbook-status/1",
   "runbook_id": "ios-patient-mvp",
-  "runbook_revision": 3,
-  "current_gate": "G07",
-  "overall": "main_consolidated_native_recovery_followup_pending_review",
+  "runbook_revision": 4,
+  "current_gate": "G05",
+  "overall": "review_reconciled_shoulder_camera_optional_delivery_next",
   "implementation_sha": "7d717f92e4e3b31663a9516a4a8087b7664da151",
   "gate_states": {
     "G00": "implemented_pending_review",
@@ -25,13 +25,13 @@
     "../../evidence/2026-09-27-reference-controls/pickup.json"
   ],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
-  "next": "Review the small native no-camera correction in PR #29; then camera-optional source-aware Do and native live reference coverage. No more unpublished integration chain or re-investigation of retired fixes.",
+  "next": "Implement source-aware camera-optional shoulder Do with truthful activity recording and per-variant bedside/foot-end guidance. Do not activate unvalidated angle/drift detection; finish native live reference checks through that real patient route.",
   "last_writer": "receiving_agent",
   "limitations": [
     "No gate independently accepted by this implementation update.",
     "No full database migration, profile isolation, write-failure acknowledgement or clinical validation is complete.",
     "Four opt-in suites remain skipped; historical source and approvals are unchanged.",
-    "74fe884 hosted Checks and iOS succeeded; c3d4b7b safety and newer storage still await independent review. Playback/patient journey, real camera and physical-device evidence remain separate."
+    "Owner-relayed Claude S1 acceptance is scoped code review, not new GitHub APPROVE, whole-gate acceptance or physical accessibility evidence. Storage containment still lacks independent review."
   ],
   "integration_basis": "aebfa1b7832a9de314c19d69d494339f82eea5bf",
   "blockers": [
@@ -103,11 +103,12 @@
       "evidence": "../../evidence/2026-09-27-reference-safety/run.json"
     },
     "reference_controls": {
-      "state": "implemented_pending_independent_review",
+      "state": "code_review_corroborated_owner_relay",
       "basis": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
       "criteria": ["G07.V01", "G07.V05", "G05.V05"],
       "evidence": "../../evidence/2026-09-27-reference-controls/pickup.json",
-      "scope": "Real web 19 checks; native prep observed but expanded native test failed before live mode, which is excluded in Release; independent review pending"
+      "scope": "Real web 19 checks; native prep observed but expanded native test failed before live mode, which is excluded in Release; independent review pending",
+      "review": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md"
     },
     "native_no_camera_copy": {
       "state": "implemented_pending_independent_review",
@@ -120,19 +121,20 @@
   "predecessor_prs": "25/26/27 closed-unmerged as superseded after checkpoint/ancestry verification",
   "review_received": {
     "reviewer": "Claude",
-    "source": "owner-supplied read-only review in chat",
-    "basis_sha": "707a6e7553fdcedbf87ebf835a21f3e22ecbf638",
-    "record": "../../responses/2026-09-27-independent-review-reconciliation.md",
-    "scope": "I01 source/hosted corroboration; no later storage or whole-gate acceptance"
+    "source": "owner-relayed read-only review in chat; receiving agent transcribed, not a GitHub review event",
+    "basis_sha": "aebfa1b7832a9de314c19d69d494339f82eea5bf",
+    "record": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md",
+    "scope": "S1 code accepted with two nonblocking follow-ups and PR29 no-camera code corroborated; no later change, physical VO or whole gate accepted; storage review still absent"
   },
-  "active_delivery_slice": "S1",
-  "active_work_item": "G07.W1",
+  "active_delivery_slice": "S2",
+  "active_work_item": "G05.W1",
   "review_queue": [
     {
       "subject": "reference_safety",
       "basis": "c3d4b7bda383a75fd6d70209a7ee73d2f888acc6",
-      "status": "independent_review_pending",
-      "record": "../../responses/2026-09-27-reference-safety.md"
+      "status": "reviewer_reports_acceptance_formal_record_pending",
+      "record": "../../responses/2026-09-27-reference-safety.md",
+      "review_record": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md"
     },
     {
       "subject": "storage_read_containment",
@@ -143,23 +145,27 @@
     {
       "subject": "reference_controls",
       "basis": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
-      "status": "independent_review_pending",
-      "record": "../../responses/2026-09-27-reference-controls.md"
+      "status": "accepted_with_nonblocking_followups_owner_relay",
+      "record": "../../responses/2026-09-27-reference-controls.md",
+      "review_record": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md",
+      "review_basis": "aebfa1b7832a9de314c19d69d494339f82eea5bf"
     },
     {
       "subject": "native_no_camera_recovery",
       "basis": "7d717f92e4e3b31663a9516a4a8087b7664da151",
-      "status": "independent_review_pending",
-      "record": "../../responses/2026-09-28-no-camera-recovery.md"
+      "status": "code_corroborated_owner_relay",
+      "record": "../../responses/2026-09-28-no-camera-recovery.md",
+      "review_record": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md",
+      "review_basis": "970e98c07933d78e02a7b03a07c1508864207447"
     }
   ],
   "hosted_observation": {
-    "basis": "d910a8cbee07169e28a2b8c0014932f67d4a6c3f",
-    "checks_run": 36328792890,
-    "ios_run": 36328792889,
+    "basis": "970e98c07933d78e02a7b03a07c1508864207447",
+    "checks_run": 36330976297,
+    "ios_run": 36330976325,
     "conclusion": "success",
-    "scope": "Parent baseline hosted tests; not full native patient journey or follow-up hosted acceptance",
-    "record": "../../evidence/2026-09-28-main-integration/merge.json"
+    "scope": "Prior PR29 head only; not new changes or full native treatment/VoiceOver validation",
+    "record": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md"
   },
   "active_branch": "agent/native-camera-recovery-20260928"
 }
