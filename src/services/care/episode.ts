@@ -11,6 +11,11 @@ import type { ExercisePlan } from '../pose/exercisePlan';
 import { PHASES, PhaseId, Pathway, pathwayOf } from './pathways';
 
 export interface CareEpisode {
+  /**
+   * Identifies this episode: a new pathway (e.g. after an operation) is a new
+   * episode, and sessions from another episode don't count towards this one.
+   */
+  id?: string;
   pathway: string;
   phase: PhaseId;
   /** When the clinician confirmed the programme for this pathway and phase. */
@@ -51,7 +56,8 @@ export const exercisesAllowed = (plan: ExercisePlan | null | undefined) => {
 export function setEpisode(
   plan: ExercisePlan,
   pathwayId: string,
-  phase?: PhaseId
+  phase?: PhaseId,
+  now: number = Date.now()
 ): ExercisePlan {
   const pathway = pathwayOf(pathwayId);
   if (!pathway) return plan;
@@ -71,6 +77,7 @@ export function setEpisode(
     ...plan,
     routine: handover ? [] : plan.routine,
     episode: {
+      id: samePathway && previous?.id ? previous.id : `${pathwayId}-${now.toString(36)}`,
       pathway: pathwayId,
       phase: nextPhase,
       confirmedAt: undefined,

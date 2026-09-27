@@ -23,7 +23,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@store/index';
 import { setExercisePlan } from '@store/slices/settingsSlice';
 import { ExercisePlan, applyPlan } from '@services/pose/exercisePlan';
-import { completionOf } from '@services/pose/routine';
+import { completionOf, occurrenceFor, todaysRoutine } from '@services/pose/routine';
 import { coachingOf } from '@services/care/episode';
 import { activeMs, seconds } from '@services/session/sessionClock';
 import { movementOf } from '@services/movement/exerciseMovement';
@@ -309,6 +309,13 @@ const PoseDetectionScreen: React.FC = () => {
           ? `${plan.side}_${plannedExercise.primaryJoint}`
           : undefined),
       completion,
+      // Fixed now: the routine occurrence this session was for, and the care
+      // episode, so replays, reorders or a later operation can't move it
+      occurrenceKey: occurrenceFor(
+        todaysRoutine(plan, exerciseState.history),
+        plannedExercise.id
+      ),
+      episodeId: plan?.episode?.id,
     };
     const saved = !practice && !recordingDemo && isWorthKeeping(result, repetitionCount);
     // Practice sessions and demonstrations are not the patient's own history

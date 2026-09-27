@@ -46,6 +46,8 @@ export interface ExerciseHistory {
   unavailableReason?: string;
   planVersion?: number;
   method?: string;
+  occurrenceKey?: string;
+  episodeId?: string;
   /** From Go to Stop, and how much of it was paused (s); `duration` is active time. */
   wallSeconds?: number;
   pausedSeconds?: number;
@@ -75,6 +77,10 @@ export interface SessionResult {
   planVersion?: number;
   /** How the number was measured (see measurementMethodOf): series compare within one. */
   method?: string;
+  /** The routine occurrence this session was for, fixed when it was done. */
+  occurrenceKey?: string;
+  /** The care episode it belongs to (see CareEpisode.id). */
+  episodeId?: string;
   /** How much of the prescribed exercise was done (see completionOf). */
   completion?: 'completed' | 'stopped_early' | 'attempted';
 }
@@ -164,7 +170,9 @@ const exerciseSlice = createSlice({
       ) {
         const now = Date.now();
         state.history.unshift({
-          id: `${state.currentExercise.id}-${now}`,
+          // Unique event id: a replayed copy of this record is recognised
+          // as the same event (see todaysRoutine)
+          id: `${state.currentExercise.id}-${now}-${Math.random().toString(36).slice(2, 8)}`,
           exerciseId: state.currentExercise.id,
           exerciseName: state.currentExercise.name,
           date: new Date(now).toISOString(),

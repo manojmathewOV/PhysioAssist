@@ -23,6 +23,7 @@ import type {
 
 import type { MovementProfile } from '../movement/analysis';
 import type { CareEpisode } from '../care/episode';
+import type { IntervalSchedule } from './schedule';
 import { movementOf } from '../movement/exerciseMovement';
 import type { MovementDirection } from '../movement/types';
 
@@ -51,6 +52,11 @@ export interface PrescribedExercise {
   exerciseId: string;
   /** Separate sessions a day (default 1): each is its own occurrence. */
   timesPerDay?: number;
+  /**
+   * A prescribed range of repetitions (e.g. 2-3): the lower bound completes
+   * the dose; the upper is shown, not required.
+   */
+  repRange?: { min: number; max: number };
   reps?: number;
   holdSeconds?: number;
   goalDegrees?: number;
@@ -96,6 +102,8 @@ export interface ExercisePlan {
   prescribedAt?: string;
   /** What is being treated, the phase, and whether the programme is confirmed. */
   episode?: CareEpisode;
+  /** Mini-sessions spread through the day (see schedule.ts); none = times per day. */
+  schedule?: IntervalSchedule;
 }
 
 export const JOINT_KINDS: { kind: JointKind; label: string; movement: string }[] = [
@@ -187,7 +195,7 @@ export function applyPlan(exercise: Exercise, plan?: ExercisePlan | null): Exerc
   const goalIndex = exercise.phases.length - 1;
   // This exercise's own prescription, where the routine sets one
   const item = prescribed ? routineItem(plan, exercise.id) : undefined;
-  const reps = item?.reps ?? plan.reps;
+  const reps = item?.reps ?? validRangeMin(item?.repRange) ?? plan.reps;
   const holdSeconds = item?.holdSeconds ?? plan.holdSeconds;
 
   const phases = exercise.phases.map((phase, index) => {
@@ -237,6 +245,12 @@ export function applyPlan(exercise: Exercise, plan?: ExercisePlan | null): Exerc
  */
 const hasGoalPhase = (exercise: Exercise) =>
   exercise.phases.length > 1 || movementOf(exercise.id).mode === 'hold';
+
+/** A usable repetition range's lower bound (the dose that completes it). */
+export const validRangeMin = (r?: { min: number; max: number }): number | undefined =>
+  r && Number.isInteger(r.min) && Number.isInteger(r.max) && r.min >= 1 && r.max >= r.min
+    ? r.min
+    : undefined;
 
 /** The routine's prescription for an exercise, if it is in the routine. */
 export const routineItem = (

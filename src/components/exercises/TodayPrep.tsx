@@ -30,6 +30,53 @@ export interface TodayPrepProps {
   notice?: React.ReactNode;
 }
 
+/** "14:30" in the patient's own clock format. */
+const timeOf = (ms: number) =>
+  new Date(ms).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+
+/** What to say when nothing is due now. */
+export function waitingWords(routine: TodaysRoutine): {
+  title: string;
+  body: string;
+  done: boolean;
+  testID: string;
+} {
+  if (routine.scheduleInvalid) {
+    return {
+      title: 'Your programme is being prepared',
+      body: 'Your physiotherapist still needs to set when your mini-sessions happen.',
+      done: false,
+      testID: 'today-schedule-incomplete',
+    };
+  }
+  if (routine.nextDueAt !== undefined) {
+    return {
+      title: `Next mini-session from ${timeOf(routine.nextDueAt)}`,
+      body: routine.roundsDone
+        ? `Mini-session ${routine.roundsDone} done. Rest until then; there is nothing to make up.`
+        : 'Your first mini-session of the day starts then.',
+      done: Boolean(routine.roundsDone),
+      testID: 'today-next-round',
+    };
+  }
+  if (routine.restOfDay) {
+    return {
+      title: 'That’s all for today',
+      body: routine.roundsDone
+        ? `${routine.roundsDone} mini-session${routine.roundsDone === 1 ? '' : 's'} done today. Missed ones aren’t made up; carry on tomorrow.`
+        : 'Your mini-sessions start again tomorrow. Missed ones aren’t made up.',
+      done: true,
+      testID: 'today-rest-of-day',
+    };
+  }
+  return {
+    title: 'All done for today',
+    body: 'Rest is part of getting better. To do one again, tap it below.',
+    done: true,
+    testID: 'today-all-done',
+  };
+}
+
 const TodayPrep: React.FC<TodayPrepProps> = ({
   routine,
   plan,
@@ -46,12 +93,17 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
   const videoLink = option ? plan.videos?.[option.exercise.id] : undefined;
   const videoId = parseYouTubeId(videoLink);
   const position = routine.nextIndex + 1;
+  const waitState = waitingWords(routine);
 
   return (
     <Screen
       testID="today-prep"
       title="Today’s exercises"
-      subtitle={`${routine.doneCount} of ${total} done`}
+      subtitle={
+        routine.round
+          ? `Mini-session ${routine.round} · ${routine.doneCount} of ${total} done`
+          : `${routine.doneCount} of ${total} done`
+      }
       footer={
         option ? (
           <BigButton
@@ -116,17 +168,21 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
           ) : null}
         </Card>
       ) : (
-        <Card style={styles.card} testID="today-all-done">
+        <Card style={styles.card} testID={waitState.testID}>
           <View style={styles.doneRow}>
-            <View style={styles.doneIcon}>
-              <Icon name="check" size={32} color={colors.onPrimary} />
+            <View style={[styles.doneIcon, !waitState.done && styles.waitIcon]}>
+              <Icon
+                name={waitState.done ? 'check' : 'schedule'}
+                size={32}
+                color={waitState.done ? colors.onPrimary : colors.primary}
+              />
             </View>
             <View style={styles.flex}>
               <AppText variant="heading" accessibilityRole="header">
-                All done for today
+                {waitState.title}
               </AppText>
               <AppText variant="body" color={colors.textSecondary}>
-                Rest is part of getting better. To do one again, tap it below.
+                {waitState.body}
               </AppText>
             </View>
           </View>
@@ -135,7 +191,9 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
 
       <TodaysRoutineCard
         routine={routine}
-        onPressItem={routine.next ? undefined : onRepeat}
+        // Doing one again only once today's are all done (not while a timed
+        // mini-session programme is waiting for its next round)
+        onPressItem={routine.next || routine.round ? undefined : onRepeat}
       />
 
       <View style={styles.links}>
@@ -181,6 +239,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   doneRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  waitIcon: { backgroundColor: colors.primarySoft },
   doneIcon: {
     width: 56,
     height: 56,

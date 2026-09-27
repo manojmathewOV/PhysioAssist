@@ -8,6 +8,7 @@ import { dayKey, localDay } from '../../utils/progressSummary';
 import type { Exercise } from '../../types/exercise';
 import { movementOf } from '../movement/exerciseMovement';
 import type { ExercisePlan, PrescribedExercise } from './exercisePlan';
+import { RoundState, roundState, validSchedule } from './schedule';
 
 /** What the physio prescribes; a change to any of these starts a new version. */
 const PRESCRIPTION_KEYS = [
@@ -131,11 +132,11 @@ const completionOfSession = (h: Pick<ExerciseHistory, 'completion' | 'reps'>) =>
 const RANK: Record<Completion, number> = { attempted: 1, stopped_early: 2, completed: 3 };
 
 export interface RoutineItemStatus extends PrescribedExercise {
-  /** Unique within the day: `${exerciseId}#${occurrence}`. */
+  /** Unique within the day: `${exerciseId}#${occurrence}` (the occurrence id). */
   key: string;
-  /** Which of the day's sessions of this exercise (1-based). */
+  /** Which of the day's sessions (or rounds) of this exercise (1-based). */
   occurrence: number;
-  /** How many times a day it is prescribed. */
+  /** How many times a day it is prescribed (without an interval schedule). */
   timesPerDay: number;
   /** This occurrence's best outcome today, if tried. */
   status?: Completion;
@@ -146,89 +147,249 @@ export interface RoutineItemStatus extends PrescribedExercise {
 }
 
 export interface TodaysRoutine {
-  /** Every occurrence, in order: all first sessions, then all second ones, ... */
+  /**
+   * The occurrences to show: without a schedule, all of today's (all first
+   * sessions, then all second ones, ...); with an interval schedule, the
+   * current round's.
+   */
   items: RoutineItemStatus[];
-  /** Completed today. */
+  /** Completed (of `items`). */
   doneCount: number;
-  /** Completed or stopped early today. */
+  /** Completed or stopped early (of `items`). */
   finishedCount: number;
-  /** The exercise of the first occurrence not finished yet (undefined when all are). */
+  /** The exercise to do now (undefined when all are done or a round isn't due). */
   next?: string;
-  /** Its position in `items` (-1 when all are finished). */
+  /** Its position in `items` (-1 when nothing is due). */
   nextIndex: number;
+  /** Interval schedule: the current round (1-based) and rounds finished today. */
+  round?: number;
+  roundsDone?: number;
+  /** Interval schedule: when the next round is due today, if not now. */
+  nextDueAt?: number;
+  /** Interval schedule: no more rounds today (outside or past the waking window). */
+  restOfDay?: boolean;
+  /**
+   * A schedule is set but incomplete or invalid (e.g. no waking window):
+   * nothing is offered until the treating team finishes it; it never falls
+   * back to another rhythm.
+   */
+  scheduleInvalid?: boolean;
+  /**
+   * Records ignored because another record had the same event id but
+   * different contents. Surfaced, never silently resolved.
+   */
+  conflicts: string[];
 }
 
 const isFinished = (c?: Completion) => c === 'completed' || c === 'stopped_early';
 
+type RoutineRecord = Pick<
+  ExerciseHistory,
+  'id' | 'exerciseId' | 'date' | 'joint' | 'reps' | 'completion'
+> &
+  Partial<Pick<ExerciseHistory, 'occurrenceKey' | 'episodeId'>>;
+
+/** What must match for a repeated event id to be the same event. */
+const payloadOf = (h: RoutineRecord) =>
+  JSON.stringify([
+    h.exerciseId,
+    h.joint,
+    h.date,
+    h.reps,
+    h.completion ?? null,
+    h.occurrenceKey ?? null,
+    h.episodeId ?? null,
+  ]);
+
 /**
- * Today's routine and what's done, for the plan's side. A session of the same
- * exercise on the other limb, or with no recorded side (older records), doesn't
- * count: unknown stays unknown. An exercise prescribed several times a day has
- * one occurrence per session: the morning one doesn't complete the afternoon
- * one. Sessions fill occurrences in time order; attempts stay with the
- * occurrence they were for until one finishes it.
+ * One record per event: an exact repeat (same id and contents, e.g. a
+ * replayed sync) counts once; the same id with different contents is a
+ * conflict, surfaced and not counted.
+ */
+function dedupe(history: RoutineRecord[]): {
+  records: RoutineRecord[];
+  conflicts: string[];
+} {
+  const seen = new Map<string, string>();
+  const records: RoutineRecord[] = [];
+  const conflicts: string[] = [];
+  for (const h of history) {
+    if (!h.id) {
+      records.push(h);
+      continue;
+    }
+    const payload = payloadOf(h);
+    const first = seen.get(h.id);
+    if (first === undefined) {
+      seen.set(h.id, payload);
+      records.push(h);
+    } else if (first !== payload && !conflicts.includes(h.id)) {
+      conflicts.push(h.id);
+    }
+  }
+  return { records, conflicts };
+}
+
+/** `exerciseId#n` -> n, when it names this exercise. */
+const occurrenceIn = (
+  key: string | undefined,
+  exerciseId: string
+): number | undefined => {
+  if (!key) return undefined;
+  const [id, n] = key.split('#');
+  const k = Number(n);
+  return id === exerciseId && Number.isInteger(k) && k >= 1 ? k : undefined;
+};
+
+/**
+ * Today's routine and what's done, for the plan's side and care episode.
+ *
+ * - A session on the other limb, with no recorded side, or from another care
+ *   episode (e.g. before an operation) doesn't count: unknown stays unknown.
+ * - Each saved session names the occurrence it was for (`occurrenceKey`, set
+ *   when it was done), so reordering the routine later doesn't move it. Older
+ *   records without one fill occurrences in time order.
+ * - A replayed record (same event id and contents) counts once; a conflicting
+ *   one is surfaced in `conflicts` and not counted.
+ * - With an interval schedule (see schedule.ts), the routine is done in
+ *   rounds: the current round's movements first, then the next round only
+ *   when due inside the waking window; missed rounds aren't made up.
  */
 export function todaysRoutine(
   plan: ExercisePlan | null | undefined,
-  history: Pick<
-    ExerciseHistory,
-    'exerciseId' | 'date' | 'joint' | 'reps' | 'completion'
-  >[],
+  history: RoutineRecord[],
   now: number = Date.now()
 ): TodaysRoutine {
   const today = localDay(now);
   const routine = plan?.routine ?? [];
-  const perExercise = new Map<string, (Completion | undefined)[]>();
-  for (const item of routine) {
-    perExercise.set(item.exerciseId, new Array(timesPerDayOf(item)).fill(undefined));
-  }
-  const todays = history
+  const inRoutineIds = new Set(routine.map((i) => i.exerciseId));
+  const episodeId = plan?.episode?.id;
+  const { records, conflicts } = dedupe(history);
+  const todays = records
     .filter(
       (h) =>
-        dayKey(h.date) === today &&
         plan !== null &&
         plan !== undefined &&
+        dayKey(h.date) === today &&
         h.joint !== undefined &&
         h.joint.startsWith(`${plan.side}_`) &&
-        perExercise.has(h.exerciseId)
+        inRoutineIds.has(h.exerciseId) &&
+        // A record from another episode (another operation) never counts
+        (h.episodeId === undefined ||
+          episodeId === undefined ||
+          h.episodeId === episodeId)
     )
     .sort((x, y) => x.date.localeCompare(y.date));
-  const filled = new Map<string, number>();
+
+  // Each exercise's outcome per occurrence, and when each occurrence finished
+  const status = new Map<string, Map<number, Completion>>();
+  const finishedAt = new Map<string, Map<number, number>>();
+  const next = new Map<string, number>(); // legacy fill position
+  const record = (exerciseId: string, k: number, c: Completion, at: number) => {
+    const byK = status.get(exerciseId) ?? new Map<number, Completion>();
+    status.set(exerciseId, byK);
+    const prev = byK.get(k);
+    if (!prev || RANK[c] > RANK[prev]) byK.set(k, c);
+    if (isFinished(c)) {
+      const ends = finishedAt.get(exerciseId) ?? new Map<number, number>();
+      finishedAt.set(exerciseId, ends);
+      ends.set(k, Math.max(ends.get(k) ?? 0, at));
+    }
+  };
   for (const h of todays) {
-    const slots = perExercise.get(h.exerciseId)!;
-    const k = filled.get(h.exerciseId) ?? 0;
-    if (k >= slots.length) continue; // more sessions than prescribed
     const c = completionOfSession(h);
-    const prev = slots[k];
-    if (!prev || RANK[c] > RANK[prev]) slots[k] = c;
-    if (isFinished(c)) filled.set(h.exerciseId, k + 1);
+    const at = new Date(h.date).getTime();
+    const k =
+      occurrenceIn(h.occurrenceKey, h.exerciseId) ??
+      // Older records: fill occurrences in time order
+      next.get(h.exerciseId) ??
+      1;
+    record(h.exerciseId, k, c, at);
+    if (!h.occurrenceKey && isFinished(c)) next.set(h.exerciseId, k + 1);
   }
+
+  const item = (p: PrescribedExercise, occurrence: number): RoutineItemStatus => {
+    const st = status.get(p.exerciseId)?.get(occurrence);
+    return {
+      ...p,
+      key: `${p.exerciseId}#${occurrence}`,
+      occurrence,
+      timesPerDay: timesPerDayOf(p),
+      status: st,
+      done: st === 'completed',
+      finished: isFinished(st),
+    };
+  };
+  const summary = (items: RoutineItemStatus[], due: boolean) => {
+    const nextIndex = due ? items.findIndex((i) => !i.finished) : -1;
+    return {
+      items,
+      doneCount: items.filter((i) => i.done).length,
+      finishedCount: items.filter((i) => i.finished).length,
+      next: nextIndex >= 0 ? items[nextIndex].exerciseId : undefined,
+      nextIndex,
+      conflicts,
+    };
+  };
+
+  const schedule = plan?.schedule;
+  if (schedule !== undefined && !validSchedule(schedule)) {
+    return {
+      ...summary(
+        routine.map((p) => item(p, 1)),
+        false
+      ),
+      scheduleInvalid: true,
+    };
+  }
+  if (validSchedule(schedule) && routine.length) {
+    // Rounds: the first not yet finished by every movement is the current one
+    const roundDone = (r: number) =>
+      routine.every((p) => isFinished(status.get(p.exerciseId)?.get(r)));
+    let round = 1;
+    while (roundDone(round)) round++;
+    const items = routine.map((p) => item(p, round));
+    const started = items.some((i) => i.status);
+    const lastEnd =
+      round > 1
+        ? Math.max(
+            ...routine.map((p) => finishedAt.get(p.exerciseId)?.get(round - 1) ?? 0)
+          )
+        : undefined;
+    // A round already begun can be finished; a new one waits until it's due
+    const state: RoundState = started
+      ? { due: true }
+      : roundState(schedule, now, lastEnd);
+    return {
+      ...summary(items, state.due),
+      round,
+      roundsDone: round - 1,
+      nextDueAt: state.due ? undefined : state.from,
+      restOfDay: state.restOfDay,
+    };
+  }
+
   const most = Math.max(0, ...routine.map(timesPerDayOf));
   const items: RoutineItemStatus[] = [];
   for (let occurrence = 1; occurrence <= most; occurrence++) {
-    for (const item of routine) {
-      const timesPerDay = timesPerDayOf(item);
-      if (occurrence > timesPerDay) continue;
-      const status = perExercise.get(item.exerciseId)![occurrence - 1];
-      items.push({
-        ...item,
-        key: `${item.exerciseId}#${occurrence}`,
-        occurrence,
-        timesPerDay,
-        status,
-        done: status === 'completed',
-        finished: isFinished(status),
-      });
+    for (const p of routine) {
+      if (occurrence <= timesPerDayOf(p)) items.push(item(p, occurrence));
     }
   }
-  const nextIndex = items.findIndex((i) => !i.finished);
-  return {
-    items,
-    doneCount: items.filter((i) => i.done).length,
-    finishedCount: items.filter((i) => i.finished).length,
-    next: nextIndex >= 0 ? items[nextIndex].exerciseId : undefined,
-    nextIndex,
-  };
+  return summary(items, true);
+}
+
+/**
+ * The occurrence a session of `exerciseId` done now is for: the first of this
+ * exercise not finished yet (undefined when none is due: extra sessions don't
+ * count towards another occurrence). Saved with the session.
+ */
+export function occurrenceFor(
+  routine: TodaysRoutine,
+  exerciseId: string
+): string | undefined {
+  if (routine.nextIndex < 0) return undefined;
+  return routine.items.find((i) => i.exerciseId === exerciseId && !i.finished)?.key;
 }
 
 /** Times a day an exercise is prescribed (at least once). */
@@ -243,6 +404,8 @@ export function nextAfter(
   routine: TodaysRoutine,
   exerciseId: string
 ): string | undefined {
+  // Nothing due (all done, or waiting for the next round's time)
+  if (routine.nextIndex < 0) return undefined;
   // The occurrence just done: the latest of this exercise that was tried
   // (or, when the session wasn't saved, its first occurrence still to do)
   let index = -1;

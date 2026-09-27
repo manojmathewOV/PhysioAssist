@@ -29,6 +29,7 @@ import {
 } from '../utils/progressSummary';
 import { todaysRoutine } from '../services/pose/routine';
 import { exercisesAllowed } from '../services/care/episode';
+import { waitingWords } from '../components/exercises/TodayPrep';
 import {
   findExerciseOption,
   formatDuration,
@@ -52,6 +53,11 @@ const HomeScreen: React.FC = () => {
   const hasRoutine = routine.items.length > 0;
   // Not confirmed for this stage of recovery: no exercises offered
   const waiting = !exercisesAllowed(plan);
+  // Timed mini-sessions: between rounds, or an unfinished schedule
+  const roundWait =
+    !waiting && routine.nextIndex < 0 && (routine.round || routine.scheduleInvalid)
+      ? waitingWords(routine)
+      : undefined;
   const routineLeft = routine.items.length - routine.finishedCount;
   // Small phones: the ring above the words, so words aren't broken up
   const narrow = useWindowDimensions().width < 360;
@@ -88,7 +94,14 @@ const HomeScreen: React.FC = () => {
         when="Today"
         testID="home-today"
       >
-        {waiting ? (
+        {roundWait ? (
+          <View style={styles.waiting} testID="home-round-wait">
+            <AppText variant="heading">{roundWait.title}</AppText>
+            <AppText variant="body" color={colors.textSecondary}>
+              {roundWait.body}
+            </AppText>
+          </View>
+        ) : waiting ? (
           <View style={styles.waiting} testID="home-waiting">
             <AppText variant="heading">Your programme is being prepared</AppText>
             <AppText variant="body" color={colors.textSecondary}>
@@ -152,7 +165,7 @@ const HomeScreen: React.FC = () => {
             </View>
           </View>
         )}
-        {waiting ? null : hasRoutine && routineLeft === 0 ? (
+        {waiting || roundWait ? null : hasRoutine && routineLeft === 0 ? (
           <BigButton
             variant="secondary"
             label="See my progress"

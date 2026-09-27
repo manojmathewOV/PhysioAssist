@@ -12,7 +12,7 @@ import { colors, radii, spacing } from '../../theme';
 import type { TodaysRoutine } from '../../services/pose/routine';
 import { findExerciseOption, formatDuration } from './exerciseCatalog';
 import { movementOf } from '../../services/movement/exerciseMovement';
-import type { PrescribedExercise } from '../../services/pose/exercisePlan';
+import { PrescribedExercise, validRangeMin } from '../../services/pose/exercisePlan';
 import type { Completion } from '../../services/pose/routine';
 
 /** "10 times", "Rest still for 1 min": the prescription, else the exercise's default. */
@@ -33,6 +33,13 @@ const amountOf = (item: PrescribedExercise): string => {
       ? item.holdSeconds * 1000
       : option?.exercise.phases[0]?.holdDuration;
     return ms ? `Rest still for ${formatDuration(ms / 1000)}` : option?.goal ?? '';
+  }
+  // A prescribed range: the lower bound is the dose, the upper is allowed
+  const range = item.repRange;
+  if (item.reps === undefined && validRangeMin(range) !== undefined && range) {
+    return range.max > range.min
+      ? `${range.min}–${range.max} times`
+      : `${range.min} times`;
   }
   const reps = item.reps ?? option?.exercise.targetRepetitions;
   return reps ? `${reps} times` : option?.goal ?? '';
@@ -57,9 +64,11 @@ export const TodaysRoutineCard: React.FC<{
         TODAY’S SESSION
       </AppText>
       <AppText variant="heading" testID="todays-routine-status">
-        {allDone
-          ? 'All done for today'
-          : `${routine.doneCount} of ${total} ${total === 1 ? 'exercise' : 'exercises'} done`}
+        {routine.round
+          ? `Mini-session ${routine.round}: ${routine.doneCount} of ${total} done`
+          : allDone
+            ? 'All done for today'
+            : `${routine.doneCount} of ${total} ${total === 1 ? 'exercise' : 'exercises'} done`}
       </AppText>
       <View>
         {routine.items.map((item, i) => {
