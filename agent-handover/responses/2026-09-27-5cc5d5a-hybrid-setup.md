@@ -32,3 +32,7 @@ Review PR #27; do not replace Claude's application branch. The iPhone patient-on
 Current operational defaults: one managed job; 2 GiB Node heap per process (not a total-RSS guarantee); 20 GiB preflight free-space reserve; 8 GiB preflight cache budget; 50 MiB command-log ceiling. No watcher or daemon persists after a run. Cleanup is dry-run by default and never purges evidence, source, metadata, credentials or shared system caches.
 
 Still open: authorised CI hardening; full native UI-driver setup and rehab journeys; current release-toolchain qualification; physical-device/real-camera/clinical validation. No simulator/runtime, Homebrew prerequisite, macOS or Xcode upgrade was performed. No patient content was uploaded.
+
+## CI permission resolution — 2026-09-27
+
+The initial Mac OAuth workflow-scope refusal was resolved using the already-connected GitHub app, which had separately authorised workflow-write access. It published the exact two-line CI change in `343a400c115f347f7fcd46a97ac3a8953883cea5`; PR #27 now has head `0ca6dbe166df2cdba36477f8bae316fe56308aae`. No account scope or credential was changed. CI uses frozen Pod installation and pipefail. A controlled failing-Pod pipeline returned 7 with pipefail and 0 without it. The API workflow commit did not run local Git hooks at publication; the main patch and following docs commit did, including the 21 Integration tests. The earlier inactive patch was retired. These results do not claim hosted native CI has completed. This resolution note was published via a contents-API documentation update.
