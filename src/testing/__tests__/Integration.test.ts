@@ -32,10 +32,10 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
     sequenceGenerator = new MultiFrameSequenceGenerator();
     frameCache = new AnatomicalFrameCache();
     anatomicalService = new AnatomicalReferenceService();
-    // Disable temporal smoothing for single-frame accuracy tests
-    measurementService = new ClinicalMeasurementService(undefined, undefined, {
-      smoothingWindow: 1,
-    });
+    // Note: ClinicalMeasurementService does not expose goniometer smoothing
+    // configuration (its internal GoniometerServiceV2 always uses the default
+    // window), so accuracy tests below use a fresh service per measurement.
+    measurementService = new ClinicalMeasurementService();
     temporalAnalyzer = new TemporalConsistencyAnalyzer();
   });
 
@@ -552,13 +552,7 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
         const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
 
         // Create fresh measurement service for each test to avoid smoothing history contamination
-        const freshMeasurementService = new ClinicalMeasurementService(
-          undefined,
-          undefined,
-          {
-            smoothingWindow: 1,
-          }
-        );
+        const freshMeasurementService = new ClinicalMeasurementService();
         const measurement = freshMeasurementService.measureElbowFlexion(
           enrichedPose,
           'right'
@@ -602,13 +596,7 @@ describe('Integration Tests: Complete Measurement Pipeline', () => {
         const enrichedPose = addAnatomicalFrames(poseData, frameCache, anatomicalService);
 
         // Create fresh measurement service for each test to avoid smoothing history contamination
-        const freshMeasurementService = new ClinicalMeasurementService(
-          undefined,
-          undefined,
-          {
-            smoothingWindow: 1,
-          }
-        );
+        const freshMeasurementService = new ClinicalMeasurementService();
         const measurement = freshMeasurementService.measureKneeFlexion(
           enrichedPose,
           'right'

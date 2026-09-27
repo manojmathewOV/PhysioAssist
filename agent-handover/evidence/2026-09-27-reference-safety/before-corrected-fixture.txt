@@ -1,0 +1,242 @@
+FAIL src/components/__tests__/referenceSafety.test.tsx
+  review V05: a demonstration never prescribes range
+    ✕ 164 degree reference does not override a met 90 degree goal (3 ms)
+    ✕ a lower reference does not hide a missed prescribed target (3 ms)
+    ✕ no goal: a reference is not permission to push further
+    ✕ straightening respects a prescribed 30 degree goal, not a demo at zero
+    ✕ an explicit zero goal is not replaced by a less-straight demonstration (1 ms)
+    ✕ withholds range coaching from front rejected knee view (1 ms)
+    ✕ withholds range coaching from oblique rejected knee view
+    ✕ withholds range coaching when the prescribed knee is hidden on the far side
+  review V06: comfort policy reaches summary, speech selection and history
+    ✕ filters expansion advice before the rendered summary and speech selection (253 ms)
+    ✕ passes the phase policy through the actual recording hook (109 ms)
+    ✕ keeps a genuine setup warning rather than blanketing all feedback (1 ms)
+    ✓ keeps an unmeasured still-position setup cue in comfort mode (1 ms)
+    ✕ does not show an inferred demo target with analysis=true
+    ✕ does not show an inferred demo target with analysis=false
+
+  ● review V05: a demonstration never prescribes range › 164 degree reference does not override a met 90 degree goal
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected value: not "reduced_range"
+    Received array:     ["reduced_range"]
+
+      28 | describe('review V05: a demonstration never prescribes range', () => {
+      29 |   it('164 degree reference does not override a met 90 degree goal', () => {
+    > 30 |     expect(ids(analyseSession(frames(90), shoulder, { reference: demo(), goalDegrees: 90 }))).not.toContain('reduced_range');
+         |                                                                                                   ^
+      31 |   });
+      32 |   it('a lower reference does not hide a missed prescribed target', () => {
+      33 |     const result = analyseSession(frames(50), shoulder, { reference: demo(40), goalDegrees: 90 });
+
+      at Object.toContain (src/components/__tests__/referenceSafety.test.tsx:30:99)
+
+  ● review V05: a demonstration never prescribes range › a lower reference does not hide a missed prescribed target
+
+    expect(received).toContain(expected) // indexOf
+
+    Matcher error: received value must not be null nor undefined
+
+    Received has value: undefined
+
+      32 |   it('a lower reference does not hide a missed prescribed target', () => {
+      33 |     const result = analyseSession(frames(50), shoulder, { reference: demo(40), goalDegrees: 90 });
+    > 34 |     expect(result.findings.find(f => f.id === 'reduced_range')?.detail).toContain('your goal is 90');
+         |                                                                         ^
+      35 |   });
+      36 |   it('no goal: a reference is not permission to push further', () => {
+      37 |     expect(ids(analyseSession(frames(90), shoulder, { reference: demo() }))).not.toContain('reduced_range');
+
+      at Object.toContain (src/components/__tests__/referenceSafety.test.tsx:34:73)
+
+  ● review V05: a demonstration never prescribes range › no goal: a reference is not permission to push further
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected value: not "reduced_range"
+    Received array:     ["reduced_range"]
+
+      35 |   });
+      36 |   it('no goal: a reference is not permission to push further', () => {
+    > 37 |     expect(ids(analyseSession(frames(90), shoulder, { reference: demo() }))).not.toContain('reduced_range');
+         |                                                                                  ^
+      38 |   });
+      39 |   it('straightening respects a prescribed 30 degree goal, not a demo at zero', () => {
+      40 |     expect(ids(analyseSession(frames(25, 90), knee, { reference: demo(0), goalDegrees: 30 }))).not.toContain('reduced_range');
+
+      at Object.toContain (src/components/__tests__/referenceSafety.test.tsx:37:82)
+
+  ● review V05: a demonstration never prescribes range › straightening respects a prescribed 30 degree goal, not a demo at zero
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected value: not "reduced_range"
+    Received array:     ["reduced_range"]
+
+      38 |   });
+      39 |   it('straightening respects a prescribed 30 degree goal, not a demo at zero', () => {
+    > 40 |     expect(ids(analyseSession(frames(25, 90), knee, { reference: demo(0), goalDegrees: 30 }))).not.toContain('reduced_range');
+         |                                                                                                    ^
+      41 |   });
+      42 |   it('an explicit zero goal is not replaced by a less-straight demonstration', () => {
+      43 |     expect(ids(analyseSession(frames(25, 90), knee, { reference: demo(30), goalDegrees: 0 }))).toContain('reduced_range');
+
+      at Object.toContain (src/components/__tests__/referenceSafety.test.tsx:40:100)
+
+  ● review V05: a demonstration never prescribes range › an explicit zero goal is not replaced by a less-straight demonstration
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected value: "reduced_range"
+    Received array: []
+
+      41 |   });
+      42 |   it('an explicit zero goal is not replaced by a less-straight demonstration', () => {
+    > 43 |     expect(ids(analyseSession(frames(25, 90), knee, { reference: demo(30), goalDegrees: 0 }))).toContain('reduced_range');
+         |                                                                                                ^
+      44 |   });
+      45 |   it.each(['front', 'oblique'] as const)('withholds range coaching from %s rejected knee view', view => {
+      46 |     const result = analyseSession(frames(50).map(f => ({ ...f, view })), { ...knee, exerciseId: 'seated-knee-flexion' }, { goalDegrees: 90 });
+
+      at Object.toContain (src/components/__tests__/referenceSafety.test.tsx:43:96)
+
+  ● review V05: a demonstration never prescribes range › withholds range coaching from front rejected knee view
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected value: not "reduced_range"
+    Received array:     ["reduced_range", "camera_view"]
+
+      46 |     const result = analyseSession(frames(50).map(f => ({ ...f, view })), { ...knee, exerciseId: 'seated-knee-flexion' }, { goalDegrees: 90 });
+      47 |     expect(result.result.status).toBe('unavailable');
+    > 48 |     expect(ids(result)).not.toContain('reduced_range');
+         |                             ^
+      49 |     expect(ids(result)).toContain('camera_view');
+      50 |   });
+      51 |   it('withholds range coaching when the prescribed knee is hidden on the far side', () => {
+
+      at toContain (src/components/__tests__/referenceSafety.test.tsx:48:29)
+
+  ● review V05: a demonstration never prescribes range › withholds range coaching from oblique rejected knee view
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected value: not "reduced_range"
+    Received array:     ["reduced_range", "camera_view"]
+
+      46 |     const result = analyseSession(frames(50).map(f => ({ ...f, view })), { ...knee, exerciseId: 'seated-knee-flexion' }, { goalDegrees: 90 });
+      47 |     expect(result.result.status).toBe('unavailable');
+    > 48 |     expect(ids(result)).not.toContain('reduced_range');
+         |                             ^
+      49 |     expect(ids(result)).toContain('camera_view');
+      50 |   });
+      51 |   it('withholds range coaching when the prescribed knee is hidden on the far side', () => {
+
+      at toContain (src/components/__tests__/referenceSafety.test.tsx:48:29)
+
+  ● review V05: a demonstration never prescribes range › withholds range coaching when the prescribed knee is hidden on the far side
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected value: not "reduced_range"
+    Received array:     ["reduced_range", "camera_view"]
+
+      50 |   });
+      51 |   it('withholds range coaching when the prescribed knee is hidden on the far side', () => {
+    > 52 |     expect(ids(analyseSession(frames(50).map(f => ({ ...f, nearSide: 'right' })), { ...knee, exerciseId: 'seated-knee-flexion' }, { goalDegrees: 90 }))).not.toContain('reduced_range');
+         |                                                                                                                                                              ^
+      53 |   });
+      54 | });
+      55 |
+
+      at Object.toContain (src/components/__tests__/referenceSafety.test.tsx:52:158)
+
+  ● review V06: comfort policy reaches summary, speech selection and history › filters expansion advice before the rendered summary and speech selection
+
+    expect(received).toBeNull()
+
+    Received: {"_fiber": {"_debugHookTypes": null, "_debugNeedsRemount": false, "_debugOwner": [FiberNode], "_debugSource": null, "actualDuration": 0, "actualStartTime": -1, "alternate": null, "child": [FiberNode], "childLanes": 0, "deletions": null, "dependencies": null, "elementType": "View", "flags": 0, "index": 0, "key": null, "lanes": 0, "memoizedProps": [Object], "memoizedState": null, "mode": 0, "pendingProps": [Object], "ref": null, "return": [FiberNode], "selfBaseDuration": 0, "sibling": null, "stateNode": [Object], "subtreeFlags": 1048577, "tag": 5, "treeBaseDuration": 0, "type": "View", "updateQueue": null}}
+
+      62 |       recordingDemo: false, sessionRange: { joint: 'left_shoulder', bestDegrees: 50, goalDegrees: 90 } });
+      63 |     const screen = render(<ExerciseSummary {...result.summary} exercise="Arm raise" reps={3} duration={15} completion="completed" />);
+    > 64 |     expect(screen.queryByTestId('finding-reduced_range')).toBeNull();
+         |                                                           ^
+      65 |     expect(screen.queryByText(/go a little further|straighten.*more|all the way back/i)).toBeNull();
+      66 |     expect(result.spokenCue ?? '').not.toMatch(/further|straighten.*more|longer/i);
+      67 |     expect(result.summary.range?.goalDegrees).toBeUndefined();
+
+      at Object.toBeNull (src/components/__tests__/referenceSafety.test.tsx:64:59)
+
+  ● review V06: comfort policy reaches summary, speech selection and history › passes the phase policy through the actual recording hook
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected value: not "reduced_range"
+    Received array:     ["reduced_range"]
+
+      78 |     act(() => { analysis = result.current.finish(); });
+      79 |     expect(analysis).not.toBeNull();
+    > 80 |     expect(ids(analysis!)).not.toContain('reduced_range');
+         |                                ^
+      81 |   });
+      82 |   it('keeps a genuine setup warning rather than blanketing all feedback', () => {
+      83 |     const analysis = analyseSession(frames(50).map(f => ({ ...f, view: 'front' })), { ...knee, exerciseId: 'seated-knee-flexion' }, { goalDegrees: 90 });
+
+      at Object.toContain (src/components/__tests__/referenceSafety.test.tsx:80:32)
+
+  ● review V06: comfort policy reaches summary, speech selection and history › keeps a genuine setup warning rather than blanketing all feedback
+
+    expect(received).toMatch(expected)
+
+    Expected pattern: /side|camera/
+    Received string:  "Try to go a little further, if it’s comfortable."
+
+      85 |       recordingDemo: false, sessionRange: null });
+      86 |     expect(result.summary.findings?.map(f => f.id)).toContain('camera_view');
+    > 87 |     expect(result.spokenCue).toMatch(/side|camera/);
+         |                              ^
+      88 |     expect(result.summary.range).toBeNull();
+      89 |     expect(result.historyResult?.measured).toBe(false);
+      90 |   });
+
+      at Object.toMatch (src/components/__tests__/referenceSafety.test.tsx:87:30)
+
+  ● review V06: comfort policy reaches summary, speech selection and history › does not show an inferred demo target with analysis=true
+
+    expect(received).toBeUndefined()
+
+    Received: 164
+
+      102 |     const result = sessionOutcome(analysis, { plan: p, exercise: EXERCISES.armRaise,
+      103 |       recordingDemo: false, sessionRange: { joint: 'left_shoulder', bestDegrees: 90 } });
+    > 104 |     expect(result.summary.range?.goalDegrees).toBeUndefined();
+          |                                               ^
+      105 |     expect(result.summary.range?.goalLabel).toBeUndefined();
+      106 |   });
+      107 | });
+
+      at toBeUndefined (src/components/__tests__/referenceSafety.test.tsx:104:47)
+
+  ● review V06: comfort policy reaches summary, speech selection and history › does not show an inferred demo target with analysis=false
+
+    expect(received).toBeUndefined()
+
+    Received: 164
+
+      102 |     const result = sessionOutcome(analysis, { plan: p, exercise: EXERCISES.armRaise,
+      103 |       recordingDemo: false, sessionRange: { joint: 'left_shoulder', bestDegrees: 90 } });
+    > 104 |     expect(result.summary.range?.goalDegrees).toBeUndefined();
+          |                                               ^
+      105 |     expect(result.summary.range?.goalLabel).toBeUndefined();
+      106 |   });
+      107 | });
+
+      at toBeUndefined (src/components/__tests__/referenceSafety.test.tsx:104:47)
+
+Test Suites: 1 failed, 1 total
+Tests:       13 failed, 1 passed, 14 total
+Snapshots:   0 total
+Time:        1.172 s, estimated 2 s
+Ran all test suites within paths "src/components/__tests__/referenceSafety.test.tsx".

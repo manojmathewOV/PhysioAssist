@@ -3,7 +3,7 @@
  * Tests Android-specific features, permissions, and behaviors
  */
 
-import { Platform, PermissionsAndroid, BackHandler } from 'react-native';
+import { Platform, PermissionsAndroid, BackHandler, View, Text } from 'react-native';
 import { render } from '@testing-library/react-native';
 import React from 'react';
 
@@ -48,6 +48,10 @@ jest.mock('react-native', () => {
   };
 });
 
+// Platform.select is replaced with a jest.fn() by the module mock above; its
+// overloaded generic signature cannot be expressed via jest.mocked().
+const mockedSelect = Platform.select as jest.Mock;
+
 describe('Android Platform Tests', () => {
   beforeEach(() => {
     Platform.OS = 'android';
@@ -62,7 +66,7 @@ describe('Android Platform Tests', () => {
     });
 
     it('should select Android-specific values', () => {
-      Platform.select.mockImplementation((obj) => obj.android);
+      mockedSelect.mockImplementation((obj: { android?: unknown }) => obj.android);
 
       const value = Platform.select({
         ios: 'iOS Value',
@@ -76,7 +80,9 @@ describe('Android Platform Tests', () => {
 
   describe('Android Permissions', () => {
     it('should request camera permission on Android', async () => {
-      PermissionsAndroid.request.mockResolvedValue(PermissionsAndroid.RESULTS.GRANTED);
+      jest
+        .mocked(PermissionsAndroid.request)
+        .mockResolvedValue(PermissionsAndroid.RESULTS.GRANTED);
 
       const result = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.CAMERA,
@@ -97,7 +103,8 @@ describe('Android Platform Tests', () => {
     });
 
     it('should handle multiple permissions on Android', async () => {
-      PermissionsAndroid.requestMultiple.mockResolvedValue({
+      // The mocked result only carries the permissions requested below.
+      (PermissionsAndroid.requestMultiple as jest.Mock).mockResolvedValue({
         'android.permission.CAMERA': 'granted',
         'android.permission.WRITE_EXTERNAL_STORAGE': 'granted',
         'android.permission.RECORD_AUDIO': 'denied',
@@ -117,7 +124,7 @@ describe('Android Platform Tests', () => {
 
     it('should handle Android 13+ photo picker', () => {
       // Android 13+ doesn't need READ_EXTERNAL_STORAGE for photo picker
-      const needsStoragePermission = Platform.Version < 33;
+      const needsStoragePermission = Number(Platform.Version) < 33;
       expect(needsStoragePermission).toBe(false);
     });
   });
@@ -150,17 +157,18 @@ describe('Android Platform Tests', () => {
   describe('Android-Specific UI Components', () => {
     it('should render Android Material Design components', () => {
       const AndroidButton = () => (
-        <div
+        <View
           testID="android-button"
           style={{
             elevation: 2,
             backgroundColor: '#2196F3',
             borderRadius: 4,
-            padding: '8px 16px',
+            paddingVertical: 8,
+            paddingHorizontal: 16,
           }}
         >
-          Android Material Button
-        </div>
+          <Text>Android Material Button</Text>
+        </View>
       );
 
       const { getByTestId } = render(<AndroidButton />);
@@ -168,7 +176,7 @@ describe('Android Platform Tests', () => {
     });
 
     it('should use Android-specific fonts', () => {
-      Platform.select.mockImplementation((obj) => obj.android);
+      mockedSelect.mockImplementation((obj: { android?: unknown }) => obj.android);
 
       const styles = {
         text: {
@@ -210,7 +218,7 @@ describe('Android Platform Tests', () => {
     });
 
     it('should use Android MediaCodec settings', () => {
-      Platform.select.mockImplementation((obj) => obj.android);
+      mockedSelect.mockImplementation((obj: { android?: unknown }) => obj.android);
 
       const codecSettings = Platform.select({
         ios: {
@@ -224,14 +232,14 @@ describe('Android Platform Tests', () => {
         },
       });
 
-      expect(codecSettings.hardwareAcceleration).toBe(true);
-      expect(codecSettings.useMediaCodec).toBe(true);
+      expect(codecSettings?.hardwareAcceleration).toBe(true);
+      expect(codecSettings?.useMediaCodec).toBe(true);
     });
   });
 
   describe('Android Storage Access', () => {
     it('should use scoped storage on Android 10+', () => {
-      const useScopedStorage = Platform.Version >= 29;
+      const useScopedStorage = Number(Platform.Version) >= 29;
       expect(useScopedStorage).toBe(true);
 
       const storageConfig = {
@@ -250,7 +258,7 @@ describe('Android Platform Tests', () => {
         createChannel: jest.fn(),
       };
 
-      if (Platform.Version >= 26) {
+      if (Number(Platform.Version) >= 26) {
         mockNotification.createChannel({
           channelId: 'exercise-reminders',
           channelName: 'Exercise Reminders',
@@ -291,9 +299,13 @@ describe('Android Platform Tests', () => {
         accessibilityRole: 'button',
         importantForAccessibility: 'yes',
         testID: 'exercise-button',
-      };
+      } as const;
 
-      const TestComponent = () => <div {...accessibilityProps}>Start Exercise</div>;
+      const TestComponent = () => (
+        <View {...accessibilityProps}>
+          <Text>Start Exercise</Text>
+        </View>
+      );
 
       const { getByTestId } = render(<TestComponent />);
       const element = getByTestId('exercise-button');

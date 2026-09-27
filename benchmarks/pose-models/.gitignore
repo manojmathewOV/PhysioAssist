@@ -1,0 +1,6 @@
+annotations/
+coco/
+selected.json
+results.json
+*.task
+*.tflite

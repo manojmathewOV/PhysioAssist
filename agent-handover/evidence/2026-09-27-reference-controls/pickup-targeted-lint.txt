@@ -1,0 +1,19 @@
+
+<PHYSIO_WORKSPACE>/repo/metro.config.js
+  0:0  warning  File ignored because of a matching ignore pattern. Use "--no-ignore" to override
+
+<PHYSIO_WORKSPACE>/repo/src/components/video/ExerciseVideo.tsx
+  144:16  warning  Inline style: {
+  height: 'failed ? 0 : playerHeight(width, expanded)',
+  minWidth: 200,
+  backgroundColor: '#000'
+}  react-native/no-inline-styles
+
+<PHYSIO_WORKSPACE>/repo/src/components/video/VideoTransport.tsx
+  43:16  warning  Inline style: { flex: 1, backgroundColor: '#000' }  react-native/no-inline-styles
+
+<PHYSIO_WORKSPACE>/repo/src/components/video/__tests__/playerDocument.test.ts
+  192:40  warning  Script URL is a form of eval  no-script-url
+
+✖ 4 problems (0 errors, 4 warnings)
+

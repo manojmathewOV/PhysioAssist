@@ -1,0 +1,6 @@
+PASS src/components/__tests__/followupReview.test.tsx
+PASS src/services/pose/__tests__/routineIdentity.test.tsx
+PASS src/components/__tests__/clinicalScrutiny.test.tsx
+PASS src/components/__tests__/framingRequirement.test.ts
+Tests:       54 passed, 54 total
+Jest did not exit one second after the test run has completed.

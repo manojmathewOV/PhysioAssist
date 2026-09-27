@@ -128,7 +128,7 @@ try {
 
   const requiredFields = ['id', 'jointId', 'name', 'category', 'normalRange'];
   const allValid = registry.movements.every((movement) =>
-    requiredFields.every((field) => movement.hasOwnProperty(field))
+    requiredFields.every((field) => Object.prototype.hasOwnProperty.call(movement, field))
   );
 
   category1Tests.push(
@@ -312,7 +312,9 @@ try {
 
   const movementsWithAllModes = registry.movements.filter((movement) => {
     if (!movement.modeSpecificData) return false;
-    return modeIds.every((modeId) => movement.modeSpecificData.hasOwnProperty(modeId));
+    return modeIds.every((modeId) =>
+      Object.prototype.hasOwnProperty.call(movement.modeSpecificData, modeId)
+    );
   });
 
   const coverage = (

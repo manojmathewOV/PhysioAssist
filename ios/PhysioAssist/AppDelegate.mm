@@ -1,6 +1,7 @@
 #import "AppDelegate.h"
 
 #import <React/RCTBundleURLProvider.h>
+#import <React/RCTBridgeModule.h>
 
 @implementation AppDelegate
 
@@ -28,4 +29,13 @@
 #endif
 }
 
+@end
+
+// The official embedded player identifies the installed app, not YouTube.
+@interface PhysioAppIdentity : NSObject <RCTBridgeModule>
+@end
+@implementation PhysioAppIdentity
+RCT_EXPORT_MODULE(PhysioAppIdentity)
++ (BOOL)requiresMainQueueSetup { return NO; }
+- (NSDictionary *)constantsToExport { return @{@"bundleIdentifier": [[NSBundle mainBundle] bundleIdentifier] ?: @""}; }
 @end

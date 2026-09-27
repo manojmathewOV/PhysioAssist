@@ -1,4 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { ExercisePlan } from '../../services/pose/exercisePlan';
+import { withVersion } from '../../services/pose/routine';
+import { keepConfirmationHonest } from '../../services/care/episode';
 
 interface SettingsState {
   // Audio Settings
@@ -15,9 +18,18 @@ interface SettingsState {
   showFormFeedback: boolean;
   showJointAngles: boolean;
   showPoseOverlay: boolean;
+  /**
+   * Camera picture: dim and soften the room so the patient (and the angle
+   * overlay) stand out; other people and objects recede. Web for now.
+   */
+  cameraFocus: boolean;
 
   // Performance Settings
   frameSkip: number;
+  /** Repetitions per day the Home ring fills towards. */
+  dailyRepGoal: number;
+  /** Joint of interest and the standard the physiotherapist set (null = not chosen). */
+  exercisePlan: ExercisePlan | null;
   highPerformanceMode: boolean;
 
   // Accessibility Settings
@@ -43,11 +55,14 @@ const initialState: SettingsState = {
   // Visual Settings
   showAngleOverlay: true,
   showFormFeedback: true,
-  showJointAngles: true,
+  showJointAngles: false, // technical numbers are opt-in for patients (see docs/design)
   showPoseOverlay: true,
+  cameraFocus: true,
 
   // Performance Settings
   frameSkip: 3,
+  dailyRepGoal: 30,
+  exercisePlan: null,
   highPerformanceMode: false,
 
   // Accessibility Settings
@@ -64,6 +79,19 @@ const settingsSlice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
+    setExercisePlan: (state, action: PayloadAction<ExercisePlan | null>) => {
+      // A changed prescription gets a new version (sessions record it)
+      // (and a confirmed programme that changed needs confirming again)
+      state.exercisePlan = action.payload
+        ? withVersion(
+            state.exercisePlan,
+            keepConfirmationHonest(state.exercisePlan, action.payload)
+          )
+        : null;
+    },
+    setDailyRepGoal: (state, action: PayloadAction<number>) => {
+      state.dailyRepGoal = Math.max(5, Math.min(200, Math.round(action.payload)));
+    },
     // Audio toggles
     toggleSound: (state) => {
       state.enableSound = !state.enableSound;
@@ -139,6 +167,8 @@ const settingsSlice = createSlice({
 });
 
 export const {
+  setExercisePlan,
+  setDailyRepGoal,
   toggleSound,
   toggleHaptics,
   toggleSpeech,

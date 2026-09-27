@@ -270,12 +270,12 @@ export class AnatomicalReferenceService {
    * TODO: Implement ISB-compliant pelvis frame calculation
    *
    * @param landmarks - Pose landmarks
-   * @param schemaId - Pose schema identifier
+   * @param _schemaId - Pose schema identifier (unused until implemented)
    * @returns Pelvis anatomical reference frame
    */
   calculatePelvisFrame(
     landmarks: PoseLandmark[],
-    schemaId?: string
+    _schemaId?: string
   ): AnatomicalReferenceFrame {
     // Stub implementation - uses global frame as placeholder
     return this.calculateGlobalFrame(landmarks);
@@ -287,13 +287,13 @@ export class AnatomicalReferenceService {
    *
    * @param landmarks - Pose landmarks
    * @param side - Which forearm ('left' or 'right')
-   * @param schemaId - Pose schema identifier
+   * @param _schemaId - Pose schema identifier (unused until implemented)
    * @returns Forearm anatomical reference frame
    */
   calculateForearmFrame(
     landmarks: PoseLandmark[],
     side: 'left' | 'right',
-    schemaId?: string
+    _schemaId?: string
   ): AnatomicalReferenceFrame {
     // Stub implementation - uses elbow to wrist vector as longitudinal axis
     const elbowIdx = side === 'left' ? 7 : 8;

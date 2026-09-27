@@ -1,0 +1,95 @@
+{
+  "scope": "Original0024 evidence and new12a4814 pickup are separate; third-party screenshots omitted",
+  "files": [
+    {
+      "path": "lint-complete-tail.txt",
+      "sha256": "f576e11fc326ecfb47485b2450edc1dc081bc07ece9e0267ae6fb446c256703d",
+      "bytes": 1257
+    },
+    {
+      "path": "native-fix-typecheck-tail.txt",
+      "sha256": "b5599c8400a949945e8ce4caf4057718b4a54dda056d3941eb91fd2738b287ad",
+      "bytes": 49
+    },
+    {
+      "path": "native-release-no-camera.png",
+      "sha256": "bbf9176318419011c426e6fd02d28b63cc67cbb8261494ff1e2546fcbda46169",
+      "bytes": 174294
+    },
+    {
+      "path": "native-url-after-tail.txt",
+      "sha256": "afd609ef779bbd1759717918bcf4bced3cb61f939707558b7f2eaf2d0bf70648",
+      "bytes": 566
+    },
+    {
+      "path": "native-url-before-tail.txt",
+      "sha256": "f57dc2beb72912aea9d9437cd30b72431b52aedd05bb3b7c93f93cb18e1253b7",
+      "bytes": 2086
+    },
+    {
+      "path": "pickup-focused-after.txt",
+      "sha256": "39e43f784c893f47647c609d0ecb87bbbeafe5f767027b7ebf0db404fd6f57c0",
+      "bytes": 567
+    },
+    {
+      "path": "pickup-native-blocker.txt",
+      "sha256": "418da508f51758473997b5b17f27c064431ad2b00ec430b234fc3b28c7e53a01",
+      "bytes": 385
+    },
+    {
+      "path": "pickup-new-cases-before.txt",
+      "sha256": "e0b8771cdc6b2b5603d1957ed858c646539b742f7d5b17e2523ba92fc737a2f6",
+      "bytes": 3770
+    },
+    {
+      "path": "pickup-retry-ui-before.txt",
+      "sha256": "c4a6c824f0ebcc468533747efc000fca75492f5354eb2eab0e804eb8fdb18473",
+      "bytes": 4806
+    },
+    {
+      "path": "pickup-targeted-lint.txt",
+      "sha256": "fc872cc3eff00fa7772ed44b7b49246b67bbc434ea236bd7fd5e9fd074d23b90",
+      "bytes": 716
+    },
+    {
+      "path": "pickup-tests-tail.txt",
+      "sha256": "2f896feda20aa36c1f25cbfc399901a13fdeee37a652a714ade45bd98f5dfd5f",
+      "bytes": 610
+    },
+    {
+      "path": "pickup-typecheck.txt",
+      "sha256": "b5599c8400a949945e8ce4caf4057718b4a54dda056d3941eb91fd2738b287ad",
+      "bytes": 49
+    },
+    {
+      "path": "pickup-worker-config.txt",
+      "sha256": "a3e69c69bce1bda691cf3774b8f5fd559781b0b247205e736334e2df1d8202f8",
+      "bytes": 37
+    },
+    {
+      "path": "pickup.json",
+      "sha256": "bd50d6c08d2eea867bc779baf26e12f6863695ec73bcd8e04e6255859236500c",
+      "bytes": 8920
+    },
+    {
+      "path": "pod-retire-tail.txt",
+      "sha256": "3b11c03d080aaa160187570d20071eee28725cd35651c65481d7be6c03cc45a9",
+      "bytes": 2615
+    },
+    {
+      "path": "retired-files.json",
+      "sha256": "78bfc08045948e4f8252792447fa3d1b286fcfa24d56667d9ee7ac6f779332af",
+      "bytes": 602
+    },
+    {
+      "path": "run.json",
+      "sha256": "3fa94cbd725df9662bbc9837da24a6d06575aecfd3063786e6c1778b0538da17",
+      "bytes": 6754
+    },
+    {
+      "path": "video-unavailable-390.png",
+      "sha256": "a4056fe1b0694201310b09f80242b380657cea59871daeb17fcb42a67bcd206f",
+      "bytes": 62633
+    }
+  ]
+}

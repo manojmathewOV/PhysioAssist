@@ -128,9 +128,6 @@ export const adaptMoveNetToClinical = (
   frameWidth: number = 1080
 ): ClinicalMeasurements => {
   // Landmark indices (MoveNet standard)
-  const NOSE = 0;
-  const LEFT_EYE = 1;
-  const RIGHT_EYE = 2;
   const LEFT_SHOULDER = 5;
   const RIGHT_SHOULDER = 6;
   const LEFT_ELBOW = 7;
@@ -145,7 +142,6 @@ export const adaptMoveNetToClinical = (
   const RIGHT_ANKLE = 16;
 
   // Extract keypoints
-  const nose = landmarks[NOSE];
   const leftShoulder = landmarks[LEFT_SHOULDER];
   const rightShoulder = landmarks[RIGHT_SHOULDER];
   const leftElbow = landmarks[LEFT_ELBOW];

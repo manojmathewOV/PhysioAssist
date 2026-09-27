@@ -1,0 +1,16 @@
+    ✓ positive control: continuously observed stable hold is measurable (8 ms)
+    ✓ must not call two observations five seconds apart a continuous hold (11 ms)
+    ✓ must break a hold across missing-angle frames (1 ms)
+    ✓ positive control: recorder suppresses front-view squat angles (13 ms)
+    ✓ front-view rejection must also suppress the patient summary range (12 ms)
+    ✓ heel-prop without the required stable window must have no numerical result (4 ms)
+    ✕ a configured shoulder rotation limit must not be checked as arm elevation (13 ms)
+    ✕ shoulder setup must not report ready when both elbows and wrists are invisible (2 ms)
+    ✕ proposed mode-specific setup: visible upper body should not require feet for shoulder exercise (1 ms)
+    Expected: true
+    Received: undefined
+    Expected: false
+    Received: true
+    Expected: true
+    Received: false
+Tests:       3 failed, 6 passed, 9 total

@@ -1,54 +1,119 @@
 import React from 'react';
-import { Platform } from 'react-native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationOptions,
+} from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable } from 'react-native';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Screens
-import PoseDetectionScreen from '../screens/PoseDetectionScreen';
+import PoseScreen from './PoseScreen';
+import HomeScreen from '../screens/HomeScreen';
+import HelpScreen from '../screens/HelpScreen';
+import ProgressScreen from '../screens/ProgressScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import LoginScreen from '../screens/LoginScreen';
-import WebPoseDetectionScreen from '../screens/web/WebPoseDetectionScreen';
 
-// Redux
 import type { RootState } from '../store';
+import { colors, typography } from '../theme';
+import type {
+  HomeStackParamList,
+  MainTabParamList,
+  SettingsStackParamList,
+} from './types';
 
 const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
+const HomeStack = createNativeStackNavigator<HomeStackParamList>();
+const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const PoseScreen = Platform.OS === 'web' ? WebPoseDetectionScreen : PoseDetectionScreen;
+/** Sub-pages get a plain header with a large, labelled "Back" button. */
+const subPageOptions: NativeStackNavigationOptions = {
+  headerShown: true,
+  headerTintColor: colors.primary,
+  headerTitleStyle: { fontSize: 20, fontWeight: '600', color: colors.text },
+  headerStyle: { backgroundColor: colors.background },
+  headerShadowVisible: false,
+  headerBackTitle: 'Back',
+  contentStyle: { backgroundColor: colors.background },
+};
+
+const HomeTab = () => (
+  <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+    <HomeStack.Screen name="Home" component={HomeScreen} />
+    <HomeStack.Screen
+      name="Help"
+      component={HelpScreen}
+      options={{ ...subPageOptions, title: 'Help' }}
+    />
+  </HomeStack.Navigator>
+);
+
+const SettingsTab = () => (
+  <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
+    <SettingsStack.Screen name="SettingsHome" component={SettingsScreen} />
+    <SettingsStack.Screen
+      name="Profile"
+      component={ProfileScreen}
+      options={{ ...subPageOptions, title: 'My details' }}
+    />
+  </SettingsStack.Navigator>
+);
+
+/** Tab icon, label and test id. Few tabs, big targets, always-visible labels. */
+const TABS: Record<
+  keyof MainTabParamList,
+  { label: string; icon: string; testID: string }
+> = {
+  HomeTab: { label: 'Home', icon: 'home', testID: 'tab-home' },
+  Exercise: { label: 'Exercise', icon: 'directions-run', testID: 'tab-exercises' },
+  Progress: { label: 'Progress', icon: 'insights', testID: 'tab-progress' },
+  SettingsTab: { label: 'Settings', icon: 'settings', testID: 'tab-settings' },
+};
 
 const MainTabs = () => {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-
-          if (route.name === 'PoseDetection') {
-            iconName = 'fitness-center';
-          } else if (route.name === 'Profile') {
-            iconName = 'person';
-          } else if (route.name === 'Settings') {
-            iconName = 'settings';
-          }
-
-          return <Icon name={iconName!} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#4A90E2',
-        tabBarInactiveTintColor: 'gray',
-      })}
+      screenOptions={({ route }) => {
+        const tab = TABS[route.name];
+        return {
+          headerShown: false,
+          title: tab.label,
+          tabBarTestID: tab.testID,
+          tabBarAccessibilityLabel: `${tab.label} tab`,
+          // Each item is a tab of the tab bar (screen readers, web)
+          tabBarButton: (props) => (
+            <Pressable
+              {...props}
+              role="tab"
+              aria-selected={Boolean(props.accessibilityState?.selected)}
+            />
+          ),
+          tabBarIcon: ({ color }) => <Icon name={tab.icon} size={30} color={color} />,
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.textSecondary,
+          tabBarLabelStyle: { ...typography.label, fontSize: 15, marginBottom: 4 },
+          tabBarActiveBackgroundColor: colors.primarySoft,
+          tabBarItemStyle: { borderRadius: 14, marginHorizontal: 4, marginVertical: 6 },
+          tabBarStyle: {
+            height: 76 + insets.bottom,
+            paddingBottom: insets.bottom,
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border,
+          },
+        };
+      }}
     >
-      <Tab.Screen
-        name="PoseDetection"
-        component={PoseScreen}
-        options={{ title: 'Exercises' }}
-      />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen name="HomeTab" component={HomeTab} />
+      <Tab.Screen name="Exercise" component={PoseScreen} />
+      <Tab.Screen name="Progress" component={ProgressScreen} />
+      <Tab.Screen name="SettingsTab" component={SettingsTab} />
     </Tab.Navigator>
   );
 };
@@ -61,7 +126,12 @@ const RootNavigator = () => {
   );
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    >
       {!hasCompletedOnboarding ? (
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       ) : !isAuthenticated ? (

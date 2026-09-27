@@ -1,0 +1,35 @@
+PASS src/services/movement/__tests__/heelProp.test.ts
+PASS src/features/videoComparison/__tests__/youtubeService.test.ts
+PASS src/testing/virtualPatient/__tests__/virtualPatient.test.ts
+PASS src/hooks/__tests__/useBlazePose.test.tsx
+PASS src/services/movement/__tests__/seatedKnee.test.ts
+PASS src/components/__tests__/exerciseFlow.test.tsx
+PASS src/services/movement/__tests__/externalRotation.test.ts
+PASS src/services/pose/__tests__/mediapipeLandmarks.test.ts
+PASS src/services/pose/__tests__/measurementLandmarks.test.ts
+PASS src/utils/__tests__/progressSummary.test.ts
+PASS src/components/__tests__/framingRequirement.test.ts
+PASS src/services/movement/__tests__/shortArcQuad.test.ts
+PASS src/testing/recordedPatient/__tests__/recordedPatient.test.ts
+PASS src/services/movement/__tests__/view.test.ts
+PASS src/services/web/__tests__/focusFrame.test.ts
+PASS src/services/pose/__tests__/exercisePlan.test.ts
+PASS src/services/web/__tests__/WebPoseDetectionService.test.ts
+PASS __tests__/smoke/rnfs.test.ts
+PASS __tests__/smoke/mediapipe.test.ts
+PASS __tests__/smoke/tensorflow.test.ts
+PASS src/components/__tests__/rangeResult.test.tsx
+PASS src/utils/__tests__/youtube.test.ts
+PASS src/components/exercises/__tests__/referenceFor.test.ts
+PASS src/services/__tests__/audioCuePacing.test.ts
+PASS __tests__/smoke/ytdl.test.ts
+PASS src/services/movement/__tests__/sessionCompensations.test.ts
+PASS src/services/pose/__tests__/adaptiveModel.test.ts
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+
+Test Suites: 4 skipped, 86 passed, 86 of 90 total
+Tests:       4 skipped, 1585 passed, 1589 total
+Snapshots:   0 total
+Time:        33.319 s
+Ran all test suites.
+Test results written to: ../RDC/evidence/jest-results.json

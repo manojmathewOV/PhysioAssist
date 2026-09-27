@@ -275,11 +275,13 @@ describe('OrientationClassifier - Gate 9B.3', () => {
     });
 
     it('should have low confidence for ambiguous pose', () => {
+      // Turned about 35° to the camera: shoulders ~0.5 and hips ~0.35 of the
+      // torso length, between the frontal and side-on ranges
       const landmarks = createLandmarks([
-        { index: 5, x: 0.4, y: 0.4, visibility: 0.5 }, // medium shoulder width
-        { index: 6, x: 0.6, y: 0.4, visibility: 0.5 }, // medium visibility
-        { index: 11, x: 0.42, y: 0.6, visibility: 0.5 },
-        { index: 12, x: 0.58, y: 0.6, visibility: 0.5 },
+        { index: 5, x: 0.45, y: 0.4, visibility: 0.5 },
+        { index: 6, x: 0.55, y: 0.4, visibility: 0.5 },
+        { index: 11, x: 0.465, y: 0.6, visibility: 0.5 },
+        { index: 12, x: 0.535, y: 0.6, visibility: 0.5 },
       ]);
 
       const result = classifier.classify(landmarks);

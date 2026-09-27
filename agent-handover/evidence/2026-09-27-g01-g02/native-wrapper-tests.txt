@@ -1,0 +1,9 @@
+test_lock_mutation_refuses_success (test_install_pods.InstallPodsTests) ... ok
+test_missing_bundle_stops_before_pods (test_install_pods.InstallPodsTests) ... ok
+test_pod_failure_survives (test_install_pods.InstallPodsTests) ... ok
+test_success_uses_frozen_bundle_and_deployment (test_install_pods.InstallPodsTests) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.612s
+
+OK

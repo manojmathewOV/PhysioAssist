@@ -1,0 +1,35 @@
+    End-to-End Single Frame Pipeline
+      ✓ should process complete shoulder flexion measurement with all gates (4 ms)
+      ✓ should detect compensations in shoulder abduction with hiking (1 ms)
+      ✓ should validate scapulohumeral rhythm in shoulder abduction
+      ✓ should validate elbow gating for shoulder rotation (40 ms)
+    End-to-End Temporal Pipeline
+      ✓ should process complete temporal sequence with all gates (12 ms)
+      ✓ should track compensation development over time (19 ms)
+      ✓ should detect quality degradation over sequence (6 ms)
+    Frame Cache Performance
+      ✓ should achieve high cache hit rate for repeated measurements
+      ✓ should maintain cache performance across temporal sequence (6 ms)
+    Schema Compatibility
+      ✓ should work with MoveNet-17 schema
+      ✓ should handle bilateral measurements
+    Measurement Accuracy
+      ✓ should achieve ±5° accuracy for shoulder flexion
+      ✓ should achieve ±5° accuracy for elbow flexion
+      ✓ should achieve ±5° accuracy for knee flexion (1 ms)
+    Compensation Detection Accuracy
+      ✓ should detect trunk lean in shoulder flexion
+      ✓ should detect shoulder hiking in shoulder abduction (1 ms)
+      ✓ should detect hip hike in knee flexion
+      ✓ should not detect compensations when none present
+    Performance Benchmarks
+      ✓ should measure single frame in <50ms (1 ms)
+      ✓ should process 30-frame sequence in <2s (1 ms)
+      ✓ should maintain <120ms/frame for real-time processing (30 FPS) (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       21 passed, 21 total
+Snapshots:   0 total
+Time:        0.483 s, estimated 1 s
+Ran all test suites matching /src\/testing\/__tests__\/Integration.test.ts/i.
+✅ Pre-push checks passed!

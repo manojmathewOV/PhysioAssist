@@ -115,5 +115,16 @@ metro.log
 !.yarn/sdks
 !.yarn/versions
 
-# TensorFlow models (downloaded via postinstall)
+# Pose models (downloaded via postinstall: scripts/download-models.sh)
 assets/models/*.tflite
+assets/models/*.task
+android/app/src/main/assets/*.task
+# Developer-specific Node location: each machine/CI supplies its own.
+/ios/.xcode.env.local
+
+# Python bytecode from local engineering skill tests
+__pycache__/
+*.py[cod]
+
+# Machine-local Bundler configuration
+/.bundle/

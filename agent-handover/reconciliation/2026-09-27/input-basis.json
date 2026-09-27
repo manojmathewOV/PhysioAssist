@@ -1,0 +1,55 @@
+{
+  "date": "2026-09-27",
+  "refs": {
+    "application": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
+    "infrastructure": "0ca6dbe166df2cdba36477f8bae316fe56308aae",
+    "handover": "510e799c0676ced95de333dd55a59fbe26333f64",
+    "main": "d045d460800a9d50db30ab3df4b836e99406a0dd",
+    "integration": "88918e77162a8491beb06c3e7615419a40b30630"
+  },
+  "all_input_heads_contained": true,
+  "private_environment_facts": "Claude final handover testimony, not direct inspection of his container",
+  "source_snapshots_preserved": [
+    {
+      "original_path": "agent-handover/CURRENT.md",
+      "archived_path": "agent-handover/archive/2026-09-27-before-reconciliation/CURRENT.md",
+      "sha256": "16e256e60e685d420777404a8b31a5726f7ec260a6c1f20c6cb0b93c26a94412"
+    },
+    {
+      "original_path": "agent-handover/README.md",
+      "archived_path": "agent-handover/archive/2026-09-27-before-reconciliation/ORIGINAL_README.md",
+      "sha256": "a65260ab635305b13ac6e1143e472a585b817d9f1945e4a54e23c18b6401e9ba"
+    },
+    {
+      "original_path": "agent-handover/backlog.json",
+      "archived_path": "agent-handover/archive/2026-09-27-before-reconciliation/backlog.json",
+      "sha256": "bb30eca7745de1cf88f09469633a1a37061b521f9d0194893d0a730a22e018c1"
+    },
+    {
+      "original_path": "agent-handover/runbooks/ios-patient-mvp/runbook.json",
+      "archived_path": "agent-handover/archive/2026-09-27-before-reconciliation/runbooks/ios-patient-mvp/runbook.json",
+      "sha256": "19c5ebe292d11970c3588911c92184778a5b77788bb8a4578fe6e37279d50d68"
+    },
+    {
+      "original_path": "agent-handover/runbooks/ios-patient-mvp/STATUS.json",
+      "archived_path": "agent-handover/archive/2026-09-27-before-reconciliation/runbooks/ios-patient-mvp/STATUS.json",
+      "sha256": "dd975caac564efc36c2524ff2378950003b774245cbae2d795f80f3e14c323db"
+    },
+    {
+      "original_path": "agent-handover/runbooks/ios-patient-mvp/research.json",
+      "archived_path": "agent-handover/archive/2026-09-27-before-reconciliation/runbooks/ios-patient-mvp/research.json",
+      "sha256": "c17321c4131d46fdcfebabb750d4186977b1800dafc6d96b8128bff1209c3f4e"
+    },
+    {
+      "original_path": "agent-handover/runbooks/ios-patient-mvp/ROADMAP.cnp",
+      "archived_path": "agent-handover/archive/2026-09-27-before-reconciliation/runbooks/ios-patient-mvp/ROADMAP.cnp",
+      "sha256": "d3dc42ca3d99ec3220938b257cfab06ad47589e64c0b1b998176e9e4eda3f3c6"
+    },
+    {
+      "original_path": "agent-handover/runbooks/ios-patient-mvp/MANIFEST.json",
+      "archived_path": "agent-handover/archive/2026-09-27-before-reconciliation/runbooks/ios-patient-mvp/MANIFEST.json",
+      "sha256": "294f7d57b90c7d88211ee6a81a98e7b12dcee7dee74099e75726abe51fa9a583"
+    }
+  ],
+  "claim": "engineering reconciliation and prospective plan, not app/clinical acceptance"
+}

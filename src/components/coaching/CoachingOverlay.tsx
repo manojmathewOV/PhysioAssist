@@ -16,6 +16,7 @@ import { Svg, Circle, Path } from 'react-native-svg';
 import { Canvas, Circle as SkiaCircle } from '@shopify/react-native-skia';
 
 import { getCoachingInstruction } from '../../utils/compensatoryMechanisms';
+import { colors, radii, spacing, typography } from '../../theme';
 
 interface CoachingOverlayProps {
   visible: boolean;
@@ -176,7 +177,7 @@ const CoachingOverlay: React.FC<CoachingOverlayProps> = ({
               styles.progressBarFill,
               {
                 width: `${progress}%`,
-                backgroundColor: isComplete ? '#4CAF50' : '#2196F3',
+                backgroundColor: isComplete ? colors.success : colors.skeleton,
               },
             ]}
           />
@@ -238,7 +239,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ progress, isComplete }) => 
     <Svg width={size} height={size} style={styles.progressRing}>
       {/* Background Circle */}
       <Circle
-        stroke="rgba(255, 255, 255, 0.1)"
+        stroke="rgba(255, 255, 255, 0.2)"
         fill="none"
         cx={size / 2}
         cy={size / 2}
@@ -248,7 +249,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ progress, isComplete }) => 
 
       {/* Progress Circle */}
       <Circle
-        stroke={isComplete ? '#4CAF50' : '#2196F3'}
+        stroke={isComplete ? colors.successSoft : colors.skeleton}
         fill="none"
         cx={size / 2}
         cy={size / 2}
@@ -375,35 +376,39 @@ const speakFeedback = (text: string) => {
 // Styles
 // ============================================================================
 
+const ON_DARK_SOFT = 'rgba(255, 255, 255, 0.85)';
+
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     top: 80,
-    left: 20,
-    right: 20,
+    left: spacing.md,
+    right: spacing.md,
     alignItems: 'center',
     zIndex: 100,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: spacing.md,
   },
   exerciseName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFF',
+    ...typography.bodyStrong,
+    color: colors.textInverse,
     textAlign: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
+    backgroundColor: colors.cameraOverlay,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    overflow: 'hidden',
   },
   angleContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: spacing.md,
   },
   angleCircle: {
     width: 180,
     height: 180,
+    borderRadius: 90,
+    backgroundColor: colors.cameraOverlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -414,124 +419,118 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   angleValue: {
+    ...typography.title,
     fontSize: 48,
-    fontWeight: '700',
-    color: '#2196F3',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    lineHeight: 56,
+    color: colors.textInverse,
   },
   angleValueSuccess: {
-    color: '#4CAF50',
+    color: colors.successSoft,
   },
   angleLabel: {
-    fontSize: 14,
-    color: '#CCC',
-    marginTop: 4,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    ...typography.label,
+    color: ON_DARK_SOFT,
   },
   coachingContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 24,
-    marginBottom: 20,
+    backgroundColor: colors.cameraOverlay,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
+    marginBottom: spacing.md,
   },
   coachingText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFF',
+    ...typography.heading,
+    color: colors.textInverse,
     textAlign: 'center',
   },
   coachingTextSuccess: {
-    color: '#4CAF50',
+    color: colors.successSoft,
   },
   progressBarContainer: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    backgroundColor: colors.cameraOverlay,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
   },
   progressBar: {
     flex: 1,
-    height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 4,
+    height: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: radii.pill,
     overflow: 'hidden',
-    marginRight: 12,
+    marginRight: spacing.sm,
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: radii.pill,
   },
   progressText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFF',
-    width: 50,
+    ...typography.label,
+    color: colors.textInverse,
+    width: 52,
     textAlign: 'right',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
   milestonesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    marginBottom: 20,
+    marginBottom: spacing.md,
   },
   milestoneIndicator: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: colors.cameraOverlay,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   milestoneIndicatorReached: {
-    backgroundColor: 'rgba(76, 175, 80, 0.3)',
-    borderColor: '#4CAF50',
+    backgroundColor: colors.successSoft,
+    borderColor: colors.successSoft,
   },
   milestoneText: {
-    fontSize: 12,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#888',
+    color: ON_DARK_SOFT,
   },
   milestoneTextReached: {
-    fontSize: 24,
-    color: '#4CAF50',
+    ...typography.heading,
+    color: colors.success,
   },
   technicalInfo: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
+    backgroundColor: colors.cameraOverlay,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.sm,
   },
   technicalText: {
-    fontSize: 11,
-    color: '#888',
+    ...typography.caption,
+    color: ON_DARK_SOFT,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   successAnimation: {
     position: 'absolute',
     top: '40%',
     alignItems: 'center',
+    backgroundColor: colors.successSoft,
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
   },
   successEmoji: {
     fontSize: 64,
+    lineHeight: 72,
   },
   successMessage: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#4CAF50',
-    marginTop: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    ...typography.title,
+    color: colors.success,
+    marginTop: spacing.sm,
   },
 });
 

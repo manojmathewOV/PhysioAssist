@@ -12,35 +12,28 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  // Dimensions,
-  Platform,
-} from 'react-native';
-import {
-  Camera,
-  useCameraDevices,
-  useFrameProcessor,
-  Frame,
-} from 'react-native-vision-camera';
+import { StyleSheet, View, Alert, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { runOnJS } from 'react-native-reanimated';
 
 import { RootState } from '@store/index';
 import { setPoseData, setDetecting } from '@store/slices/poseSlice';
-import { poseDetectionService } from '@services/poseDetectionService';
+import { useBlazePose, CAMERA_FPS } from '@hooks/useBlazePose';
+import { webPoseDetectionService } from '@services/web/WebPoseDetectionService';
+import type { MockPoseDataSimulator } from '@services/mockPoseDataSimulator';
 // Conditional import: Only include mock simulator in development builds
-const mockPoseDataSimulator = __DEV__
-  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator // eslint-disable-line @typescript-eslint/no-var-requires
+const mockPoseDataSimulator: MockPoseDataSimulator | null = __DEV__
+  ? require('@services/mockPoseDataSimulator').mockPoseDataSimulator
   : null;
 import { VideoFrameFeeder, createPoseVideoFeeder } from '@utils/videoFrameFeeder';
 import PoseOverlay from '@components/pose/PoseOverlay';
 import ExerciseControls from '@components/exercises/ExerciseControls';
+import { AppText, Banner, BigButton } from '@components/ui';
+import { CameraPanel } from '@components/ui/CameraPanel';
+import { colors, radii, spacing } from '../theme';
 
 // const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -61,8 +54,7 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
 }) => {
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
-  const devices = useCameraDevices();
-  const device = devices.front;
+  const device = useCameraDevice('front');
 
   const { isDetecting, confidence } = useSelector((state: RootState) => state.pose);
   const { frameSkip } = useSelector((state: RootState) => state.settings);
@@ -110,8 +102,8 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
 
   const requestCameraPermission = async () => {
     const permission = await Camera.requestCameraPermission();
-    setHasPermission(permission === 'authorized');
-    if (permission !== 'authorized') {
+    setHasPermission(permission === 'granted');
+    if (permission !== 'granted') {
       Alert.alert(
         'Camera Permission Required',
         'Please grant camera permission to use pose detection.',
@@ -123,46 +115,53 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
     }
   };
 
-  const initializePoseDetection = async () => {
-    try {
-      await poseDetectionService.initialize();
-      poseDetectionService.setPoseDataCallback((poseData) => {
-        dispatch(setPoseData(poseData));
-      });
-      setIsInitialized(true);
-      setUseMockData(false);
-      console.log('Pose detection initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize pose detection:', error);
-      setInitError('Pose detection unavailable');
+  // Camera mode: BlazePose runs natively while detecting (not paused); poses go
+  // to the Redux store. The detector is created by useBlazePose itself.
+  const { cameraProps, error: detectorError } = useBlazePose({
+    device,
+    enabled: isDetecting && !isPaused && !useVideoFeed && !useMockData,
+    frameSkip,
+  });
 
-      if (testMode === 'video') {
-        setUseVideoFeed(true);
-        setIsInitialized(true);
-      } else {
-        Alert.alert(
-          'Using Mock Data',
-          'Pose detection service unavailable. Using simulated data for testing.',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                setUseMockData(true);
-                setIsInitialized(true);
-              },
-            },
-          ]
-        );
-      }
-    }
+  const initializePoseDetection = () => {
+    setIsInitialized(true);
+    console.log('Pose detection initialized successfully');
   };
+
+  // Detector failure: fall back to the video feed (video mode) or mock data
+  useEffect(() => {
+    if (!detectorError) {
+      return;
+    }
+    console.error('Pose detection error:', detectorError);
+    setInitError('Pose detection unavailable');
+
+    if (testMode === 'video') {
+      setUseVideoFeed(true);
+    } else {
+      Alert.alert(
+        'Using Mock Data',
+        'Pose detection service unavailable. Using simulated data for testing.',
+        [{ text: 'OK', onPress: () => setUseMockData(true) }]
+      );
+    }
+  }, [detectorError, testMode]);
 
   const initializeVideoFeeder = async () => {
     try {
       if (Platform.OS === 'web' && videoFeederRef.current === null) {
         console.log('Initializing video feeder with URL:', testVideoUrl);
 
-        videoFeederRef.current = createPoseVideoFeeder(poseDetectionService, {
+        // Video frames go through MediaPipe's browser build (web only)
+        const videoPoseDetector = {
+          processFrame: async (imageData: ImageData) => {
+            const poseData = await webPoseDetectionService.detectFromFrame(imageData);
+            if (poseData) {
+              dispatch(setPoseData(poseData));
+            }
+          },
+        };
+        videoFeederRef.current = createPoseVideoFeeder(videoPoseDetector, {
           fps: 30,
           frameSkip,
           loop: true,
@@ -253,93 +252,23 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
     }
   }, [useVideoFeed]);
 
-  const processFrameData = useCallback(async (_width: number, _height: number) => {
-    try {
-      // Real frame processing would happen here in production
-      // await poseDetectionService.processFrame(imageData);
-    } catch (error) {
-      console.error('Error processing frame:', error);
-    }
-  }, []);
-
-  const frameProcessor = useFrameProcessor(
-    (frame: Frame) => {
-      'worklet';
-
-      if (!isDetecting || isPaused || useVideoFeed || useMockData) return;
-
-      frameCountRef.current++;
-      if (frameCountRef.current % frameSkip !== 0) {
-        return;
-      }
-
-      const frameWidth = frame.width;
-      const frameHeight = frame.height;
-
-      runOnJS(processFrameData)(frameWidth, frameHeight);
-    },
-    [isDetecting, isPaused, frameSkip, processFrameData, useVideoFeed, useMockData]
-  );
-
   // Render camera or video/mock background
   const renderBackground = () => {
-    if (useVideoFeed) {
-      return (
-        <View style={[StyleSheet.absoluteFill, styles.mockBackground]}>
-          <Text style={styles.mockModeText}>VIDEO FEED MODE</Text>
-          <Text style={styles.mockModeSubtext}>Processing video frames for testing</Text>
-          {videoStats && (
-            <View style={styles.statsContainer}>
-              <Text style={styles.statsText}>FPS: {videoStats.fps}</Text>
-              <Text style={styles.statsText}>
-                Frames: {videoStats.processedFrames}/{videoStats.totalFrames}
-              </Text>
-              <Text style={styles.statsText}>Skipped: {videoStats.skippedFrames}</Text>
-              <Text style={styles.statsText}>Errors: {videoStats.errors}</Text>
-            </View>
-          )}
-        </View>
-      );
-    }
-
-    if (useMockData) {
-      return (
-        <View style={[StyleSheet.absoluteFill, styles.mockBackground]}>
-          <Text style={styles.mockModeText}>MOCK DATA MODE</Text>
-          <Text style={styles.mockModeSubtext}>Simulated pose detection for testing</Text>
-        </View>
-      );
-    }
-
-    if (device && hasPermission) {
+    if (!useVideoFeed && !useMockData && device && hasPermission) {
       return (
         <Camera
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={isFocused}
-          frameProcessor={frameProcessor}
-          fps={30}
+          fps={CAMERA_FPS}
+          {...cameraProps}
         />
       );
     }
-
-    return (
-      <View style={styles.container}>
-        <Text style={styles.message}>
-          {!device ? 'No camera device found' : 'Camera permission required'}
-        </Text>
-        <TouchableOpacity
-          style={styles.mockButton}
-          onPress={() => {
-            setUseVideoFeed(true);
-            Alert.alert('Video Mode Enabled', 'Using video feed for testing.');
-          }}
-        >
-          <Text style={styles.mockButtonText}>Use Video Feed (Testing Mode)</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    return <View style={[StyleSheet.absoluteFill, styles.mockBackground]} />;
   };
+
+  const noCamera = !useVideoFeed && !useMockData && !(device && hasPermission);
 
   return (
     <View style={styles.container}>
@@ -347,179 +276,154 @@ const PoseDetectionScreenWithVideo: React.FC<PoseDetectionScreenProps> = ({
 
       <PoseOverlay />
 
-      <View style={styles.topInfo}>
-        {useVideoFeed && (
-          <View style={styles.modeBadge}>
-            <Text style={styles.modeBadgeText}>VIDEO MODE</Text>
-          </View>
-        )}
-        {useMockData && (
-          <View style={styles.mockBadge}>
-            <Text style={styles.mockBadgeText}>MOCK MODE</Text>
-          </View>
-        )}
-        <View style={styles.confidenceBadge}>
-          <Text style={styles.confidenceText}>
-            Confidence: {(confidence * 100).toFixed(0)}%
-          </Text>
+      <SafeAreaView
+        style={styles.overlay}
+        edges={['top', 'bottom']}
+        pointerEvents="box-none"
+      >
+        <View style={styles.topInfo} pointerEvents="box-none">
+          {useVideoFeed && (
+            <StatusChip icon="ondemand-video" label="Video feed (testing)" />
+          )}
+          {useMockData && <StatusChip icon="science" label="Mock data (testing)" />}
+          <StatusChip
+            icon="visibility"
+            label={`Confidence ${(confidence * 100).toFixed(0)}%`}
+          />
+          {useVideoFeed && videoStats && (
+            <>
+              <StatusChip icon="speed" label={`FPS ${videoStats.fps}`} />
+              <StatusChip
+                icon="movie"
+                label={`Frames ${videoStats.processedFrames}/${videoStats.totalFrames}`}
+              />
+              <StatusChip
+                icon="skip-next"
+                label={`Skipped ${videoStats.skippedFrames}`}
+              />
+              <StatusChip
+                icon="error-outline"
+                label={`Errors ${videoStats.errors}`}
+                danger={videoStats.errors > 0}
+              />
+            </>
+          )}
+          {initError && <StatusChip icon="error-outline" label={initError} danger />}
         </View>
-        {initError && (
-          <View style={styles.errorBadge}>
-            <Text style={styles.errorText}>{initError}</Text>
-          </View>
+
+        {/* No camera: offer the video feed instead */}
+        {noCamera && (
+          <CameraPanel style={styles.noCameraPanel}>
+            <Banner
+              tone="warning"
+              message={!device ? 'No camera device found' : 'Camera permission required'}
+            />
+            <BigButton
+              label="Use video feed (testing)"
+              icon="ondemand-video"
+              variant="secondary"
+              compact
+              onPress={() => {
+                setUseVideoFeed(true);
+                Alert.alert('Video Mode Enabled', 'Using video feed for testing.');
+              }}
+            />
+          </CameraPanel>
         )}
-      </View>
 
-      <View style={styles.controls}>
-        {!isDetecting && !isExerciseActive ? (
-          <TouchableOpacity style={styles.startButton} onPress={startPoseDetection}>
-            <Text style={styles.buttonText}>Start Detection</Text>
-          </TouchableOpacity>
-        ) : isDetecting && !isExerciseActive ? (
-          <TouchableOpacity style={styles.stopButton} onPress={stopPoseDetection}>
-            <Text style={styles.buttonText}>Stop Detection</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
+        {/* Exercise choice, instructions and rep counter */}
+        <View style={styles.flex} pointerEvents="box-none">
+          {isInitialized && (
+            <ExerciseControls
+              isActive={isExerciseActive}
+              onStart={handleStartExercise}
+              onStop={handleStopExercise}
+              onPause={handlePauseExercise}
+              onReset={handleResetExercise}
+            />
+          )}
+        </View>
 
-      {isInitialized && (
-        <ExerciseControls
-          isActive={isExerciseActive}
-          onStart={handleStartExercise}
-          onStop={handleStopExercise}
-          onPause={handlePauseExercise}
-          onReset={handleResetExercise}
-        />
-      )}
+        {!isExerciseActive && (
+          <CameraPanel style={styles.controls}>
+            {!isDetecting ? (
+              <BigButton
+                label="Start detection"
+                icon="play-arrow"
+                onPress={startPoseDetection}
+                accessibilityHint="Starts pose detection on the current feed"
+              />
+            ) : (
+              <BigButton
+                label="Stop detection"
+                icon="stop"
+                variant="danger"
+                onPress={stopPoseDetection}
+                accessibilityHint="Stops pose detection"
+              />
+            )}
+          </CameraPanel>
+        )}
+      </SafeAreaView>
     </View>
   );
 };
 
+/** Small status pill for the camera overlay: icon + text, never colour alone. */
+const StatusChip: React.FC<{ icon: string; label: string; danger?: boolean }> = ({
+  icon,
+  label,
+  danger,
+}) => (
+  <View
+    style={[styles.chip, danger && styles.chipDanger]}
+    accessible
+    accessibilityLabel={label}
+  >
+    <Icon name={icon} size={20} color={danger ? colors.danger : colors.skeleton} />
+    <AppText variant="label" color={danger ? colors.danger : colors.textInverse}>
+      {label}
+    </AppText>
+  </View>
+);
+
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   container: {
     flex: 1,
     backgroundColor: '#000',
   },
-  message: {
-    color: '#FFF',
-    fontSize: 18,
-    textAlign: 'center',
-    marginTop: 100,
-    paddingHorizontal: 20,
-  },
-  mockButton: {
-    backgroundColor: '#FF9800',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 30,
-    marginTop: 40,
-    alignSelf: 'center',
-  },
-  mockButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   mockBackground: {
-    backgroundColor: '#1a1a2e',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: colors.text,
   },
-  mockModeText: {
-    color: '#FF9800',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
+  noCameraPanel: {
+    gap: spacing.sm,
   },
-  mockModeSubtext: {
-    color: '#AAA',
-    fontSize: 14,
-  },
-  statsContainer: {
-    marginTop: 20,
-    padding: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 8,
-  },
-  statsText: {
-    color: '#FFF',
-    fontSize: 14,
-    marginBottom: 4,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    padding: spacing.md,
+    gap: spacing.sm,
   },
   topInfo: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
   },
-  confidenceBadge: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: 8,
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.cameraOverlay,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
   },
-  confidenceText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  modeBadge: {
-    backgroundColor: 'rgba(33, 150, 243, 0.9)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  modeBadgeText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  mockBadge: {
-    backgroundColor: 'rgba(255, 152, 0, 0.9)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  mockBadgeText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  errorBadge: {
-    backgroundColor: 'rgba(244, 67, 54, 0.9)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: 8,
-  },
-  errorText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '600',
+  chipDanger: {
+    backgroundColor: colors.dangerSoft,
   },
   controls: {
-    position: 'absolute',
-    bottom: 100,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  startButton: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 30,
-  },
-  stopButton: {
-    backgroundColor: '#F44336',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 30,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '600',
+    padding: spacing.md,
   },
 });
 

@@ -1,0 +1,136 @@
+{
+  "source_sha": "7f4532c6fdba5114bce56c8e67410a3a623f7a7a",
+  "scope": "production-web audit and current source inspection; not native iOS or clinical validation",
+  "video_id": "M7lc1UVf-VE",
+  "video_role": "official YouTube API sample; not an approved clinical demonstration",
+  "web_build": "passed with three performance warnings",
+  "focused_tests": {
+    "passed": 14,
+    "suites": 2,
+    "full_suite_rerun": false
+  },
+  "screens": [
+    {
+      "name": "prep-390",
+      "iframe_rectangles": [
+        {
+          "width": 294,
+          "height": 165.375
+        }
+      ]
+    },
+    {
+      "name": "prep-after-play-390",
+      "iframe_rectangles": [
+        {
+          "width": 294,
+          "height": 165.375
+        }
+      ]
+    },
+    {
+      "name": "prep-320",
+      "iframe_rectangles": [
+        {
+          "width": 224,
+          "height": 126
+        }
+      ]
+    },
+    {
+      "name": "follow-along-390",
+      "iframe_rectangles": [
+        {
+          "width": 192.890625,
+          "height": 106.75
+        }
+      ]
+    },
+    {
+      "name": "paused-390",
+      "iframe_rectangles": [
+        {
+          "width": 192.890625,
+          "height": 106.75
+        }
+      ]
+    }
+  ],
+  "playback": {
+    "afterPlay": [
+      {
+        "currentTime": 10.463426,
+        "paused": false,
+        "readyState": 4
+      }
+    ],
+    "livePlayer": [
+      {
+        "currentTime": 10.002872,
+        "paused": false,
+        "readyState": 4
+      }
+    ],
+    "afterShow": [
+      {
+        "currentTime": 8.385958,
+        "paused": false,
+        "readyState": 4
+      }
+    ],
+    "afterAppPause": [
+      {
+        "currentTime": 8.414482,
+        "paused": false,
+        "readyState": 4
+      }
+    ],
+    "twoSecondsAfterAppPause": [
+      {
+        "currentTime": 10.617714,
+        "paused": false,
+        "readyState": 4
+      }
+    ]
+  },
+  "hide_removes_player": true,
+  "show_creates_new_player": true,
+  "app_runtime_errors": [],
+  "observations": {
+    "real_embed_played": true,
+    "app_pause_stops_embed": false,
+    "hide_show_preserves_position": false,
+    "player_meets_200px_minimum": false,
+    "native_playback_tested": false,
+    "youtube_pixels_analysed_by_app": false
+  },
+  "visual_review": "paused-390.png opened and inspected locally; no screenshots/video containing third-party content published",
+  "source_findings": [
+    "Native WebView baseUrl is the YouTube domain rather than app identity; review against current YouTube requirements. No native failure reproduced in this audit.",
+    "App player has no readiness/error message bridge or playback state/control API.",
+    "Live comparison summary uses a separately camera-recorded PlanReference, not pose extraction from YouTube."
+  ],
+  "benchmark_inventory": {
+    "historical_mobiphysio_manifest_clips": 89,
+    "historical_manifest_declared_bytes": 2266719687,
+    "historical_rehab24_report_camera_sessions": 86,
+    "historical_rehab24_report_rep_camera_observations": 1510,
+    "raw_media_found_in_scoped_workspace_search": false,
+    "portable_recorded_landmark_fixtures": 16,
+    "no_whole_home_search_claim": true,
+    "new_benchmark_media_downloaded": false,
+    "historic_results_rerun": false
+  },
+  "limits": [
+    "No native playback/approved clinical video/physical phone/patient test",
+    "No new pose-model benchmark run",
+    "Private or permission-restricted data not fetched",
+    "No app functionality changed by this audit"
+  ],
+  "resources": {
+    "new_clone": false,
+    "new_dependencies": false,
+    "xcode_build": false,
+    "owned_browser_and_server_closed": true
+  }
+}

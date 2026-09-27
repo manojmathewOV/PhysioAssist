@@ -1,0 +1,35 @@
+{
+  "id": "owner-frozen-shoulder-mini-session-draft",
+  "status": "draft_not_activated",
+  "basis": "Project owner's direct instruction supplied before this handover; not a merged dose from archived handouts",
+  "clinical_approval_record": null,
+  "owner_stated": {
+    "repetitions": { "min": 2, "max": 3 },
+    "repeat_interval_hours": { "min": 2, "max": 3 },
+    "daytime_only": true,
+    "movements": [
+      "Forward flexion/elevation lying supine, supported by the other arm",
+      "External rotation lying supine, stick-assisted, affected elbow next to the body",
+      "Sleeper stretch"
+    ]
+  },
+  "unconfirmed_interpretation": "Two to three repetitions of each selected movement per mini-session",
+  "unresolved": {
+    "hold_seconds_by_movement": null,
+    "rest_seconds_by_movement": null,
+    "sleeper_stretch_position_and_modifications": null,
+    "waking_window": null,
+    "interval_anchor": null,
+    "symptom_response_rules": null,
+    "patient_specific_exclusions": null
+  },
+  "engineering_requirements": [
+    "Treat a prescribed repetition range as a range, not a mandatory maximum.",
+    "Group the selected movements into the current mini-session before waiting for the next interval.",
+    "Do not invite the next round immediately after completion.",
+    "Do not schedule outside the approved waking window or accumulate missed repetitions as catch-up dose.",
+    "Do not require camera calibration for every otherwise-approved exercise mini-session.",
+    "Do not relabel current standing active estimators as these supine assisted variants.",
+    "Keep activity records separate from qualified measurement checks."
+  ]
+}

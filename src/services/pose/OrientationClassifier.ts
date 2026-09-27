@@ -1,3 +1,4 @@
+import { findLandmark } from './landmarkLookup';
 import { PoseLandmark } from '../../types/pose';
 
 export interface OrientationResult {
@@ -22,6 +23,64 @@ export interface OrientationResult {
  * console.log(result.orientation); // 'frontal'
  * console.log(result.confidence); // 0.85
  */
+/**
+ * Shoulder and hip width as a fraction of torso length (shoulder midpoint to
+ * hip midpoint). Unlike widths in image units, these don't depend on how far
+ * the patient stands from the camera. They depend on the landmark set: on
+ * MediaPipe image landmarks from real smartphone video (MobiPhysio) people
+ * facing the camera measured shoulders 0.64-0.73 and hips 0.35-0.39, and
+ * turned 40-50° 0.39-0.46 / 0.21-0.30. Projected world landmarks (Clemente et
+ * al. 2024) are wider at the hips (0.44-0.53 facing the camera), so prefer
+ * bodyYawDegrees when world landmarks are available.
+ */
+export function bodyWidthRatios(
+  landmarks: PoseLandmark[]
+): { shoulder: number; hip: number } | null {
+  const ls = findLandmark(landmarks, 'left_shoulder');
+  const rs = findLandmark(landmarks, 'right_shoulder');
+  const lh = findLandmark(landmarks, 'left_hip');
+  const rh = findLandmark(landmarks, 'right_hip');
+  if (!ls || !rs || !lh || !rh) return null;
+  const torso = Math.hypot(
+    (ls.x + rs.x - lh.x - rh.x) / 2,
+    (ls.y + rs.y - lh.y - rh.y) / 2
+  );
+  if (torso < 1e-6) return null;
+  return { shoulder: Math.abs(rs.x - ls.x) / torso, hip: Math.abs(rh.x - lh.x) / torso };
+}
+
+/** Shorter body lines have no reliable direction (metres). */
+const MIN_LINE_METRES = 0.05;
+
+/**
+ * How far the body is turned from facing the camera, in degrees (0 = facing
+ * it, 90 = side-on), from MediaPipe's 3D world landmarks: the angle of the
+ * shoulder line and of the hip line out of the image plane, averaged.
+ *
+ * Unlike width ratios this doesn't depend on body proportions or on which
+ * landmark set is used. On real smartphone video (MobiPhysio, inspection
+ * participants) people facing the camera measured 0.5-8°, and clips filmed
+ * from the side 37-74°. On the Clemente et al. recordings, frontal-plane
+ * exercises measured 0.5-6° and the 35° camera 19-36°.
+ */
+export function bodyYawDegrees(world: PoseLandmark[] | undefined): number | null {
+  if (!world?.length) return null;
+  const lineYaw = (a: string, b: string): number | null => {
+    const p = findLandmark(world, a);
+    const q = findLandmark(world, b);
+    if (!p || !q || p.z === undefined || q.z === undefined) return null;
+    const dx = Math.abs(p.x - q.x);
+    const dz = Math.abs(p.z - q.z);
+    if (Math.hypot(dx, dz) < MIN_LINE_METRES) return null;
+    return (Math.atan2(dz, dx) * 180) / Math.PI;
+  };
+  const yaws = [
+    lineYaw('left_shoulder', 'right_shoulder'),
+    lineYaw('left_hip', 'right_hip'),
+  ].filter((y): y is number => y !== null);
+  return yaws.length ? yaws.reduce((s, y) => s + y, 0) / yaws.length : null;
+}
+
 export class OrientationClassifier {
   private orientationHistory: OrientationResult[] = [];
   private readonly historyWindow: number;
@@ -98,17 +157,17 @@ export class OrientationClassifier {
     let score = 0.0;
 
     // Check shoulder width (wider = more frontal)
-    const leftShoulder = landmarks[5];
-    const rightShoulder = landmarks[6];
+    const leftShoulder = findLandmark(landmarks, 'left_shoulder');
+    const rightShoulder = findLandmark(landmarks, 'right_shoulder');
+
+    const ratios = bodyWidthRatios(landmarks);
 
     if (leftShoulder && rightShoulder) {
-      const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
-
-      // Wide shoulders (>0.2 normalized) indicate frontal view
-      if (shoulderWidth > 0.2) {
+      // Wide shoulders relative to the torso indicate a frontal view
+      if (ratios && ratios.shoulder > 0.6) {
         score += 0.3;
         // Bonus for very wide shoulders
-        if (shoulderWidth > 0.3) {
+        if (ratios.shoulder > 0.68) {
           score += 0.1;
         }
       }
@@ -121,13 +180,11 @@ export class OrientationClassifier {
     }
 
     // Check hip width
-    const leftHip = landmarks[11];
-    const rightHip = landmarks[12];
+    const leftHip = findLandmark(landmarks, 'left_hip');
+    const rightHip = findLandmark(landmarks, 'right_hip');
 
     if (leftHip && rightHip) {
-      const hipWidth = Math.abs(rightHip.x - leftHip.x);
-
-      if (hipWidth > 0.15) {
+      if (ratios && ratios.hip > 0.42) {
         score += 0.2;
       }
 
@@ -139,9 +196,9 @@ export class OrientationClassifier {
     }
 
     // Face visibility (nose, eyes)
-    const nose = landmarks[0];
-    const leftEye = landmarks[1];
-    const rightEye = landmarks[2];
+    const nose = findLandmark(landmarks, 'nose');
+    const leftEye = findLandmark(landmarks, 'left_eye');
+    const rightEye = findLandmark(landmarks, 'right_eye');
 
     if (nose && nose.visibility > 0.5) {
       score += 0.1;
@@ -172,17 +229,17 @@ export class OrientationClassifier {
     let score = 0.0;
 
     // Check shoulder width (narrower = more sagittal)
-    const leftShoulder = landmarks[5];
-    const rightShoulder = landmarks[6];
+    const leftShoulder = findLandmark(landmarks, 'left_shoulder');
+    const rightShoulder = findLandmark(landmarks, 'right_shoulder');
+
+    const ratios = bodyWidthRatios(landmarks);
 
     if (leftShoulder && rightShoulder) {
-      const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
-
-      // Narrow shoulders (<0.15 normalized) indicate sagittal view
-      if (shoulderWidth < 0.15) {
+      // Narrow shoulders relative to the torso indicate a sagittal view
+      if (ratios && ratios.shoulder < 0.35) {
         score += 0.4;
         // Bonus for very narrow shoulders
-        if (shoulderWidth < 0.08) {
+        if (ratios.shoulder < 0.2) {
           score += 0.1;
         }
       }
@@ -195,13 +252,11 @@ export class OrientationClassifier {
     }
 
     // Check hip width
-    const leftHip = landmarks[11];
-    const rightHip = landmarks[12];
+    const leftHip = findLandmark(landmarks, 'left_hip');
+    const rightHip = findLandmark(landmarks, 'right_hip');
 
     if (leftHip && rightHip) {
-      const hipWidth = Math.abs(rightHip.x - leftHip.x);
-
-      if (hipWidth < 0.1) {
+      if (ratios && ratios.hip < 0.25) {
         score += 0.2;
       }
 
@@ -240,9 +295,9 @@ export class OrientationClassifier {
     let score = 0.0;
 
     // Face NOT visible (key indicator of posterior)
-    const nose = landmarks[0];
-    const leftEye = landmarks[1];
-    const rightEye = landmarks[2];
+    const nose = findLandmark(landmarks, 'nose');
+    const leftEye = findLandmark(landmarks, 'left_eye');
+    const rightEye = findLandmark(landmarks, 'right_eye');
 
     let faceVisibilityCount = 0;
     if (nose && nose.visibility > 0.5) faceVisibilityCount++;
@@ -257,13 +312,13 @@ export class OrientationClassifier {
     }
 
     // Wide shoulders (similar to frontal, but with no face)
-    const leftShoulder = landmarks[5];
-    const rightShoulder = landmarks[6];
+    const leftShoulder = findLandmark(landmarks, 'left_shoulder');
+    const rightShoulder = findLandmark(landmarks, 'right_shoulder');
+
+    const ratios = bodyWidthRatios(landmarks);
 
     if (leftShoulder && rightShoulder) {
-      const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
-
-      if (shoulderWidth > 0.2) {
+      if (ratios && ratios.shoulder > 0.6) {
         score += 0.2;
       }
 
@@ -275,20 +330,18 @@ export class OrientationClassifier {
     }
 
     // Wide hips (visible from back)
-    const leftHip = landmarks[11];
-    const rightHip = landmarks[12];
+    const leftHip = findLandmark(landmarks, 'left_hip');
+    const rightHip = findLandmark(landmarks, 'right_hip');
 
     if (leftHip && rightHip) {
-      const hipWidth = Math.abs(rightHip.x - leftHip.x);
-
-      if (hipWidth > 0.15) {
+      if (ratios && ratios.hip > 0.42) {
         score += 0.2;
       }
     }
 
     // Ears more visible than eyes (looking away)
-    const leftEar = landmarks[3];
-    const rightEar = landmarks[4];
+    const leftEar = findLandmark(landmarks, 'left_ear');
+    const rightEar = findLandmark(landmarks, 'right_ear');
 
     if (leftEar && rightEar) {
       const earVisibility = (leftEar.visibility + rightEar.visibility) / 2;

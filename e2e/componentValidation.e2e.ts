@@ -451,13 +451,10 @@ describe('PhysioAssist - Complete Component Validation', () => {
     });
 
     it('should support VoiceOver navigation', async () => {
-      // Enable accessibility mode
-      await device.enableAccessibility();
-
-      // Navigate using accessibility
+      // Detox has no API to toggle VoiceOver/TalkBack (the former
+      // device.enableAccessibility()/disableAccessibility() calls do not exist
+      // and would throw), so navigate the way VoiceOver does: by accessibility label.
       await element(by.label('Start exercise')).tap();
-
-      await device.disableAccessibility();
     });
 
     it('should have sufficient color contrast', async () => {

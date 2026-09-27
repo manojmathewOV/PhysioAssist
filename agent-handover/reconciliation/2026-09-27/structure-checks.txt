@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "claim": "plan structural consistency only; no app/clinical acceptance",
+  "gates": 11,
+  "acceptance_scenarios": 83,
+  "dod_axes": 11,
+  "research_questions": 12,
+  "negative_mutations_detected": 7,
+  "accepted_implementation_gates": 0
+}

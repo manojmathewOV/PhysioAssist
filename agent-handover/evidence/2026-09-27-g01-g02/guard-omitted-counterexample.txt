@@ -1,0 +1,32 @@
+FAIL src/store/__tests__/readRecovery.test.ts
+  persisted read recovery
+    ✕ preserves exact saved bytes after a rejected history read (49 ms)
+    ○ skipped retries the failed read and restores saved history before enabling the app
+    ○ skipped a root-profile read error also preserves that record and withholds bootstrap
+    ○ skipped keeps invalid saved history unchanged rather than replacing it
+    ○ skipped allows a genuinely absent record to finish initialisation
+
+  ● persisted read recovery › preserves exact saved bytes after a rejected history read
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "{\"history\":\"[{\\\"id\\\":\\\"retained-session\\\",\\\"date\\\":\\\"2026-09-20T10:00:00Z\\\"}]\",\"_persist\":\"{\\\"version\\\":-1,\\\"rehydrated\\\":true}\"}"
+    Received: "{\"history\":\"[]\",\"_persist\":\"{\\\"version\\\":-1,\\\"rehydrated\\\":true}\"}"
+
+    [0m [90m 51 |[39m     [36mawait[39m settle()[33m;[39m
+     [90m 52 |[39m     [36mawait[39m app[33m.[39mpersistor[33m.[39mflush()[33m;[39m
+    [31m[1m>[22m[39m[90m 53 |[39m     expect(disk[[32m'persist:exercise'[39m])[33m.[39mtoBe(historyBytes)[33m;[39m
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 54 |[39m     expect(
+     [90m 55 |[39m       storage[33m.[39msetItem[33m.[39mmock[33m.[39mcalls[33m.[39mfilter(([key]) [33m=>[39m key [33m===[39m [32m'persist:exercise'[39m)
+     [90m 56 |[39m     )[33m.[39mtoHaveLength([35m0[39m)[33m;[39m[0m
+
+      at Object.toBe (src/store/__tests__/readRecovery.test.ts:53:38)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 4 skipped, 5 total
+Snapshots:   0 total
+Time:        0.468 s, estimated 1 s
+Ran all test suites matching /src\/store\/__tests__\/readRecovery.test.ts/i with tests matching "preserves exact saved bytes".

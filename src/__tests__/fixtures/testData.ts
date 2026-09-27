@@ -3,9 +3,25 @@
  * Comprehensive test data for all testing scenarios
  */
 
-import { PoseLandmark, Keypoint } from '../../types/pose';
-import { ExerciseType, ExercisePhase, ValidationResult } from '../../types/exercise';
-import { User, UserProfile } from '../../types/user';
+import { PoseLandmark } from '../../types/pose';
+import { ExercisePhase, ValidationResult } from '../../types/exercise';
+
+/** Exercises that the pose generators below know how to simulate. */
+export type TestExerciseType =
+  | 'bicep_curl'
+  | 'squat'
+  | 'shoulder_press'
+  | 'hamstring_stretch';
+
+/**
+ * Validation result fixture: the service's ValidationResult plus the
+ * scoring/rep metadata these scenarios describe.
+ */
+export interface TestValidationResult extends ValidationResult {
+  formScore: number;
+  repetitions: number;
+  phaseTransition: boolean;
+}
 
 // ===== User Test Data =====
 
@@ -71,7 +87,7 @@ export const testUsers = {
 
 export const generateMockLandmarks = (options: {
   visibility?: number;
-  exerciseType?: ExerciseType;
+  exerciseType?: TestExerciseType;
   formQuality?: 'perfect' | 'good' | 'poor';
 }): PoseLandmark[] => {
   const { visibility = 0.9, exerciseType = 'bicep_curl', formQuality = 'good' } = options;
@@ -83,6 +99,7 @@ export const generateMockLandmarks = (options: {
       y: 0.5,
       z: 0,
       visibility,
+      index: i,
       name: getLandmarkName(i),
     }));
 
@@ -304,91 +321,85 @@ export const testExercisePhases: { [key: string]: ExercisePhase[] } = {
   bicep_curl: [
     {
       name: 'start',
-      minDuration: 0,
-      maxDuration: 1000,
-      criteria: {
-        jointAngles: {
-          leftElbow: { min: 160, max: 180 },
-          rightElbow: { min: 160, max: 180 },
-        },
-      },
+      description: 'start phase',
+      holdDuration: 0,
+      transitionTime: 1000,
+      jointRequirements: [
+        { joint: 'left_elbow', minAngle: 160, maxAngle: 180 },
+        { joint: 'right_elbow', minAngle: 160, maxAngle: 180 },
+      ],
     },
     {
       name: 'flexion',
-      minDuration: 500,
-      maxDuration: 3000,
-      criteria: {
-        jointAngles: {
-          leftElbow: { min: 30, max: 60 },
-          rightElbow: { min: 30, max: 60 },
-        },
-      },
+      description: 'flexion phase',
+      holdDuration: 500,
+      transitionTime: 3000,
+      jointRequirements: [
+        { joint: 'left_elbow', minAngle: 30, maxAngle: 60 },
+        { joint: 'right_elbow', minAngle: 30, maxAngle: 60 },
+      ],
     },
     {
       name: 'extension',
-      minDuration: 500,
-      maxDuration: 3000,
-      criteria: {
-        jointAngles: {
-          leftElbow: { min: 140, max: 180 },
-          rightElbow: { min: 140, max: 180 },
-        },
-      },
+      description: 'extension phase',
+      holdDuration: 500,
+      transitionTime: 3000,
+      jointRequirements: [
+        { joint: 'left_elbow', minAngle: 140, maxAngle: 180 },
+        { joint: 'right_elbow', minAngle: 140, maxAngle: 180 },
+      ],
     },
   ],
 
   squat: [
     {
       name: 'standing',
-      minDuration: 0,
-      maxDuration: 1000,
-      criteria: {
-        jointAngles: {
-          leftKnee: { min: 160, max: 180 },
-          rightKnee: { min: 160, max: 180 },
-          leftHip: { min: 160, max: 180 },
-          rightHip: { min: 160, max: 180 },
-        },
-      },
+      description: 'standing phase',
+      holdDuration: 0,
+      transitionTime: 1000,
+      jointRequirements: [
+        { joint: 'left_knee', minAngle: 160, maxAngle: 180 },
+        { joint: 'right_knee', minAngle: 160, maxAngle: 180 },
+        { joint: 'left_hip', minAngle: 160, maxAngle: 180 },
+        { joint: 'right_hip', minAngle: 160, maxAngle: 180 },
+      ],
     },
     {
       name: 'descending',
-      minDuration: 1000,
-      maxDuration: 3000,
-      criteria: {
-        jointAngles: {
-          leftKnee: { min: 70, max: 110 },
-          rightKnee: { min: 70, max: 110 },
-          leftHip: { min: 70, max: 110 },
-          rightHip: { min: 70, max: 110 },
-        },
-      },
+      description: 'descending phase',
+      holdDuration: 1000,
+      transitionTime: 3000,
+      jointRequirements: [
+        { joint: 'left_knee', minAngle: 70, maxAngle: 110 },
+        { joint: 'right_knee', minAngle: 70, maxAngle: 110 },
+        { joint: 'left_hip', minAngle: 70, maxAngle: 110 },
+        { joint: 'right_hip', minAngle: 70, maxAngle: 110 },
+      ],
     },
     {
       name: 'ascending',
-      minDuration: 1000,
-      maxDuration: 3000,
-      criteria: {
-        jointAngles: {
-          leftKnee: { min: 140, max: 180 },
-          rightKnee: { min: 140, max: 180 },
-          leftHip: { min: 140, max: 180 },
-          rightHip: { min: 140, max: 180 },
-        },
-      },
+      description: 'ascending phase',
+      holdDuration: 1000,
+      transitionTime: 3000,
+      jointRequirements: [
+        { joint: 'left_knee', minAngle: 140, maxAngle: 180 },
+        { joint: 'right_knee', minAngle: 140, maxAngle: 180 },
+        { joint: 'left_hip', minAngle: 140, maxAngle: 180 },
+        { joint: 'right_hip', minAngle: 140, maxAngle: 180 },
+      ],
     },
   ],
 };
 
 // ===== Validation Result Test Data =====
 
-export const testValidationResults: { [key: string]: ValidationResult } = {
+export const testValidationResults: { [key: string]: TestValidationResult } = {
   perfect: {
     isValid: true,
     phase: 'flexion',
     formScore: 1.0,
     errors: [],
-    feedbackMessage: 'Perfect form! Keep it up!',
+    feedback: ['Perfect form! Keep it up!'],
     repetitions: 10,
     phaseTransition: false,
   },
@@ -398,7 +409,7 @@ export const testValidationResults: { [key: string]: ValidationResult } = {
     phase: 'flexion',
     formScore: 0.85,
     errors: [],
-    feedbackMessage: 'Good form!',
+    feedback: ['Good form!'],
     repetitions: 8,
     phaseTransition: false,
   },
@@ -408,7 +419,7 @@ export const testValidationResults: { [key: string]: ValidationResult } = {
     phase: 'flexion',
     formScore: 0.6,
     errors: ['elbow_flare', 'shoulder_elevation'],
-    feedbackMessage: 'Keep your elbows closer to your body',
+    feedback: ['Keep your elbows closer to your body'],
     repetitions: 5,
     phaseTransition: false,
   },
@@ -418,7 +429,7 @@ export const testValidationResults: { [key: string]: ValidationResult } = {
     phase: 'flexion',
     formScore: 0.3,
     errors: ['elbow_flare', 'shoulder_elevation', 'back_arch', 'momentum'],
-    feedbackMessage: 'Slow down and focus on form',
+    feedback: ['Slow down and focus on form'],
     repetitions: 2,
     phaseTransition: false,
   },
@@ -537,7 +548,7 @@ export const accessibilityLabels = {
 
 // ===== Helper Functions =====
 
-export function generateTimeSeriesData(days: number, exerciseType?: ExerciseType) {
+export function generateTimeSeriesData(days: number, exerciseType?: TestExerciseType) {
   const data = [];
   const now = new Date();
 

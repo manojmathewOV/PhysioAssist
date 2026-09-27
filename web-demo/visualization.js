@@ -43,12 +43,6 @@ const EXERCISE_TARGETS = {
   elbow_flexion: 145,
 };
 
-const EXERCISE_NAMES = {
-  shoulder_flexion: 'Shoulder Flexion',
-  knee_flexion: 'Knee Flexion',
-  elbow_flexion: 'Elbow Flexion',
-};
-
 // ============================================================================
 // RENDERING FUNCTIONS
 // ============================================================================
@@ -113,7 +107,7 @@ function drawSkeleton(pose) {
 /**
  * Get skeleton connections based on exercise type
  */
-function getSkeletonConnections(exerciseType) {
+function getSkeletonConnections(_exerciseType) {
   // Common connections (MoveNet 17 points)
   const baseConnections = [
     [0, 1],
@@ -486,3 +480,7 @@ ctx.fillText('Select exercise and press Start', canvas.width / 2, canvas.height 
 
 console.log('✅ PhysioAssist Exercise Simulator loaded successfully!');
 console.log('🎮 Use the controls below to start an exercise simulation');
+
+// Expose button handlers referenced by inline onclick attributes in index.html
+window.startExercise = startExercise;
+window.resetExercise = resetExercise;

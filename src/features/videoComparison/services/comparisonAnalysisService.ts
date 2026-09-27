@@ -6,13 +6,6 @@ import {
   ComparisonResult,
 } from '../types/videoComparison.types';
 
-interface JointAngles {
-  elbow: number;
-  shoulder: number;
-  knee: number;
-  hip: number;
-}
-
 export class ComparisonAnalysisService {
   private static readonly ANGLE_TOLERANCE = {
     good: 5,

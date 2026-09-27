@@ -1,0 +1,10 @@
+PASS src/components/video/__tests__/referenceControls.test.tsx
+PASS src/components/video/__tests__/playerDocument.test.ts
+PASS src/utils/__tests__/youtubeNative.test.ts
+PASS src/utils/__tests__/youtube.test.ts
+
+Test Suites: 4 passed, 4 total
+Tests:       48 passed, 48 total
+Snapshots:   0 total
+Time:        1.631 s, estimated 2 s
+Ran all test suites within paths "src/components/video/__tests__/playerDocument.test.ts", "src/components/video/__tests__/referenceControls.test.tsx", "src/utils/__tests__/youtube.test.ts", "src/utils/__tests__/youtubeNative.test.ts".

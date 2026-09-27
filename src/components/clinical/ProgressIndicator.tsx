@@ -6,36 +6,65 @@
  *
  * Usage:
  * <ProgressIndicator currentStep={2} totalSteps={4} />
+ * <ProgressIndicator currentStep={4} totalSteps={4} tone="dark" /> // on camera
  */
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+
+import { AppText } from '../ui';
+import { colors, radii, spacing } from '../../theme';
 
 interface ProgressIndicatorProps {
   currentStep: number;
   totalSteps: number;
+  /** Colour of completed steps (defaults to the primary colour, or white on dark). */
   color?: string;
+  /** "dark" for use on camera overlays. */
+  tone?: 'light' | 'dark';
+  /** Show the "Step X of Y" text next to the dots. */
+  showLabel?: boolean;
 }
 
 const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   currentStep,
   totalSteps,
-  color = '#fff',
+  color,
+  tone = 'light',
+  showLabel = true,
 }) => {
+  const dark = tone === 'dark';
+  const activeColor = color ?? (dark ? colors.textInverse : colors.primary);
+  const inactiveColor = dark ? 'rgba(255, 255, 255, 0.35)' : colors.border;
   return (
     <View
       style={styles.container}
+      accessible
       accessibilityLabel={`Step ${currentStep} of ${totalSteps}`}
       accessibilityRole="progressbar"
+      accessibilityValue={{ min: 1, max: totalSteps, now: currentStep }}
     >
-      {Array.from({ length: totalSteps }, (_, index) => (
-        <Text
-          key={index}
-          style={[styles.dot, { color }, index < currentStep && styles.dotActive]}
+      <View style={styles.dots}>
+        {Array.from({ length: totalSteps }, (_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.dot,
+              index + 1 === currentStep && styles.dotCurrent,
+              { backgroundColor: index < currentStep ? activeColor : inactiveColor },
+            ]}
+          />
+        ))}
+      </View>
+      {showLabel ? (
+        <AppText
+          variant="label"
+          color={dark ? colors.textInverse : colors.textSecondary}
+          importantForAccessibility="no"
         >
-          {index < currentStep ? '●' : '○'}
-        </Text>
-      ))}
+          Step {currentStep} of {totalSteps}
+        </AppText>
+      ) : null}
     </View>
   );
 };
@@ -43,17 +72,21 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 20,
-    gap: 12,
+    gap: spacing.md,
+  },
+  dots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   dot: {
-    fontSize: 24,
-    opacity: 0.3,
+    width: 12,
+    height: 12,
+    borderRadius: radii.pill,
   },
-  dotActive: {
-    opacity: 1,
+  dotCurrent: {
+    width: 28,
   },
 });
 

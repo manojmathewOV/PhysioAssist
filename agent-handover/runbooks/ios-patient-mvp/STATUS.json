@@ -1,0 +1,152 @@
+{
+  "schema": "physioassist-runbook-status/1",
+  "runbook_id": "ios-patient-mvp",
+  "runbook_revision": 3,
+  "current_gate": "G07",
+  "overall": "reference_controls_web_verified_native_preparation_observed_live_gap_open",
+  "implementation_sha": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
+  "gate_states": {
+    "G00": "implemented_pending_review",
+    "G01": "in_progress",
+    "G02": "in_progress",
+    "G03": "planned",
+    "G04": "planned",
+    "G05": "in_progress",
+    "G06": "planned",
+    "G07": "in_progress",
+    "G08": "planned",
+    "G09": "planned",
+    "G10": "planned"
+  },
+  "evidence": [
+    "../../evidence/2026-09-27-g01-g02/run.json",
+    "../../evidence/2026-09-27-reference-safety/run.json",
+    "../../evidence/2026-09-27-reference-controls/run.json",
+    "../../evidence/2026-09-27-reference-controls/pickup.json"
+  ],
+  "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
+  "next": "Independent review of published reference controls; qualify native live Pause/Hide/Show using an isolated test lane or camera-optional Do, correct Release no-camera wording and prep visibility, then complete the source-aware shoulder journey. Do not repeat the retired downloader audit.",
+  "last_writer": "receiving_agent",
+  "limitations": [
+    "No gate independently accepted by this implementation update.",
+    "No full database migration, profile isolation, write-failure acknowledgement or clinical validation is complete.",
+    "Four opt-in suites remain skipped; historical source and approvals are unchanged.",
+    "74fe884 hosted Checks and iOS succeeded; c3d4b7b safety and newer storage still await independent review. Playback/patient journey, real camera and physical-device evidence remain separate."
+  ],
+  "integration_basis": "88918e77162a8491beb06c3e7615419a40b30630",
+  "blockers": [
+    {
+      "id": "I01",
+      "gate": "G01",
+      "status": "independently_corroborated_at_707a6e7",
+      "owner": "native_build_owner",
+      "observed": "Pinned local/hosted Ruby and native gems; identical Gem/Pod hashes; hosted run 36304301981 passed install/build/smoke/Detox at 707a6e7.",
+      "evidence": "../../evidence/2026-09-27-g01-g02/run.json#I01",
+      "wake": "Fresh failing native/toolchain counterexample only; current hosted 74fe884 also green. Remaining G01 review is not the original Pod failure."
+    },
+    {
+      "id": "DATA-READ-ERROR",
+      "gate": "G02",
+      "status": "contained_pending_independent_review",
+      "owner": "storage_owner",
+      "observed": "Reproduced empty overwrite; pending read, explicit retry and navigation guard now pass production-code and web fault tests. Native ordinary start observed with simulator ad-hoc signing.",
+      "wake": "Independent review and future native failure/migration/write-acknowledgement coverage; G02 remains open.",
+      "evidence": "../../evidence/2026-09-27-g01-g02/run.json#I02"
+    },
+    {
+      "id": "D-C-DECISIONS",
+      "gate": "G04",
+      "status": "open_feature_scoped",
+      "owner": "Manoj",
+      "observed": "C01-C08 and D01-D08 unresolved; initial variant/source and measurement choices are not approved.",
+      "wake": "Named scoped decisions recorded; no blanket completion needed for unrelated reversible work."
+    },
+    {
+      "id": "NATIVE-LIVE-REFERENCE",
+      "gate": "G07",
+      "status": "open_test_input_boundary",
+      "owner": "receiving_agent",
+      "observed": "Actual Release native test reaches video playback then no-camera screen; simulated practice is compiled out. Full live reference journey has not run. No-camera copy inaccurately promises practice.",
+      "wake": "A deliberately isolated qualified test lane or completed camera-optional Do, plus reachable native presentation; no production fake-input bypass.",
+      "evidence": "../../evidence/2026-09-27-reference-controls/pickup.json"
+    }
+  ],
+  "observed_subitems": {
+    "P08": {
+      "state": "independently_verified_on_frozen_basis",
+      "basis": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
+      "evidence": ".agents/skills/physioassist-hybrid/evidence/verification.json",
+      "ceiling": "test teardown only; not whole product acceptance"
+    },
+    "R01_R03": {
+      "state": "implemented_pending_targeted_independent_review",
+      "basis": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84"
+    },
+    "EX06": {
+      "state": "implemented_web_only_pending_independent_journey",
+      "basis": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84"
+    },
+    "G01.W1": {
+      "state": "implemented_pending_review",
+      "basis": "707a6e7553fdcedbf87ebf835a21f3e22ecbf638",
+      "evidence": "../../evidence/2026-09-27-g01-g02/run.json#I01"
+    },
+    "G02.W1": {
+      "state": "implemented_pending_review",
+      "basis": "1c539a566d18ff53f8388e505afb1904b730c6d3",
+      "evidence": "../../evidence/2026-09-27-g01-g02/run.json#I02"
+    },
+    "reference_safety": {
+      "state": "implemented_pending_independent_review",
+      "basis": "c3d4b7bda383a75fd6d70209a7ee73d2f888acc6",
+      "criteria": ["G05.V04", "G05.V08"],
+      "evidence": "../../evidence/2026-09-27-reference-safety/run.json"
+    },
+    "reference_controls": {
+      "state": "implemented_pending_independent_review",
+      "basis": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
+      "criteria": ["G07.V01", "G07.V05", "G05.V05"],
+      "evidence": "../../evidence/2026-09-27-reference-controls/pickup.json",
+      "scope": "Real web 19 checks; native prep observed but expanded native test failed before live mode, which is excluded in Release; independent review pending"
+    }
+  },
+  "active_pr": 28,
+  "predecessor_prs": "25/26/27 closed-unmerged as superseded after checkpoint/ancestry verification",
+  "review_received": {
+    "reviewer": "Claude",
+    "source": "owner-supplied read-only review in chat",
+    "basis_sha": "707a6e7553fdcedbf87ebf835a21f3e22ecbf638",
+    "record": "../../responses/2026-09-27-independent-review-reconciliation.md",
+    "scope": "I01 source/hosted corroboration; no later storage or whole-gate acceptance"
+  },
+  "active_delivery_slice": "S1",
+  "active_work_item": "G07.W1",
+  "review_queue": [
+    {
+      "subject": "reference_safety",
+      "basis": "c3d4b7bda383a75fd6d70209a7ee73d2f888acc6",
+      "status": "independent_review_pending",
+      "record": "../../responses/2026-09-27-reference-safety.md"
+    },
+    {
+      "subject": "storage_read_containment",
+      "basis": "dd7f5042dc4c0a46603faaaa3735ebbe60d5f390",
+      "status": "independent_review_pending",
+      "record": "../../responses/2026-09-27-g01-g02-receiving-agent.md"
+    },
+    {
+      "subject": "reference_controls",
+      "basis": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
+      "status": "independent_review_pending",
+      "record": "../../responses/2026-09-27-reference-controls.md"
+    }
+  ],
+  "hosted_observation": {
+    "basis": "74fe884cc090ff4a5813ad47e36415186316abba",
+    "checks_run": 36316922628,
+    "ios_run": 36316922623,
+    "conclusion": "success",
+    "scope": "Build/selected hosted tests only; not independent review or complete clinical native journey",
+    "record": "evidence/convergence-20260927.json"
+  }
+}

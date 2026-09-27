@@ -1,0 +1,25 @@
+PASS src/components/__tests__/framingRequirement.test.ts
+PASS src/services/web/__tests__/focusFrame.test.ts
+PASS src/testing/recordedPatient/__tests__/recordedPatient.test.ts
+PASS src/services/movement/__tests__/shortArcQuad.test.ts
+PASS src/services/movement/__tests__/view.test.ts
+PASS src/services/web/__tests__/WebPoseDetectionService.test.ts
+PASS src/store/__tests__/persistence.test.ts
+PASS src/services/pose/__tests__/exercisePlan.test.ts
+PASS __tests__/smoke/rnfs.test.ts
+PASS __tests__/smoke/mediapipe.test.ts
+PASS __tests__/smoke/tensorflow.test.ts
+PASS src/components/__tests__/rangeResult.test.tsx
+PASS src/utils/__tests__/youtube.test.ts
+PASS src/components/exercises/__tests__/referenceFor.test.ts
+PASS src/services/__tests__/audioCuePacing.test.ts
+PASS __tests__/smoke/ytdl.test.ts
+PASS src/services/pose/__tests__/adaptiveModel.test.ts
+PASS src/services/movement/__tests__/sessionCompensations.test.ts
+
+Test Suites: 4 skipped, 87 passed, 87 of 91 total
+Tests:       4 skipped, 1593 passed, 1597 total
+Snapshots:   0 total
+Time:        34.484 s
+Ran all test suites.
+Test results written to: ../RDC/runs/20260927-landing-fixes/jest-parallel.json

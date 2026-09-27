@@ -15,7 +15,7 @@
  * - General Shoulder Assessment
  */
 
-import { MovementType, JointType } from './movements.config';
+import { JointType } from './movements.config';
 
 export interface ProtocolStep {
   /** Step number in protocol */

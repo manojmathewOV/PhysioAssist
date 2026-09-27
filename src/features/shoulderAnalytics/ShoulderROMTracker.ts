@@ -17,10 +17,6 @@
  */
 
 import { PoseLandmark } from '../../types/pose';
-import {
-  ClinicalMeasurements,
-  adaptMoveNetToClinical,
-} from '../../utils/moveNetClinicalAdapter';
 
 export type ShoulderMovement =
   | 'forward_flexion'
@@ -83,7 +79,8 @@ const calculateShoulderAngle = (
   landmarks: PoseLandmark[],
   movement: ShoulderMovement,
   side: 'left' | 'right',
-  cameraAngle: CameraAngle
+  // Not yet used: angle math currently assumes the movement's canonical view.
+  _cameraAngle: CameraAngle
 ): number => {
   // Landmark indices (MoveNet)
   const SHOULDER_LEFT = 5;

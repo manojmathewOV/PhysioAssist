@@ -1,0 +1,30 @@
+<WORKSPACE>/repo/node_modules/react-native-fast-tflite/react-native-fast-tflite.podspec:47: warning: key "CLANG_CXX_LANGUAGE_STANDARD" is duplicated and overwritten on line 49
+[TFLite] CoreML Delegate is set to true! ($EnableCoreMLDelegate setting in Podfile)
+[VisionCamera] Thank you for using VisionCamera ❤️
+[VisionCamera] If you enjoy using VisionCamera, please consider sponsoring this project: https://github.com/sponsors/mrousavy
+[VisionCamera] $VCEnableLocation is not set, enabling CLLocation APIs by default...
+[VisionCamera] $VCEnableFrameProcessors is not set, enabling Frame Processors if Worklets is installed...
+[VisionCamera] react-native-worklets-core found at <WORKSPACE>/repo/node_modules/react-native-worklets-core, Frame Processors are enabled!
+Auto-linking React Native modules for target `PhysioAssist`: BVLinearGradient, RNCAsyncStorage, RNFS, RNGestureHandler, RNReactNativeHapticFeedback, RNReanimated, RNSVG, RNScreens, RNSound, RNVectorIcons, ReactNativeMediaPipe, TextToSpeech, VisionCamera, react-native-blur, react-native-encrypted-storage, react-native-fast-tflite, react-native-safe-area-context, react-native-webview, and react-native-worklets-core
+Framework build type is static library
+[Codegen] Generating ./build/generated/ios/React-Codegen.podspec.json
+[Codegen] generating an empty RCTThirdPartyFabricComponentsProvider
+Analyzing dependencies
+[Codegen] Found FBReactNativeSpec
+[Codegen] Found rncore
+[VisionCamera] Thank you for using VisionCamera ❤️
+[VisionCamera] If you enjoy using VisionCamera, please consider sponsoring this project: https://github.com/sponsors/mrousavy
+[VisionCamera] $VCEnableLocation is not set, enabling CLLocation APIs by default...
+[VisionCamera] $VCEnableFrameProcessors is not set, enabling Frame Processors if Worklets is installed...
+[VisionCamera] react-native-worklets-core found at <WORKSPACE>/repo/node_modules/react-native-worklets-core, Frame Processors are enabled!
+<WORKSPACE>/repo/node_modules/react-native-fast-tflite/react-native-fast-tflite.podspec:47: warning: key "CLANG_CXX_LANGUAGE_STANDARD" is duplicated and overwritten on line 49
+[TFLite] CoreML Delegate is set to true! ($EnableCoreMLDelegate setting in Podfile)
+Downloading dependencies
+Removing react-native-cameraroll
+Generating Pods project
+Setting USE_HERMES build settings
+Setting REACT_NATIVE build settings
+Setting CLANG_CXX_LANGUAGE_STANDARD to c++20 on <WORKSPACE>/repo/ios/PhysioAssist.xcodeproj
+Pod install took 86 [s] to run
+Integrating client project
+Pod installation complete! There are 70 dependencies from the Podfile and 73 total pods installed.

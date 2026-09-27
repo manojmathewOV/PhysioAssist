@@ -10,7 +10,6 @@ DEPS=(
   "@tensorflow/tfjs-react-native"
   "@mediapipe/pose"
   "react-native-fs"
-  "react-native-ytdl"
   "react-native-vision-camera"
   "@react-navigation/native"
   "@mediapipe/camera_utils"

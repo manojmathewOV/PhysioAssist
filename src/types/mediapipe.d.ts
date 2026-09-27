@@ -15,6 +15,8 @@ declare module '@mediapipe/pose' {
     poseLandmarks: PoseLandmark[];
     poseWorldLandmarks?: PoseLandmark[];
     segmentationMask?: ImageData;
+    /** The input frame, drawable with CanvasRenderingContext2D.drawImage */
+    image: HTMLCanvasElement | HTMLImageElement | ImageBitmap;
   }
 
   export interface PoseConfig {

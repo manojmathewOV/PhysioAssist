@@ -1,0 +1,9 @@
+PASS src/components/__tests__/StorageRestoreBoundary.test.tsx
+PASS src/store/__tests__/readRecovery.test.ts
+PASS src/store/__tests__/persistence.test.ts
+
+Test Suites: 3 passed, 3 total
+Tests:       10 passed, 10 total
+Snapshots:   0 total
+Time:        1.197 s
+Ran all test suites matching /src\/store\/__tests__|src\/components\/__tests__\/StorageRestoreBoundary.test.tsx/i.

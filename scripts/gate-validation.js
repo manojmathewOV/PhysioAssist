@@ -826,29 +826,12 @@ if (gates.gate3.status === 'PASSED') {
     return { pass: true, message: 'Camera permission handling present' };
   });
 
-  addCriteria('gate4', 'Scenarios: Network failure handling', () => {
-    const youtubeServiceContent = fs.readFileSync(
-      path.join(__dirname, '../src/features/videoComparison/services/youtubeService.ts'),
-      'utf8'
-    );
-
-    // Check for network error handling
-    const hasNetworkError =
-      youtubeServiceContent.includes('NETWORK_ERROR') ||
-      youtubeServiceContent.includes('NetworkError');
-
-    if (!hasNetworkError) {
-      return { pass: false, message: 'No network error handling in YouTube service' };
-    }
-
-    const hasCatch = youtubeServiceContent.includes('catch');
-
-    if (!hasCatch) {
-      return { pass: false, message: 'Missing try-catch blocks' };
-    }
-
-    return { pass: true, message: 'Network error handling present' };
-  });
+  // Retired downloader checks are not a playback-recovery test.
+  addCriteria('gate4', 'Scenarios: Network failure handling', () => ({
+    pass: false,
+    message:
+      'Use G07 native/reference tests; legacy source-text checks cannot establish runtime recovery.',
+  }));
 
   // ===== ERROR RECOVERY =====
 

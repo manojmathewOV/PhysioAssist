@@ -1,0 +1,34 @@
+{
+  "files": [
+    {
+      "path": "before-corrected-fixture.txt",
+      "sha256": "2b74ea58225901e30e14a64287b2ef763b7e2da6d642bab65869cbb8791d3661",
+      "bytes": 13595
+    },
+    {
+      "path": "comfort-summary-320.png",
+      "sha256": "73c2aeb57831694ab975b327f69d06ff2dacfdc1927317c1a4c76b6a304d861c",
+      "bytes": 35885
+    },
+    {
+      "path": "lint.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "targeted-final.txt",
+      "sha256": "050c8ef4c6b03dea95022b43cd5733b7c0171e9193574c7710acccd0e19ae2dc",
+      "bytes": 699
+    },
+    {
+      "path": "typecheck.txt",
+      "sha256": "b5599c8400a949945e8ce4caf4057718b4a54dda056d3941eb91fd2738b287ad",
+      "bytes": 49
+    },
+    {
+      "path": "run.json",
+      "sha256": "1060cf18923ba3a76ea741f23cfdff681e59e14feacce84745660f86744ff811",
+      "bytes": 2131
+    }
+  ]
+}

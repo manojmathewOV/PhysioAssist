@@ -1,0 +1,111 @@
+{
+  "revision": 3,
+  "role": "portable plan files, not implementation evidence acceptance",
+  "files": [
+    {
+      "path": "ACTIVE.md",
+      "sha256": "0b7152b1cd6a1923408c4adb57564582432c40d49d5524edb885a3a72f3a3c3d",
+      "bytes": 4218
+    },
+    {
+      "path": "DECISIONS.md",
+      "sha256": "44d475d23987e2905d912c5b231996e14bcc74910b121736dcd90712fa1646a0",
+      "bytes": 6276
+    },
+    {
+      "path": "PROGRESSION.md",
+      "sha256": "25b94905b0550bad8dcca4163fe62b07f40f1a6e4cc45de3ccf9a0c0b6b93bbd",
+      "bytes": 5863
+    },
+    {
+      "path": "README.md",
+      "sha256": "0cef41322d07b4233de08a5ad57eef358f0aebee94aa0779f568260a9c03d48b",
+      "bytes": 2489
+    },
+    {
+      "path": "RESEARCH.md",
+      "sha256": "8bdc157bc492d9f5a2cec4fc2b03a850c5833bdc207b687dee65a0a7c3e6ab29",
+      "bytes": 4320
+    },
+    {
+      "path": "ROADMAP.cnp",
+      "sha256": "5ce101551a693abcd2af4f792c1052755df1ca7cab4128395cc8724621298668",
+      "bytes": 102491
+    },
+    {
+      "path": "RUNBOOK.md",
+      "sha256": "c23fe45d3223fdafe73880d874a87a3b7aafd3f3752c25cec5832bf9ce291dcb",
+      "bytes": 41538
+    },
+    {
+      "path": "STATUS.json",
+      "sha256": "19f6f1bc0433edf5b0ee2a1c355e915e298d6e1aca924c98ebd8b4d3de115e0e",
+      "bytes": 7169
+    },
+    {
+      "path": "TEST_MATRIX.md",
+      "sha256": "3e74c83056d96d249f92ae660400509ae7f5fd421cf8726f8f9979dbaf3adae9",
+      "bytes": 15747
+    },
+    {
+      "path": "evidence/CCORE_TOOLING.md",
+      "sha256": "bad3bf63e5203a04d3817652b727dd087d94c5c500388c5457e39a54558afc46",
+      "bytes": 3857
+    },
+    {
+      "path": "evidence/TOOL_EXECUTION.json",
+      "sha256": "25ce1c2c109442c034c560e0b00549f79277f84220fa606fdf5c0a83c059fda3",
+      "bytes": 2281
+    },
+    {
+      "path": "evidence/ccore-inspection.txt",
+      "sha256": "3ab8ad434a3140e3100884efeebde76e8f000089945f06e2f7302e7427623f6e",
+      "bytes": 3198
+    },
+    {
+      "path": "evidence/ccore-reconciliation.json",
+      "sha256": "8053696a66511ef39550d961605ad94500961b32a20e79c83644799b4315cfed",
+      "bytes": 2279
+    },
+    {
+      "path": "evidence/convergence-20260927.json",
+      "sha256": "d3fe6c96089fa789d708d457138aa936e421bd5b16bad67ff9ba041b9d7ceff2",
+      "bytes": 3700
+    },
+    {
+      "path": "evidence/structural-check.json",
+      "sha256": "f29e1949f189fe1919ecca47ec4ee68b7913948c0861eeea8aa048846faef32f",
+      "bytes": 264
+    },
+    {
+      "path": "research.json",
+      "sha256": "d1c94ee17e6b8eef42eb948ef7097192a3538f67b154446112fe53a24e38351e",
+      "bytes": 14625
+    },
+    {
+      "path": "runbook.json",
+      "sha256": "908b88ec2a32de63dea4757a6da7daede7dc62ae006bd15786a318dec908f5fe",
+      "bytes": 82132
+    },
+    {
+      "path": "tools/check_matrix.py",
+      "sha256": "3d6e1ea8952574cd6c738bdbf356c063f6819e2b2519a292dce0b4513113911e",
+      "bytes": 4983
+    },
+    {
+      "path": "tools/check_runbook.py",
+      "sha256": "2ddae3fb0e799845bde6d7d2bb41537c3cba3311603490f53c111dafaa78b715",
+      "bytes": 10368
+    },
+    {
+      "path": "tools/render_cnp.py",
+      "sha256": "dd4aa80bc00603a74a55ff86b40954702cd9d408f0c99e04b251b2e4f0fe143f",
+      "bytes": 13216
+    },
+    {
+      "path": "validation-matrix.json",
+      "sha256": "a7030cf61f1b1787c0f06d79727ef4bab706786506676549e173df024cecdc8e",
+      "bytes": 73903
+    }
+  ]
+}

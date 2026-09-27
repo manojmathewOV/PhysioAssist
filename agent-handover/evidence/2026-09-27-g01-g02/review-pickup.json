@@ -1,0 +1,30 @@
+{
+  "date": "2026-09-27",
+  "scope": "receiving-agent review pickup; no clinical or whole-gate acceptance",
+  "tested_sha": "86189f2acf3b6bf0ae004faaa9e6d1fb7b36053c",
+  "reviewed_by_Claude_sha": "707a6e7553fdcedbf87ebf835a21f3e22ecbf638",
+  "review_origin": "user-supplied read-only review; not an impersonated GitHub review",
+  "application_tests": {
+    "passed": 1605,
+    "skipped": 4,
+    "failed": 0,
+    "passed_suites": 90,
+    "exit_code": 0,
+    "forceExit": false,
+    "teardown_warning": false,
+    "seconds": 26.41,
+    "log_sha256": "28afd028eba07a47d2b0ef965aefbbaa9e1199946b9b837f372c046a4c53a65d"
+  },
+  "new_production_characterisation_tests": 4,
+  "typecheck": "passed",
+  "new_test_lint": "passed; not a new full lint scan",
+  "runtime_changes_published": "existing dd7f504 read-recovery and 1c539a5 local simulator/toolchain correction",
+  "not_implemented_by_this_pickup": [
+    "permission/dependency removal",
+    "patient-only copy rewrite",
+    "new endpoint estimator or saved provenance fields",
+    "complete shoulder journey"
+  ],
+  "next": "current hosted CI and storage review; small privacy/copy/provenance increment and source-aware shoulder journey",
+  "mac_use": "reused existing checkout and dependencies; no native build or permanent process"
+}

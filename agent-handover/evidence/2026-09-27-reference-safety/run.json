@@ -1,0 +1,56 @@
+{
+  "scope": "Implemented summary/reference safety; no independent, native, clinical or whole-gate acceptance",
+  "basis": "7542688a7c809ecef2832b473cce4f5de2609ee3",
+  "implementation_sha": "c3d4b7bda383a75fd6d70209a7ee73d2f888acc6",
+  "review_origin": "Owner-supplied Claude read-only report; no impersonated approval",
+  "reproduction": {
+    "initial_cases": 14,
+    "failed_before": 13,
+    "passed_control_before": 1,
+    "scope": "Production-code tests; corrected view fixture uses a view-gated knee variant"
+  },
+  "tests": {
+    "new_reference_cases": 21,
+    "targeted_related_passed": 61,
+    "full_passed": 1626,
+    "full_failed": 0,
+    "full_skipped": 4,
+    "suites_passed": 91,
+    "exit_code": 0,
+    "forceExit": false,
+    "teardown_warning": false,
+    "duration_seconds": 45.43,
+    "raw_log_sha256": "4ea316e4ff6567be9581859f0f3d3713952e7794910798f22564790179b4f98e",
+    "typecheck": "passed",
+    "targeted_lint": "passed; not a full historical-warning cleanup",
+    "existing_expectations_reconciled": 8
+  },
+  "browser": {
+    "status": "passed",
+    "source_sha": "c3d4b7bda383a75fd6d70209a7ee73d2f888acc6",
+    "viewport_widths": [
+      320,
+      390
+    ],
+    "fixture": "Synthetic practice, goal90 and reference164, comfort phase; no media or patient data",
+    "checks": [
+      "summary has no range-increase finding",
+      "restricted feedback labelled, not declared normal",
+      "no inferred rest time or excellent-form score",
+      "practice writes no treatment history"
+    ],
+    "visual_inspection": "comfort-summary-320.png opened and inspected after scrolling to the affected feedback; default-screen usability not established"
+  },
+  "limits": [
+    "No native iOS or physical-phone journey rerun",
+    "No human exercise, new benchmark download or accuracy claim",
+    "YouTube Pause/hide-show/size faults and legacy downloader removal remain open",
+    "General clinician-implying copy cleanup and full source-aware journey remain open"
+  ],
+  "resources": {
+    "clone": false,
+    "dependency_install": false,
+    "native_build": false,
+    "browser_server_stopped": true
+  }
+}

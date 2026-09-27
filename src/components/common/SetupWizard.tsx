@@ -5,26 +5,25 @@
  * Reduces setup failure from 60% → 10%
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
+  ScrollView,
   Dimensions,
   Animated,
 } from 'react-native';
-import {
-  Frame,
-  Camera,
-  useCameraDevice,
-  useFrameProcessor,
-} from 'react-native-vision-camera';
-import { Worklets } from 'react-native-worklets-core';
-import LinearGradient from 'react-native-linear-gradient';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import { useSelector } from 'react-redux';
 import { RootState } from '@store/index';
+import { useBlazePose, CAMERA_FPS } from '@hooks/useBlazePose';
+import { goniometerService } from '@services/goniometerService';
+import { findLandmark } from '@services/pose/landmarkLookup';
+import { getMeasurementLandmarks } from '@services/pose/measurementLandmarks';
 
 import {
   checkLightingConditions,
@@ -32,9 +31,53 @@ import {
   LightingAssessment,
   DistanceAssessment,
 } from '../../utils/compensatoryMechanisms';
-import { PoseLandmark } from '../../types/pose';
+import { FrameInfo } from '../../utils/realFrameAnalysis';
+import { PoseLandmark, ProcessedPoseData } from '../../types/pose';
+import { AppText, Banner, BigButton, Card, ListRow, Metric } from '../ui';
+import { CameraPanel } from '../ui/CameraPanel';
+import ProgressIndicator from '../clinical/ProgressIndicator';
+import { colors, radii, spacing, touch } from '../../theme';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+/**
+ * checkPatientDistance reads head points at indices 0-4 and ankles at 15-16
+ * (MoveNet-17 order), so BlazePose landmarks are re-ordered by name first.
+ */
+const MOVENET_17_ORDER = [
+  'nose',
+  'left_eye',
+  'right_eye',
+  'left_ear',
+  'right_ear',
+  'left_shoulder',
+  'right_shoulder',
+  'left_elbow',
+  'right_elbow',
+  'left_wrist',
+  'right_wrist',
+  'left_hip',
+  'right_hip',
+  'left_knee',
+  'right_knee',
+  'left_ankle',
+  'right_ankle',
+];
+
+const toMoveNetOrder = (landmarks: PoseLandmark[]): PoseLandmark[] => {
+  const ordered = MOVENET_17_ORDER.map((name) => findLandmark(landmarks, name));
+  return ordered.every(Boolean) ? (ordered as PoseLandmark[]) : [];
+};
+
+/** Knee flexion (0 = straight) of the more bent knee, or null if no knee is visible. */
+const kneeFlexion = (pose: ProcessedPoseData): number | null => {
+  const angles = goniometerService.calculateAllJointAngles(getMeasurementLandmarks(pose));
+  const flexions = ['left_knee', 'right_knee']
+    .map((joint) => angles.get(joint))
+    .filter((angle) => angle?.isValid)
+    .map((angle) => 180 - angle!.angle);
+  return flexions.length > 0 ? Math.max(...flexions) : null;
+};
 
 interface SetupWizardProps {
   visible: boolean;
@@ -54,10 +97,11 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
 
   // VisionCamera setup (Gate 1: Real frame capture)
   const device = useCameraDevice('front');
-  const latestFrameRef = useRef<Frame | null>(null);
+  // Snapshot of the camera frame size (set once the camera is streaming)
+  const latestFrameRef = useRef<FrameInfo | null>(null);
 
-  // Get pose landmarks from Redux (populated by PoseDetectionScreen)
-  const { landmarks } = useSelector((state: RootState) => state.pose.poseData || {});
+  // Pose landmarks from Redux (populated by useBlazePose below)
+  const landmarks = useSelector((state: RootState) => state.pose.currentPose?.landmarks);
 
   useEffect(() => {
     if (visible) {
@@ -69,19 +113,54 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
     }
   }, [visible]);
 
-  /**
-   * Frame Processor - Captures latest frame for analysis
-   * Gate 1: Real frame capture (no more mocks!)
-   */
-  const frameProcessor = useFrameProcessor((frame) => {
-    'worklet';
-    // Store latest frame in ref for analysis
-    Worklets.runOnJS(updateLatestFrame)(frame);
+  // Live knee angle for the practice step (null until BlazePose sees a knee)
+  const [livePracticeAngle, setLivePracticeAngle] = useState<number | null>(null);
+  const currentStepRef = useRef(currentStep);
+  currentStepRef.current = currentStep;
+
+  const handlePose = useCallback((pose: ProcessedPoseData) => {
+    if (currentStepRef.current === 'practice') {
+      const flexion = kneeFlexion(pose);
+      if (flexion !== null) {
+        setLivePracticeAngle(Math.max(0, flexion));
+      }
+    }
   }, []);
 
-  const updateLatestFrame = (frame: Frame) => {
-    latestFrameRef.current = frame;
-  };
+  // BlazePose runs while the wizard is shown; poses go to the Redux store (for
+  // the distance check) and to handlePose (for the practice angle)
+  const { cameraProps } = useBlazePose({
+    device,
+    enabled: visible,
+    onPose: handlePose,
+  });
+
+  /**
+   * Record the camera's frame size once it is streaming, for the lighting check.
+   * (Pixel data isn't read from JS; the Frame object is only valid inside the
+   * frame processor, which BlazePose now owns.)
+   */
+  const handleCameraInitialized = useCallback(() => {
+    const format = device?.formats?.[0];
+    latestFrameRef.current =
+      format?.videoWidth && format?.videoHeight
+        ? { width: format.videoWidth, height: format.videoHeight }
+        : { width: SCREEN_WIDTH, height: SCREEN_HEIGHT };
+  }, [device]);
+
+  // Live practice: track the real knee angle and finish once it reaches 45°
+  useEffect(() => {
+    if (currentStep === 'practice' && livePracticeAngle !== null) {
+      setPracticeAngle(livePracticeAngle);
+    }
+  }, [currentStep, livePracticeAngle]);
+
+  useEffect(() => {
+    if (currentStep === 'practice' && livePracticeAngle !== null && practiceAngle >= 45) {
+      handlePracticeComplete();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, livePracticeAngle, practiceAngle]);
 
   const handleLightingCheck = async () => {
     const frame = latestFrameRef.current;
@@ -111,9 +190,10 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
   };
 
   const handleDistanceCheck = () => {
-    // Gate 1: Use real landmarks from Redux (populated by PoseDetectionScreen)
-    const landmarkArray: PoseLandmark[] = landmarks || [];
-    const assessment = checkPatientDistance(landmarkArray, SCREEN_HEIGHT);
+    // Real BlazePose landmarks from Redux, looked up by name. They are normalized
+    // to the camera preview, so a preview height of 1 gives body fill in percent.
+    const landmarkArray = toMoveNetOrder(landmarks || []);
+    const assessment = checkPatientDistance(landmarkArray, 1);
     setDistanceStatus(assessment);
 
     if (assessment.status === 'perfect') {
@@ -145,6 +225,8 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
     return null;
   }
 
+  const stepNumber = currentStep === 'lighting' ? 1 : currentStep === 'distance' ? 2 : 3;
+
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       {/* VisionCamera for frame capture (Gate 1: Real camera integration) */}
@@ -153,48 +235,39 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
           style={StyleSheet.absoluteFill}
           device={device}
           isActive={visible}
-          frameProcessor={frameProcessor}
-          pixelFormat="yuv"
+          fps={CAMERA_FPS}
+          onInitialized={handleCameraInitialized}
+          {...cameraProps}
         />
       )}
 
-      <LinearGradient
-        colors={['rgba(26, 26, 26, 0.85)', 'rgba(13, 13, 13, 0.85)']}
-        style={styles.gradient}
-      >
-        {/* Skip Button */}
-        {currentStep !== 'complete' && (
-          <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-            <Text style={styles.skipText}>Skip Setup</Text>
-          </TouchableOpacity>
-        )}
+      <View style={[StyleSheet.absoluteFill, styles.scrim]} pointerEvents="none" />
 
-        {/* Progress Indicator */}
-        <View style={styles.progressContainer}>
-          <View
-            style={[
-              styles.progressDot,
-              currentStep === 'lighting' && styles.progressDotActive,
-            ]}
-          />
-          <View style={styles.progressLine} />
-          <View
-            style={[
-              styles.progressDot,
-              currentStep === 'distance' && styles.progressDotActive,
-            ]}
-          />
-          <View style={styles.progressLine} />
-          <View
-            style={[
-              styles.progressDot,
-              currentStep === 'practice' && styles.progressDotActive,
-            ]}
-          />
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        {/* Progress + Skip */}
+        <View style={styles.topBar}>
+          <ProgressIndicator currentStep={stepNumber} totalSteps={3} tone="dark" />
+          {currentStep !== 'complete' && (
+            <Pressable
+              style={({ pressed }) => [styles.skipButton, pressed && styles.skipPressed]}
+              onPress={handleSkip}
+              accessibilityRole="button"
+              accessibilityLabel="Skip setup"
+              accessibilityHint="Closes the setup guide and goes straight to the exercise"
+            >
+              <AppText variant="label" color={colors.textInverse}>
+                Skip setup
+              </AppText>
+            </Pressable>
+          )}
         </View>
 
         {/* Step Content */}
-        <View style={styles.content}>
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
           {currentStep === 'lighting' && (
             <LightingCheckStep status={lightingStatus} onCheck={handleLightingCheck} />
           )}
@@ -207,13 +280,14 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
             <PracticeStep
               currentAngle={practiceAngle}
               onAngleChange={setPracticeAngle}
+              simulate={livePracticeAngle === null}
               onComplete={handlePracticeComplete}
             />
           )}
 
           {currentStep === 'complete' && <CompleteStep />}
-        </View>
-      </LinearGradient>
+        </ScrollView>
+      </SafeAreaView>
     </Animated.View>
   );
 };
@@ -221,6 +295,42 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ visible, onComplete, onSkip }
 // ============================================================================
 // Step Components
 // ============================================================================
+
+const ON_DARK_SOFT = 'rgba(255, 255, 255, 0.85)';
+
+const StepTitle: React.FC<{ icon: string; title: string; description: string }> = ({
+  icon,
+  title,
+  description,
+}) => (
+  <View style={styles.stepHeader}>
+    <View style={styles.stepIcon}>
+      <Icon name={icon} size={36} color={colors.skeleton} />
+    </View>
+    <AppText variant="title" color={colors.textInverse} center accessibilityRole="header">
+      {title}
+    </AppText>
+    <AppText variant="body" color={ON_DARK_SOFT} center>
+      {description}
+    </AppText>
+  </View>
+);
+
+const Tips: React.FC<{ tips: string[] }> = ({ tips }) => (
+  <CameraPanel style={styles.tipsPanel}>
+    <AppText variant="label" color={colors.skeleton} accessibilityRole="header">
+      QUICK TIPS
+    </AppText>
+    {tips.map((tip) => (
+      <View key={tip} style={styles.tipRow}>
+        <Icon name="check" size={22} color={colors.skeleton} />
+        <AppText variant="body" color={colors.textInverse} style={styles.flex}>
+          {tip}
+        </AppText>
+      </View>
+    ))}
+  </CameraPanel>
+);
 
 interface LightingCheckStepProps {
   status: LightingAssessment | null;
@@ -230,52 +340,45 @@ interface LightingCheckStepProps {
 const LightingCheckStep: React.FC<LightingCheckStepProps> = ({ status, onCheck }) => {
   return (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>💡 Check Lighting</Text>
-      <Text style={styles.stepDescription}>
-        Good lighting helps us track your movement accurately
-      </Text>
+      <StepTitle
+        icon="light-mode"
+        title="Check the lighting"
+        description="Good lighting helps us see your movement clearly."
+      />
 
       {/* Live Preview Placeholder */}
       <View style={styles.previewContainer}>
-        <Text style={styles.previewText}>📸 Camera Preview</Text>
-        {status && (
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusIcon}>{status.icon}</Text>
-            <Text style={styles.statusText}>{status.message}</Text>
-          </View>
-        )}
+        <Icon name="videocam" size={40} color={ON_DARK_SOFT} />
+        <AppText variant="bodyStrong" color={ON_DARK_SOFT}>
+          Camera preview
+        </AppText>
       </View>
 
       {/* Status Message */}
-      {status && !status.canProceed && (
-        <View style={styles.suggestionContainer}>
-          <Text style={styles.suggestionTitle}>Try this:</Text>
-          <Text style={styles.suggestionText}>{status.suggestion}</Text>
-        </View>
-      )}
-
       {status && status.canProceed && (
-        <View style={styles.successContainer}>
-          <Text style={styles.successText}>✅ Perfect! Moving to next step...</Text>
-        </View>
+        <Banner tone="success" message={`${status.message} Moving to the next step…`} />
+      )}
+      {status && !status.canProceed && (
+        <>
+          <Banner tone="warning" message={status.message} />
+          <Banner tone="info" message={`Try this: ${status.suggestion}`} />
+        </>
       )}
 
       {/* Action Button */}
-      <TouchableOpacity style={styles.actionButton} onPress={onCheck}>
-        <LinearGradient colors={['#4CAF50', '#45a049']} style={styles.buttonGradient}>
-          <Text style={styles.buttonText}>
-            {status ? 'Check Again' : 'Check Lighting'}
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
+      <BigButton
+        label={status ? 'Check again' : 'Check lighting'}
+        icon="light-mode"
+        onPress={onCheck}
+      />
 
-      {/* Tips */}
-      <View style={styles.tipsContainer}>
-        <Text style={styles.tipsTitle}>Quick Tips:</Text>
-        <Text style={styles.tipText}>• Face a window (not directly in front)</Text>
-        <Text style={styles.tipText}>• Turn on room lights</Text>
-        <Text style={styles.tipText}>• Avoid dark rooms</Text>
-      </View>
+      <Tips
+        tips={[
+          'Face a window (not directly in front)',
+          'Turn on room lights',
+          'Avoid dark rooms',
+        ]}
+      />
     </View>
   );
 };
@@ -288,60 +391,69 @@ interface DistanceCheckStepProps {
 const DistanceCheckStep: React.FC<DistanceCheckStepProps> = ({ status, onCheck }) => {
   return (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>📏 Check Distance</Text>
-      <Text style={styles.stepDescription}>Stand where your whole body is visible</Text>
+      <StepTitle
+        icon="accessibility-new"
+        title="Check your distance"
+        description="Stand where your whole body is visible."
+      />
 
       {/* Live Preview with Guide */}
       <View style={styles.previewContainer}>
-        <Text style={styles.previewText}>📸 Camera Preview</Text>
-
-        {/* Distance Visual */}
-        {status && (
-          <View style={styles.distanceVisual}>
-            <Text style={styles.distanceVisualText}>{status.visual}</Text>
-            <Text style={styles.distanceInstruction}>{status.instruction}</Text>
-          </View>
-        )}
-
         {/* Ideal Position Outline */}
         <View style={styles.idealPositionOutline}>
-          <Text style={styles.outlineText}>Stand inside this area</Text>
+          <Icon name="accessibility-new" size={64} color={colors.skeleton} />
+          <AppText variant="label" color={colors.skeleton}>
+            Stand inside this area
+          </AppText>
         </View>
       </View>
 
-      {/* Action Button */}
-      <TouchableOpacity style={styles.actionButton} onPress={onCheck}>
-        <LinearGradient colors={['#4CAF50', '#45a049']} style={styles.buttonGradient}>
-          <Text style={styles.buttonText}>
-            {status ? 'Check Again' : 'Check Position'}
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
+      {/* Distance Visual */}
+      {status && (
+        <Banner
+          tone={status.status === 'perfect' ? 'success' : 'info'}
+          message={status.instruction}
+        />
+      )}
 
-      {/* Tips */}
-      <View style={styles.tipsContainer}>
-        <Text style={styles.tipsTitle}>Quick Tips:</Text>
-        <Text style={styles.tipText}>• Stand 6-8 feet from camera</Text>
-        <Text style={styles.tipText}>• Ensure your whole body is visible</Text>
-        <Text style={styles.tipText}>• Use a chair or table to prop your phone</Text>
-      </View>
+      {/* Action Button */}
+      <BigButton
+        label={status ? 'Check again' : 'Check position'}
+        icon="accessibility-new"
+        onPress={onCheck}
+      />
+
+      <Tips
+        tips={[
+          'Stand 6-8 feet from camera',
+          'Ensure your whole body is visible',
+          'Use a chair or table to prop your phone',
+        ]}
+      />
     </View>
   );
 };
 
 interface PracticeStepProps {
   currentAngle: number;
-  onAngleChange: (angle: number) => void;
+  onAngleChange: React.Dispatch<React.SetStateAction<number>>;
   onComplete: () => void;
+  /** Animate a simulated angle (no live pose available). */
+  simulate?: boolean;
 }
 
 const PracticeStep: React.FC<PracticeStepProps> = ({
   currentAngle,
   onAngleChange,
   onComplete,
+  simulate = true,
 }) => {
-  // Simulate angle increase for practice
+  // Simulate angle increase for practice when no live pose is available
+  // (e.g. simulator without a camera)
   useEffect(() => {
+    if (!simulate) {
+      return;
+    }
     const interval = setInterval(() => {
       onAngleChange((prevAngle) => {
         const newAngle = Math.min(prevAngle + 5, 90);
@@ -353,44 +465,57 @@ const PracticeStep: React.FC<PracticeStepProps> = ({
     }, 500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [simulate]);
 
-  const progress = (currentAngle / 90) * 100;
+  const progress = (Math.min(currentAngle, 90) / 90) * 100;
+  const coaching =
+    currentAngle < 30
+      ? 'Bend your knee…'
+      : currentAngle < 60
+        ? 'Keep going!'
+        : 'Great job! Almost there!';
 
   return (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>🎯 Practice Run</Text>
-      <Text style={styles.stepDescription}>
-        Try bending your knee to test the tracking
-      </Text>
+      <StepTitle
+        icon="directions-walk"
+        title="Practice run"
+        description="Try bending your knee to test the tracking."
+      />
 
       {/* Live Angle Display */}
-      <View style={styles.angleDisplayContainer}>
-        <Text style={styles.angleDisplay}>{Math.round(currentAngle)}°</Text>
-        <Text style={styles.angleLabel}>Current Angle</Text>
+      <CameraPanel style={styles.anglePanel}>
+        <Metric
+          value={`${Math.round(currentAngle)}°`}
+          label="Current angle"
+          color={colors.textInverse}
+          labelColor={ON_DARK_SOFT}
+        />
 
-        {/* Progress Arc */}
-        <View style={styles.progressArc}>
-          <View style={[styles.progressArcFill, { width: `${progress}%` }]} />
+        {/* Progress bar */}
+        <View
+          style={styles.progressTrack}
+          accessible
+          accessibilityRole="progressbar"
+          accessibilityValue={{ min: 0, max: 100, now: Math.round(progress) }}
+        >
+          <View style={[styles.progressFill, { width: `${progress}%` }]} />
         </View>
-      </View>
 
-      {/* Coaching Message */}
-      <View style={styles.coachingContainer}>
-        {currentAngle < 30 && <Text style={styles.coachingText}>Bend your knee...</Text>}
-        {currentAngle >= 30 && currentAngle < 60 && (
-          <Text style={styles.coachingText}>Keep going! 👍</Text>
-        )}
-        {currentAngle >= 60 && (
-          <Text style={styles.coachingText}>Great job! Almost there! 🎉</Text>
-        )}
-      </View>
+        {/* Coaching Message */}
+        <AppText
+          variant="heading"
+          color={colors.textInverse}
+          center
+          accessibilityLiveRegion="polite"
+        >
+          {coaching}
+        </AppText>
+      </CameraPanel>
 
       {/* Success Message */}
       {currentAngle >= 45 && (
-        <View style={styles.successContainer}>
-          <Text style={styles.successText}>✅ Perfect! You're ready to start!</Text>
-        </View>
+        <Banner tone="success" message="Perfect! You're ready to start!" />
       )}
     </View>
   );
@@ -399,31 +524,30 @@ const PracticeStep: React.FC<PracticeStepProps> = ({
 const CompleteStep: React.FC = () => {
   return (
     <View style={styles.stepContainer}>
-      <Text style={styles.completeTitle}>🎉 All Set!</Text>
-      <Text style={styles.completeDescription}>
-        You're ready to start tracking your exercises
-      </Text>
-
       <View style={styles.completeIconContainer}>
-        <Text style={styles.completeIcon}>✅</Text>
+        <Icon name="check-circle" size={72} color={colors.success} />
       </View>
+      <AppText
+        variant="display"
+        color={colors.textInverse}
+        center
+        accessibilityRole="header"
+      >
+        All set!
+      </AppText>
+      <AppText variant="body" color={ON_DARK_SOFT} center>
+        You&apos;re ready to start tracking your exercises.
+      </AppText>
 
-      <View style={styles.completeSummary}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryIcon}>💡</Text>
-          <Text style={styles.summaryText}>Lighting: Good</Text>
-        </View>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryIcon}>📏</Text>
-          <Text style={styles.summaryText}>Distance: Perfect</Text>
-        </View>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryIcon}>🎯</Text>
-          <Text style={styles.summaryText}>Tracking: Working</Text>
-        </View>
-      </View>
+      <Card style={styles.summaryCard}>
+        <ListRow icon="light-mode" title="Lighting" description="Good" />
+        <ListRow icon="accessibility-new" title="Distance" description="Perfect" />
+        <ListRow icon="directions-walk" title="Tracking" description="Working" last />
+      </Card>
 
-      <Text style={styles.completeNote}>Starting in a moment...</Text>
+      <AppText variant="bodyStrong" color={ON_DARK_SOFT} center>
+        Starting in a moment…
+      </AppText>
     </View>
   );
 };
@@ -433,288 +557,116 @@ const CompleteStep: React.FC = () => {
 // ============================================================================
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   container: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1000,
+    backgroundColor: '#000',
   },
-  gradient: {
+  scrim: {
+    backgroundColor: colors.cameraOverlay,
+  },
+  safeArea: {
     flex: 1,
-    padding: 20,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    gap: spacing.md,
   },
   skipButton: {
-    alignSelf: 'flex-end',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginTop: 40,
-  },
-  skipText: {
-    color: '#888',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    minHeight: touch.min,
     justifyContent: 'center',
-    marginVertical: 30,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
-  progressDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  progressDotActive: {
-    backgroundColor: '#4CAF50',
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-  },
-  progressLine: {
-    width: 40,
-    height: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginHorizontal: 8,
+  skipPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
+    padding: spacing.lg,
   },
   stepContainer: {
+    gap: spacing.md,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+  },
+  stepHeader: {
     alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
-  stepTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  stepDescription: {
-    fontSize: 16,
-    color: '#CCC',
-    textAlign: 'center',
-    marginBottom: 30,
-    paddingHorizontal: 20,
+  stepIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: radii.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   previewContainer: {
-    width: '100%',
-    height: 300,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
+    height: 220,
+    borderRadius: radii.lg,
     borderWidth: 2,
-    borderColor: 'rgba(76, 175, 80, 0.3)',
-  },
-  previewText: {
-    fontSize: 18,
-    color: '#888',
-  },
-  statusBadge: {
-    marginTop: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
-    borderRadius: 20,
-    flexDirection: 'row',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     alignItems: 'center',
-  },
-  statusIcon: {
-    fontSize: 24,
-    marginRight: 8,
-  },
-  statusText: {
-    fontSize: 16,
-    color: '#FFF',
-    fontWeight: '600',
-  },
-  suggestionContainer: {
-    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: '#FFC107',
-  },
-  suggestionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFC107',
-    marginBottom: 8,
-  },
-  suggestionText: {
-    fontSize: 15,
-    color: '#FFF',
-    lineHeight: 22,
-  },
-  successContainer: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
-  },
-  successText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#4CAF50',
-    textAlign: 'center',
-  },
-  actionButton: {
-    width: '100%',
-    marginBottom: 30,
-  },
-  buttonGradient: {
-    borderRadius: 30,
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  tipsContainer: {
-    backgroundColor: 'rgba(33, 150, 243, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-    width: '100%',
-    borderLeftWidth: 4,
-    borderLeftColor: '#2196F3',
-  },
-  tipsTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#2196F3',
-    marginBottom: 8,
-  },
-  tipText: {
-    fontSize: 14,
-    color: '#DDD',
-    lineHeight: 22,
-    marginBottom: 4,
-  },
-  distanceVisual: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  distanceVisualText: {
-    fontSize: 32,
-    marginBottom: 12,
-  },
-  distanceInstruction: {
-    fontSize: 18,
-    color: '#4CAF50',
-    fontWeight: '600',
+    justifyContent: 'center',
+    gap: spacing.sm,
   },
   idealPositionOutline: {
-    position: 'absolute',
     width: '60%',
-    height: '80%',
+    height: '85%',
     borderWidth: 3,
-    borderColor: 'rgba(76, 175, 80, 0.5)',
-    borderRadius: 12,
+    borderColor: colors.skeleton,
+    borderRadius: radii.md,
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: spacing.sm,
   },
-  outlineText: {
-    color: 'rgba(76, 175, 80, 0.7)',
-    fontSize: 14,
-    fontWeight: '600',
+  tipsPanel: {
+    padding: spacing.lg,
   },
-  angleDisplayContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
+  tipRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
   },
-  angleDisplay: {
-    fontSize: 72,
-    fontWeight: '700',
-    color: '#4CAF50',
+  anglePanel: {
+    padding: spacing.lg,
+    gap: spacing.md,
   },
-  angleLabel: {
-    fontSize: 16,
-    color: '#CCC',
-    marginTop: 8,
-  },
-  progressArc: {
-    width: 200,
-    height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 4,
-    marginTop: 20,
+  progressTrack: {
+    height: 16,
+    borderRadius: radii.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     overflow: 'hidden',
   },
-  progressArcFill: {
+  progressFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
-    borderRadius: 4,
-  },
-  coachingContainer: {
-    paddingVertical: 20,
-  },
-  coachingText: {
-    fontSize: 20,
-    color: '#FFF',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  completeTitle: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  completeDescription: {
-    fontSize: 18,
-    color: '#CCC',
-    textAlign: 'center',
-    marginBottom: 40,
+    borderRadius: radii.pill,
+    backgroundColor: colors.skeleton,
   },
   completeIconContainer: {
+    alignSelf: 'center',
     width: 120,
     height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    borderRadius: radii.pill,
+    backgroundColor: colors.successSoft,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 40,
   },
-  completeIcon: {
-    fontSize: 64,
-  },
-  completeSummary: {
-    width: '100%',
-    marginBottom: 30,
-  },
-  summaryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  summaryIcon: {
-    fontSize: 24,
-    marginRight: 16,
-  },
-  summaryText: {
-    fontSize: 16,
-    color: '#FFF',
-    fontWeight: '600',
-  },
-  completeNote: {
-    fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
-    fontStyle: 'italic',
+  summaryCard: {
+    paddingVertical: spacing.sm,
   },
 });
 

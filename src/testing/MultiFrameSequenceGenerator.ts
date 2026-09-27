@@ -383,8 +383,9 @@ export class MultiFrameSequenceGenerator {
         // Sudden drop at midpoint
         quality = index < totalFrames / 2 ? 0.95 : 0.55;
       } else if (degradationPattern === 'intermittent') {
-        // Random drops
-        quality = Math.random() < 0.2 ? 0.6 : 0.95; // 20% chance of low quality
+        // Periodic drops: every 5th frame (20%) is low quality. Deterministic so tests
+        // don't fail when a random draw happens to degrade the first frames.
+        quality = index % 5 === 4 ? 0.6 : 0.95;
       }
 
       return {

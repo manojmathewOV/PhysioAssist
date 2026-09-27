@@ -6,12 +6,7 @@
  * poses at once vs. processing them incrementally.
  */
 
-import {
-  PoseFrame,
-  ComparisonResult,
-  AngleDeviation,
-  TemporalAlignment,
-} from '../types/videoComparison.types';
+import { PoseFrame, ComparisonResult } from '../types/videoComparison.types';
 
 /**
  * Base interface for analysis sessions
@@ -56,7 +51,7 @@ export interface AnalysisSession {
  */
 export class BatchAnalysisSession implements AnalysisSession {
   sessionId: string;
-  mode: 'batch' = 'batch';
+  mode = 'batch' as const;
   exerciseType: string;
 
   private referencePoses: PoseFrame[] = [];
@@ -146,7 +141,7 @@ export class BatchAnalysisSession implements AnalysisSession {
  */
 export class StreamingAnalysisSession implements AnalysisSession {
   sessionId: string;
-  mode: 'streaming' = 'streaming';
+  mode = 'streaming' as const;
   exerciseType: string;
 
   private referencePoses: PoseFrame[] = [];
@@ -225,27 +220,8 @@ export class StreamingAnalysisSession implements AnalysisSession {
    * Update intermediate result based on current window
    */
   private updateIntermediateResult(): void {
-    // Analyze current window against reference poses
-    // This provides real-time feedback
-
-    // Find corresponding reference window
-    const userFrameIndex = this.allUserPoses.length - 1;
-    const refFrameIndex = Math.min(
-      Math.floor(
-        (userFrameIndex / this.allUserPoses.length) * this.referencePoses.length
-      ),
-      this.referencePoses.length - 1
-    );
-
-    const refWindowStart = Math.max(0, refFrameIndex - Math.floor(this.WINDOW_SIZE / 2));
-    const refWindowEnd = Math.min(
-      this.referencePoses.length,
-      refWindowStart + this.WINDOW_SIZE
-    );
-    const refWindow = this.referencePoses.slice(refWindowStart, refWindowEnd);
-
-    // Compare windows
-    // Actual implementation would use ComparisonAnalysisService
+    // TODO: compare the current user window against the matching reference
+    // window (via ComparisonAnalysisService) for real-time feedback.
     // For now, update with placeholder
     this.currentResult = {
       sessionId: this.sessionId,

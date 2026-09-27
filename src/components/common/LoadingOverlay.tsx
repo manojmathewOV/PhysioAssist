@@ -1,13 +1,16 @@
 /**
  * LoadingOverlay Component
  *
- * Displays a loading overlay with progress indicator and message
- * Used during model initialization, downloads, or other async operations
+ * A calm, full-screen "please wait" card with a spinner, a plain-language
+ * message and an optional progress bar. Used during model initialisation,
+ * downloads or other async operations.
  */
 
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, Modal, Animated } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, ActivityIndicator, StyleSheet, Modal, Animated } from 'react-native';
+
+import { AppText } from '../ui';
+import { colors, radii, shadows, spacing } from '../../theme';
 
 interface LoadingOverlayProps {
   /** Whether the overlay is visible */
@@ -22,9 +25,17 @@ interface LoadingOverlayProps {
   showSpinner?: boolean;
 }
 
+const formatTimeRemaining = (seconds: number): string => {
+  if (seconds < 60) {
+    return `About ${Math.ceil(seconds)} seconds left`;
+  }
+  const minutes = Math.ceil(seconds / 60);
+  return `About ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} left`;
+};
+
 const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   visible,
-  message = 'Loading...',
+  message = 'Loading…',
   progress,
   estimatedTime,
   showSpinner = true,
@@ -41,58 +52,60 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
     }
   }, [progress, progressAnim]);
 
-  const formatTimeRemaining = (seconds: number): string => {
-    if (seconds < 60) {
-      return `${Math.ceil(seconds)}s remaining`;
-    }
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.ceil(seconds % 60);
-    return `${minutes}m ${secs}s remaining`;
-  };
-
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       <View style={styles.overlay}>
-        <LinearGradient
-          colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.9)']}
-          style={styles.container}
+        <View
+          style={styles.card}
+          accessible
+          accessibilityRole="progressbar"
+          accessibilityLabel={
+            progress !== undefined
+              ? `${message} ${Math.round(progress * 100)} percent`
+              : message
+          }
+          accessibilityLiveRegion="polite"
         >
-          {/* Loading Content */}
-          <View style={styles.content}>
-            {/* Spinner */}
-            {showSpinner && (
-              <ActivityIndicator size="large" color="#4CAF50" style={styles.spinner} />
-            )}
+          {showSpinner && (
+            <ActivityIndicator
+              size="large"
+              color={colors.primary}
+              style={styles.spinner}
+              testID="loading-spinner"
+            />
+          )}
 
-            {/* Message */}
-            <Text style={styles.message}>{message}</Text>
+          <AppText variant="heading" center>
+            {message}
+          </AppText>
 
-            {/* Progress Bar */}
-            {progress !== undefined && (
-              <View style={styles.progressContainer}>
-                <View style={styles.progressBar}>
-                  <Animated.View
-                    style={[
-                      styles.progressFill,
-                      {
-                        width: progressAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0%', '100%'],
-                        }),
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
+          {progress !== undefined && (
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <Animated.View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: progressAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0%', '100%'],
+                      }),
+                    },
+                  ]}
+                />
               </View>
-            )}
+              <AppText variant="label" color={colors.primary}>
+                {Math.round(progress * 100)}%
+              </AppText>
+            </View>
+          )}
 
-            {/* Estimated Time */}
-            {estimatedTime !== undefined && estimatedTime > 0 && (
-              <Text style={styles.timeText}>{formatTimeRemaining(estimatedTime)}</Text>
-            )}
-          </View>
-        </LinearGradient>
+          {estimatedTime !== undefined && estimatedTime > 0 && (
+            <AppText variant="caption" color={colors.textSecondary} center>
+              {formatTimeRemaining(estimatedTime)}
+            </AppText>
+          )}
+        </View>
       </View>
     </Modal>
   );
@@ -103,62 +116,32 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    padding: spacing.lg,
+    backgroundColor: colors.cameraOverlay,
   },
-  container: {
-    borderRadius: 20,
-    padding: 30,
-    minWidth: 250,
-    maxWidth: 320,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  content: {
-    alignItems: 'center',
-  },
-  spinner: {
-    marginBottom: 20,
-  },
-  message: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 20,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  progressContainer: {
+  card: {
     width: '100%',
+    maxWidth: 360,
     alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.xl,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    ...shadows.card,
   },
+  spinner: { marginBottom: spacing.xs },
+  progressContainer: { width: '100%', alignItems: 'center', gap: spacing.sm },
   progressBar: {
     width: '100%',
-    height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 4,
+    height: 10,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radii.pill,
     overflow: 'hidden',
-    marginBottom: 10,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
-    borderRadius: 4,
-  },
-  progressText: {
-    fontSize: 14,
-    color: '#4CAF50',
-    fontWeight: '600',
-    marginTop: 5,
-  },
-  timeText: {
-    fontSize: 14,
-    color: '#AAA',
-    marginTop: 10,
-    fontStyle: 'italic',
+    backgroundColor: colors.primary,
+    borderRadius: radii.pill,
   },
 });
 

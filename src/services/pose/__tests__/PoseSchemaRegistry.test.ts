@@ -1,6 +1,14 @@
 import { PoseSchemaRegistry } from '../PoseSchemaRegistry';
 import { PoseSchema } from '../../../types/pose';
 
+/**
+ * PoseSchema['id'] is typed as the closed union of built-in schema ids, while
+ * the registry itself (register/get/has) is keyed by arbitrary strings and is
+ * meant to accept custom schemas. Narrow cast so these tests can exercise
+ * custom-schema registration without clobbering the built-in schemas.
+ */
+const customSchemaId = (id: string) => id as PoseSchema['id'];
+
 describe('PoseSchemaRegistry - Gate 9B.2', () => {
   let registry: PoseSchemaRegistry;
 
@@ -17,7 +25,7 @@ describe('PoseSchemaRegistry - Gate 9B.2', () => {
   describe('Schema Registration', () => {
     it('should register a custom schema', () => {
       const customSchema: PoseSchema = {
-        id: 'custom-test',
+        id: customSchemaId('custom-test'),
         modelName: 'Test Model',
         landmarkCount: 5,
         landmarks: [],
@@ -36,7 +44,7 @@ describe('PoseSchemaRegistry - Gate 9B.2', () => {
 
     it('should allow overwriting existing schema', () => {
       const schema1: PoseSchema = {
-        id: 'overwrite-test',
+        id: customSchemaId('overwrite-test'),
         modelName: 'Version 1',
         landmarkCount: 10,
         landmarks: [],
@@ -46,7 +54,7 @@ describe('PoseSchemaRegistry - Gate 9B.2', () => {
       };
 
       const schema2: PoseSchema = {
-        id: 'overwrite-test',
+        id: customSchemaId('overwrite-test'),
         modelName: 'Version 2',
         landmarkCount: 20,
         landmarks: [],
@@ -225,7 +233,7 @@ describe('PoseSchemaRegistry - Gate 9B.2', () => {
     it('should persist registered schemas across getInstance calls', () => {
       const instance1 = PoseSchemaRegistry.getInstance();
       const customSchema: PoseSchema = {
-        id: 'singleton-test',
+        id: customSchemaId('singleton-test'),
         modelName: 'Singleton Test',
         landmarkCount: 1,
         landmarks: [],

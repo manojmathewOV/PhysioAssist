@@ -59,5 +59,19 @@ target 'PhysioAssist' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
+
+    # react-native-worklets-core imports <ReactCommon/RCTTurboModule.h>, but on the old
+    # architecture its podspec doesn't depend on React-NativeModulesApple (which ships
+    # that header) or the pods it includes, so the header isn't on its search path.
+    installer.pods_project.targets.each do |target|
+      next unless target.name == 'react-native-worklets-core'
+      target.build_configurations.each do |build_config|
+        paths = build_config.build_settings['HEADER_SEARCH_PATHS'] || ['$(inherited)']
+        paths = paths.split(' ') if paths.is_a?(String)
+        build_config.build_settings['HEADER_SEARCH_PATHS'] = paths + %w[
+          React-NativeModulesApple ReactCommon React-callinvoker React-jsi
+        ].map { |pod| "\"$(PODS_ROOT)/Headers/Public/#{pod}\"" }
+      end
+    end
   end
 end

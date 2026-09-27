@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "date": "2026-09-27",
+  "scope": "G01/I01 implementation and G02/I02 read-error containment; no gate, release or clinical acceptance",
+  "tested_source_sha": "1c539a566d18ff53f8388e505afb1904b730c6d3",
+  "commits": {
+    "native_toolchain": "4064e802f217a935d41aab8c48b23acc06dda366",
+    "hosted_workflow": "707a6e7553fdcedbf87ebf835a21f3e22ecbf638",
+    "read_recovery": "dd7f5042dc4c0a46603faaaa3735ebbe60d5f390",
+    "simulator_and_runner": "1c539a566d18ff53f8388e505afb1904b730c6d3"
+  },
+  "I01": {
+    "before": "Hosted CocoaPods 1.17.0 refused checksums from locally generated 1.16.2 lock. Exact cause of every per-spec difference was not independently isolated.",
+    "fix": "Pin Ruby, CocoaPods, JSON, Xcodeproj and transitive gems; keep frozen install, lock hash check and pipefail.",
+    "native_tool_versions": {
+      "ruby": "3.4.5",
+      "cocoapods": "1.16.2",
+      "json": "2.9.1",
+      "xcodeproj": "1.27.0"
+    },
+    "local_and_hosted_lock_hashes": {
+      "Gemfile.lock": "e96e84e89de635dd1796285c633fc35c381b18364065a9e32b9a6c4558f54898",
+      "ios/Podfile.lock": "c620a4ab4a9ae36c553164752255f2e1a052154c380534ac7a68dec2f7a0d87a"
+    },
+    "hosted": {
+      "run_id": 36304301981,
+      "job_id": 108577902566,
+      "source_sha": "707a6e7553fdcedbf87ebf835a21f3e22ecbf638",
+      "conclusion": "success",
+      "passed": [
+        "pinned bundle",
+        "frozen Pods",
+        "build",
+        "smoke",
+        "Detox"
+      ],
+      "artifact_id": 10926459954,
+      "artifact_sha256": "d46fc85b22ee076ae6672fb8da1bb12fa623dcc3930a843611665b0c61589821",
+      "artifact_digest_verified_in_cloud": true,
+      "expires_at": "2026-10-11T08:07:17Z",
+      "visual_review": "Actual hosted Home image inspected: no-routine demo, not prescribed rehabilitation."
+    },
+    "state": "implemented_with_hosted_evidence_pending_independent_review"
+  },
+  "I02": {
+    "before": "Actual production wiring replaced retained history with [] after a rejected read; reproduced before editing.",
+    "fix": "Failed read/decode remains pending, with explicit retry; app navigation waits for all persisted state; no purge or reset.",
+    "scope": "Startup read/decode failure containment, not transactional migration or write-error acknowledgement.",
+    "state": "implemented_pending_independent_review",
+    "guard_omission_counterexample": {
+      "mutation": "use the prior production persistence wiring (no read guard)",
+      "prior_index_sha256": "d3550256de99874178af7617ad5297e3dec94237494118615ad14c9a62dc09dc",
+      "test_file_sha256": "fc63560b35172a07ff6552fe16f231dade032917ec4b1ab9dea693b3dee2892a",
+      "exit_code": 1,
+      "expected": "one failed regression: saved history overwritten by []",
+      "detected": true
+    }
+  },
+  "tests": {
+    "application": {
+      "passed": 1601,
+      "skipped": 4,
+      "passed_suites": 89,
+      "exit_code": 0,
+      "teardown_warning": false,
+      "forceExit": false,
+      "seconds": 28.11,
+      "log_sha256": "243a39c33da8c7052421709173b9782c45190bbc953667dfc33c2546d31acdf9"
+    },
+    "focused_recovery_tests": 10,
+    "new_recovery_tests": 8,
+    "workspace_tests": 25,
+    "native_wrapper_tests": 4,
+    "typecheck": "both normal and pre-push passed",
+    "lint_summary": [
+      "\u2716 456 problems (0 errors, 456 warnings)"
+    ],
+    "web_build": "passed",
+    "browser": {
+      "fixture": "synthetic read exception followed by success",
+      "status": "passed",
+      "assertions": [
+        "failed read preserves exact saved bytes",
+        "ordinary app navigation withheld on failure",
+        "retry restores saved record before normal navigation"
+      ]
+    }
+  },
+  "native": {
+    "environment": "Local Xcode 16.2 / dedicated iOS18.3 simulator; not current release qualification",
+    "build": "Release passed",
+    "initial_unsigned_launch": "Process stayed up but actual screenshot showed storage recovery; NOT treated as normal-start success",
+    "corrected_adhoc_launch": "Same committed application code rebuilt with Xcode simulator-only CODE_SIGN_IDENTITY=-; actual screenshot shows normal onboarding",
+    "numeric_keychain_error": "not_observed; do not invent a specific OSStatus",
+    "diagnostic_warning": "temporary, no raw data/message; removed before final build",
+    "developer_certificate_used": false,
+    "device_or_distribution_signing": false,
+    "physical_device_or_native_fault_injection": false,
+    "owned_simulator_shutdown": true
+  },
+  "resource_use": {
+    "new_repo_clone": false,
+    "new_node_modules_or_Pods_copy": false,
+    "new_local_gem_install": false,
+    "existing_gems_reused": true,
+    "single_DerivedData_cache_reused": true,
+    "skill_version": "1.1"
+  },
+  "limitations": [
+    "No complete G02 database, migration, multi-profile or write-failure feature accepted",
+    "No clinical decisions filled or numerical accuracy claim added",
+    "No independent review of this agent-authored patch yet",
+    "Hosted CI result applies to 707a6e7; later storage changes need their own hosted run",
+    "Existing five web sound-asset 404s remain outside this patch",
+    "Initial native recovery observation retained, not erased by later successful launch"
+  ]
+}

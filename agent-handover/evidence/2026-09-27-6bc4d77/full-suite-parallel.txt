@@ -1,0 +1,94 @@
+PASS __tests__/auth/RootNavigator.test.tsx
+PASS __tests__/auth/userSlice.test.ts
+PASS __tests__/integration/settingsPersistence.test.ts
+PASS __tests__/integration/userJourney.test.ts
+PASS __tests__/integration/videoFrameFeeder.test.ts
+PASS __tests__/smoke/mediapipe.test.ts
+PASS __tests__/smoke/rnfs.test.ts
+PASS __tests__/smoke/tensorflow.test.ts
+PASS __tests__/smoke/ytdl.test.ts
+PASS src/__tests__/deviceHealthMonitor.test.ts
+PASS src/__tests__/platform/android.test.tsx
+PASS src/__tests__/platform/crossPlatform.test.tsx
+PASS src/__tests__/platform/ios.test.tsx
+PASS src/components/__tests__/PoseOverlay.test.tsx
+PASS src/components/__tests__/careEpisode.test.tsx
+PASS src/components/__tests__/clinicalScrutiny.test.tsx
+PASS src/components/__tests__/componentVerification.test.tsx
+PASS src/components/__tests__/exerciseFlow.test.tsx
+PASS src/components/__tests__/followupReview.test.tsx
+PASS src/components/__tests__/framingRequirement.test.ts
+PASS src/components/__tests__/integration.test.tsx
+PASS src/components/__tests__/measuredSessions.test.ts
+PASS src/components/__tests__/prescription.test.tsx
+PASS src/components/__tests__/rangeResult.test.tsx
+PASS src/components/__tests__/routine.test.tsx
+PASS src/components/__tests__/scheduleIntegrity.test.tsx
+PASS src/components/__tests__/sessionUx.test.tsx
+PASS src/components/exercises/__tests__/referenceFor.test.ts
+PASS src/components/exercises/__tests__/useFramingReadiness.test.ts
+PASS src/features/shoulderAnalytics/__tests__/ShoulderROMService.test.ts
+PASS src/features/shoulderAnalytics/__tests__/ShoulderROMTracker.test.ts
+PASS src/features/videoComparison/__tests__/analytics.test.ts
+PASS src/features/videoComparison/__tests__/comparisonAnalysisService.test.ts
+PASS src/features/videoComparison/__tests__/errorDetection.test.ts
+PASS src/features/videoComparison/__tests__/integration.test.ts
+PASS src/features/videoComparison/__tests__/smartFeedbackGenerator.test.ts
+PASS src/features/videoComparison/__tests__/telemetryService.test.ts
+PASS src/features/videoComparison/__tests__/youtubeQuotaManager.test.ts
+PASS src/features/videoComparison/__tests__/youtubeService.test.ts
+PASS src/hooks/__tests__/useBlazePose.test.tsx
+PASS src/services/__tests__/PoseDetectionService.v2.Gate9B.test.ts
+PASS src/services/__tests__/api.test.ts
+PASS src/services/__tests__/audioCuePacing.test.ts
+PASS src/services/__tests__/exerciseValidationService.test.ts
+PASS src/services/__tests__/goniometerService.test.ts
+PASS src/services/__tests__/goniometerService.v2.test.ts
+PASS src/services/__tests__/memoryHealthManager.test.ts
+PASS src/services/biomechanics/__tests__/AnatomicalFrameCache.test.ts
+PASS src/services/biomechanics/__tests__/AnatomicalReferenceService.test.ts
+PASS src/services/biomechanics/__tests__/ClinicalMeasurementService.test.ts
+PASS src/services/biomechanics/__tests__/CompensationDetectionService.test.ts
+PASS src/services/biomechanics/__tests__/TemporalConsistencyAnalyzer.test.ts
+PASS src/services/movement/__tests__/analysis.test.ts
+PASS src/services/movement/__tests__/compensations.test.ts
+PASS src/services/movement/__tests__/externalRotation.test.ts
+PASS src/services/movement/__tests__/heelProp.test.ts
+PASS src/services/movement/__tests__/seatedKnee.test.ts
+PASS src/services/movement/__tests__/sessionCompensations.test.ts
+PASS src/services/movement/__tests__/shortArcQuad.test.ts
+PASS src/services/movement/__tests__/view.test.ts
+PASS src/services/pose/__tests__/OrientationClassifier.test.ts
+PASS src/services/pose/__tests__/PoseSchemaRegistry.test.ts
+PASS src/services/pose/__tests__/adaptiveModel.test.ts
+PASS src/services/pose/__tests__/exercisePlan.test.ts
+PASS src/services/pose/__tests__/measurementLandmarks.test.ts
+PASS src/services/pose/__tests__/mediapipeLandmarks.test.ts
+PASS src/services/pose/__tests__/routineIdentity.test.tsx
+PASS src/services/telemetry/__tests__/PrivacyCompliantTelemetry.test.ts
+PASS src/services/telemetry/__tests__/TelemetryAggregator.test.ts
+PASS src/services/templates/__tests__/ExerciseTemplateManager.test.ts
+PASS src/services/web/__tests__/WebPoseDetectionService.test.ts
+PASS src/services/web/__tests__/focusFrame.test.ts
+PASS src/store/__tests__/persistence.test.ts
+PASS src/testing/__tests__/Integration.test.ts
+PASS src/testing/__tests__/Performance.test.ts
+PASS src/testing/__tests__/TemporalValidation.test.ts
+PASS src/testing/__tests__/ValidationPipeline.test.ts
+PASS src/testing/recordedPatient/__tests__/recordedPatient.test.ts
+PASS src/testing/virtualPatient/__tests__/virtualPatient.test.ts (5.002 s)
+PASS src/types/__tests__/biomechanics.test.ts
+PASS src/types/__tests__/pose.test.ts
+PASS src/utils/__tests__/PersistenceFilter.test.ts
+PASS src/utils/__tests__/progressSummary.test.ts
+PASS src/utils/__tests__/realFrameAnalysis.test.ts
+PASS src/utils/__tests__/smoothing.test.ts
+PASS src/utils/__tests__/vectorMath.test.ts
+PASS src/utils/__tests__/youtube.test.ts
+
+
+Test Suites: 4 skipped, 87 passed, 87 of 91 total
+Tests:       4 skipped, 1593 passed, 1597 total
+Snapshots:   0 total
+Time:        22.345 s, estimated 35 s
+Ran all test suites.

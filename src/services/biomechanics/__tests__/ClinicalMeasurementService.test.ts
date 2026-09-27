@@ -1402,7 +1402,6 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
     it('should handle rotation with missing forearm frame error', () => {
       const poseData = createMockPoseData('movenet-17', {
-        shoulderRotation: 60,
         viewOrientation: 'frontal',
         elbowAngle: 90,
       });
@@ -1418,7 +1417,6 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
     it('should handle rotation with missing cachedAnatomicalFrames', () => {
       const poseData = createMockPoseData('movenet-17', {
-        shoulderRotation: 60,
         viewOrientation: 'frontal',
         elbowAngle: 90,
       });
@@ -1431,7 +1429,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
     it('should handle knee with missing cachedAnatomicalFrames', () => {
       const poseData = createMockPoseData('movenet-17', {
-        kneeFlexion: 135,
+        kneeAngle: 135,
         viewOrientation: 'sagittal',
       });
       delete (poseData as any).cachedAnatomicalFrames;
@@ -1443,7 +1441,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
     it('should handle knee with missing hip landmark', () => {
       const poseData = createMockPoseData('movenet-17', {
-        kneeFlexion: 135,
+        kneeAngle: 135,
         viewOrientation: 'sagittal',
       });
       // Remove hip landmark
@@ -1459,7 +1457,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
     it('should handle knee with missing knee landmark', () => {
       const poseData = createMockPoseData('movenet-17', {
-        kneeFlexion: 135,
+        kneeAngle: 135,
         viewOrientation: 'sagittal',
       });
       // Remove knee landmark
@@ -1475,7 +1473,7 @@ describe('ClinicalMeasurementService - Gate 10A', () => {
 
     it('should handle elbow with missing cachedAnatomicalFrames', () => {
       const poseData = createMockPoseData('movenet-17', {
-        elbowFlexion: 150,
+        elbowAngle: 150,
         viewOrientation: 'sagittal',
       });
       delete (poseData as any).cachedAnatomicalFrames;

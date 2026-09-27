@@ -16,6 +16,13 @@
 
 import { Frame } from 'react-native-vision-camera';
 
+/**
+ * The frame properties the analysis reads. A VisionCamera Frame is only valid
+ * inside its frame processor call, so JS-thread callers should pass a plain
+ * snapshot ({ width, height }) rather than the Frame itself.
+ */
+export type FrameInfo = Pick<Frame, 'width' | 'height'>;
+
 // ============================================================================
 // Constants
 // ============================================================================
@@ -110,7 +117,7 @@ export interface PixelData {
  * For Gate 1, we'll use a reasonable mock with frame metadata.
  * Full implementation requires native bridge (Gate 4).
  */
-export const getFramePixelData = async (frame: Frame): Promise<PixelData> => {
+export const getFramePixelData = async (frame: FrameInfo): Promise<PixelData> => {
   // TODO Gate 4: Implement native pixel extraction
   // For now, use frame dimensions and mock pixel data
   // This allows us to test the algorithms with realistic parameters
@@ -468,7 +475,7 @@ export const generateLuminanceHistogram = (pixels: PixelData): number[] => {
  * @returns Complete analysis result
  */
 export const analyzeFrame = async (
-  frame: Frame,
+  frame: FrameInfo,
   downsample: boolean = true
 ): Promise<FrameAnalysisResult> => {
   const startTime = performance.now();

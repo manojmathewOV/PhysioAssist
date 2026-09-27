@@ -432,4 +432,5 @@ if (require.main === module) {
   });
 }
 
-export { runValidation, ValidationResult, GroundTruthError };
+export { runValidation };
+export type { ValidationResult, GroundTruthError };

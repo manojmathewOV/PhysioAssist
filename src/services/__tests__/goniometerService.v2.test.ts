@@ -66,8 +66,8 @@ describe('GoniometerServiceV2 - Gate 9B.6', () => {
 
       // Position based on pose
       let x = 0.5,
-        y = 0.5,
-        z = 0;
+        y = 0.5;
+      const z = 0;
 
       if (pose === 'elbow_90_deg') {
         // Elbow bent at 90 degrees

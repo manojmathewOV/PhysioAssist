@@ -2,9 +2,33 @@ import { PoseLandmark, JointAngle, AngleCalculationConfig } from '../types/pose'
 import { Vector3D } from '../types/common';
 import { AnatomicalPlane } from '../types/biomechanics';
 import { angleBetweenVectors, projectVectorOntoPlane } from '@utils/vectorMath';
+import { jointPoints } from './pose/jointPoints';
+
+type LandmarkTriplet = [proximal: string, vertex: string, distal: string];
+
+/**
+ * Joints as [proximal, vertex, distal] landmark names. MoveNet-17 and MediaPipe-33
+ * share these names; heel/foot_index (ankle angles) exist only in MediaPipe-33.
+ */
+const JOINT_LANDMARKS: Record<string, LandmarkTriplet> = {
+  left_elbow: ['left_shoulder', 'left_elbow', 'left_wrist'],
+  right_elbow: ['right_shoulder', 'right_elbow', 'right_wrist'],
+  left_shoulder: ['left_elbow', 'left_shoulder', 'left_hip'],
+  right_shoulder: ['right_elbow', 'right_shoulder', 'right_hip'],
+  left_hip: ['left_shoulder', 'left_hip', 'left_knee'],
+  right_hip: ['right_shoulder', 'right_hip', 'right_knee'],
+  left_knee: ['left_hip', 'left_knee', 'left_ankle'],
+  right_knee: ['right_hip', 'right_knee', 'right_ankle'],
+  left_ankle: ['left_knee', 'left_ankle', 'left_foot_index'],
+  right_ankle: ['right_knee', 'right_ankle', 'right_foot_index'],
+};
+
+/** camelCase joint names accepted by getJointAngle (e.g. 'leftElbow' -> 'left_elbow') */
+const toSnakeCase = (jointName: string): string =>
+  jointName.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 
 export class GoniometerService {
-  private readonly config: AngleCalculationConfig;
+  private readonly config: Required<AngleCalculationConfig>;
   private angleHistory: Map<string, number[]> = new Map();
 
   constructor(config: AngleCalculationConfig = {}) {
@@ -213,33 +237,10 @@ export class GoniometerService {
   calculateAllJointAngles(landmarks: PoseLandmark[]): Map<string, JointAngle> {
     const angles = new Map<string, JointAngle>();
 
-    // Define joint configurations (MoveNet 17 keypoints: 0-16)
-    const jointConfigs = [
-      // Arms
-      { name: 'left_elbow', indices: [5, 7, 9] }, // shoulder-elbow-wrist
-      { name: 'right_elbow', indices: [6, 8, 10] },
-      { name: 'left_shoulder', indices: [7, 5, 11] }, // elbow-shoulder-hip
-      { name: 'right_shoulder', indices: [8, 6, 12] },
-
-      // Legs
-      { name: 'left_knee', indices: [11, 13, 15] }, // hip-knee-ankle
-      { name: 'right_knee', indices: [12, 14, 16] },
-      // Note: Hip and ankle angles not supported (MoveNet lacks required keypoints)
-    ];
-
-    for (const config of jointConfigs) {
-      if (
-        landmarks[config.indices[0]] &&
-        landmarks[config.indices[1]] &&
-        landmarks[config.indices[2]]
-      ) {
-        const angle = this.calculateAngle(
-          landmarks[config.indices[0]],
-          landmarks[config.indices[1]],
-          landmarks[config.indices[2]],
-          config.name
-        );
-        angles.set(config.name, angle);
+    for (const jointName of Object.keys(JOINT_LANDMARKS)) {
+      const points = jointPoints(landmarks, jointName);
+      if (points) {
+        angles.set(jointName, this.calculateAngle(...points, jointName));
       }
     }
 
@@ -250,35 +251,12 @@ export class GoniometerService {
    * Get joint angle by name
    */
   getJointAngle(jointName: string, landmarks: PoseLandmark[]): number | null {
-    // MoveNet 17 keypoints (0-16 only)
-    const jointConfigs: Record<string, number[]> = {
-      leftElbow: [5, 7, 9],
-      rightElbow: [6, 8, 10],
-      leftKnee: [11, 13, 15],
-      rightKnee: [12, 14, 16],
-      leftShoulder: [7, 5, 11],
-      rightShoulder: [8, 6, 12],
-      leftHip: [5, 11, 13], // shoulder-hip-knee
-      rightHip: [6, 12, 14], // shoulder-hip-knee
-      // Note: Ankle angles not supported (MoveNet lacks toe keypoints)
-    };
-
-    const indices = jointConfigs[jointName];
-    if (
-      !indices ||
-      !landmarks[indices[0]] ||
-      !landmarks[indices[1]] ||
-      !landmarks[indices[2]]
-    ) {
+    const points = jointPoints(landmarks, toSnakeCase(jointName));
+    if (!points) {
       return null;
     }
 
-    const angle = this.calculateAngle(
-      landmarks[indices[0]],
-      landmarks[indices[1]],
-      landmarks[indices[2]],
-      jointName
-    );
+    const angle = this.calculateAngle(...points, jointName);
 
     return angle.isValid ? angle.angle : null;
   }
@@ -287,7 +265,7 @@ export class GoniometerService {
    * Get all joint angles
    */
   getAllJointAngles(landmarks: PoseLandmark[]): Record<string, number> {
-    // All joints supported by MoveNet (17 keypoints)
+    // Ankle angles need heel/foot landmarks, so they're only returned for MediaPipe-33 poses
     const joints = [
       'leftElbow',
       'rightElbow',
@@ -297,7 +275,8 @@ export class GoniometerService {
       'rightShoulder',
       'leftHip',
       'rightHip',
-      // Note: Ankle angles not supported (MoveNet lacks toe keypoints)
+      'leftAnkle',
+      'rightAnkle',
     ];
     const angles: Record<string, number> = {};
 
