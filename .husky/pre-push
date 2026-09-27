@@ -9,6 +9,6 @@ npx tsc --noEmit --project tsconfig.prepush.json || exit 1
 
 # Run tests (Integration tests - core biomechanics validation)
 echo "🧪 Running Integration tests..."
-npm test -- src/testing/__tests__/Integration.test.ts --passWithNoTests || exit 1
+npm test -- --ci --watchman=false --maxWorkers=2 --runTestsByPath src/testing/__tests__/Integration.test.ts || exit 1
 
 echo "✅ Pre-push checks passed!"

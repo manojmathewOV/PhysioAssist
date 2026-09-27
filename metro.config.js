@@ -10,6 +10,8 @@ const config = {
   // Bound both transform/file-map worker pools on shared development Macs and CI.
   maxWorkers: 2,
   resolver: {
+    // Keep this project independent of an unrelated machine-wide Watchman watch.
+    useWatchman: false,
     // Add .tflite as recognized asset extension for TensorFlow Lite models
     assetExts: ['tflite', 'txt', 'jpg', 'png', 'ttf', 'otf', 'mp4'],
   },
