@@ -1,0 +1,38 @@
+{
+  "qualification.json": {
+    "bytes": 3204,
+    "sha256": "41aeedb9c25fffb5fb372ce1414c34358d8bba0fdebffb63eb16f72bed4a6b24"
+  },
+  "app-prepush-tail.txt": {
+    "bytes": 1794,
+    "sha256": "3910d827b6cd4fb4710385f8f7a517fd5222f3ae6aeeb553cb0446934200bc5d"
+  },
+  "lint-tail.txt": {
+    "bytes": 1932,
+    "sha256": "f62f52556b9d7cc0a903609014f108ea1009863ddb555d85f3d6a0d9ad75978b"
+  },
+  "jest-tail.txt": {
+    "bytes": 1936,
+    "sha256": "165c34a69891ba0641282b6ac5e3c871e5400876f3d1ce50bf836f35715167e6"
+  },
+  "web-demo-home.png": {
+    "bytes": 59356,
+    "sha256": "7c3e73d8507393471a1afe1fe4d216355e86d3854989e5bc9dc3186615edd1f7"
+  },
+  "webpack-tail.txt": {
+    "bytes": 1641,
+    "sha256": "8e57c6d66c890fefbac2a2f58c347ebad4a88241e2fdc8bda12c4ed9e9743afb"
+  },
+  "native-launch-15s.png": {
+    "bytes": 166517,
+    "sha256": "80e45863e89c8e3d172ded42ca2ff1adee77d3c968652ab496ba33c0a55a7ddb"
+  },
+  "native-dependency-diff.txt": {
+    "bytes": 73986,
+    "sha256": "8579b4bb5a7a2b5935661bf55c25daa6cac66eb49127e05613bc27dfd781f48c"
+  },
+  "typecheck-tail.txt": {
+    "bytes": 49,
+    "sha256": "b5599c8400a949945e8ce4caf4057718b4a54dda056d3941eb91fd2738b287ad"
+  }
+}

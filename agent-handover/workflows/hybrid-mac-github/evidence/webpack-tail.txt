@@ -1,0 +1,34 @@
+
+> physioassist@1.0.0 build:web
+> webpack --mode production --config webpack.config.js
+
+asset bundle.c7b19b45bf48eca730da.js 1.17 MiB [emitted] [immutable] [minimized] [big] (name: main) 1 related asset
+asset MaterialIcons.ttf 348 KiB [emitted] [from: node_modules/react-native-vector-icons/Fonts/MaterialIcons.ttf] [big] (auxiliary name: main)
+asset index.html 2.42 KiB [emitted]
+orphan modules 90.1 KiB [orphan] 26 modules
+runtime modules 27.7 KiB 11 modules
+modules by path ./node_modules/ 1.46 MiB 427 modules
+modules by path ./src/ 511 KiB 101 modules
+modules by path ./web/shims/*.js 3.12 KiB
+  ./web/shims/react-native-tts.js 1.61 KiB [built] [code generated]
+  ./web/shims/react-native-sound.js 1.07 KiB [built] [code generated]
+  ./web/shims/react-native-haptic-feedback.js 456 bytes [built] [code generated]
+./index.web.js 815 bytes [built] [code generated]
+./app.json 62 bytes [built] [code generated]
+
+WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).
+This can impact web performance.
+Assets: 
+  MaterialIcons.ttf (348 KiB)
+  bundle.c7b19b45bf48eca730da.js (1.17 MiB)
+
+WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
+Entrypoints:
+  main (1.17 MiB)
+      bundle.c7b19b45bf48eca730da.js
+
+WARNING in webpack performance recommendations: 
+You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
+For more info visit https://webpack.js.org/guides/code-splitting/
+
+webpack 5.101.0 compiled with 3 warnings in 9469 ms

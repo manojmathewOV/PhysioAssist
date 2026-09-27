@@ -1,0 +1,83 @@
+{
+  "date": "2026-09-27",
+  "application_sha": "414b81b170a6205b9fcb3aca20f3cab89bb850a1",
+  "scope": "hybrid workflow qualification, no app feature or clinical acceptance",
+  "environment": {
+    "macOS": "14.5",
+    "Xcode": "16.2",
+    "SDK": "iOS simulator 18.2",
+    "runtime": "iOS 18.3.1",
+    "architecture": "arm64",
+    "memory_GiB": 128,
+    "node_app": "18.17.0",
+    "node_browser_driver": "22.17.0",
+    "CocoaPods": "1.16.2",
+    "compiler_jobs": 2,
+    "priority": "nice +10"
+  },
+  "javascript": {
+    "typecheck_exit": 0,
+    "lint_exit": 0,
+    "lint_errors": 0,
+    "lint_warnings": 450,
+    "jest_exit": 0,
+    "passed_tests": 1585,
+    "skipped_tests": 4,
+    "passed_suites": 86,
+    "forceExit_flag_used": false,
+    "worker_force_closed": true,
+    "clean_shutdown": false,
+    "web_build_exit": 0,
+    "web_build_performance_warnings": 3
+  },
+  "web_browser": {
+    "status": "passed",
+    "journey": "onboarding, consent, demo login, Home",
+    "camera_label": "fake_device_0",
+    "real_camera_accessed": false,
+    "real_patient_tested": false,
+    "visual_review": "web-demo-home.png inspected",
+    "initial_driver_issue": "Node18 refused by Playwright; app pin retained and browser driver run with installed Node22",
+    "audio_limitation": "Five web sound assets returned HTTP 404; playback not verified"
+  },
+  "native": {
+    "frozen_dependency_setup": "pod install --deployment refused an outdated lockfile",
+    "candidate_resolution": "pod install, as in existing CI; generated changes confined to isolated checkout",
+    "build_exit": 0,
+    "build_seconds": 482.24,
+    "build_result": "BUILD SUCCEEDED",
+    "claim": "candidate dependency resolution, not frozen-lock reproducibility",
+    "launch_status": "passed",
+    "visual_review": "native-launch-15s.png opened and inspected: real native onboarding screen, no error overlay",
+    "detox_journeys_run": false,
+    "detox_prerequisite": "applesimutils absent; no global install performed",
+    "running_after_15s": true,
+    "owned_simulator_shutdown_exit": 0,
+    "original_lock_sha256": "985b33e05a3188676e8cfe4bb12c8e60e89fa7712813955f6db6ece8138af480",
+    "resolved_lock_sha256": "c620a4ab4a9ae36c553164752255f2e1a052154c380534ac7a68dec2f7a0d87a"
+  },
+  "cloud_job_supervisor_tests": {
+    "passed": 8,
+    "scope": "synthetic supervisor tests, not application acceptance"
+  },
+  "limitations": [
+    "Jest worker teardown remains open",
+    "Native lockfile needs reconciliation",
+    "Installed Xcode is too old for current App Store submissions",
+    "No physical device, real-camera accuracy, approved exercise video or clinical validation",
+    "Separate folder is not an OS security sandbox"
+  ],
+  "changes": {
+    "application_branch_pushed": false,
+    "source_features_edited": false,
+    "global_Xcode_changed": false,
+    "permanent_background_service_installed": false,
+    "self_hosted_runner_installed": false
+  },
+  "app_prepush": {
+    "exit_code": 0,
+    "integration_tests_passed": 21,
+    "normal_hook_invoked": true
+  },
+  "isolated_generated_changes": " M ios/.xcode.env.local\n M ios/PhysioAssist.xcodeproj/project.pbxproj\n M ios/PhysioAssist/Info.plist\n M ios/Podfile.lock\n"
+}

@@ -20,17 +20,17 @@ The owner has narrowed the next release to an **iPhone patient-only, local-first
 
 ## What is here
 
-| Location | Use |
-|---|---|
-| `CURRENT.md`, `backlog.json` | Compact orientation and stable task IDs |
-| `reviews/` | SHA-bound independent findings and historical disposition |
-| `tests/original-reviewer-tests.zip` | Four original reviewer test sources, preserved byte-for-byte |
-| `tools/extract-reviewer-tests.py` | Verify the archive and extract tests outside normal application discovery |
-| `protocols/` | Source-family index, missing approvals and the owner's new frozen-shoulder intent as an inactive draft |
-| `design/` | Engineering requirements derived from the reviews, not an approved treatment protocol |
-| `responses/` | Agent responses to findings, with implementation SHAs and test evidence |
-| `templates/` | Reusable review and response templates |
-| `evidence/` | Historical scope and guidance for portable future evidence |
+| Location                            | Use                                                                                                    |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `CURRENT.md`, `backlog.json`        | Compact orientation and stable task IDs                                                                |
+| `reviews/`                          | SHA-bound independent findings and historical disposition                                              |
+| `tests/original-reviewer-tests.zip` | Four original reviewer test sources, preserved byte-for-byte                                           |
+| `tools/extract-reviewer-tests.py`   | Verify the archive and extract tests outside normal application discovery                              |
+| `protocols/`                        | Source-family index, missing approvals and the owner's new frozen-shoulder intent as an inactive draft |
+| `design/`                           | Engineering requirements derived from the reviews, not an approved treatment protocol                  |
+| `responses/`                        | Agent responses to findings, with implementation SHAs and test evidence                                |
+| `templates/`                        | Reusable review and response templates                                                                 |
+| `evidence/`                         | Historical scope and guidance for portable future evidence                                             |
 
 ## First action for the implementation agent
 
@@ -41,3 +41,7 @@ Use [templates/AGENT_RESPONSE.md](templates/AGENT_RESPONSE.md) to add a response
 ## Public repository boundary
 
 This is a curated engineering handover, not a verbatim publication of every earlier report. Full private protocol originals, local source extracts, clinic contact details, private Dropbox links, raw conversation dumps and identifiable media have not been uploaded. The source index says what is unavailable. Do not claim to have read a private original from its filename or this summary. Source-dependent clinical activation remains blocked until the approved content is supplied through an appropriately authorized channel.
+
+## Hybrid Mac / GitHub execution
+
+See [the qualified hybrid workflow](workflows/hybrid-mac-github/WORKFLOW.md) and its [actual evidence](workflows/hybrid-mac-github/evidence/qualification.json). RDC connects the engineering session to an isolated Mac checkout for dependency installation, tests, browser checks and native Xcode/Simulator runs. GitHub remains the durable source/review point. This does not add a clinician backend or accept an MVP gate.
