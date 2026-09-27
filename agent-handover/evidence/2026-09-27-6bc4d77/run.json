@@ -77,10 +77,23 @@
       "exit": 0,
       "passed": 21,
       "log": null
+    },
+    {
+      "id": "ci-pr25",
+      "application_sha": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
+      "command": "GitHub Actions on PR #25 (read 2026-09-27T03:55Z)",
+      "exit": 0,
+      "result": "checks: success (runs 36290716007, 36290713330); ios-simulator incl. Detox E2E launch test: success (runs 36290715989, 36290713112)",
+      "links": [
+        "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36290716007",
+        "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36290713330",
+        "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36290715989",
+        "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36290713112"
+      ],
+      "note": "CI runs the repository's Jest suite and an iOS simulator smoke/Detox first-run flow; it does not exercise the focus view or a patient journey on a device."
     }
   ],
   "exclusions": [
-    "CI for 6bc4d77 not yet recorded here.",
     "EX06 checked on web only; native iOS still shows the plain camera.",
     "No clinical values, variants, transitions or doses changed."
   ]
