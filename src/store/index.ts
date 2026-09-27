@@ -1,5 +1,6 @@
 import { persistReducer } from 'redux-persist';
 import EncryptedStorage from './storage';
+import { createReadRecovery } from './readRecovery';
 import { combineReducers } from 'redux';
 
 import poseReducer from './slices/poseSlice';
@@ -16,11 +17,14 @@ import networkReducer from './slices/networkSlice';
  */
 const REHYDRATE_TIMEOUT = 0;
 
+export const persistenceRecovery = createReadRecovery(['root', 'exercise']);
+
 const rootPersistConfig = {
   key: 'root',
   storage: EncryptedStorage,
   timeout: REHYDRATE_TIMEOUT,
-  whitelist: ['user', 'settings'], // Only persist user and settings (HIPAA-compliant encrypted storage)
+  getStoredState: persistenceRecovery.read,
+  whitelist: ['user', 'settings'], // Only persist the required profile and settings fields
 };
 
 // Of the exercise slice only the session history is kept across launches
@@ -28,6 +32,7 @@ const exercisePersistConfig = {
   key: 'exercise',
   storage: EncryptedStorage,
   timeout: REHYDRATE_TIMEOUT,
+  getStoredState: persistenceRecovery.read,
   whitelist: ['history'],
 };
 
