@@ -42,4 +42,4 @@ Work in bounded implementation batches. More than two attempts without new diagn
 
 ## Evidence boundaries
 
-This pickup reused the permanent checkout and installed dependencies. Its four new tests are synthetic production-code characterisation. It does not add a new camera accuracy study, native exercise journey or patient trial. Earlier native/storage screenshots and logs remain explicitly tied to their earlier versions. Current suite and publication details are recorded in the accompanying pickup run record.
+This pickup reused the permanent checkout and installed dependencies. Its four new tests are synthetic production-code characterisation. It does not add a new camera accuracy study, native exercise journey or patient trial. Earlier native/storage screenshots and logs remain explicitly tied to their earlier versions. Current suite and publication details are recorded in the [pickup run record](../evidence/2026-09-27-g01-g02/review-pickup.json).

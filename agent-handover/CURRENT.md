@@ -21,7 +21,7 @@ The four skipped suites are recorded individually in Claude's final handover: on
 
 **I01: hosted native portability is now corroborated at `707a6e7`.** Run 36304301981 passed frozen installation, build, smoke and selected Detox. Claude independently reviewed the source/hosted result on that revision; the review was supplied by the owner. Do not keep presenting the original Install pods failure as the current unfixed state. The remaining G01 criteria and newer commits still require scoped evidence/review.
 
-**I02: failed-read overwrite is contained in local commits `dd7f504` and `1c539a5`, now being published with this update.** Failed reads stay pending with explicit Retry; there is no empty-state reset. The newer code was absent from Claude's 707a6e7 review. Read [implementation/evidence](responses/2026-09-27-g01-g02-receiving-agent.md). Full transactional migration, durable-write acknowledgement and native fault testing remain open.
+**I02: failed-read overwrite is contained in local commits `dd7f504` and `1c539a5`, included with this update.** Failed reads stay pending with explicit Retry; there is no empty-state reset. The newer code was absent from Claude's 707a6e7 review. Read [implementation/evidence](responses/2026-09-27-g01-g02-receiving-agent.md). Full transactional migration, durable-write acknowledgement and native fault testing remain open.
 
 Latest [review reconciliation](responses/2026-09-27-independent-review-reconciliation.md) distinguishes filtered extrema from raw-frame noise experiments and records privacy/copy/CI-trigger findings. Four production characterisation tests cover the actual five-frame median and away/toward selection; they do not validate clinical accuracy.
 
