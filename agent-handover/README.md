@@ -6,6 +6,10 @@ This is the shared handover and review point for Claude, independent reviewers a
 
 Initial handover: 2026-09-27. Application evidence is pinned to `c7ac7f3bdda47ab736553b25bdca6f4100a8f74b`, the then-current head of PR #25. This handover adds documentation and archived reviewer tests only. It does not merge PR #25, change application code, approve a clinical protocol or establish clinical readiness.
 
+## Current MVP roadmap
+
+The owner has narrowed the next release to an **iPhone patient-only, local-first MVP**. Use [the execution runbook](runbooks/ios-patient-mvp/README.md) before earlier platform-wide implementation priorities. Clinician/surgeon portals and clinical cloud synchronisation are deferred; this does not waive clinical-content or safety requirements. The plan has 11 unaccepted gates and records both portable structural checks and the incomplete native CCore tooling qualification.
+
 ## Read in this order
 
 1. [CURRENT.md](CURRENT.md): what is implemented, what remains, and the exact evidence baseline.

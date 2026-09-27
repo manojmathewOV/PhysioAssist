@@ -1,0 +1,57 @@
+{
+  "date": "2026-09-27",
+  "target_repository": "manojmathewOV/PhysioAssist",
+  "application_basis": "414b81b170a6205b9fcb3aca20f3cab89bb850a1",
+  "handover_basis": "9aea33a895fa9f529771bc697d3f54f8663ab21a",
+  "environment": "Authorised Mac through Remote Desktop Commander; portable structure checks also run in cloud Linux",
+  "ccore": {
+    "observed_calls": [
+      "ccore.starbase.handshake",
+      "ccore.registry.describe",
+      "ccore.filelens.scan",
+      "ccore.cnp.assist",
+      "ccore.runbook.author",
+      "ccore.research.ingest",
+      "ccore.research.query",
+      "ccore.runbook.compile"
+    ],
+    "runbook_contract_version": "0.56",
+    "native_authoring": "typed_request_or_source_ingress_refusal",
+    "native_research_body": "not_created",
+    "native_research_offer": "not_created",
+    "native_runbook_epoch": "not_admitted",
+    "definition_inspection": {
+      "mode": "inspect_definition",
+      "file": "ROADMAP.cnp",
+      "initial_refusal": "runbook_definition_missing_field:@:ops",
+      "after_explicit_ops_header": {
+        "process_exit": 0,
+        "disposition": "refuse",
+        "reason": "runbook_definition_value_refused:@:auth",
+        "effect": "no_compile_effect",
+        "writer": "no_writer",
+        "claim_ceiling": "refusal_only_no_write"
+      }
+    },
+    "interpretation": "Process exit 0 does not override the explicit semantic refusal. R2 was not relabelled to force admission. No owner approval, native TaskEpoch or acceptance receipt was invented.",
+    "scope": "Contracts and explicit refusal diagnostics informed the portable plan; no native Research/Runbook acceptance claimed."
+  },
+  "portable_checks": {
+    "cloud": "passed",
+    "mac": "passed",
+    "gates": 11,
+    "planned_acceptance_scenarios": 45,
+    "dod_axes": 11,
+    "research_questions": 8,
+    "negative_structure_mutations_detected": 7,
+    "accepted_implementation_gates": 0
+  },
+  "not_executed": [
+    "new full application test suite",
+    "native iOS simulator journey",
+    "real-camera validation",
+    "physical-device performance test",
+    "clinical study"
+  ],
+  "publication_boundary": "Public-safe planning documents and synthetic structural checks only; no private sources, credentials, raw patient media or local absolute paths."
+}

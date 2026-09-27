@@ -1,0 +1,260 @@
+{
+  "schema": "physioassist-research-register/1",
+  "role": "portable_source_and_uncertainty_register",
+  "date": "2026-09-27",
+  "sources": [
+    {
+      "id": "S01",
+      "kind": "user_instruction",
+      "locator": "This conversation, latest patient-only MVP scope and CCore tool request, 2026-09-27",
+      "status": "directly_supplied",
+      "supports": "iPhone first; patient registration/local saving; minimum footprint; future clinician connection only; use CCore Runbook/Research to structure GitHub plan",
+      "limits": "Does not settle exact auth provider, clinical protocols, quantitative budgets or release approval"
+    },
+    {
+      "id": "S02",
+      "kind": "github_baseline",
+      "locator": "https://github.com/manojmathewOV/PhysioAssist/tree/414b81b170a6205b9fcb3aca20f3cab89bb850a1",
+      "status": "metadata_and_selected_files_observed",
+      "supports": "Current application snapshot to re-read on pickup",
+      "limits": "No independent application build/test run in this planning task"
+    },
+    {
+      "id": "S03",
+      "kind": "implementation_testimony",
+      "locator": "https://github.com/manojmathewOV/PhysioAssist/blob/9aea33a895fa9f529771bc697d3f54f8663ab21a/agent-handover/responses/2026-09-27-414b81b-claude.md",
+      "status": "read",
+      "supports": "Author reports R01-R03 fixes, 1585 passing / four skipped and unresolved P08 worker shutdown",
+      "limits": "Author evidence, not independent verification"
+    },
+    {
+      "id": "S04",
+      "kind": "prior_review_and_decisions",
+      "locator": "https://github.com/manojmathewOV/PhysioAssist/tree/9aea33a895fa9f529771bc697d3f54f8663ab21a/agent-handover",
+      "status": "read_selected",
+      "supports": "Stable findings, historical tests, original scope and clinical C01-C08 decisions",
+      "limits": "New patient-only scope defers clinician-backend proposals; private source originals not present"
+    },
+    {
+      "id": "S05",
+      "kind": "official_platform_policy",
+      "locator": "https://developer.apple.com/app-store/review/guidelines/",
+      "status": "retrieved_2026-09-27",
+      "supports": "Account creation/login/deletion and health-data restrictions require explicit release review, including iCloud health-data storage",
+      "limits": "Platform policy not an app certification; re-read exact relevant sections at release"
+    },
+    {
+      "id": "S06",
+      "kind": "official_platform_documentation",
+      "locator": "https://developer.apple.com/documentation/usernotifications/scheduling-a-notification-locally-from-your-app",
+      "status": "retrieved_search_and_official_reference",
+      "supports": "Local notification delivery and cancellation can avoid a routine-reminder server",
+      "limits": "Delivery/permission is not eligibility or completion"
+    },
+    {
+      "id": "S07",
+      "kind": "official_platform_documentation",
+      "locator": "https://developer.apple.com/documentation/usernotifications/",
+      "status": "retrieved_search_and_official_reference",
+      "supports": "Notification delivery is not guaranteed",
+      "limits": "In-app schedule remains authoritative"
+    },
+    {
+      "id": "S08",
+      "kind": "official_platform_documentation",
+      "locator": "https://developer.apple.com/documentation/Security/keychain-services",
+      "status": "retrieved_search_and_official_reference",
+      "supports": "Keychain is for small secrets/credentials rather than the whole clinical history",
+      "limits": "Database/file protection, backup and ownership remain separate design work"
+    },
+    {
+      "id": "S09",
+      "kind": "official_reference_to_verify",
+      "locator": "https://developer.apple.com/documentation/foundation/optimizing-your-app-s-data-for-icloud-backup",
+      "status": "reference_only_dynamic_page_not_fully_parsed",
+      "supports": "G02/G10 must inspect filesystem backup behaviour and exclusions",
+      "limits": "No claim that all protection/transfer rules were independently verified from this page"
+    },
+    {
+      "id": "S10",
+      "kind": "official_reference_to_verify",
+      "locator": "https://developer.apple.com/documentation/xcode/reducing-your-app-s-memory-use",
+      "status": "reference_only_dynamic_page_not_fully_parsed",
+      "supports": "G08 profiling research target",
+      "limits": "No numeric memory budget or hardware pass inferred"
+    },
+    {
+      "id": "S11",
+      "kind": "official_reference_to_verify",
+      "locator": "https://developer.apple.com/documentation/signinwithapple/verifying-a-user",
+      "status": "reference_only_dynamic_page_not_fully_parsed",
+      "supports": "D01 real registration must check actual server verification/account lifecycle requirements",
+      "limits": "Native button alone is not verified registration"
+    },
+    {
+      "id": "S12",
+      "kind": "installed_tool_contract",
+      "locator": "CCore installed provider 5cd416b99656c10af89ffaa4ee4b4325a0c308ad6f901215b7c44917e94d530f; RunbookProductContract 0.56 and ResearchProductContract observed via authorised local tool reads",
+      "status": "observed_not_redistributed",
+      "supports": "DoD outcomes, gates, scoped evidence, candidate-vs-admission distinction, source-bound Research and bounded tool claims",
+      "limits": "Project Cosmos private internals are not copied; contracts are not evidence of successful PhysioAssist native author/ingest effects"
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "How can a local-first patient app satisfy the intended registration experience without introducing clinical cloud storage?",
+      "sources": [
+        "S01",
+        "S05",
+        "S11"
+      ],
+      "status": "open_decision",
+      "affects": [
+        "G00",
+        "G03"
+      ],
+      "alternatives": [
+        "Local profile registration only, clearly labelled",
+        "Optional true Sign in with Apple and tiny identity-only service"
+      ],
+      "decision": "D01",
+      "falsifier": "Account UI promises restored progress after reinstall but no clinical backup exists."
+    },
+    {
+      "id": "Q02",
+      "question": "Which storage/migration design preserves records with low writes and bounded resident history?",
+      "sources": [
+        "S02",
+        "S08",
+        "S09"
+      ],
+      "status": "proposed_experiment",
+      "affects": [
+        "G02",
+        "G08"
+      ],
+      "alternatives": [
+        "SQLite adapter with paginated queries",
+        "Measured native alternative behind same repository interface"
+      ],
+      "decision": "D03,D06",
+      "falsifier": "History loss, whole-array hydration or duplicate migration after injected crash."
+    },
+    {
+      "id": "Q03",
+      "question": "Does current 414b81b actually close the prior conflict, schedule approval and UI-clock findings?",
+      "sources": [
+        "S02",
+        "S03",
+        "S04"
+      ],
+      "status": "author_claim_pending_independent_retest",
+      "affects": [
+        "G01"
+      ],
+      "alternatives": [
+        "Accept only after current production journey replay",
+        "Reopen only the affected invariant if counterexample found"
+      ],
+      "decision": null,
+      "falsifier": "Conflicting event earns credit, schedule retains stale approval or mounted screen never becomes eligible."
+    },
+    {
+      "id": "Q04",
+      "question": "What programme may the independent patient safely use without an online treating team?",
+      "sources": [
+        "S01",
+        "S04"
+      ],
+      "status": "source_and_clinical_decision_open",
+      "affects": [
+        "G04",
+        "G05",
+        "G10"
+      ],
+      "alternatives": [
+        "Approved local programme package with explicit applicability/setup",
+        "Guided-only education/diary until the relevant programme is established"
+      ],
+      "decision": "D05,C01-C08",
+      "falsifier": "Selecting a procedure name unlocks unapproved protected movement."
+    },
+    {
+      "id": "Q05",
+      "question": "Which pose source and native presentation give useful feedback at the smallest measured resource cost?",
+      "sources": [
+        "S02",
+        "S10"
+      ],
+      "status": "proposed_benchmark",
+      "affects": [
+        "G08"
+      ],
+      "alternatives": [
+        "Keep current estimator",
+        "Apple Vision/Core ML candidate only after compatibility and evidence comparison"
+      ],
+      "decision": "D04,D06,D08",
+      "falsifier": "New model changes landmark/angle meaning without new method identity or validated equivalence."
+    },
+    {
+      "id": "Q06",
+      "question": "Can native cloud simulation artifacts actually be retrieved and visually reviewed?",
+      "sources": [
+        "S02",
+        "S04"
+      ],
+      "status": "execution_proof_required",
+      "affects": [
+        "G09"
+      ],
+      "alternatives": [
+        "Hosted macOS CI with deterministic native fixtures and image artifacts"
+      ],
+      "decision": null,
+      "falsifier": "Only web screenshots or green test status are available."
+    },
+    {
+      "id": "Q07",
+      "question": "How does interval scheduling handle sleep, abandoned sessions, timezone and declined notifications?",
+      "sources": [
+        "S01",
+        "S03",
+        "S06",
+        "S07"
+      ],
+      "status": "partial_contract_plus_open_clinical_choices",
+      "affects": [
+        "G01",
+        "G06"
+      ],
+      "alternatives": [
+        "Explicit local calendar window and approved interval anchor; OS notification optional"
+      ],
+      "decision": "D07,C05",
+      "falsifier": "Missed reminders accumulate treatment dose or the app exercises outside the approved window."
+    },
+    {
+      "id": "Q08",
+      "question": "What may count as longitudinal clinical improvement rather than a numerical difference?",
+      "sources": [
+        "S04"
+      ],
+      "status": "validation_gap",
+      "affects": [
+        "G05",
+        "G08",
+        "G10"
+      ],
+      "alternatives": [
+        "Show qualified compatible observations without automatic improvement label",
+        "Add claims only with independent repeatability/reference evidence"
+      ],
+      "decision": "D08",
+      "falsifier": "Synthetic fixtures or high landmark confidence are used as proof of clinical accuracy."
+    }
+  ],
+  "native_research_body": "not_claimed; see evidence/CCORE_TOOLING.md",
+  "authority": "Sources inform decisions; this register approves neither treatment nor implementation."
+}

@@ -61,3 +61,7 @@ Response to the independent source review [reviews/2026-09-27-a47ba14-source-rev
 - R03: time-aware routine (next boundary, foreground, midnight; timer cleaned up); Start re-checks eligibility; sessions bound to their occurrence/episode at start.
 - Begun mini-sessions close at the end of the waking window; new-episode action; blank-field schedule editor (drafts offer nothing).
 - Full suite 1,585 passed, 4 skipped, exit 0 without --forceExit; P08 still open (worker force-exited).
+
+## Scope revision: iPhone patient-only MVP runbook
+
+See [runbooks/ios-patient-mvp/README.md](runbooks/ios-patient-mvp/README.md). This is a prospective plan based on application `414b81b170a6205b9fcb3aca20f3cab89bb850a1`, not a new app test run. It defers clinician portals/linkage, messaging and clinical cloud sync while retaining future-ready data boundaries. All 11 gates begin unaccepted. Native CCore Research/Runbook authoring did not complete; exact refusal/inspection results are retained alongside successful portable plan-structure checks. Start at G00; preserve prior evidence and recheck new code before treating older findings as current.
