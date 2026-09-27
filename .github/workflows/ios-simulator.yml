@@ -92,7 +92,8 @@ jobs:
       - name: Install pods
         run: |
           mkdir -p "$OUT_DIR"
-          cd ios && pod install 2>&1 | tee "$OUT_DIR/pod-install.log"
+          set -o pipefail
+          cd ios && pod install --deployment 2>&1 | tee "$OUT_DIR/pod-install.log"
 
       - name: Build app for simulator (Release, JS bundled)
         run: |
