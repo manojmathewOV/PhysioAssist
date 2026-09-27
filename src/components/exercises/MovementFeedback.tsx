@@ -17,7 +17,8 @@ export const MovementFeedback: React.FC<{
   comparedWithDemo?: boolean;
   /** False when too little movement was seen to judge technique. */
   assessed?: boolean;
-}> = ({ findings, comparedWithDemo, assessed = true }) => {
+  coachingLimited?: boolean;
+}> = ({ findings, comparedWithDemo, assessed = true, coachingLimited = false }) => {
   const top = findings.slice(0, 2);
   return (
     <Card style={styles.card} testID="movement-feedback">
@@ -38,6 +39,11 @@ export const MovementFeedback: React.FC<{
             Not enough movement was seen to judge your technique this time.
           </AppText>
         </View>
+      ) : top.length === 0 && coachingLimited ? (
+        <AppText variant="bodyStrong" testID="movement-coaching-limited">
+          Feedback is limited for this stage. Follow the movement and timing in your
+          programme.
+        </AppText>
       ) : top.length === 0 ? (
         <View style={styles.row}>
           <View style={[styles.icon, styles.iconGood]}>

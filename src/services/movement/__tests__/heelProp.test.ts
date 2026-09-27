@@ -65,7 +65,7 @@ describe('heel-prop passive knee extension', () => {
   ] as const)(
     'resting at %i° reports a passive extension deficit (%s)',
     (knee, severity) => {
-      const { analysis } = run(lying(still(knee)));
+      const { analysis } = run(lying(still(knee)), HEEL_PROP, 0); // Explicit synthetic straightening goal.
       const finding = analysis.findings.find((f) => f.id === 'reduced_range');
       expect(finding?.severity).toBe(severity);
       expect(finding?.detail).toMatch(/Passive extension deficit/);

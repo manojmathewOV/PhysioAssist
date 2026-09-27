@@ -80,7 +80,7 @@ describe('seated knee extension (side-on)', () => {
   ] as const)(
     'reaching %i° reports an active extension deficit (%s)',
     (top, severity) => {
-      const { analysis } = analyse(seated(top), EXTENSION);
+      const { analysis } = analyse(seated(top), EXTENSION, 0); // Explicit synthetic straightening goal.
       const finding = analysis.findings.find((f) => f.id === 'reduced_range');
       expect(finding?.severity).toBe(severity);
       expect(finding?.detail).toMatch(/Active extension deficit/);

@@ -35,7 +35,7 @@ const saq = (top = 176, extra: JointAngles = {}): Scenario => ({
   expect: { reps: 3 },
 });
 
-const run = (scenario: Scenario, context = SAQ) => {
+const run = (scenario: Scenario, context = SAQ, goalDegrees?: number) => {
   const recorder = new MovementRecorder(context);
   for (const f of new VirtualPatient(scenario).frames()) recorder.add(f.pose);
   return {
@@ -43,7 +43,7 @@ const run = (scenario: Scenario, context = SAQ) => {
     analysis: analyseSession(
       recorder.frames,
       context,
-      {},
+      { goalDegrees },
       { detect: detectCompensations }
     ),
   };
@@ -64,7 +64,7 @@ describe('short-arc quad (lying, roll under the knee)', () => {
   });
 
   it('reports an active extension deficit when the knee stops short', () => {
-    const { analysis } = run(saq(160)); // 20° short
+    const { analysis } = run(saq(160), SAQ, 0); // 20° short
     const f = analysis.findings.find((x) => x.id === 'reduced_range');
     expect(f?.severity).toBe('warn');
     expect(f?.detail).toMatch(/Active extension deficit/);

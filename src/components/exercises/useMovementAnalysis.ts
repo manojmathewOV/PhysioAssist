@@ -7,6 +7,7 @@ import {
   measurementMethodOf,
   movementOf,
 } from '../../services/movement/exerciseMovement';
+import { coachingOf } from '../../services/care/episode';
 import type { SessionResult } from '../../store/slices/exerciseSlice';
 import { useCallback, useRef } from 'react';
 
@@ -25,6 +26,7 @@ import {
   MovementProfile,
   SessionAnalysis,
   analyseSession,
+  withCoaching,
 } from '../../services/movement/analysis';
 import type { RangeResultProps } from './RangeResult';
 import { parseYouTubeId } from '../../utils/youtube';
@@ -84,6 +86,7 @@ export function useMovementAnalysis(
         // Compensation checks are part of the extended (shoulder, knee) support
         detect: hasExtendedSupport(rec.context.joint) ? detectCompensations : undefined,
         cues: PATIENT_CUES,
+        coaching: coachingOf(plan),
       }
     );
   }, [plan, exercise]);
@@ -104,6 +107,7 @@ export interface SessionOutcome {
     reps?: number;
     /** Enough movement was seen to judge technique (else no "nothing to correct"). */
     assessed?: boolean;
+    coachingLimited?: boolean;
   };
   /** Said after "Well done" (the most important thing to work on). */
   spokenCue?: string;
@@ -154,14 +158,22 @@ export function sessionOutcome(
   }
   const reference = referenceFor(plan, exercise);
   const movement = movementOf(exercise.id);
+  const comfort = coachingOf(plan) === 'comfort';
+  if (analysis && plan && exercise.primaryJoint) {
+    analysis = withCoaching(
+      analysis,
+      { joint: exercise.primaryJoint, side: plan.side, exerciseId: exercise.id },
+      coachingOf(plan)
+    );
+  }
   const joint =
     sessionRange?.joint ??
     (plan && exercise.primaryJoint ? `${plan.side}_${exercise.primaryJoint}` : undefined);
   // Repetitions the live counter can't count (it tracks a different quantity)
   const reps = movement.measure && analysis ? analysis.reps.length : undefined;
   // The clinician's prescription sets the goal; a demonstration explains the
-  // movement and only stands in when nothing was prescribed. (A goal set for
-  // the joint's usual range doesn't apply to rotation.)
+  // movement but cannot supply a missing prescription. (An elevation goal
+  // does not apply to rotation.)
   const prescribed = movement.measure ? undefined : sessionRange?.goalDegrees;
 
   let range: RangeResultProps | null = null;
@@ -179,12 +191,10 @@ export function sessionOutcome(
       approximate: measured ? r.approximate : undefined,
     };
     if (measured) {
-      const useDemo = prescribed === undefined && reference && !movement.measure;
       range = {
         ...common,
         bestDegrees: Math.round(r.degrees as number),
-        goalDegrees: useDemo ? reference.peakDegrees : prescribed,
-        goalLabel: useDemo ? 'the demonstration' : undefined,
+        goalDegrees: comfort ? undefined : prescribed,
       };
     } else {
       notice = unavailableNotice(joint, r.reason);
@@ -201,12 +211,11 @@ export function sessionOutcome(
     };
   } else if (sessionRange) {
     // No movement analysis (no plan): the live counter's range
-    range = reference
-      ? {
-          ...sessionRange,
-          goalDegrees: sessionRange.goalDegrees ?? reference.peakDegrees,
-        }
-      : sessionRange;
+    range = {
+      ...sessionRange,
+      goalDegrees: comfort ? undefined : prescribed,
+      goalLabel: undefined,
+    };
   }
   return {
     historyResult,
@@ -215,6 +224,7 @@ export function sessionOutcome(
       range,
       findings: analysis?.findings ?? null,
       comparedWithDemo: Boolean(reference),
+      coachingLimited: analysis?.coachingLimited,
       reps,
       notice,
       assessed: analysis

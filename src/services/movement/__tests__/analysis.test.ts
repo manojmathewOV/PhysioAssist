@@ -75,24 +75,27 @@ describe('comparison with a demonstration', () => {
     expect(ids('bicep-curl-jitter', ELBOW)).toEqual([]);
   });
 
-  it('reports reduced range with both numbers', () => {
+  it('reports reduced range against the explicit goal, never the demonstration', () => {
     const result = analyseSession(
       record(scenario('arm-raise-short-of-standard'), SHOULDER),
       SHOULDER,
-      { reference: raiseRef }
+      { reference: raiseRef, goalDegrees: 150 }
     );
     expect(result.findings[0].id).toBe('reduced_range');
-    expect(result.findings[0].detail).toMatch(/about 11\d°.*demonstration reached 15\d°/);
+    expect(result.findings[0].detail).toMatch(/about 11\d°.*your goal is 150°/);
     expect(result.cues[0]).toMatch(/a little further/);
   });
 
   it('reports moving too fast and not holding', () => {
-    expect(ids('bicep-curl-fast', ELBOW)).toEqual(
-      expect.arrayContaining(['too_fast', 'short_hold'])
-    );
+    expect(
+      analyseSession(record(scenario('bicep-curl-fast'), ELBOW), ELBOW, {
+        reference: curlRef,
+        holdMs: 1500,
+      }).findings.map((f) => f.id)
+    ).toEqual(expect.arrayContaining(['too_fast', 'short_hold']));
   });
 
-  it('reports not straightening the elbow fully', () => {
+  it('does not make the demonstration rest position an instruction to straighten further', () => {
     const bentRest: Scenario = {
       ...scenario('bicep-curl-normal'),
       timeline: repetitions({
@@ -106,10 +109,11 @@ describe('comparison with a demonstration', () => {
     };
     const result = analyseSession(record(bentRest, ELBOW), ELBOW, { reference: curlRef });
     const finding = result.findings.find((f) => f.id === 'incomplete_return');
-    expect(finding?.cue).toBe('Try to straighten your elbow all the way each time.');
+    expect(finding).toBeUndefined();
+    expect(result.result.status).toBe('measured');
   });
 
-  it('falls back to the prescribed goal without a demonstration', () => {
+  it('uses the prescribed goal without a demonstration', () => {
     const result = analyseSession(
       record(scenario('arm-raise-short-of-standard'), SHOULDER),
       SHOULDER,

@@ -70,6 +70,7 @@ export interface ExerciseSummaryProps {
    * list of findings says nothing about how the patient moved.
    */
   assessed?: boolean;
+  coachingLimited?: boolean;
 }
 
 /** The headline and one plain sentence for how much was done. */
@@ -151,6 +152,7 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
   completion,
   onConfirmCompleted,
   assessed,
+  coachingLimited,
 }) => {
   const [confirmed, setConfirmed] = useState(false);
   const [pain, setPain] = useState<number | null>(painScore);
@@ -236,7 +238,9 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
         ) : null}
       </View>
 
-      {isPersonalBest ? <Banner tone="success" message="New personal best!" /> : null}
+      {isPersonalBest && !coachingLimited ? (
+        <Banner tone="success" message="New personal best!" />
+      ) : null}
 
       <Card style={styles.card}>
         {mode === 'hold' ? (
@@ -281,7 +285,7 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
                 <Stat
                   icon="thumb-up"
                   label="Form"
-                  value={formWords(percent, reps)}
+                  value={coachingLimited ? 'Limited feedback' : formWords(percent, reps)}
                   testID="form-accuracy"
                 />
               </View>
@@ -309,7 +313,7 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
         {calories > 0 ? (
           <Stat icon="local-fire-department" label="Energy" value={`${calories} kcal`} />
         ) : null}
-        {previousBestScore !== undefined ? (
+        {previousBestScore !== undefined && !coachingLimited ? (
           <Stat
             icon="emoji-events"
             label="Previous best"
@@ -333,6 +337,7 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
           findings={findings}
           comparedWithDemo={comparedWithDemo}
           assessed={assessed}
+          coachingLimited={coachingLimited}
         />
       ) : null}
 
@@ -370,9 +375,11 @@ const ExerciseSummary: React.FC<ExerciseSummaryProps> = ({
       <View style={styles.note} testID="summary-encouragement">
         <Icon name="favorite-border" size={24} color={colors.warning} />
         <AppText variant="body" style={styles.flex}>
-          {mode === 'hold' || status
-            ? 'Every session helps. Take your time, and rest before your next exercise.'
-            : encouragement(percent, reps, reachedGoal)}
+          {coachingLimited
+            ? 'Follow the timing and movements in your programme.'
+            : mode === 'hold' || status
+              ? 'Every session helps. Take your time, and rest before your next exercise.'
+              : encouragement(percent, reps, reachedGoal)}
         </AppText>
       </View>
     </Screen>

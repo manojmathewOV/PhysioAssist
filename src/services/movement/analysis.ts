@@ -43,6 +43,8 @@ export interface SessionTargets {
 }
 
 export interface AnalysisOptions {
+  /** Same stage policy as live feedback; a reference cannot grant progression. */
+  coaching?: 'comfort' | 'target';
   /** Per-repetition compensation checks (services/movement/compensations). */
   detect?: (rep: Repetition, context: MovementContext) => CompensationHit[];
   /** Patient cue for each finding. */
@@ -81,6 +83,8 @@ export interface SessionAnalysis {
   hold?: StaticMeasurement | null;
   reps: Repetition[];
   profile: MovementProfile | null;
+  /** Advice is deliberately limited for the prescribed stage, not proof of normal technique. */
+  coachingLimited?: boolean;
   /** All findings, most important first. */
   findings: Finding[];
   /** The one or two things to tell the patient. */
@@ -96,8 +100,7 @@ export const TOO_FAST_RATIO = 0.7;
 export const HOLD_SLACK_MS = 1000;
 /**
  * Towards-neutral movements (straightening a bent knee while sitting): the
- * active extension deficit (degrees short of straight, or of the goal or
- * demonstration) reported above these. Not "extension lag": lag is the
+ * active extension deficit (degrees short of straight, or of the supplied goal) reported above these. Not "extension lag": lag is the
  * difference between passive and active extension and needs both measured.
  */
 export const EXTENSION_DEFICIT_WARN_DEG = 10;
@@ -190,7 +193,43 @@ export const buildReference = (
   direction: MovementDirection = 'away'
 ) => profileOf(segmentReps(frames, { direction }), direction);
 
+/** Apply the same policy to analysis and legacy/imported outcome inputs. */
+export function withCoaching(
+  analysis: SessionAnalysis,
+  context: MovementContext,
+  coaching: 'comfort' | 'target'
+): SessionAnalysis {
+  if (coaching !== 'comfort') return analysis;
+  const findings = analysis.findings.filter(
+    (f) =>
+      !['reduced_range', 'incomplete_return'].includes(f.id) &&
+      (f.id !== 'short_hold' ||
+        (movementOf(context.exerciseId).mode === 'hold' &&
+          analysis.result.status === 'unavailable' &&
+          analysis.result.reason === 'not_still'))
+  );
+  return {
+    ...analysis,
+    coachingLimited: true,
+    findings,
+    cues: findings.slice(0, 2).map((f) => f.cue),
+  };
+}
+
 export function analyseSession(
+  frames: MovementFrame[],
+  context: MovementContext,
+  targets: SessionTargets = {},
+  options: AnalysisOptions = {}
+): SessionAnalysis {
+  return withCoaching(
+    analyseMovement(frames, context, targets, options),
+    context,
+    options.coaching ?? 'target'
+  );
+}
+
+function analyseMovement(
   frames: MovementFrame[],
   context: MovementContext,
   targets: SessionTargets = {},
@@ -285,22 +324,21 @@ export function analyseSession(
   const ref = targets.reference;
   const all = reps.map((r) => r.index);
 
-  // Towards neutral: how far short of straight (or of the goal/demonstration)
-  if (direction === 'toward' && !wrongView) {
-    const aim = ref?.peakDegrees ?? targets.goalDegrees ?? 0;
+  // A goal is supplied by the programme, never inferred from a demonstration.
+  const goal =
+    Number.isFinite(targets.goalDegrees) && targets.goalDegrees! >= 0
+      ? targets.goalDegrees
+      : undefined;
+  const canJudgeRange = !wrongView && !farSide && goal !== undefined;
+  if (direction === 'toward' && canJudgeRange) {
+    const aim = goal!;
     const deficit = profile.peakDegrees - aim;
     if (deficit > EXTENSION_DEFICIT_WARN_DEG) {
       findings.push({
         id: 'reduced_range',
         severity: deficit > EXTENSION_DEFICIT_FLAG_DEG ? 'flag' : 'warn',
         cue: `Try to straighten your ${context.joint} a little more, if it's comfortable.`,
-        detail: `Active extension deficit: your ${joint} straightened to about ${profile.peakDegrees}°; ${
-          ref
-            ? `the demonstration reached ${Math.round(aim)}°`
-            : aim === 0
-              ? 'fully straight is 0°'
-              : `your goal is ${Math.round(aim)}°`
-        }.`,
+        detail: `Active extension deficit: your ${joint} straightened to about ${profile.peakDegrees}°; your goal is ${Math.round(aim)}°.`,
         reps: reps
           .filter((r) => r.peakDegrees - aim > EXTENSION_DEFICIT_WARN_DEG)
           .map((r) => r.index),
@@ -308,17 +346,14 @@ export function analyseSession(
     }
   }
 
-  // Range: against the demonstration, else against the prescribed goal
-  const target =
-    direction === 'away' ? ref?.peakDegrees ?? targets.goalDegrees : undefined;
+  // Range advice is unavailable when its view/side is rejected.
+  const target = direction === 'away' && canJudgeRange ? goal : undefined;
   if (target && profile.peakDegrees < target * RANGE_WARN_RATIO) {
     findings.push({
       id: 'reduced_range',
       severity: profile.peakDegrees < target * RANGE_FLAG_RATIO ? 'flag' : 'warn',
       cue: cueFor('reduced_range'),
-      detail: `Your ${joint} reached about ${profile.peakDegrees}°; ${
-        ref ? 'the demonstration reached' : 'your goal is'
-      } ${Math.round(target)}°.`,
+      detail: `Your ${joint} reached about ${profile.peakDegrees}°; your goal is ${Math.round(target)}°.`,
       reps: reps
         .filter((r) => r.peakDegrees < target * RANGE_WARN_RATIO)
         .map((r) => r.index),
@@ -326,13 +361,13 @@ export function analyseSession(
   }
 
   // Coming back to the start (e.g. fully straightening the knee or elbow)
-  // Without a demonstration, compare with the patient's own usual return today
+  // A demonstrator's starting range is not the patient's prescription: use their own return today
   // (a natural rest is rarely exactly 0°, and some exercises, like a press,
   // rest part-way: the median catches the repetitions that stopped short)
-  const restTarget = ref?.restDegrees ?? median(reps.map((r) => r.restDegrees));
+  const restTarget = median(reps.map((r) => r.restDegrees));
   // (Towards neutral, the start is a bent position: returning less is no fault)
   const shortReturns =
-    direction === 'toward' || wrongView
+    direction === 'toward' || wrongView || farSide
       ? []
       : reps.filter((r) => r.restDegrees > restTarget + RETURN_SLACK_DEG);
   if (enoughReps(shortReturns.length, reps.length)) {
@@ -345,7 +380,7 @@ export function analyseSession(
         : cueFor('incomplete_return'),
       detail: `In ${shortReturns.length} of ${reps.length} repetitions your ${joint} stayed about ${Math.round(
         median(shortReturns.map((r) => r.restDegrees)) - restTarget
-      )}° short of ${ref ? 'the starting position in the demonstration' : 'your usual starting position'}.`,
+      )}° short of your usual starting position.`,
       reps: shortReturns.map((r) => r.index),
     });
   }
@@ -364,8 +399,10 @@ export function analyseSession(
   }
 
   // Holding at the top
-  const holdTarget = targets.holdMs ?? ref?.holdMs;
+  const holdTarget = targets.holdMs; // A demonstration does not prescribe a longer hold.
   if (
+    !wrongView &&
+    !farSide &&
     holdTarget &&
     holdTarget > HOLD_SLACK_MS &&
     profile.holdMs < holdTarget - HOLD_SLACK_MS
@@ -487,8 +524,13 @@ function analyseHold(
       reps: [],
     });
   }
-  if (hold && direction === 'toward') {
-    const aim = targets.goalDegrees ?? 0;
+  if (
+    hold &&
+    direction === 'toward' &&
+    Number.isFinite(targets.goalDegrees) &&
+    targets.goalDegrees! >= 0
+  ) {
+    const aim = targets.goalDegrees!;
     const deficit = hold.degrees - aim;
     if (deficit > PASSIVE_DEFICIT_WARN_DEG) {
       findings.push({
