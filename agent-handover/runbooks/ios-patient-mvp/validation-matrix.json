@@ -174,9 +174,10 @@
       "executor": "implementation_lead",
       "acceptor": "independent_engineering_reviewer",
       "fixture_policy": "synthetic unless explicitly approved reference/human evidence is required; source approvals never fabricated",
-      "state": "not_run_in_this_revision",
-      "evidence_refs": [],
-      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair."
+      "state": "partial_evidence_pending_review",
+      "evidence_refs": ["../../evidence/2026-09-27-g01-g02/run.json"],
+      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair.",
+      "evidence_scope": "Use exact source and scope in run.json; native error injection, all corruption cases and whole-gate acceptance are not implied."
     },
     {
       "id": "G01.V06",
@@ -188,9 +189,10 @@
       "executor": "implementation_lead",
       "acceptor": "independent_engineering_reviewer",
       "fixture_policy": "synthetic unless explicitly approved reference/human evidence is required; source approvals never fabricated",
-      "state": "not_run_in_this_revision",
-      "evidence_refs": [],
-      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair."
+      "state": "partial_evidence_pending_review",
+      "evidence_refs": ["../../evidence/2026-09-27-g01-g02/run.json"],
+      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair.",
+      "evidence_scope": "Use exact source and scope in run.json; native error injection, all corruption cases and whole-gate acceptance are not implied."
     },
     {
       "id": "G01.V07",
@@ -202,9 +204,10 @@
       "executor": "implementation_lead",
       "acceptor": "independent_engineering_reviewer",
       "fixture_policy": "synthetic unless explicitly approved reference/human evidence is required; source approvals never fabricated",
-      "state": "not_run_in_this_revision",
-      "evidence_refs": [],
-      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair."
+      "state": "partial_evidence_pending_review",
+      "evidence_refs": ["../../evidence/2026-09-27-g01-g02/run.json"],
+      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair.",
+      "evidence_scope": "Use exact source and scope in run.json; native error injection, all corruption cases and whole-gate acceptance are not implied."
     },
     {
       "id": "G01.V08",
@@ -272,9 +275,10 @@
       "executor": "storage_owner",
       "acceptor": "independent_engineering_reviewer",
       "fixture_policy": "synthetic unless explicitly approved reference/human evidence is required; source approvals never fabricated",
-      "state": "not_run_in_this_revision",
-      "evidence_refs": [],
-      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair."
+      "state": "partial_evidence_pending_review",
+      "evidence_refs": ["../../evidence/2026-09-27-g01-g02/run.json"],
+      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair.",
+      "evidence_scope": "Use exact source and scope in run.json; native error injection, all corruption cases and whole-gate acceptance are not implied."
     },
     {
       "id": "G02.V05",
@@ -300,9 +304,10 @@
       "executor": "storage_owner",
       "acceptor": "independent_engineering_reviewer",
       "fixture_policy": "synthetic unless explicitly approved reference/human evidence is required; source approvals never fabricated",
-      "state": "not_run_in_this_revision",
-      "evidence_refs": [],
-      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair."
+      "state": "partial_evidence_pending_review",
+      "evidence_refs": ["../../evidence/2026-09-27-g01-g02/run.json"],
+      "failure_action": "Block the affected acceptance, retain counterexample, identify owner/root cause and replay after repair.",
+      "evidence_scope": "Use exact source and scope in run.json; native error injection, all corruption cases and whole-gate acceptance are not implied."
     },
     {
       "id": "G02.V07",

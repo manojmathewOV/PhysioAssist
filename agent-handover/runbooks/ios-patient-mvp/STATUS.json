@@ -2,13 +2,13 @@
   "schema": "physioassist-runbook-status/1",
   "runbook_id": "ios-patient-mvp",
   "runbook_revision": 2,
-  "current_gate": "G01",
-  "overall": "integration_candidate_blocked_on_native_portability",
-  "implementation_sha": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
+  "current_gate": "G02",
+  "overall": "foundation_fixes_implemented_pending_review",
+  "implementation_sha": "1c539a566d18ff53f8388e505afb1904b730c6d3",
   "gate_states": {
     "G00": "implemented_pending_review",
-    "G01": "blocked",
-    "G02": "planned",
+    "G01": "in_progress",
+    "G02": "in_progress",
     "G03": "planned",
     "G04": "planned",
     "G05": "planned",
@@ -18,34 +18,35 @@
     "G09": "planned",
     "G10": "planned"
   },
-  "evidence": [],
+  "evidence": ["../../evidence/2026-09-27-g01-g02/run.json"],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
-  "next": "G00 independent reconciliation review in parallel with G01.W1 native dependency portability diagnosis. G02 read-error containment can be prepared from frozen input; no gate closure inherited.",
+  "next": "Latest combined-source hosted CI and independent storage review; then small privacy/copy cleanup and one complete source-aware shoulder journey. Retain safe storage/migration requirements without additional roadmap work.",
   "last_writer": "receiving_agent",
   "limitations": [
-    "No implementation gate accepted by this planning update.",
-    "P08 was independently verified on the frozen app; it is not the current failure.",
-    "Full hosted native run of PR27 failed at Install pods; local success is a narrower observation.",
-    "No new clinical, physical-device or approved-media validation claimed."
+    "No gate independently accepted by this implementation update.",
+    "Hosted green native evidence is pinned to 707a6e7; later storage code requires its own hosted run.",
+    "No full database migration, profile isolation, write-failure acknowledgement or clinical validation is complete.",
+    "Four opt-in suites remain skipped; historical source and approvals are unchanged."
   ],
   "integration_basis": "88918e77162a8491beb06c3e7615419a40b30630",
   "blockers": [
     {
       "id": "I01",
       "gate": "G01",
-      "status": "open",
+      "status": "independently_corroborated_at_707a6e7",
       "owner": "native_build_owner",
-      "observed": "Hosted CocoaPods 1.17.0 rejects spec checksums from local 1.16.2 lock; build/UI tests skipped. Cause of every checksum difference still requires controlled comparison.",
-      "evidence": "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36295560714",
-      "wake": "Fresh hosted strict install/build/selected UI run passes on chosen pinned toolchain."
+      "observed": "Pinned local/hosted Ruby and native gems; identical Gem/Pod hashes; hosted run 36304301981 passed install/build/smoke/Detox at 707a6e7.",
+      "evidence": "../../evidence/2026-09-27-g01-g02/run.json#I01",
+      "wake": "Later combined-source CI/review and other G01 criteria; do not repeat the resolved old dependency investigation."
     },
     {
       "id": "DATA-READ-ERROR",
       "gate": "G02",
-      "status": "reported_pending_reproduction",
+      "status": "contained_pending_independent_review",
       "owner": "storage_owner",
-      "observed": "Claude final handover reports a rejected encrypted read can lead to empty-state overwrite.",
-      "wake": "Failing regression reproduced then fixed with original bytes preserved and independent review."
+      "observed": "Reproduced empty overwrite; pending read, explicit retry and navigation guard now pass production-code and web fault tests. Native ordinary start observed with simulator ad-hoc signing.",
+      "wake": "Independent review and future native failure/migration/write-acknowledgement coverage; G02 remains open.",
+      "evidence": "../../evidence/2026-09-27-g01-g02/run.json#I02"
     },
     {
       "id": "D-C-DECISIONS",
@@ -70,8 +71,25 @@
     "EX06": {
       "state": "implemented_web_only_pending_independent_journey",
       "basis": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84"
+    },
+    "G01.W1": {
+      "state": "implemented_pending_review",
+      "basis": "707a6e7553fdcedbf87ebf835a21f3e22ecbf638",
+      "evidence": "../../evidence/2026-09-27-g01-g02/run.json#I01"
+    },
+    "G02.W1": {
+      "state": "implemented_pending_review",
+      "basis": "1c539a566d18ff53f8388e505afb1904b730c6d3",
+      "evidence": "../../evidence/2026-09-27-g01-g02/run.json#I02"
     }
   },
   "active_pr": 28,
-  "predecessor_prs": "25/26/27 closed-unmerged as superseded after checkpoint/ancestry verification"
+  "predecessor_prs": "25/26/27 closed-unmerged as superseded after checkpoint/ancestry verification",
+  "review_received": {
+    "reviewer": "Claude",
+    "source": "owner-supplied read-only review in chat",
+    "basis_sha": "707a6e7553fdcedbf87ebf835a21f3e22ecbf638",
+    "record": "../../responses/2026-09-27-independent-review-reconciliation.md",
+    "scope": "I01 source/hosted corroboration; no later storage or whole-gate acceptance"
+  }
 }

@@ -1,0 +1,30 @@
+test_absolute_refused (test_workspace.WorkspaceTests) ... ok
+test_atomic_replace (test_workspace.WorkspaceTests) ... ok
+test_bad_marker_refused (test_workspace.WorkspaceTests) ... ok
+test_changed_digest_refused (test_workspace.WorkspaceTests) ... ok
+test_commands_have_resource_limits (test_workspace.WorkspaceTests) ... ok
+test_dirty_refused (test_workspace.WorkspaceTests) ... ok
+test_dry_run_preserves_cache (test_workspace.WorkspaceTests) ... ok
+test_existing_ruby_configuration_is_reused (test_workspace.WorkspaceTests) ... ok
+test_failure_recorded (test_workspace.WorkspaceTests) ... ok
+test_fingerprint_changes (test_workspace.WorkspaceTests) ... ok
+test_lock_released (test_workspace.WorkspaceTests) ... ok
+test_missing_configured_ruby_is_not_installed (test_workspace.WorkspaceTests) ... ok
+test_pods_frozen (test_workspace.WorkspaceTests) ... ok
+test_second_job_lock_refused (test_workspace.WorkspaceTests) ... ok
+test_simulator_signing_is_adhoc_only (test_workspace.WorkspaceTests) ... ok
+test_success_recorded (test_workspace.WorkspaceTests) ... ok
+test_symlink_refused (test_workspace.WorkspaceTests) ... ok
+test_timeout_recorded (test_workspace.WorkspaceTests) ... ok
+test_tracked_cache_refused (test_workspace.WorkspaceTests) ... ok
+test_traversal_refused (test_workspace.WorkspaceTests) ... ok
+test_unique_run_records (test_workspace.WorkspaceTests) ... ok
+test_unsupported_action_refused (test_workspace.WorkspaceTests) ... ok
+test_valid_marker (test_workspace.WorkspaceTests) ... ok
+test_warning_is_not_clean_success (test_workspace.WorkspaceTests) ... ok
+test_wrong_head_refused (test_workspace.WorkspaceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 25 tests in 2.884s
+
+OK

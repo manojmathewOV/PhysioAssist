@@ -2,11 +2,7 @@
   "schema_version": 1,
   "as_of": "2026-09-27",
   "reviewed_application_sha": "c7ac7f3bdda47ab736553b25bdca6f4100a8f74b",
-  "latest_response": {
-    "path": "responses/2026-09-27-6bc4d77-claude-final-handover.md",
-    "application_sha": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
-    "independently_verified": false
-  },
+  "latest_response": "responses/2026-09-27-independent-review-reconciliation.md",
   "items": [
     {
       "id": "P01",
@@ -114,7 +110,8 @@
       "status": "open",
       "title": "Portable strict native dependency installation",
       "gate": "G01",
-      "acceptance": "Fresh local/hosted installation uses the agreed toolchain, preserves lock, passes build and selected native tests; no deployment/pipefail bypass."
+      "acceptance": "Fresh local/hosted installation uses the agreed toolchain, preserves lock, passes build and selected native tests; no deployment/pipefail bypass.",
+      "review_note": "Claude independently corroborated native toolchain and hosted result at 707a6e7, supplied by owner; does not review later storage changes or accept whole G01."
     },
     {
       "id": "I02",

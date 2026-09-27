@@ -15,3 +15,6 @@ Responses so far:
 A response is not an independent verification. Responses should use stable Pxx/Cxx IDs and link commits, regression tests and actual evidence. After a response, a reviewer records a separate SHA-bound retest.
 
 - [Permanent landing, hybrid skill and independent P08 verification](2026-09-27-5cc5d5a-hybrid-setup.md) — PR #27; native-hygiene candidate and explicit CI permission limitation.
+
+- [G01/G02 implementation and recovery evidence](2026-09-27-g01-g02-receiving-agent.md): pinned hosted/local native build plus failed-read containment.
+- [Latest independent-review reconciliation](2026-09-27-independent-review-reconciliation.md): reviewer scope, filtered-extreme caveat and product-first next batch.

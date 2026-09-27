@@ -17,13 +17,15 @@ P08 was independently retested on 6bc4d77: 1,593 passed/four opt-in skipped, par
 
 The four skipped suites are recorded individually in Claude's final handover: one Detox-mode-only and three permission-cleared dataset-dependent benchmarks. Skipped is not a benchmark pass.
 
-## Next action and blockers
+## Current implementation and review
 
-**Current engineering frontier: G01.W1 / I01 — native dependency portability.** PR27's hosted Install pods failed with a different CocoaPods generation/checksums. Preserve deployment-mode and pipefail; diagnose/pin and validate a clean hosted run. Local success is not enough.
+**I01: hosted native portability is now corroborated at `707a6e7`.** Run 36304301981 passed frozen installation, build, smoke and selected Detox. Claude independently reviewed the source/hosted result on that revision; the review was supplied by the owner. Do not keep presenting the original Install pods failure as the current unfixed state. The remaining G01 criteria and newer commits still require scoped evidence/review.
 
-**Next data-safety slice: G02.W1 / I02 — storage read-error overwrite.** Slow read was fixed; a rejected read was separately reported to permit empty-state overwrite. Reproduce before the larger transactional storage migration.
+**I02: failed-read overwrite is contained in local commits `dd7f504` and `1c539a5`, now being published with this update.** Failed reads stay pending with explicit Retry; there is no empty-state reset. The newer code was absent from Claude's 707a6e7 review. Read [implementation/evidence](responses/2026-09-27-g01-g02-receiving-agent.md). Full transactional migration, durable-write acknowledgement and native fault testing remain open.
 
-Source approvals C01-C08 and owner choices D01-D08 remain open only where relevant. Do not invent clinical timing, targets, source version or monitoring. Reversible framework/synthetic work can proceed without activating an unresolved prescription.
+Latest [review reconciliation](responses/2026-09-27-independent-review-reconciliation.md) distinguishes filtered extrema from raw-frame noise experiments and records privacy/copy/CI-trigger findings. Four production characterisation tests cover the actual five-frame median and away/toward selection; they do not validate clinical accuracy.
+
+**Next product slice:** review/publish the foundation, small patient-only privacy/copy cleanup, then one complete source-aware shoulder journey. Keep only the active work item's acceptance cases in view; no additional roadmap or CCore execution project. Preserve data safety, exact variants and source approval. Clinical/owner C01-C08 and D01-D08 remain unresolved only where relevant.
 
 ## One roadmap and evidence ledger
 
