@@ -24,6 +24,9 @@ on:
   push:
     branches: ['claude/**']
     paths:
+      - '.ruby-version'
+      - 'Gemfile'
+      - 'Gemfile.lock'
       - 'ios/**'
       - 'src/**'
       - 'e2e/**'
@@ -37,6 +40,9 @@ on:
       - '.github/workflows/ios-simulator.yml'
   pull_request:
     paths:
+      - '.ruby-version'
+      - 'Gemfile'
+      - 'Gemfile.lock'
       - 'ios/**'
       - 'src/**'
       - 'e2e/**'
@@ -83,17 +89,22 @@ jobs:
       - name: Point Xcode at the CI node binary
         run: echo "export NODE_BINARY=$(command -v node)" > ios/.xcode.env.local
 
+      - name: Set up pinned Ruby and native gems
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
       - name: Cache CocoaPods
         uses: actions/cache@v4
         with:
           path: ios/Pods
-          key: pods-${{ runner.os }}-${{ hashFiles('ios/Podfile', 'ios/Podfile.lock', 'package-lock.json') }}
+          key: pods-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.ruby-version', 'Gemfile.lock', 'ios/Podfile', 'ios/Podfile.lock', 'package-lock.json') }}
 
       - name: Install pods
         run: |
           mkdir -p "$OUT_DIR"
           set -o pipefail
-          cd ios && pod install --deployment 2>&1 | tee "$OUT_DIR/pod-install.log"
+          bash scripts/ci/install-pods.sh 2>&1 | tee "$OUT_DIR/pod-install.log"
 
       - name: Build app for simulator (Release, JS bundled)
         run: |
