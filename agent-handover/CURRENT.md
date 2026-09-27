@@ -69,3 +69,13 @@ See [runbooks/ios-patient-mvp/README.md](runbooks/ios-patient-mvp/README.md). Th
 ## Hybrid execution qualification: 2026-09-27
 
 At app `414b81b`, the independent hybrid qualification ran typecheck, lint (0 errors/450 warnings), 1,585 passing tests with four skipped, and the ordinary pre-push checks (21 Integration tests). Jest still force-closed a worker. A production web journey and synthetic camera-device probe ran on the Mac. A native Release build succeeded after candidate Pod resolution; frozen deployment-mode setup had failed on the old lockfile. The app launched in a dedicated simulator, stayed running for 15 seconds, and its onboarding screenshot was actually inspected. Full native rehab journeys, real camera/device validation and current submission-toolchain qualification remain open. The dedicated simulator and local browser server were stopped. See [workflow/evidence](workflows/hybrid-mac-github/WORKFLOW.md). No app feature or protocol was changed by this task.
+
+## Update: implementation response 2026-09-27 (6bc4d77)
+
+Response to the [patient-experience research](research/2026-09-27-patient-experience/REVIEW.md) and G01/P08: [responses/2026-09-27-6bc4d77-claude.md](responses/2026-09-27-6bc4d77-claude.md), evidence [evidence/2026-09-27-6bc4d77/](evidence/2026-09-27-6bc4d77/run.json). Author-reported; not an independent retest. No gate accepted; STATUS.json unchanged.
+
+- Application at `6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84` (PR #25).
+- EX01–EX08 compared with the 414b81b code and mapped to G04–G07. Owner inputs needed: time-only transitions, the policy when a review date passes, frozen-shoulder group membership, and the default picture for assisted exercises.
+- EX06 implemented: the focus view recedes the room without blurring it (a stick, helper or brace stays readable), and a Focus/Plain switch is available during the exercise. Web only.
+- P08 implemented pending review. Two causes: the store was created at import, and the telemetry interval started in its constructor. Full suite exits 0 in parallel, in-band and `--detectOpenHandles` modes without `--forceExit` (1,593 passed, 4 skipped). At 414b81b, detect mode reported 6 open handles and did not finish.
+- Data safety (G02): redux-persist's default 5 s rehydration timeout could save empty state over stored history after a slow Keychain read. Rehydration now waits for storage. The read-error path remains open for G02.

@@ -1,0 +1,87 @@
+{
+  "application_sha": "6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84",
+  "previous_sha": "414b81b170a6205b9fcb3aca20f3cab89bb850a1",
+  "inputs": [
+    "research/2026-09-27-patient-experience/REVIEW.md (EX01-EX08)",
+    "runbooks/ios-patient-mvp (G01: P08)"
+  ],
+  "author": "implementation agent (Claude, cloud session); author-reported, not an independent retest",
+  "environment": {
+    "os": "Linux container (cloud session)",
+    "node": "v22.22.2",
+    "jest": "29.7.0",
+    "typescript": "5.3.3"
+  },
+  "evidence_layer": "synthetic logic and rendered React Native components under Jest; web focus view in headless Chromium with a fake camera; no native device, real camera or people",
+  "runs": [
+    {
+      "id": "static",
+      "command": "npx tsc --noEmit -p . ; npx tsc --noEmit --project tsconfig.prepush.json ; npx eslint src __tests__/setup.ts --quiet",
+      "exit": 0,
+      "log": null
+    },
+    {
+      "id": "full-parallel",
+      "command": "./node_modules/.bin/jest --ci",
+      "exit": 0,
+      "passed": 1593,
+      "failed": 0,
+      "skipped": 4,
+      "force_exited_workers": 0,
+      "log": "full-suite-parallel.txt"
+    },
+    {
+      "id": "full-in-band",
+      "command": "./node_modules/.bin/jest --ci --runInBand",
+      "exit": 0,
+      "passed": 1593,
+      "failed": 0,
+      "skipped": 4,
+      "log": "full-suite-runInBand.txt"
+    },
+    {
+      "id": "full-detect-open-handles",
+      "command": "./node_modules/.bin/jest --ci --detectOpenHandles",
+      "exit": 0,
+      "passed": 1593,
+      "failed": 0,
+      "skipped": 4,
+      "open_handles_reported": 0,
+      "log": "full-suite-detectOpenHandles.txt"
+    },
+    {
+      "id": "per-suite",
+      "command": "for each of 91 suites: jest --runTestsByPath <file> --runInBand --watchman=false",
+      "exit": 0,
+      "note": "no suite printed 'did not exit one second after the test run has completed'",
+      "log": null
+    },
+    {
+      "id": "baseline-414b81b-detect",
+      "application_sha": "414b81b170a6205b9fcb3aca20f3cab89bb850a1",
+      "command": "timeout 580 ./node_modules/.bin/jest --ci --detectOpenHandles",
+      "exit": 124,
+      "note": "6 open handles, all the telemetry setInterval; run also included an untracked new test that fails without its fix, so only the open-handle report is used",
+      "log": "baseline-414b81b-detect-open-handles.txt"
+    },
+    {
+      "id": "persistence-falsifier",
+      "command": "persistence.test.ts with REHYDRATE_TIMEOUT temporarily 5000",
+      "exit": 1,
+      "note": "setItem called twice before the stored read resolves; passes with timeout 0",
+      "log": null
+    },
+    {
+      "id": "prepush-integration",
+      "command": "jest --ci --passWithNoTests src/testing/__tests__/Integration.test.ts",
+      "exit": 0,
+      "passed": 21,
+      "log": null
+    }
+  ],
+  "exclusions": [
+    "CI for 6bc4d77 not yet recorded here.",
+    "EX06 checked on web only; native iOS still shows the plain camera.",
+    "No clinical values, variants, transitions or doses changed."
+  ]
+}
