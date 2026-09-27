@@ -41,21 +41,23 @@ export function playerDocument(
   videoId: string,
   start: number,
   origin: string,
-  channel: string
+  channel: string,
+  resumeAt: number = start
 ): string {
   if (!/^[\w-]{11}$/.test(videoId) || !/^https?:\/\/[^\s/]+(?::\d+)?$/.test(origin))
     throw new Error('Invalid player identity');
   const config = JSON.stringify({
     videoId,
     start: Number.isFinite(start) && start >= 0 ? Math.floor(start) : 0,
+    resumeAt: Number.isFinite(resumeAt) && resumeAt >= 0 ? Math.floor(resumeAt) : 0,
     origin,
     channel,
     scope: PLAYER_SCOPE,
   }).replace(/</g, '\\u003c');
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><style>html,body{margin:0;width:100%;height:100%;background:#000}#player,iframe{border:0;width:100%;height:100%}</style></head><body><div id="player"></div><script>
 (function(c){
-  var player,ready=false,externalPause=true,resume=false,lastState='loading',timer;
-  function blocked(){return externalPause || document.hidden;}
+  var player,ready=false,externalPause=true,pageHidden=Boolean(document.hidden),resume=false,lastState='loading',timer;
+  function blocked(){return externalPause || pageHidden;}
   function emit(state,error){lastState=state;var seconds=ready?player.getCurrentTime():c.start;
     var value=JSON.stringify({scope:c.scope,channel:c.channel,state:state,seconds:Number.isFinite(seconds)?seconds:0,error:error});
     if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(value);else window.parent.postMessage(value,c.origin);
@@ -80,11 +82,10 @@ export function playerDocument(
     if(data&&data.scope===c.scope&&data.channel===c.channel)command(data.command);
   });
   document.addEventListener('visibilitychange',function(){
-    if(document.hidden){if(ready){resume=[1,3].indexOf(player.getPlayerState())>=0;player.pauseVideo();}}
-    else if(!externalPause&&resume&&ready){resume=false;player.playVideo();}
+    var before=blocked();pageHidden=Boolean(document.hidden);applySuspension(before);
   });
   window.onYouTubeIframeAPIReady=function(){player=new YT.Player('player',{host:'https://www.youtube-nocookie.com',videoId:c.videoId,
-    playerVars:{playsinline:1,rel:0,cc_load_policy:1,autoplay:0,origin:c.origin,start:c.start},
+    playerVars:{playsinline:1,rel:0,cc_load_policy:1,autoplay:0,origin:c.origin,start:c.resumeAt},
     events:{onReady:function(){ready=true;emit('ready');},onStateChange:function(e){
       if(e.data===1&&blocked()){player.pauseVideo();return;}
       var state={0:'ended',1:'playing',2:'paused',3:'loading',5:'ready'}[e.data];if(state&&state!=='loading')emit(state);

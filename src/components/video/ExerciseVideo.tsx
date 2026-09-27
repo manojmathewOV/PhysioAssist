@@ -67,7 +67,13 @@ const ExerciseVideo: React.FC<ExerciseVideoProps> = ({
     try {
       return {
         channel,
-        html: playerDocument(videoId, retry ? lastTime.current : start, origin, channel),
+        html: playerDocument(
+          videoId,
+          start,
+          origin,
+          channel,
+          retry ? lastTime.current : start
+        ),
       };
     } catch {
       return { channel, html: '' };
@@ -170,9 +176,11 @@ const ExerciseVideo: React.FC<ExerciseVideoProps> = ({
                 ? 'Tap Play in the video to start.'
                 : state === 'playing'
                   ? 'Reference video playing'
-                  : state === 'ended'
-                    ? 'Video finished. Watching does not complete your exercise.'
-                    : 'Reference video ready'}
+                  : state === 'paused'
+                    ? 'Reference video paused'
+                    : state === 'ended'
+                      ? 'Video finished. Watching does not complete your exercise.'
+                      : 'Reference video ready'}
       </AppText>
       <View style={styles.buttons}>
         {!hidden && onHide && button('Hide video', 'follow-along-toggle', onHide)}

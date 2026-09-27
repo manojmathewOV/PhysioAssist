@@ -7,7 +7,7 @@ import {
 } from '../playerDocument';
 const ORIGIN = 'https://org.example.physio';
 const ID = 'M7lc1UVf-VE';
-function harness() {
+function harness(html = playerDocument(ID, 8, ORIGIN, 'test')) {
   const events: any[] = [];
   const handlers: Record<string, (e?: any) => void> = {};
   const docHandlers: Record<string, () => void> = {};
@@ -46,7 +46,6 @@ function harness() {
       docHandlers[n] = fn;
     },
   };
-  const html = playerDocument(ID, 8, ORIGIN, 'test');
   const script = html.match(/<script>([\s\S]*)<\/script>/)![1];
   runInNewContext(script, {
     window,
@@ -200,5 +199,42 @@ describe('official player control contract (synthetic API)', () => {
     expect(readPlayerEvent(raw, 'test')?.seconds).toBe(8);
     expect(readPlayerEvent(raw, 'old')).toBeNull();
     expect(readPlayerEvent('{}', 'test')).toBeNull();
+  });
+});
+
+describe('retry and overlapping interruptions', () => {
+  it('resumes a retry at the last observation but replays from the assigned start', () => {
+    const h = harness(playerDocument(ID, 8, ORIGIN, 'test', 31));
+    h.ready();
+    expect(h.options().playerVars.start).toBe(31);
+    h.command({ type: 'suspend', value: false });
+    h.command({ type: 'replay' });
+    expect(h.player.seekTo).toHaveBeenCalledWith(8, true);
+  });
+  it('remembers playing intent across app pause followed by backgrounding', () => {
+    const h = harness();
+    h.ready();
+    h.command({ type: 'suspend', value: false });
+    h.command({ type: 'play' });
+    h.command({ type: 'suspend', value: true });
+    h.document.hidden = true;
+    h.visibility();
+    h.document.hidden = false;
+    h.visibility();
+    expect(h.player.playVideo).toHaveBeenCalledTimes(1);
+    h.command({ type: 'suspend', value: false });
+    expect(h.player.playVideo).toHaveBeenCalledTimes(2);
+  });
+  it('duplicate hidden observations cannot clear a pending resume', () => {
+    const h = harness();
+    h.ready();
+    h.command({ type: 'suspend', value: false });
+    h.command({ type: 'play' });
+    h.document.hidden = true;
+    h.visibility();
+    h.visibility();
+    h.document.hidden = false;
+    h.visibility();
+    expect(h.player.playVideo).toHaveBeenCalledTimes(2);
   });
 });

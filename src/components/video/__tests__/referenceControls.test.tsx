@@ -102,3 +102,32 @@ it('keeps enlargement in preparation, not over the live safety instruction', () 
   expect(s.getByTestId('follow-along-toggle')).toBeTruthy();
   s.unmount();
 });
+
+it('a retry keeps the assigned replay start separate from the recovery position', () => {
+  const s = render(<ExerciseVideo videoId="M7lc1UVf-VE" start={8} />);
+  ready();
+  act(() =>
+    mockProps.onMessage(
+      JSON.stringify({
+        scope: PLAYER_SCOPE,
+        channel: mockProps.channel,
+        state: 'playing',
+        seconds: 31,
+      })
+    )
+  );
+  act(() =>
+    mockProps.onMessage(
+      JSON.stringify({
+        scope: PLAYER_SCOPE,
+        channel: mockProps.channel,
+        state: 'error',
+        seconds: 31,
+      })
+    )
+  );
+  fireEvent.press(s.getByTestId('reference-retry'));
+  expect(mockProps.html).toContain('"start":8,');
+  expect(mockProps.html).toContain('"resumeAt":31,');
+  s.unmount();
+});
