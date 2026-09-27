@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "purpose": "Public-safe source inventory from prior authorized retrieval; not clinical instructions",
+  "originals_in_repository": false,
+  "default_state": "source_not_transferred; master_selection_and_clinical_approval_required",
+  "families": [
+    {"id":"cuff_accelerated","documents":["Rotator cuff medium small Accelerated protocol.docx"],"note":"Distinct from both standard repair and accelerated no-repair mobility; selection is a clinical decision."},
+    {"id":"cuff_standard","documents":["Rotator cuff protocol standard cuff tear.docx"],"note":"Resolve early passive/active-assisted terminology and operative modifiers."},
+    {"id":"cuff_large_slow","documents":["Rotator cuff Large tear slow protocol.docx"],"note":"Do not inherit earlier activities from other cuff families."},
+    {"id":"shoulder_no_protected_repair","documents":["Shoulder post op exercises - no cuff repair -.docx"],"note":"Existing ROM-focused source; confirm actual procedure and concomitant repairs before assignment."},
+    {"id":"anterior_stabilisation","documents":["Shoulder Stabilisation Protocol.docx"],"note":"Content is anterior-oriented; table/narrative and loading wording require reconciliation by the owner."},
+    {"id":"posterior_stabilisation","documents":["Posterior Stabilisation Protocol.docx"],"note":"A separate movement/loading restriction family; do not substitute the anterior template."},
+    {"id":"latarjet","documents":["Latarjet post op.docx","Laterjet Protocol Public.docx"],"note":"Preserve bone/soft-tissue modifiers and select the source revision."},
+    {"id":"reverse_non_fracture","documents":["Reverse shoulder protocol pvt.docx","Shoulder replacement Reverse for non fracture Protocol - Manoj .docx"],"note":"Material differences in early movement and sling instructions; master not selected."},
+    {"id":"reverse_fracture","documents":["Shoulder replacement reverse for Fracture Protocol - Private Manoj .docx"],"note":"Separate fracture/tuberosity-repair context."},
+    {"id":"anatomic_shoulder","documents":["Shoulder Anatomic replacement Protocol Manoj.docx"],"note":"Do not reuse reverse-replacement assumptions."},
+    {"id":"acl","documents":["ACL Protocol.docx","ACL Protocol.pdf"],"note":"The newer Word original was read locally and matched Dropbox's content hash; the older PDF was not substituted. Confirm graft and associated-procedure applicability."},
+    {"id":"tkr","documents":["Total Knee Replacement Exercise Protocol.docx","Total Knee Replacement Exercise Protocol -- Public.docx","Total Knee Replacement Exercise Protocol -- Public.pdf"],"note":"Preserve active, assisted and resting variants; conditional escalation needs clinical approval."},
+    {"id":"mpfl_isolated","documents":["MPFL Reconstruction Protocol.docx"],"note":"Separate from MPFL with TTO."},
+    {"id":"mpfl_tto","documents":["MPFL with TTO Physio Protocol.docx"],"note":"Brace-dependent loading and the distinction between muscle activation and joint excursion must be represented."},
+    {"id":"knee_arthroscopy","documents":["Knee Arthroscopy Patient information.docx"],"note":"Patient-information handout, not a complete phased exercise prescription; repair/cartilage/ligament procedures require different routing."},
+    {"id":"frozen_shoulder","documents":["Frozen Shoulder private.docx","Frozen Shoulder public.docx"],"note":"Archived handouts have different dosing from the owner's latest direct instruction. Do not merge them silently."}
+  ]
+}

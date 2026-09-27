@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-09-27",
+  "reviewed_application_sha": "c7ac7f3bdda47ab736553b25bdca6f4100a8f74b",
+  "items": [
+    {"id":"P01","priority":"high","kind":"reproduced_defect","status":"open_at_review","title":"Replay-safe event and occurrence identity","acceptance":"One duplicated completion cannot finish another occurrence; conflicting payloads cannot silently replace an earlier event."},
+    {"id":"P02","priority":"high","kind":"new_requirement","status":"not_implemented_at_review","title":"Daytime interval scheduling and ranged repetitions","acceptance":"Respect the approved waking window, interval anchor and repetition range; no immediate next-round invitation or accumulated catch-up dose."},
+    {"id":"P03","priority":"high","kind":"architecture_requirement","status":"needs_source_approval","title":"Bind clinical programmes to approved source revisions","acceptance":"Trace each operative restriction and exercise instruction to an approved revision; preserve amendments and explicit unresolved fields."},
+    {"id":"P04","priority":"high","kind":"architecture_requirement","status":"not_implemented_at_review","title":"Exact exercise variants and conditional precautions","acceptance":"Posture, assistance, loading, brace state and associated procedure affect assignment; unsupported measurement does not erase a clinical restriction."},
+    {"id":"P05","priority":"high","kind":"product_requirement","status":"not_implemented_at_review","title":"Learn, Do and Check","acceptance":"Watching is not activity; activity is not automatically an assessment; only qualified compatible observations enter the assessment series."},
+    {"id":"P06","priority":"medium","kind":"validation_gap","status":"not_tested","title":"Approved reference-video journey","acceptance":"Exercise-matched asset plays, enlarges, pauses and recovers from network failure; wrong assets do not silently substitute."},
+    {"id":"P07","priority":"medium","kind":"validation_gap","status":"not_tested","title":"Native, enlarged-text and older-user usability","acceptance":"Record real device and assisted/unassisted workflow results; browser fixtures and axe results alone are insufficient."},
+    {"id":"P08","priority":"medium","kind":"engineering_gap","status":"open_at_review","title":"Clean test-runner shutdown","acceptance":"The selected tests finish without forced exit or leaking timers; preserve actual exit status."},
+    {"id":"P09","priority":"high","kind":"clinical_decision","status":"blocked_clinical_decision","title":"Resolve source-version and terminology questions","acceptance":"Owner resolves the approval register without the agent averaging or guessing conflicting source instructions."},
+    {"id":"P10","priority":"medium","kind":"validation_gap","status":"not_tested","title":"Measurement repeatability and cohort evidence","acceptance":"Separate synthetic tests from independent reference measurement, repeatability and supervised clinical usability evidence."},
+    {"id":"P11","priority":"high","kind":"deployment_requirement","status":"requires_review","title":"Authenticated clinical authorization and patient-data governance","acceptance":"A setup toggle is not clinician identity; establish actual access control, consent, retention and authorized data delivery before clinical deployment."}
+  ]
+}
