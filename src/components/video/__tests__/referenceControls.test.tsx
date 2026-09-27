@@ -94,3 +94,11 @@ describe('actual reference presentation', () => {
     s.unmount();
   });
 });
+
+it('keeps enlargement in preparation, not over the live safety instruction', () => {
+  const s = render(<ExerciseVideo videoId="M7lc1UVf-VE" onHide={jest.fn()} />);
+  ready();
+  expect(s.queryByTestId('reference-enlarge')).toBeNull();
+  expect(s.getByTestId('follow-along-toggle')).toBeTruthy();
+  s.unmount();
+});

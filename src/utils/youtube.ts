@@ -1,62 +1,79 @@
-/**
- * YouTube links for exercise videos. Videos are only ever shown through
- * YouTube's official embeddable player (never downloaded or analysed), which
- * is what YouTube's terms allow.
- */
-
+/** Allowlisted YouTube links; no browser-only URL polyfill or downloaded video. */
 const ID = /^[A-Za-z0-9_-]{11}$/;
-
-/** The video id from a watch, youtu.be, shorts, embed or live link (or a bare id). */
+interface YouTubeLink {
+  host: string;
+  path: string;
+  query: string;
+}
+function link(input?: string | null): YouTubeLink | null {
+  if (typeof input !== 'string') return null;
+  const text = input.trim();
+  if (!text || /[\s\\]/.test(text)) return null;
+  if (text.includes('://') && !/^https?:\/\//i.test(text)) return null;
+  const match = text
+    .replace(/^https?:\/\//i, '')
+    .match(/^([a-z0-9.-]+)(?::(?:80|443))?(\/[^?#]*)?(?:\?([^#]*))?(?:#.*)?$/i);
+  if (!match) return null;
+  const host = match[1].toLowerCase().replace(/^(www|m|music)\./, '');
+  return ['youtube.com', 'youtube-nocookie.com', 'youtu.be'].includes(host)
+    ? { host, path: match[2] ?? '/', query: match[3] ?? '' }
+    : null;
+}
+function param(query: string, name: string): string | undefined {
+  for (const pair of query.split('&')) {
+    const split = pair.indexOf('=');
+    try {
+      const key = decodeURIComponent(
+        (split < 0 ? pair : pair.slice(0, split)).replace(/\+/g, ' ')
+      );
+      if (key === name)
+        return decodeURIComponent(
+          (split < 0 ? '' : pair.slice(split + 1)).replace(/\+/g, ' ')
+        );
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+/** Accept watch, short, live, embed and bare IDs; reject foreign hosts and credentials. */
 export function parseYouTubeId(input?: string | null): string | null {
-  const text = input?.trim();
+  if (typeof input !== 'string') return null;
+  const text = input.trim();
   if (!text) return null;
   if (ID.test(text)) return text;
-  let url: URL;
-  try {
-    url = new URL(text.includes('://') ? text : `https://${text}`);
-  } catch {
-    return null;
-  }
-  const host = url.hostname.replace(/^(www|m|music)\./, '');
-  let id: string | null = null;
-  if (host === 'youtu.be') {
-    id = url.pathname.split('/')[1] ?? null;
-  } else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
-    const [, kind, value] = url.pathname.split('/');
-    id =
-      kind === 'watch'
-        ? url.searchParams.get('v')
+  const url = link(text);
+  if (!url) return null;
+  const [, kind, value] = url.path.split('/');
+  const id =
+    url.host === 'youtu.be'
+      ? kind
+      : kind === 'watch'
+        ? param(url.query, 'v')
         : ['shorts', 'embed', 'live', 'v'].includes(kind)
-          ? value ?? null
-          : null;
-  }
+          ? value
+          : undefined;
   return id && ID.test(id) ? id : null;
 }
 
-/** The start time in seconds from a link's t= / start= parameter, if any. */
+/** Seconds in a recognised link's t/start value; malformed values are not guessed. */
 export function parseYouTubeStart(input?: string | null): number | undefined {
-  try {
-    const url = new URL(input?.includes('://') ? input : `https://${input}`);
-    const raw = url.searchParams.get('t') ?? url.searchParams.get('start');
-    if (!raw) return undefined;
-    const m = raw.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/);
-    if (!m) return undefined;
-    const seconds = Number(m[1] ?? 0) * 3600 + Number(m[2] ?? 0) * 60 + Number(m[3] ?? 0);
-    return seconds || undefined;
-  } catch {
-    return undefined;
-  }
+  const url = link(input);
+  if (!url) return undefined;
+  const raw = param(url.query, 't') ?? param(url.query, 'start');
+  if (!raw) return undefined;
+  const m = raw.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/);
+  if (!m) return undefined;
+  const seconds = Number(m[1] ?? 0) * 3600 + Number(m[2] ?? 0) * 60 + Number(m[3] ?? 0);
+  return Number.isSafeInteger(seconds) && seconds > 0 ? seconds : undefined;
 }
-
-/**
- * Official embed URL (privacy-enhanced domain). Plays inline, muted, looping,
- * with captions and without related videos from other channels.
- */
+/** Legacy pure URL builder. Controlled playback uses the official API document. */
 export function youTubeEmbedUrl(
   id: string,
   { start, autoplay = false }: { start?: number; autoplay?: boolean } = {}
 ): string {
-  const params = new URLSearchParams({
+  if (!ID.test(id)) throw new Error('Invalid YouTube ID');
+  const params: Record<string, string> = {
     playsinline: '1',
     rel: '0',
     modestbranding: '1',
@@ -64,7 +81,12 @@ export function youTubeEmbedUrl(
     playlist: id,
     cc_load_policy: '1',
     ...(autoplay ? { autoplay: '1', mute: '1' } : {}),
-    ...(start ? { start: String(start) } : {}),
-  });
-  return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
+    ...(Number.isFinite(start) && start! > 0
+      ? { start: String(Math.floor(start!)) }
+      : {}),
+  };
+  const query = Object.entries(params)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&');
+  return `https://www.youtube-nocookie.com/embed/${id}?${query}`;
 }

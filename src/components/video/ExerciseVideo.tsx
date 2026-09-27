@@ -190,6 +190,7 @@ const ExerciseVideo: React.FC<ExerciseVideoProps> = ({
         {!compact &&
           button('Replay', 'reference-replay', () => send({ type: 'replay' }), disabled)}
         {!compact &&
+          !onHide &&
           button(expanded ? 'Smaller video' : 'Enlarge video', 'reference-enlarge', () =>
             setExpanded((x) => !x)
           )}

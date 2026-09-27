@@ -403,9 +403,13 @@ const ExerciseControls: React.FC<ExerciseControlsProps> = ({
           style={[
             styles.flex,
             styles.media,
-            outOfView && !isPaused && { display: 'none' },
+            outOfView && !isPaused && { position: 'absolute', left: -10000, opacity: 0 },
           ]}
-          pointerEvents="box-none"
+          pointerEvents={outOfView && !isPaused ? 'none' : 'box-none'}
+          accessibilityElementsHidden={outOfView && !isPaused}
+          importantForAccessibility={
+            outOfView && !isPaused ? 'no-hide-descendants' : 'auto'
+          }
         >
           {media}
         </View>
