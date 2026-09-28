@@ -1,6 +1,6 @@
 {
   "schema": "physioassist-validation-matrix/1",
-  "revision": 8,
+  "revision": 9,
   "runbook_id": "ios-patient-mvp",
   "evidence_schema": {
     "required": [
@@ -777,7 +777,7 @@
       "id": "G07.V03",
       "gate": "G07",
       "required_for_gate": true,
-      "scenario": "Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. Patient result card: one large approximate value, elbow state, simple same-interval schematic, secondary previous/best with dates and one Done action. At narrow/large-text settings stack content; the diagram cannot conflate forearm rotation with bed-plane caudal alignment. Muted excluded values remain legible and reasons do not depend on colour. First/no/partial-history states avoid blank zeros or false pose.",
+      "scenario": "Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. Patient result card: one large approximate value, elbow state, simple same-interval schematic, secondary previous/best with dates and one Done action. At narrow/large-text settings stack content; the diagram cannot conflate forearm rotation with bed-plane caudal alignment. Muted excluded values remain legible and reasons do not depend on colour. First/no/partial-history states avoid blank zeros or false pose. Counterbalanced comprehension task: identify today/previous/best, elbow state, approximate/invalid and saved/unsaved, and correct next action; measure accuracy/time and confident misinterpretations before preference. Directly labelled schematic must be tested against equivalent text/numbers; no population claim from a small formative round. Test at actual viewing distance and comfortable posture without forcing the patient to watch constantly.",
       "expected": "The stated invariant holds in both positive and contrary/invalid-input controls; exact observations are retained.",
       "evidence_class": "native_media_accessibility_and_human",
       "executor": "patient_experience_owner",

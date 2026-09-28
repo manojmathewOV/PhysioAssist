@@ -1,6 +1,6 @@
 # iPhone patient MVP — remaining execution roadmap
 
-Revision 8. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
+Revision 9. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
 
 ## Delivery first; gate details on demand
 
@@ -112,16 +112,17 @@ Owner-defined shoulder capture plus patient-result presentation: conditional app
 
 ## Patient result — approximate rotation, schematic and personal history
 
-2026-09-28 Manoj selects patient-visible approximate sleeper IR, a clear schematic, previous comparable reading and best recorded value. This resolves display intent, not method/clinical activation or the numeric caudal allowance.
+2026-09-28 Manoj selects patient-visible approximate sleeper IR, a clear schematic, previous comparable reading and best recorded value. This resolves display intent, not method/clinical activation or the numeric caudal allowance. Owner clarification: minimise interpretation effort using comprehension/feedback evidence and familiar cross-domain interaction patterns; visual appeal alone is not acceptance.
 
 Read-only Check result and history; iPhone patient-only/local-first. No clinician account is required. Guided Do remains useful without measurement. Review/study builds use explicitly synthetic or governed evaluation inputs until qualification.
 
 ### Patient hierarchy
 
-- Keep the existing calm typography/card style. In order: Sleeper stretch + affected side/date; one large About X degrees value if qualified; one compact elbow-position status; explanatory schematic; secondary Last comparable check and Best recorded in this recovery rows with dates; brief variability note; one Done/Return action. Details are optional.
+- Keep the current calm native/card style. One large qualified approximate current value, directly labelled elbow state and one recognisable schematic form the main unit. Smaller previous/best rows include dates; one Done action. Keep warning, validity and save state visible rather than buried in Details. Do not expose the full measurement schema.
 - Results are available after the Check and later in My recovery, not a live maximum-to-chase during every short routine. No repeat-to-beat or retest-until-green CTA. A replay/instruction action must not bypass dose/schedule permissions.
 - Use About/Approximate with every shown angle, including history and speech. No invented decimal precision, error interval or several-degrees claim. Choose display resolution from method qualification; small numerical differences are not automatically improvement.
 - Keep current recording state separate: a valid but unacknowledged result says Not saved yet and does not enter recorded comparisons. Failure to measure or save is not personal failure or automatically completed prescribed activity.
+- Separate jobs: Learn explains setup; Do/Check live shows the one currently relevant actionable cue and existing count/time, not a bank of gauges; the post-Check card shows current rotation, schematic and previous/best. One cue is a starting product rule, not a scientifically universal feedback frequency; measure comprehension, burden and learning before choosing timing.
 
 ### Schematic without misleading geometry
 
@@ -129,6 +130,7 @@ Read-only Check result and history; iPhone patient-only/local-first. No clinicia
 - Use a side-lying outline for orientation, a clear forearm rotation indication and a separate elbow/shoulder-level alignment inset or labelled view. Do not draw IR and caudal deviation as if they were the same planar angle. Preserve affected-side and mirroring conventions; the pillow is only an instructional cue.
 - Default to the current result. Optional comparison may show one earlier compatible result with solid/dashed lines and labels; do not stack current/previous/best/target on one small drawing. Any historical drawing retains its own elbow position and interval; a historical forearm cannot be combined with today's best elbow.
 - Never use a best-value arc or permitted drift band as a target to fill. Freeze the post-Check schematic instead of chasing frame noise; no trophy, flashing record, forced animation or falling-score effect. Unknown result segments are omitted/labelled, while instructional drawings remain clearly instructional.
+- Use direct labels beside the relevant body part, fixed spatial relationships and a stable affected-side convention. The main sketch need not quantitatively encode every variable: use the number for approximate rotation and an elbow marker/status for position, with a separate labelled plane/detail only when needed. No animated 3D orbit, perspective puzzle, legend lookup or multiple simultaneous ghosts. The schematic remains visible; test its added comprehension against the same text/numbers without it.
 
 ### Comparable previous and best
 
@@ -152,6 +154,7 @@ Read-only Check result and history; iPhone patient-only/local-first. No clinicia
 - Support the existing native text scaling, high contrast and Reduce Motion preferences. On narrow phones stack previous/best rows and schematic panels; enlarge/replay has a named reachable control. No clipping the unit, About qualifier, safety reason, Pause/Stop or Done to fit decoration.
 - One explicit Hear result action may read a concise ordered summary using the existing speech/VoiceOver ownership logic; do not add a second voice, read every animation frame or queue target/personal-best praise over a warning.
 - Usability acceptance: an older or lower-digital-confidence participant can explain which reading is current, which is previous/best, why a number was excluded, and that best is not a target. Missing data are not failure; no clinician monitoring or transmission is implied.
+- A sparse screen can still be confusing. Test the meaning of near shoulder level, elbow moved and position not clear with both words and spatial cue. Silence is not proof of correct technique; loss of tracking changes the observable state, not merely the colour. Preserve camera-free permitted participation and one-owner spoken guidance without forcing head turning or reaching during a lying exercise.
 
 ### Result states
 
@@ -164,6 +167,39 @@ Read-only Check result and history; iPhone patient-only/local-first. No clinicia
 | first_compatible_check | First comparable check; do not manufacture a previous value or improvement. If today is also the only best, avoid duplicate tiles. Later equal displayed values receive no New best badge. |
 
 **Delivery order:** Keep S2a camera-optional Do -> S2b durable recording -> S2c reopen/progress. Add held-interval quantitative observation support in bounded commits with explicit output validity, not by passing a hold into a repetition-only detector. Build result selector and schematic with synthetic fixtures before the study; numerical patient activation waits for approved method/allowance, reference validation and usable repeatability. The next change is application code, not more sleeper research.
+
+## Comprehension-led mobile presentation
+
+The patient can identify the relevant body part, understand the current state and know the next permitted action without calculating an angle difference, decoding a legend or remembering another screen.
+
+Studies below concern medication information, research consent and different motor tasks; product manuals describe interfaces, not their causal effect. None establishes minimum cognitive load or clinical success for this sleeper-stretch screen.
+
+**Borrow patterns, not whole interfaces:**
+- Apple Maps: next relevant instruction plus optional speech; borrow action timing, not route complexity or uninterrupted background activity. PhysioAssist pauses appropriately and keeps safety precedence.
+- Apple Measure/Level: visible alignment instead of mental angle subtraction; borrow the spatial relationship, not exact-zero/perfection or green-as-safe semantics. The approved leeway and unknown state remain separate.
+- Apple Weather: current observation first, context and details below. Borrow hierarchy, not forecast certainty, decorative animation or a normal-range scale for rehabilitation.
+- Hinge Health: accessible replay/pause and a camera-free continuation route. Do not import its prescriptions, whole-body framing, adjustment rules, streaks or copied artwork.
+
+Use one stable current schematic and direct text labels. A second comparison rendering is optional and must beat the simpler card on understanding before becoming default. Never remove approximate/invalid/save-state meaning to achieve visual minimalism.
+
+**Test understanding before preference:**
+- Compare counterbalanced equivalent scenarios: A same meaningful text/numbers; B those data plus directly labelled schematic; optional C adds one prior overlay. Use the same clinical information and varying example values so recall/order do not favour an option.
+- Ask which is today, whether the elbow moved, whether the result is measured/saved/comparable, and whether best is a record or an instruction to stretch further. Include first result, missing tracking, excluded angle, nearly equal readings, a lower reading and incomplete history.
+- Record interpretation accuracy, time to the correct answer, unprompted next action, assistance/reaching/head-turn burden and later recall; ask preference/confidence separately, then look for confidently wrong answers. A brief five-second glance is optional formative diagnosis, not a medical acceptance cutoff.
+- Use actual supported iPhone/text sizes at the intended viewing distance and comfortable posture, including low digital/graph confidence, reduced vision/hearing and caregiver setup. Early 5-8-person iterations are a proposal to find defects, not statistical validation or an age-based simplified mode.
+- Any interpretation that a best record is a target, missing means zero, an unassessable elbow is safe, or unsaved means saved triggers redesign and retest. No issue observed in a small round is not proof of population safety.
+
+This is one refinement of existing G07.V03, not another study programme or prerequisite to synthetic UI/code implementation. No new clinical thresholds, phase changes or performance claims.
+
+**Primary studies and product descriptions:**
+- Morrow1998 (primary_experiment): Integrated timeline icons improved speed/accuracy of medication-information comprehension; less integrated icons did not show the same benefit. Supports removing inference, not adding decoration. https://pubmed.ncbi.nlm.nih.gov/9679516/
+- Politi2026 (primary_randomized_trial): 422 valid responses: 69.4% preferred the icon/visual version after seeing alternatives, but randomized versions showed no significant knowledge/satisfaction/engagement benefit. Hypothetical research consent, not rehabilitation; preference is not comprehension. https://pmc.ncbi.nlm.nih.gov/articles/PMC13124231/
+- Goodwin2018 (primary_randomized_motor_task): 21 older adults: reduced/absent concurrent feedback plus terminal feedback outperformed always-concurrent feedback on two-day balance retention. Small task-specific study; not a blanket ban on live guidance. https://pubmed.ncbi.nlm.nih.gov/30193556/
+- Wishart2002 (primary_motor_learning): Older adults learning a bimanual pattern benefited from concurrent visual feedback; reinforces task-dependent timing rather than a universal least-feedback policy. https://pubmed.ncbi.nlm.nih.gov/12102108/
+- Maps (official_product_manual): Turn-by-turn spoken instructions and audio controls. Borrow a timely actionable instruction and speech, not claim this proves a rehabilitation UI. https://support.apple.com/guide/iphone/iphd3c85c193/ios
+- Measure (official_product_manual): Level display maps spatial alignment to a visual state and approximate degrees. Do not copy zero-tolerance or colour-only success. https://support.apple.com/guide/iphone/iphbd435673d/ios
+- Weather (official_product_manual): Current temperature precedes high/low and future detail. Borrow information hierarchy, not a clinical normal range or recovery forecast. https://support.apple.com/guide/iphone/iph1ac0b35f/ios
+- Hinge (official_product_manual): Replay instructions, pause/audio/captions and camera-free continuation. Useful mechanics only; its dosage, gamification and clinical model are not copied. https://www.hingehealth.com/user-manual/
 
 **E0 — Integrated engineering baseline:** One reproducible reviewed development baseline; no patient/release claim.
 
@@ -419,7 +455,7 @@ Read-only Check result and history; iPhone patient-only/local-first. No clinicia
 **Required validation:**
 - **G07.V01** Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback. App Pause also pauses the player; Hide/Show preserves position; the viewport and native identity satisfy the selected provider contract; unavailable/blocked/autoplay-denied states recover truthfully. Separately qualify the three reference paths and forbid YouTube-frame extraction.
 - **G07.V02** Speech identifies the next movement and dose without forcing a floor-exercising patient to reach for the phone.
-- **G07.V03** Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. Patient result card: one large approximate value, elbow state, simple same-interval schematic, secondary previous/best with dates and one Done action. At narrow/large-text settings stack content; the diagram cannot conflate forearm rotation with bed-plane caudal alignment. Muted excluded values remain legible and reasons do not depend on colour. First/no/partial-history states avoid blank zeros or false pose.
+- **G07.V03** Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. Patient result card: one large approximate value, elbow state, simple same-interval schematic, secondary previous/best with dates and one Done action. At narrow/large-text settings stack content; the diagram cannot conflate forearm rotation with bed-plane caudal alignment. Muted excluded values remain legible and reasons do not depend on colour. First/no/partial-history states avoid blank zeros or false pose. Counterbalanced comprehension task: identify today/previous/best, elbow state, approximate/invalid and saved/unsaved, and correct next action; measure accuracy/time and confident misinterpretations before preference. Directly labelled schematic must be tested against equivalent text/numbers; no population claim from a small formative round. Test at actual viewing distance and comfortable posture without forcing the patient to watch constantly.
 - **G07.V04** Camera problem plus precaution plus praise selects one correct visual/spoken message consistently.
 - **G07.V05** Corrupt, missing, wrong-variant or unavailable video cannot silently substitute another movement; approved text/audio fallback is clear.
 - **G07.V06** Dynamic Type, VoiceOver and Voice Control traverse a complete native routine with reachable Stop/Pause. Compact counts retain accessible role/value; iOS requires its native announcement route, not Android liveRegion alone. Test app speech on/off, warnings, pause/background, listener cleanup and no per-second hold chatter. Post-Check text/schematic/date/approximate and eligibility labels are equivalent for VoiceOver; Hear result uses the existing single-owner speech path and no frame-by-frame or duplicate announcement. Reduced motion and named enlarge controls retain every essential result.

@@ -1,7 +1,7 @@
 {
   "schema": "physioassist-runbook-status/1",
   "runbook_id": "ios-patient-mvp",
-  "runbook_revision": 8,
+  "runbook_revision": 9,
   "current_gate": "G05",
   "overall": "review_reconciled_shoulder_camera_optional_delivery_next",
   "implementation_sha": "4c8b20d14cf923d1501e54f2700376f9fcb9870d",

@@ -1,6 +1,6 @@
-# iPhone patient MVP — execution runbook v8
+# iPhone patient MVP — execution runbook v9
 
-One roadmap, continuous with G00-G10. Revision 8 narrows the sleeper requirement to the owner-confirmed shoulder-level/90-degree variant with caudal leeway, and retains the owner-relayed Claude review and practical lying-shoulder capture requirements within the existing five delivery slices. One complete shoulder journey is next. The wider G00-G10 detail remains available behind the compact pickup. It does not implement the remaining features or approve clinical protocols.
+One roadmap, continuous with G00-G10. Revision 9 narrows the sleeper requirement to the owner-confirmed shoulder-level/90-degree variant with caudal leeway, and retains the owner-relayed Claude review and practical lying-shoulder capture requirements within the existing five delivery slices. One complete shoulder journey is next. The wider G00-G10 detail remains available behind the compact pickup. It does not implement the remaining features or approve clinical protocols.
 
 **Start:** [ACTIVE.md](ACTIVE.md) is the compact generated pickup; [STATUS.json](STATUS.json) is its sole current-state source and names the current gate/work item. [RUNBOOK.md](RUNBOOK.md) is the readable progression. [TEST_MATRIX.md](TEST_MATRIX.md) binds every planned acceptance scenario to a stable ID and evidence class. [PROGRESSION.md](PROGRESSION.md) defines movement between states and endpoints.
 
@@ -28,3 +28,5 @@ Latest scope correction: approximate sleeper IR is a conditional measurement tar
 Quantitative sleeper refinement: [paired angle/elbow computation study](../../research/2026-09-28-sleeper-elbow-drift/README.md). Twenty synthetic geometry tests and a scoped production aggregation probe, not live measurement validation. The active S2a interaction task is unchanged.
 
 Patient-result decision is selected: see the generated RUNBOOK section **Patient result** for approximate rotation, same-interval schematic, previous compatible Check and scoped best. It is passive information, not a treatment target. S2a code remains the next task; this is a narrow upgrade to existing criteria, not a new study or roadmap.
+
+Patient presentation now has a comprehension-led contract within `patient_feedback.comprehension`: direct spatial labels, context-specific feedback, familiar navigation/alignment/current-value patterns, and tests of correct understanding rather than visual preference. It changes no clinical threshold or activation.

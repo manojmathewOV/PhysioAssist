@@ -10,6 +10,8 @@ Manoj permits a conditional approximate sleeper internal-rotation estimate along
 
 Updated 2026-09-28. Scope: **iPhone patient-only, local-first MVP**. Surgeon/physio backend, monitoring and clinical cloud sync remain future scope.
 
+The patient result retains approximate IR, schematic and previous/best, now with an evidence-backed low-interpretation design contract and counterbalanced comprehension checks. No screen or detector is implemented by this specification update; S2a code remains the next delivery.
+
 ## Ownership and basis
 
 - Claude implementation is frozen at `6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84`. Its final handover is [here](responses/2026-09-27-6bc4d77-claude-final-handover.md). Claude is independent reviewer unless explicitly reassigned.

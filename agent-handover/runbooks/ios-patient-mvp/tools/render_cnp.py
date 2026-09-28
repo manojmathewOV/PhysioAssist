@@ -66,6 +66,9 @@ def markdown(m,vm,state):
   lines+=['### Result states','','| State | Required presentation |','|---|---|']
   lines+=['| '+x['state']+' | '+x['display'].replace('|',' / ')+' |' for x in feedback['states']]
   lines+=['','**Delivery order:** '+feedback['delivery'],'']
+ if capture and capture.get('patient_feedback',{}).get('comprehension'):
+  q=capture['patient_feedback']['comprehension']
+  lines+=['## Comprehension-led mobile presentation','',q['target'],'',q['evidence_boundary'],'','**Borrow patterns, not whole interfaces:**']+['- '+x for x in q['patterns']]+['',q['presentation_test'],'','**Test understanding before preference:**']+['- '+x for x in q['evaluation']]+['',q['scope'],'','**Primary studies and product descriptions:**']+['- '+x['id']+' ('+x['kind']+'): '+x['finding']+' '+x['url'] for x in q['sources']]+['']
  for ep in m['endpoints']:lines+=['**'+ep['id']+' — '+ep['name']+':** '+ep['meaning'],'']
  for g in m['gates']:
   lines+=['## '+g['id']+' — '+g['title'],'','**Outcome:** '+g['outcome'],'','**Closure requires:** '+(', '.join(g['depends_on']) or 'No prior gate')+'. **Executor:** '+g['owner']+'. **Acceptor:** '+g['acceptance']['acceptor']+'.','', '**Next bounded work:** '+g['next_work_item']['candidate_action'],'','**Remaining work:**']
