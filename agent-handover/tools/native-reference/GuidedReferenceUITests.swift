@@ -6,7 +6,8 @@ final class ReferenceUITests: XCTestCase {
  func tap(_ id: String) {
   for _ in 0..<24 {
    let e=item(id)
-   if e.exists && e.isHittable { e.tap(); return }
+   if e.exists && !e.isEnabled { Thread.sleep(forTimeInterval:0.25); continue }
+   if e.exists && e.isHittable && e.isEnabled { e.tap(); return }
    let middle=app.coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:0.48))
    let to=app.coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:(e.exists && e.frame.minY < 70) ? 0.73 : 0.23))
    middle.press(forDuration:0.1,thenDragTo:to)
@@ -86,7 +87,12 @@ final class ReferenceUITests: XCTestCase {
   let heldPause=item("guided-time").label
   XCUIDevice.shared.press(.home);Thread.sleep(forTimeInterval:2);app.activate()
   XCTAssertEqual(item("guided-time").label,heldPause)
+  let resumeReady=NSPredicate(format:"enabled == true AND label == 'Resume'")
+  expectation(for:resumeReady,evaluatedWith:item("guided-pause"));waitForExpectations(timeout:10)
+  Thread.sleep(forTimeInterval:0.5) // Let foreground transition settle; not therapeutic rest.
   tap("guided-pause")
+  let resumed=NSPredicate(format:"label == 'Pause'")
+  expectation(for:resumed,evaluatedWith:item("guided-pause"));waitForExpectations(timeout:3)
   let secondHold=NSPredicate(format:"label CONTAINS '2 hold timers finished'")
   expectation(for:secondHold,evaluatedWith:item("guided-hold-time"));waitForExpectations(timeout:15)
   XCTAssertFalse(item("guided-pause").exists)

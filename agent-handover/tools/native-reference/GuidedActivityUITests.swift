@@ -6,7 +6,8 @@ final class ReferenceUITests: XCTestCase {
  func tap(_ id: String) {
   for _ in 0..<24 {
    let e=item(id)
-   if e.exists && e.isHittable { e.tap(); return }
+   if e.exists && !e.isEnabled { Thread.sleep(forTimeInterval:0.25); continue }
+   if e.exists && e.isHittable && e.isEnabled { e.tap(); return }
    let middle=app.coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:0.48))
    let to=app.coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:(e.exists && e.frame.minY < 70) ? 0.73 : 0.23))
    middle.press(forDuration:0.1,thenDragTo:to)
