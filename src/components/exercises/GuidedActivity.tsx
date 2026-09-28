@@ -182,9 +182,9 @@ export default function GuidedActivity({
                 tone={saveStatus === 'failed' ? 'warning' : 'info'}
                 message={
                   saveStatus === 'saved'
-                    ? 'Saved on this device. Your report is not a camera measurement.'
+                    ? 'Saved on this device.'
                     : saveStatus === 'failed'
-                      ? 'Saving could not be confirmed. This activity is not counted yet. Try saving again.'
+                      ? 'Not saved yet. Try saving again.'
                       : 'Saving your activity… It is not counted until saving is confirmed.'
                 }
                 testID="guided-save-state"
