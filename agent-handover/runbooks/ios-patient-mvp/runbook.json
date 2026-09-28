@@ -1,7 +1,7 @@
 {
   "schema": "physioassist-portable-runbook/1",
   "id": "ios-patient-mvp",
-  "revision": 5,
+  "revision": 6,
   "prepared_date": "2026-09-27",
   "claim": "declaration_only_no_implementation_or_clinical_acceptance",
   "authority": {
@@ -475,7 +475,7 @@
       ],
       "acceptance_tests": [
         "Learn -> Do -> interrupted Do -> incomplete Check -> valid Check -> later compatible comparison, using the same profile/episode.",
-        "Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not failed rehabilitation. Sleeper can issue clearly approximate IR only with a qualified method, known angle reference and sufficient view/interval; otherwise no number, not zero. Approximate result and drift observability are separate. Stable but wrong setup does not prove technique; an arbitrary starting pose is not zero IR.",
+        "Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not failed rehabilitation. Sleeper can issue clearly approximate IR only with a qualified method, known angle reference and sufficient view/interval; otherwise no number, not zero. Approximate result and drift observability are separate. Stable but wrong setup does not prove technique; an arbitrary starting pose is not zero IR. Continuous elbow data distinguish measured-zero/below-alert, unobservable and not-applicable; unknown depth or missing wrist cannot manufacture a normal paired result.",
         "Dose/schedule changes preserve compatible methods; assistance/method changes separate comparison or mark incompatibility.",
         "Goal, clinical restriction and demonstrator endpoint remain three separate quantities.",
         "Watching or a simulated demonstration never becomes completed treatment or a clinical measurement.",
@@ -740,8 +740,8 @@
         "Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims. Sleeper approximate IR requires independent reference testing of its exact angle definition and practical bedside view; check camera pitch/roll, both sides, elbow/wrist substitutes, torso drift, occlusion and repositioning. Distinguish absolute IR from change relative to setup; no unvalidated numeric error claim.",
         "A method change cannot silently present the same measurement-method version or turn simulation success into clinical accuracy.",
         "More noisy repetitions without changed true endpoints cannot justify an automatic improvement claim; report selection policy and sample basis.",
-        "Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. Include stand movement, mattress compression, mirrored sides, initial prescribed roll, assistance and partial occlusion; rebaseline camera movement rather than label it patient drift.",
-        "Chosen endpoint with poor tracking is withheld even if the rest of the session has high visibility.",
+        "Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. Include stand movement, mattress compression, mirrored sides, initial prescribed roll, assistance and partial occlusion; rebaseline camera movement rather than label it patient drift. Match the initial upper-arm/torso setup across days as well as within-session drift. A session baseline must catch cumulative elbow migration that per-repetition resetting hides. Include pure rotation, combined shoulder/elbow translation and camera/torso motion controls.",
+        "Chosen endpoint with poor tracking is withheld even if the rest of the session has high visibility. Pair the endpoint IR with elbow displacement and upper-arm direction from that same interval, not independent maxima/minima. Preserve numerical values/units/coverage through history, including held Checks; below-alert observations do not disappear into the warning list.",
         "Thirty repeated camera cycles release resources; memory/low-storage/model failure gives an honest safe fallback, not another app reload loop.",
         "Structured synthetic appointment export round-trips meaning, units, unknowns, correction links and version; unavailable is not zero."
       ],
@@ -1298,7 +1298,7 @@
         "variant": "Sleeper stretch",
         "position": "Raised bedside compromise; no required overhead rig",
         "intent": "Candidate approximate internal rotation from forearm orientation in the prescribed sleeper setup, with visible torso roll, elbow migration/upper-arm repositioning and elbow-bend changes assessed separately. A prescribed initial roll is not drift; stillness alone does not validate setup.",
-        "output": "Approximate internal rotation may be displayed when this variant, angle reference, camera view and contributing interval support the qualified method. Otherwise withhold the number and retain useful observable drift/guidance. No claim of exact isolated glenohumeral ROM, scapular fixation, capsule tension or force."
+        "output": "Approximate internal rotation may be displayed when this variant, angle reference, camera view and contributing interval support the qualified method. Otherwise withhold the number and retain useful observable drift/guidance. No claim of exact isolated glenohumeral ROM, scapular fixation, capsule tension or force. Quantitative elbow drift is a separate same-interval observation; retain magnitude, direction, units, validity and baseline for temporal comparison."
       }
     ],
     "common": [
@@ -1311,7 +1311,23 @@
       "Sleeper estimate and compensation checks are complementary, not mutually exclusive. A practical raised bedside view looking approximately along the upper arm is a candidate; overhead capture is not required. Generic bedside placement alone does not qualify a numerical result.",
       "Define the anatomical/measurement reference and rotation direction. Elbow-to-wrist forearm orientation is the candidate input, not shoulder-elbow-wrist elbow flexion, hand height or wrist bending. An arbitrary restricted starting pose must not be relabelled zero internal rotation; without a known reference report only a distinctly labelled change, or no number.",
       "Show approximate status beside the value and preserve it in history/export. Keep variant, side, assistance, view, reference and estimator identity for comparisons. Camera movement or material position drift can invalidate the contributing interval; never present an old value as current or missing as zero. Do not use an approximate value to authorise progression, safety limits or greater force.",
-      "Validate against an independent reference using the exact variant, both sides, practical view offsets, restricted ranges, support/occlusion and repeated phone setup. Reference error, false cues, issued-result coverage and unavailable results belong together. No fixed error bound or extra clinical hold duration is specified here."
-    ]
+      "Validate against an independent reference using the exact variant, both sides, practical view offsets, restricted ranges, support/occlusion and repeated phone setup. Reference error, false cues, issued-result coverage and unavailable results belong together. No fixed error bound or extra clinical hold duration is specified here.",
+      "Compute elbow displacement relative to the torso and upper-arm direction change as continuous outputs, paired with the same endpoint interval as approximate IR. Preserve session baseline and starting posture across days; do not reduce temporal data to warning counts. See ../../research/2026-09-28-sleeper-elbow-drift/README.md for tested geometry and current data-loss-at-aggregation gap."
+    ],
+    "quantitative_elbow_drift": {
+      "source": "Manoj clarification 2026-09-28: sleeper angles are useful for temporal comparison; elbow drift must also be analysed and computed.",
+      "observations": [
+        "Torso-referenced elbow displacement vector/magnitude in a named normalized unit; projected dimensions explicitly marked",
+        "Upper-arm direction/elevation-plane change; shoulder displacement relative to torso kept separate",
+        "Elbow bend and torso orientation separately observable",
+        "Approximate IR and elbow measures from the same contributing endpoint interval"
+      ],
+      "baseline": "Retain a session setup and each repetition baseline; save starting posture across days. No silent ratcheting reset; verify body-frame anchors and camera reference.",
+      "validity": "Continuous values are distinct from cue thresholds. Valid below-threshold, unobservable and not-applicable are different; null cannot stand for all three in a quantitative record.",
+      "comparability": "Keep method, side, variant, assistance, starting posture, dimensionality, baseline ID and interval visibility. No maximum angle paired with minimum drift from another interval; no angle-minus-drift correction.",
+      "integration_gap": "Current aggregate drops CompensationHit magnitude/unit/duration and the held-assessment path bypasses detectors. Sleeper needs a quantitative observation channel through stored history, not only warning findings.",
+      "research_ref": "../../research/2026-09-28-sleeper-elbow-drift/README.md",
+      "activation": "Not a live detector, warning cutoff or clinical prescription; S2a interaction remains active."
+    }
   }
 }

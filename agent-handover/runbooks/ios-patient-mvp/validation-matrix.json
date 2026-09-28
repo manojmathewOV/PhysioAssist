@@ -1,6 +1,6 @@
 {
   "schema": "physioassist-validation-matrix/1",
-  "revision": 5,
+  "revision": 6,
   "runbook_id": "ios-patient-mvp",
   "evidence_schema": {
     "required": [
@@ -551,7 +551,7 @@
       "id": "G05.V02",
       "gate": "G05",
       "required_for_gate": true,
-      "scenario": "Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not failed rehabilitation. Sleeper can issue clearly approximate IR only with a qualified method, known angle reference and sufficient view/interval; otherwise no number, not zero. Approximate result and drift observability are separate. Stable but wrong setup does not prove technique; an arbitrary starting pose is not zero IR.",
+      "scenario": "Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not failed rehabilitation. Sleeper can issue clearly approximate IR only with a qualified method, known angle reference and sufficient view/interval; otherwise no number, not zero. Approximate result and drift observability are separate. Stable but wrong setup does not prove technique; an arbitrary starting pose is not zero IR. Continuous elbow data distinguish measured-zero/below-alert, unobservable and not-applicable; unknown depth or missing wrist cannot manufacture a normal paired result.",
       "expected": "The stated invariant holds in both positive and contrary/invalid-input controls; exact observations are retained.",
       "evidence_class": "native_patient_journey",
       "executor": "patient_app_owner",
@@ -931,7 +931,7 @@
       "id": "G08.V06",
       "gate": "G08",
       "required_for_gate": true,
-      "scenario": "Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. Include stand movement, mattress compression, mirrored sides, initial prescribed roll, assistance and partial occlusion; rebaseline camera movement rather than label it patient drift.",
+      "scenario": "Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. Include stand movement, mattress compression, mirrored sides, initial prescribed roll, assistance and partial occlusion; rebaseline camera movement rather than label it patient drift. Match the initial upper-arm/torso setup across days as well as within-session drift. A session baseline must catch cumulative elbow migration that per-repetition resetting hides. Include pure rotation, combined shoulder/elbow translation and camera/torso motion controls.",
       "expected": "The stated invariant holds in both positive and contrary/invalid-input controls; exact observations are retained.",
       "evidence_class": "reference_measurement_and_physical_device",
       "executor": "measurement_owner",
@@ -945,7 +945,7 @@
       "id": "G08.V07",
       "gate": "G08",
       "required_for_gate": true,
-      "scenario": "Chosen endpoint with poor tracking is withheld even if the rest of the session has high visibility.",
+      "scenario": "Chosen endpoint with poor tracking is withheld even if the rest of the session has high visibility. Pair the endpoint IR with elbow displacement and upper-arm direction from that same interval, not independent maxima/minima. Preserve numerical values/units/coverage through history, including held Checks; below-alert observations do not disappear into the warning list.",
       "expected": "The stated invariant holds in both positive and contrary/invalid-input controls; exact observations are retained.",
       "evidence_class": "reference_measurement_and_physical_device",
       "executor": "measurement_owner",

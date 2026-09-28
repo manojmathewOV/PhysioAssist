@@ -1,5 +1,5 @@
 {
-  "revision": 5,
+  "revision": 6,
   "role": "portable plan files, not implementation evidence acceptance",
   "files": [
     {
@@ -19,8 +19,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "1fe2d87e2be0bd267946cb965363a35b9ec937d464cc27efd93e4a77229ab7e1",
-      "bytes": 2857
+      "sha256": "313a2f75266013572963e3a6fd63e9c3a62dd46a108b9b4694423b755c755062",
+      "bytes": 3142
     },
     {
       "path": "RESEARCH.md",
@@ -29,23 +29,23 @@
     },
     {
       "path": "ROADMAP.cnp",
-      "sha256": "ffd3a1a679a8d25c35d0a87b19aa595b247634414464d9a94d5980678e0feb69",
-      "bytes": 103847
+      "sha256": "4f13f2f47ee728f1c3d21e926ab554352f9bba942ea55bd76555be974df1b191",
+      "bytes": 104558
     },
     {
       "path": "RUNBOOK.md",
-      "sha256": "b666356df90ca8dfe7d3510e15f893883a05e6866e7bf4e9e46a2a6962b90967",
-      "bytes": 48188
+      "sha256": "df751a6ec7cf2e5233142237233a5fc663e2c56ba6964daa73541d84ef9c5688",
+      "bytes": 49440
     },
     {
       "path": "STATUS.json",
-      "sha256": "565a763e0389d6ba0078cc8dcb60b8b21b1748f7fddaf00da6eef9bb8729aeb8",
+      "sha256": "01ac45505ec15f04032c6cace927eca635cda44f8d46e2f5bed9ec6995211435",
       "bytes": 9303
     },
     {
       "path": "TEST_MATRIX.md",
-      "sha256": "2f766c0c1a4623493629d4ddf9ed01a3410cb09a3bc2824d26ff4dec95d666b1",
-      "bytes": 17087
+      "sha256": "d4a3f92340fcbe8760ff20831868f7da55759e6faa5a636f53cb80e3c750c0c0",
+      "bytes": 17798
     },
     {
       "path": "evidence/CCORE_TOOLING.md",
@@ -84,8 +84,8 @@
     },
     {
       "path": "runbook.json",
-      "sha256": "9435cb9c7d22f7d6aee76e37fadb6dca42979f35caf92ce036bd68fa10dd9854",
-      "bytes": 89452
+      "sha256": "55f91ca8625b10e2b838f8062047c5dbc34c92a3f07256dd6e4288535418da9e",
+      "bytes": 92390
     },
     {
       "path": "tools/check_matrix.py",
@@ -104,8 +104,8 @@
     },
     {
       "path": "validation-matrix.json",
-      "sha256": "90d4f81b56d1d2e4c8bdcb498e932ab02fcfd69eabea6f749239a3faf013d694",
-      "bytes": 75243
+      "sha256": "11b61b7be64b142e6152656ae356c598f6f01c87ed9f5ab1f863137cd2b5dd11",
+      "bytes": 75954
     }
   ]
 }

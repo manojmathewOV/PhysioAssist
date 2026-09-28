@@ -66,3 +66,7 @@ Latest receiving pickup: `18f0139` fixes retry/overlapping interruptions; `12a48
 [Merge evidence](evidence/2026-09-28-main-integration/merge.json) records exact ancestry, fresh clean baseline tests and green hosted Checks/iOS. The older 0024f87 source remains unchanged in history; later retry/tooling changes are separate commits. No force, reset, branch deletion or fabricated independent approval was used.
 
 PR #29 corrects the Release screen promising unavailable practice. [Response](responses/2026-09-28-no-camera-recovery.md) records 1,651 passing tests/four opt-in skipped and an actual native no-camera/Back test plus inspected screenshot. This does not complete camera-optional Do or the still-blocked full native live reference test. Claude may review the published safety, storage and player deltas now; the implementing agent has not accepted its own gates.
+
+## Sleeper quantitative observation clarification
+
+Approximate IR and elbow drift are paired temporal observations, not a single angle or a binary warning. See [computed geometry and source audit](research/2026-09-28-sleeper-elbow-drift/README.md). Known ideal-geometry tests are not camera accuracy. Runbook6 retains the same gates/criteria and S2a pickup; no clinical threshold or patient detector is activated.

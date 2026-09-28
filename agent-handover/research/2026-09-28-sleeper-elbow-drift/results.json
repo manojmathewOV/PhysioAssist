@@ -1,0 +1,122 @@
+{
+  "scope": "Exact synthetic 3-D geometry, not RGB inference or clinical accuracy",
+  "cases": {
+    "rotation_30_to_50_fixed_elbow": {
+      "approximate_ir_deg": 50.00000000000001,
+      "elbow_drift_pct_torso": 0.0,
+      "elbow_drift_vector_pct_torso": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "shoulder_drift_pct_torso": 0.0,
+      "upper_arm_direction_change_deg": 0.0,
+      "elbow_flexion_deg": 90.0,
+      "torso_orientation_change_deg": 0.0,
+      "reason": null
+    },
+    "upper_arm_swing_10_same_IR_and_length": {
+      "approximate_ir_deg": 29.999999999999993,
+      "elbow_drift_pct_torso": 10.458689129718984,
+      "elbow_drift_vector_pct_torso": [
+        -0.9115348192675232,
+        10.418890660015823,
+        0.0
+      ],
+      "shoulder_drift_pct_torso": 0.0,
+      "upper_arm_direction_change_deg": 9.999999999999975,
+      "elbow_flexion_deg": 89.99999999999999,
+      "torso_orientation_change_deg": 0.0,
+      "reason": null
+    },
+    "shoulder_and_elbow_shift_2_5cm_synthetic_only": {
+      "approximate_ir_deg": 29.999999999999993,
+      "elbow_drift_pct_torso": 5.000000000000004,
+      "elbow_drift_vector_pct_torso": [
+        0.0,
+        -5.000000000000004,
+        0.0
+      ],
+      "shoulder_drift_pct_torso": 5.000000000000004,
+      "upper_arm_direction_change_deg": 0.0,
+      "elbow_flexion_deg": 90.0,
+      "torso_orientation_change_deg": 0.0,
+      "reason": null
+    },
+    "body_turn_20_no_relative_elbow_movement": {
+      "approximate_ir_deg": 30.000000000000004,
+      "elbow_drift_pct_torso": 1.570092458683775e-14,
+      "elbow_drift_vector_pct_torso": [
+        1.1102230246251565e-14,
+        1.1102230246251565e-14,
+        0.0
+      ],
+      "shoulder_drift_pct_torso": 1.2412670766236365e-14,
+      "upper_arm_direction_change_deg": 0.0,
+      "elbow_flexion_deg": 90.0,
+      "torso_orientation_change_deg": 19.999999999999993,
+      "reason": null
+    },
+    "zoom_1_8_and_translation_no_patient_change": {
+      "approximate_ir_deg": 30.00000000000001,
+      "elbow_drift_pct_torso": 1.1102230246251565e-14,
+      "elbow_drift_vector_pct_torso": [
+        0.0,
+        1.1102230246251565e-14,
+        0.0
+      ],
+      "shoulder_drift_pct_torso": 1.1102230246251565e-14,
+      "upper_arm_direction_change_deg": 0.0,
+      "elbow_flexion_deg": 90.0,
+      "torso_orientation_change_deg": 0.0,
+      "reason": null
+    },
+    "wrist_hidden_but_elbow_drift_visible": {
+      "approximate_ir_deg": null,
+      "elbow_drift_pct_torso": 10.458689129718984,
+      "elbow_drift_vector_pct_torso": [
+        -0.9115348192675232,
+        10.418890660015823,
+        0.0
+      ],
+      "shoulder_drift_pct_torso": 0.0,
+      "upper_arm_direction_change_deg": 9.999999999999975,
+      "elbow_flexion_deg": null,
+      "torso_orientation_change_deg": 0.0,
+      "reason": null
+    },
+    "camera_moved_requires_new_reference": {
+      "approximate_ir_deg": null,
+      "elbow_drift_pct_torso": null,
+      "elbow_drift_vector_pct_torso": null,
+      "shoulder_drift_pct_torso": null,
+      "upper_arm_direction_change_deg": null,
+      "elbow_flexion_deg": null,
+      "torso_orientation_change_deg": null,
+      "reason": "camera_reference_changed"
+    }
+  },
+  "depth_blindness": {
+    "projected_2d_elbow_drift": 0.0,
+    "true_synthetic_3d_pct_torso": 8.0,
+    "meaning": "2-D no visible drift cannot establish 3-D stability; this is not a physiologically isolated movement model."
+  },
+  "baseline_ratchet": {
+    "per_rep_reset_deg": 4.999999999999919,
+    "session_baseline_deg": 9.999999999999975
+  },
+  "units": "Distances are percent of a defined synthetic torso reference; cm in fixture name is not a monocular calibration claim.",
+  "thresholds": "No clinical thresholds or dose recommendations; interval gap is explicit synthetic input.",
+  "limitations": [
+    "Supplied torso frame is exact; visibility and camera epoch are inputs, not inferred detectors.",
+    "Real 2-D projection/occlusion and learned depth require separate qualification.",
+    "This is a forearm orientation surrogate with a declared neutral, not scapular/bony-axis tracking.",
+    "No automatic improvement claim or angle-minus-drift correction."
+  ],
+  "test_result": {
+    "run": 20,
+    "failures": 0,
+    "errors": 0,
+    "random_transform_cases": 500
+  }
+}

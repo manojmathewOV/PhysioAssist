@@ -1,0 +1,29 @@
+{
+  "scope": "Production aggregation with injected synthetic detection; NOT sleeper accuracy",
+  "repetitions": 2,
+  "detector_input": {
+    "id": "elbow_from_side",
+    "severity": "warn",
+    "value": 19.2,
+    "unit": "deg",
+    "durationMs": 450
+  },
+  "aggregate_output": {
+    "id": "elbow_from_side",
+    "severity": "warn",
+    "cue": "Keep your elbow gently beside your body.",
+    "detail": "Seen in 2 of 2 repetitions.",
+    "reps": [
+      0,
+      1
+    ]
+  },
+  "quantitative_fields_retained": [],
+  "external_rotation_detector_applies": true,
+  "sleeper_detector_applies": false,
+  "held_assessment_control": {
+    "result": "measured",
+    "compensation_callback_calls": 0
+  },
+  "source_sha": "dc123553e3c1e8649ef9be14e91a1955624b0aa7"
+}

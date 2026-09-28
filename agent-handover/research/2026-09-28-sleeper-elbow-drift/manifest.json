@@ -1,0 +1,41 @@
+{
+  "source_sha": "dc123553e3c1e8649ef9be14e91a1955624b0aa7",
+  "scope": "offline research only",
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "2d9ff83abb568ff9dd98ca2478b6c8fc204e7b4cd4ed390f05861fadf384ca9b",
+      "bytes": 9847
+    },
+    {
+      "path": "audit_current.cjs",
+      "sha256": "ea8d2fde9a91ca9e945d3a7e7410d8ad552e7acc068c52f034b42b53293d91d9",
+      "bytes": 2257
+    },
+    {
+      "path": "production-probe.json",
+      "sha256": "bd81a6611a6fd0ce8b7c026f5aacb913fd1f2afe848f955fbee30404bb6cc8a3",
+      "bytes": 755
+    },
+    {
+      "path": "results.json",
+      "sha256": "44f7f63134a47f46b0b3327389ba237ebe31963031253a9c9c913502d7cc3164",
+      "bytes": 4313
+    },
+    {
+      "path": "run.json",
+      "sha256": "49c4ecdcd4cbd11b554ae99ee9fa769be3dc73cac6762f2dc42b1167e1fe7e14",
+      "bytes": 1822
+    },
+    {
+      "path": "sleeper_geometry_probe.py",
+      "sha256": "864a8a9c67bfdf7a3f0065933fced0026db69a5500b3d84cb14e730eef938fbe",
+      "bytes": 15219
+    },
+    {
+      "path": "test-output.txt",
+      "sha256": "46de893f0e713df4ed88af2df59dd7a53b8a1e8d1244e0854d75266abbe07508",
+      "bytes": 2235
+    }
+  ]
+}
