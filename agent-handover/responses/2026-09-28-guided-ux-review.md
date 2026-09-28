@@ -1,6 +1,6 @@
 # Guided readiness, hold guidance and recovery — implementation
 
-Resumed the exact interrupted task on the existing checkout. Public reviewed basis: `8da497777266441155e50b5a4f28cf47873a72c9`. Final tested application: `d38b9cb4d05f3c8f5b721b4b411025d90b8daf88`. No main merge, clinical dose, sleeper estimator or whole-gate acceptance.
+Resumed the exact interrupted task on the existing checkout. Public reviewed basis: `8da497777266441155e50b5a4f28cf47873a72c9`. Final tested application: `e768304831ea52ea39a59d26535ca45606c0c7cb`; native driver `33cf7914ad5bcd79537a50aaf2da5bf19927c5b1`. No main merge, clinical dose, sleeper estimator or whole-gate acceptance.
 
 ## Reviewer basis and delivered correction
 
@@ -18,7 +18,7 @@ Before reporting, the summary asks **Tell us how it went to save it**. A failed 
 
 ## Tests and observations
 
-- Full suite at clean committed `d38b9cb`: **1,724 passed, four opt-in skipped, zero failures**, 102 suites, exit0, no force-exit or worker-shutdown warning. Existing synthetic accuracy test names are not clinical claims.
+- Full suite at clean committed `e768304`: **1,725 passed, four opt-in skipped, zero failures**, 102 suites, exit0, no force-exit or worker-shutdown warning. Existing synthetic accuracy test names are not clinical claims.
 - TypeScript and ordinary commit/push hooks passed. Focused readiness/hold/source/cancellation cases passed. Six original new cases failed before their corrections; a separate yesterday-pending case reproduced and was fixed.
 - Production web: **39 checks passed** on the same source at320/390px, including ready/start, pauses/rest, prescribed timer/voice requests, manual report, save failure/retry, pending-duplicate guard, restart, singular history and actual YouTube playback/control observations.
 - The initial geometry assertion missed a clipped long cue because it compared with the lower Stop button. Actual screenshot inspection caught it. The concise same-meaning cue and removal of duplicated active dose fixed it; the final test checks both cue and hold time against the top of the fixed footer. Old screenshot/results remain separate.
@@ -27,9 +27,15 @@ Before reporting, the summary asks **Tell us how it went to save it**. A failed 
 
 ## Native and physical evidence boundary
 
-The native XCTest drivers now enter Ready and include supplied six-second test holds, pause/background, manual reporting and restart. They have **not been executed against this new application**. The managed iOS build refused before launch with exit2: **Native build requires AC power under this profile**. The Mac remained on battery; the safeguard was not bypassed. Prior native screenshots and green parent CI do not qualify this changed journey.
+The initial managed build refused on battery with exit2; that refusal is preserved. AC power subsequently became available. Deployment-mode Pods verification and the Release build then passed with unchanged dependencies.
 
-The next native action is to connect power, run the guarded build on the exact candidate, run the updated reference/hold/restart XCTest, retrieve its attachments and inspect them. Physical-device audibility, VoiceOver timing, one-handed/lying use and patient comprehension still require separate observation. No queued unattended build or background watcher was created.
+The updated native XCTest passed at driver `33cf7914` using the application built at `e768304` (application code equivalence checked). It exercises untimed Ready, explicit Start, real reference Play/Pause/Hide/Show, timed holds/rest, pause/background/explicit Resume, manual completion, saved status, reopening and episode isolation. Its synthetic six-second holds are test values, not a clinical default. The ready, hold-active/rest/saved, reopened and reference images were actually inspected; only synthetic UI-only images are published.
+
+Two failed native runs are retained. The first exposed a fixture helper appending an already retained URL and tapping disabled Apply; the corrected helper verifies values, reuses an identical fixture and checks the first variant. The second showed a hold still safely paused after the driver tapped during foreground restoration; the driver now waits for an enabled Resume and checks the actual transition to Pause. No app foreground safeguard or completion assertion was relaxed. The final run passed these exact checks.
+
+An additional unit counterexample showed that enabling speech partway through a hold could announce the original duration. The toggle now snapshots the remaining time; the added test passes. The final full/web checks were rerun after this code change.
+
+Physical-device audibility, VoiceOver interaction, one-handed/lying use and patient comprehension remain separate observations. Native UI success is not an actual listening or clinical-accuracy study. The dedicated simulator was shut down and no unattended job was scheduled.
 
 ## Historical screenshot provenance
 
@@ -37,8 +43,8 @@ The previous native-history/native-reopened files have identical pixels. The ori
 
 ## Scope, resources and next work
 
-The movement estimator, held-observation computation, RGB replay/model and package locks were unchanged. The prior ten-file MobiPhysio replay remains pinned to1096a16; it was not relabelled as validation of this UI/audio patch. No further video download, model/dependency installation or clone was required. The existing code/dependency/cache tree and bounded test runner were reused. This work cannot establish patient camera accuracy or activate sleeper numbers.
+The movement estimator, held-observation computation, RGB replay/model and package locks were unchanged. The prior ten-file MobiPhysio replay remains pinned to1096a16; it was not relabelled as validation of this UI/audio patch. No further benchmark-video download, model or dependency upgrade, or clone was required. Frozen Pods installation reused the existing tree. The existing code/dependency/cache tree and bounded test runner were reused. This work cannot establish patient camera accuracy or activate sleeper numbers.
 
-Review this candidate, complete its native/physical-audio checks, then continue the existing synthetic result selector/schematic/compatible-history implementation. No new roadmap or clinical band is needed for that code. Full storage migration, permissioned clinical assets, protocol activation, physical-device performance and human/clinical acceptance remain open.
+Review this candidate, obtain physical-device audio/accessibility observations, and continue the existing synthetic result selector/schematic/compatible-history implementation. No new roadmap or clinical band is needed for that code. Full storage migration, permissioned clinical assets, protocol activation, physical-device performance and human/clinical acceptance remain open.
 
 Evidence: `../evidence/2026-09-28-guided-ux-review/run.json`, `web-journey.json`, capture provenance and synthetic UI screenshots. Failed runs remain in the existing local task evidence; no success was manufactured by erasing them.

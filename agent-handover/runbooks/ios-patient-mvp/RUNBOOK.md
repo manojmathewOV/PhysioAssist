@@ -378,7 +378,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 
 **Closure requires:** G02, G03, G04. **Executor:** patient_experience_implementer. **Acceptor:** independent_usability_reviewer.
 
-**Next bounded work:** Review the published ready/hold-speech/pending-save UX correction; complete its native build and updated journey when AC power is available. Then implement the synthetic result selector/schematic and compatible history; no unqualified sleeper activation.
+**Next bounded work:** Independently review the implemented ready/hold-speech/pending-save UX and its native/web evidence. Continue the synthetic result selector/schematic and compatible history; physical audio/accessibility and clinical measurement qualification remain separate.
 
 **Remaining work:**
 - S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.

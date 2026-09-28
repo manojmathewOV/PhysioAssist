@@ -3,8 +3,8 @@
   "runbook_id": "ios-patient-mvp",
   "runbook_revision": 11,
   "current_gate": "G05",
-  "overall": "guided_UX_implemented_web_verified_native_pending_AC",
-  "implementation_sha": "d38b9cb4d05f3c8f5b721b4b411025d90b8daf88",
+  "overall": "guided_UX_web_native_verified_pending_independent_review",
+  "implementation_sha": "e768304831ea52ea39a59d26535ca45606c0c7cb",
   "gate_states": {
     "G00": "implemented_pending_review",
     "G01": "in_progress",
@@ -15,7 +15,7 @@
     "G06": "planned",
     "G07": "in_progress",
     "G08": "planned",
-    "G09": "planned",
+    "G09": "in_progress",
     "G10": "planned"
   },
   "evidence": [
@@ -28,7 +28,7 @@
     "../../evidence/2026-09-28-guided-ux-review/run.json"
   ],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
-  "next": "Review the published ready/hold-speech/pending-save UX correction; complete its native build and updated journey when AC power is available. Then implement the synthetic result selector/schematic and compatible history; no unqualified sleeper activation.",
+  "next": "Independently review the implemented ready/hold-speech/pending-save UX and its native/web evidence. Continue the synthetic result selector/schematic and compatible history; physical audio/accessibility and clinical measurement qualification remain separate.",
   "last_writer": "s2-implementation-20260928-53363",
   "limitations": [
     "No gate independently accepted by this implementation update.",
@@ -78,10 +78,10 @@
     {
       "id": "NATIVE-GUIDED-UX-AC",
       "gate": "G09",
-      "status": "preflight_blocked_AC_required",
+      "status": "resolved_after_power_connected_native_journey_passed",
       "owner": "receiving_agent",
-      "observed": "Guarded new iOS build refused on battery with exit2; no build/test launched. Existing native evidence belongs to prior code.",
-      "wake": "AC power, unchanged candidate/lock preflight, native ready/hold/reference/restart driver and actual screenshot inspection",
+      "observed": "Initial AC preflight refused; later power available. Frozen Pods and Release build passed; corrected native driver33cf7914 passed on app e768304. Prior failures retained.",
+      "wake": "Fresh native regression or changed input/device, not the retired power prerequisite.",
       "evidence": "../../evidence/2026-09-28-guided-ux-review/run.json"
     }
   ],
@@ -156,11 +156,11 @@
       "scope": "10 original inspection clips plus mirror/blank controls, 4742 samples; no independent angle/rep truth or native accuracy."
     },
     "guided_UX": {
-      "state": "implemented_pending_native_and_independent_review",
-      "basis": "d38b9cb4d05f3c8f5b721b4b411025d90b8daf88",
+      "state": "implemented_pending_independent_and_physical_review",
+      "basis": "e768304831ea52ea39a59d26535ca45606c0c7cb",
       "criteria": ["G05.V01", "G07.V02", "G07.V03", "G07.V08"],
       "evidence": "../../evidence/2026-09-28-guided-ux-review/run.json",
-      "scope": "Untimed ready, supplied hold timing/voice requests, concise cue, exact pending-occurrence recovery; software/web proven, no new native or physical audio run"
+      "scope": "Final1725 software tests,39 real web checks and actual Release native ready/hold/reference/restart test. No physical listening, human or clinical measurement qualification."
     }
   },
   "active_pr": 29,
@@ -228,8 +228,8 @@
     },
     {
       "subject": "guided_readiness_hold_speech_and_recovery",
-      "basis": "d38b9cb4d05f3c8f5b721b4b411025d90b8daf88",
-      "status": "implemented_pending_independent_and_native_review",
+      "basis": "e768304831ea52ea39a59d26535ca45606c0c7cb",
+      "status": "implemented_pending_independent_and_physical_review",
       "record": "../../responses/2026-09-28-guided-ux-review.md"
     }
   ],
