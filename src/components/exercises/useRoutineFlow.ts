@@ -1,3 +1,4 @@
+import { selectDurableHistory } from '../../store/historySelectors';
 /**
  * Today's routine on the Exercise screens (native and web): what's done, start
  * the next exercise, and the physio adding or removing exercises.
@@ -5,7 +6,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import type { RootState } from '../../store';
 import { setExercisePlan } from '../../store/slices/settingsSlice';
 import type { ExercisePlan } from '../../services/pose/exercisePlan';
 import {
@@ -30,7 +30,7 @@ export function useRoutineFlow({
   start: () => void;
 }) {
   const dispatch = useDispatch();
-  const history = useSelector((s: RootState) => s.exercise.history);
+  const history = useSelector(selectDurableHistory);
   // Kept current as time passes (a round becoming due, the window, midnight)
   const { routine, refresh } = useRoutineClock(plan, history);
   const historyRef = useRef(history);

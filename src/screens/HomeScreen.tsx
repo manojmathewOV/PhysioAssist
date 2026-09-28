@@ -1,3 +1,6 @@
+import PendingActivityNotice from '../components/exercises/PendingActivityNotice';
+import { guidedShoulderTitle } from '../services/care/guidedShoulder';
+import { selectDurableHistory } from '../store/historySelectors';
 /**
  * Home: a calm daily summary with one obvious action.
  *
@@ -45,7 +48,7 @@ const shortDate = (iso: string) =>
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const name = useSelector((s: RootState) => s.user.currentUser?.name);
-  const history = useSelector((s: RootState) => s.exercise.history);
+  const history = useSelector(selectDurableHistory);
   const goal = useSelector((s: RootState) => s.settings.dailyRepGoal ?? 30);
   const plan = useSelector((s: RootState) => s.settings.exercisePlan);
   // The physio's routine, when one is set, is what "today" means
@@ -63,7 +66,11 @@ const HomeScreen: React.FC = () => {
   // Small phones: the ring above the words, so words aren't broken up
   const narrow = useWindowDimensions().width < 360;
   const nextTitle = routine.next
-    ? findExerciseOption(routine.next)?.title.toLowerCase() ?? ''
+    ? (
+        findExerciseOption(routine.next)?.title ??
+        guidedShoulderTitle(routine.next) ??
+        ''
+      ).toLowerCase()
     : '';
 
   const firstName = name?.split(' ')[0];
@@ -87,6 +94,7 @@ const HomeScreen: React.FC = () => {
         month: 'long',
       })}
     >
+      <PendingActivityNotice />
       {/* Today: one ring, one sentence, one button */}
       <SummaryCard
         icon="directions-run"
@@ -106,8 +114,8 @@ const HomeScreen: React.FC = () => {
           <View style={styles.waiting} testID="home-waiting">
             <AppText variant="heading">Your programme is being prepared</AppText>
             <AppText variant="body" color={colors.textSecondary}>
-              Your physiotherapist will confirm your exercises for this stage. Until then,
-              follow the instructions they gave you.
+              Your programme needs confirmation for this stage. Check it against the
+              instructions you were given before starting.
             </AppText>
           </View>
         ) : hasRoutine ? (
@@ -116,13 +124,13 @@ const HomeScreen: React.FC = () => {
             testID="home-routine"
           >
             <ProgressRing
-              progress={routine.finishedCount / routine.items.length}
+              progress={routine.doneCount / routine.items.length}
               size={132}
               thickness={16}
               testID="home-goal-ring"
-              accessibilityLabel={`${routine.finishedCount} of ${routine.items.length} exercises done today`}
+              accessibilityLabel={`${routine.doneCount} of ${routine.items.length} exercises done today`}
             >
-              <AppText variant="value">{routine.finishedCount}</AppText>
+              <AppText variant="value">{routine.doneCount}</AppText>
               <AppText variant="caption" color={colors.textSecondary}>
                 {`of ${routine.items.length}`}
               </AppText>
@@ -130,12 +138,16 @@ const HomeScreen: React.FC = () => {
             <View style={narrow ? undefined : styles.flex}>
               <AppText variant="heading">
                 {routineLeft === 0
-                  ? 'Today’s exercises done'
+                  ? routine.doneCount === routine.items.length
+                    ? 'Today’s exercises done'
+                    : 'Today’s activities recorded'
                   : `${routineLeft} ${routineLeft === 1 ? 'exercise' : 'exercises'} to go`}
               </AppText>
               <AppText variant="body" color={colors.textSecondary}>
                 {routineLeft === 0
-                  ? 'Lovely work today. Rest is part of getting better.'
+                  ? routine.doneCount === routine.items.length
+                    ? 'Lovely work today. Rest is part of getting better.'
+                    : 'Some activities were stopped early. They are recorded separately.'
                   : `Next: ${nextTitle}`}
               </AppText>
             </View>
@@ -234,8 +246,12 @@ const HomeScreen: React.FC = () => {
           tint={colors.category.progress}
           when={shortDate(last.date)}
           // A still hold is timed, not counted
-          value={lastIsHold ? formatDuration(last.duration) : `${last.reps}`}
-          unit={`${lastIsHold ? 'resting still' : 'reps'} · ${
+          value={
+            last.kind === 'activity' || lastIsHold
+              ? formatDuration(last.duration)
+              : `${last.reps}`
+          }
+          unit={`${last.kind === 'activity' ? 'reported activity' : lastIsHold ? 'resting still' : 'reps'} · ${
             findExerciseOption(last.exerciseId)?.title ?? last.exerciseName
           }`}
           onPress={() => navigation.navigate('Progress')}
@@ -246,7 +262,7 @@ const HomeScreen: React.FC = () => {
           icon="insights"
           category="My progress"
           tint={colors.category.progress}
-          description="See how you are improving, week by week."
+          description="See your saved activity and measurement history."
           onPress={() => navigation.navigate('Progress')}
           testID="home-progress"
         />
@@ -256,7 +272,7 @@ const HomeScreen: React.FC = () => {
         tone="accent"
         icon="help-outline"
         title="How to set up"
-        description="Where to put your phone and how to stand"
+        description="Preparing for your exercises and optional camera checks"
         onPress={() => navigation.navigate('HomeTab', { screen: 'Help' })}
         testID="home-help"
       />

@@ -49,6 +49,8 @@ export interface PlanReference extends MovementProfile {
  * for a straightening exercise) and never applies to rotation.
  */
 export interface PrescribedExercise {
+  /** Instruction revision explicitly selected for a guided-only variant. */
+  instructionRevision?: string;
   exerciseId: string;
   /** Separate sessions a day (default 1): each is its own occurrence. */
   timesPerDay?: number;

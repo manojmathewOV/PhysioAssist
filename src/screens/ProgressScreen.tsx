@@ -1,3 +1,5 @@
+import PendingActivityNotice from '../components/exercises/PendingActivityNotice';
+import { selectDurableHistory } from '../store/historySelectors';
 /**
  * Progress: streak, a simple 7-day bar chart and recent sessions, in plain
  * language with large numbers.
@@ -8,7 +10,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
 
-import type { RootState } from '../store';
 import {
   AppText,
   BigButton,
@@ -19,7 +20,12 @@ import {
 } from '../components/ui';
 import { colors, radii, spacing } from '../theme';
 import type { MainTabParamList } from '../navigation/types';
-import { currentStreak, dailyReps, summarizeWeek } from '../utils/progressSummary';
+import {
+  currentStreak,
+  dailyReps,
+  summarizeWeek,
+  dayKey,
+} from '../utils/progressSummary';
 import { measurementSeries } from '../utils/measurementSeries';
 import MeasurementCard from '../components/progress/MeasurementCard';
 
@@ -38,8 +44,17 @@ const formPercent = (score: number) => Math.round(score <= 1 ? score * 100 : sco
 
 const ProgressScreen: React.FC = () => {
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
-  const history = useSelector((s: RootState) => s.exercise.history);
-  const days = dailyReps(history, 7);
+  const history = useSelector(selectDurableHistory);
+  const hasGuided = history.some((h) => h.kind === 'activity');
+  const days = dailyReps(history, 7).map((d) =>
+    hasGuided
+      ? {
+          ...d,
+          value: history.filter((h) => (h.activityDay ?? dayKey(h.date)) === d.date)
+            .length,
+        }
+      : d
+  );
   const week = summarizeWeek(history);
   const streak = currentStreak(history);
   const max = Math.max(1, ...days.map((d) => d.value));
@@ -48,11 +63,11 @@ const ProgressScreen: React.FC = () => {
   if (history.length === 0) {
     return (
       <Screen testID="progress-screen" title="My progress">
+        <PendingActivityNotice />
         <Card>
           <AppText variant="heading">No sessions yet</AppText>
           <AppText variant="body" color={colors.textSecondary} style={styles.gap}>
-            After your first exercise session you will see your repetitions and how you
-            are improving here.
+            Your saved activity and any available measurements will appear here.
           </AppText>
         </Card>
         <BigButton
@@ -67,6 +82,7 @@ const ProgressScreen: React.FC = () => {
 
   return (
     <Screen testID="progress-screen" title="My progress">
+      <PendingActivityNotice />
       {series.length ? (
         <>
           <SectionTitle>Measurements</SectionTitle>
@@ -79,9 +95,9 @@ const ProgressScreen: React.FC = () => {
             style={styles.note}
             testID="progress-series-note"
           >
-            Camera measurements at home vary by several degrees from day to day, so small
-            differences may not be real changes. Your physiotherapist will look at the
-            trend with you.
+            Small differences in home camera readings may not be real changes. Keep these
+            readings for your records or show them at an appointment. They are not
+            monitored through this app.
           </AppText>
           <SectionTitle>Activity</SectionTitle>
         </>
@@ -89,49 +105,60 @@ const ProgressScreen: React.FC = () => {
 
       <Card style={styles.streakCard} testID="progress-streak">
         <AppText variant="metric" color={colors.primary}>
-          {streak}
+          {hasGuided ? week.sessions : streak}
         </AppText>
         <View style={styles.flex}>
           <AppText variant="heading">
-            {streak === 1 ? 'day in a row' : 'days in a row'}
+            {hasGuided
+              ? 'activities recorded this week'
+              : streak === 1
+                ? 'day in a row'
+                : 'days in a row'}
           </AppText>
           <AppText variant="body" color={colors.textSecondary}>
-            {week.sessions} {week.sessions === 1 ? 'session' : 'sessions'} and {week.reps}{' '}
-            repetitions this week
+            {hasGuided
+              ? 'Completed and stopped-early activities are kept separate.'
+              : `${week.sessions} ${week.sessions === 1 ? 'session' : 'sessions'} and ${week.reps} repetitions this week`}
           </AppText>
         </View>
       </Card>
 
-      <Card testID="progress-chart">
-        <AppText variant="heading">Repetitions per day</AppText>
-        <View
-          style={styles.chart}
-          accessible
-          accessibilityLabel={days
-            .map((d) => `${WEEKDAY[new Date(`${d.date}T12:00:00`).getDay()]} ${d.value}`)
-            .join(', ')}
-        >
-          {days.map((d) => (
-            <View key={d.date} style={styles.barColumn}>
-              <AppText variant="caption" color={colors.textSecondary}>
-                {d.value > 0 ? d.value : ''}
-              </AppText>
-              <View
-                style={[
-                  styles.bar,
-                  {
-                    height: Math.max(6, (d.value / max) * CHART_HEIGHT),
-                    backgroundColor: d.value > 0 ? colors.primary : colors.surfaceMuted,
-                  },
-                ]}
-              />
-              <AppText variant="label" color={colors.textSecondary}>
-                {WEEKDAY[new Date(`${d.date}T12:00:00`).getDay()]}
-              </AppText>
-            </View>
-          ))}
-        </View>
-      </Card>
+      {!hasGuided || history.length >= 7 ? (
+        <Card testID="progress-chart">
+          <AppText variant="heading">
+            {hasGuided ? 'Activity records per day' : 'Repetitions per day'}
+          </AppText>
+          <View
+            style={styles.chart}
+            accessible
+            accessibilityLabel={days
+              .map(
+                (d) => `${WEEKDAY[new Date(`${d.date}T12:00:00`).getDay()]} ${d.value}`
+              )
+              .join(', ')}
+          >
+            {days.map((d) => (
+              <View key={d.date} style={styles.barColumn}>
+                <AppText variant="caption" color={colors.textSecondary}>
+                  {d.value > 0 ? d.value : ''}
+                </AppText>
+                <View
+                  style={[
+                    styles.bar,
+                    {
+                      height: Math.max(6, (d.value / max) * CHART_HEIGHT),
+                      backgroundColor: d.value > 0 ? colors.primary : colors.surfaceMuted,
+                    },
+                  ]}
+                />
+                <AppText variant="label" color={colors.textSecondary}>
+                  {WEEKDAY[new Date(`${d.date}T12:00:00`).getDay()]}
+                </AppText>
+              </View>
+            ))}
+          </View>
+        </Card>
+      ) : null}
 
       <SectionTitle>Recent sessions</SectionTitle>
       <Card>
@@ -140,9 +167,13 @@ const ProgressScreen: React.FC = () => {
             key={h.id}
             icon="fitness-center"
             title={h.exerciseName}
-            description={`${formatDate(h.date)} · ${h.reps} reps${
-              h.formScore ? ` · form ${formPercent(h.formScore)}%` : ''
-            }${sessionMeasurement(h)}${h.painScore !== undefined ? ` · pain ${h.painScore}/10` : ''}`}
+            description={
+              h.kind === 'activity'
+                ? `${formatDate(h.date)} · ${h.completion === 'completed' ? 'Completed' : h.completion === 'stopped_early' ? 'Stopped early' : 'Attempted'} · reported by you · not measured`
+                : `${formatDate(h.date)} · ${h.reps} reps${
+                    h.formScore ? ` · form ${formPercent(h.formScore)}%` : ''
+                  }${sessionMeasurement(h)}${h.painScore !== undefined ? ` · pain ${h.painScore}/10` : ''}`
+            }
             last={i === list.length - 1}
             testID={`progress-session-${i}`}
           />

@@ -13,7 +13,8 @@ import {
   persistStore,
 } from 'redux-persist';
 
-import { persistedReducer } from './index';
+import { persistedReducer, historyPersistence } from './index';
+import { historyWriteResult } from './slices/exerciseSlice';
 
 export const store = configureStore({
   reducer: persistedReducer,
@@ -25,6 +26,8 @@ export const store = configureStore({
     }),
 });
 
+// Installed once for this live store; reducer-only imports do not create observers.
+historyPersistence.subscribe((event) => store.dispatch(historyWriteResult(event)));
 export const persistor = persistStore(store);
 
 export type AppDispatch = typeof store.dispatch;

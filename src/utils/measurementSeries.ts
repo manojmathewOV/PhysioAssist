@@ -52,7 +52,8 @@ export function measurementSeries(history: ExerciseHistory[]): MeasurementSeries
     const attempted =
       (h.bestDegrees !== undefined && Number.isFinite(h.bestDegrees)) ||
       h.measured === false;
-    if (!h.joint || !attempted) continue;
+    if (h.kind === 'activity' || h.durability === 'pending' || !h.joint || !attempted)
+      continue;
     const key = `${h.exerciseId}:${h.joint}`;
     let s = byKey.get(key);
     if (!s) {

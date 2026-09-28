@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Exercise, ValidationResult, ExerciseMetrics } from '../../types/exercise';
+import type { HistoryWriteEvent } from '../acknowledgedHistory';
 import { liveCue } from '../../utils/liveCue';
 import {
   SessionClock,
@@ -23,6 +24,16 @@ export const clockOf = (s: {
 });
 
 export interface ExerciseHistory {
+  /** New camera-optional records are scoped and acknowledged independently of measurement. */
+  kind?: 'activity';
+  profileId?: string;
+  completionBasis?: 'patient_report';
+  durability?: 'pending' | 'saved';
+  recordConflict?: boolean;
+  writeRevision?: number;
+  /** Routine calendar day bound at execution, independent of a later finish/save. */
+  activityDay?: string;
+  instructionRevision?: string;
   id: string;
   exerciseId: string;
   exerciseName: string;
@@ -111,6 +122,8 @@ interface ExerciseState {
   lastValidationResult: ValidationResult | null;
   metrics: ExerciseMetrics | null;
   history: ExerciseHistory[];
+  /** Volatile write failures; never persisted as a retry-triggering history mutation. */
+  historySaveErrors: Record<string, number | 'conflict'>;
   /** When the current exercise started (ms since epoch). */
   startedAt: number | null;
   /** When the current pause began (see sessionClock). */
@@ -142,6 +155,7 @@ const initialState: ExerciseState = {
   lastValidationResult: null,
   metrics: null,
   history: [],
+  historySaveErrors: {},
   startedAt: null,
   pausedAt: null,
   pausedMs: 0,
@@ -152,6 +166,72 @@ const exerciseSlice = createSlice({
   name: 'exercise',
   initialState,
   reducers: {
+    /** New unmeasured activity: no routine credit until its storage receipt. */
+    recordGuidedActivity: (
+      state,
+      { payload: record }: PayloadAction<ExerciseHistory>
+    ) => {
+      if (
+        record.kind !== 'activity' ||
+        record.measured !== false ||
+        record.bestDegrees !== undefined ||
+        !record.profileId ||
+        !record.id ||
+        record.durability !== 'pending' ||
+        record.writeRevision !== 1 ||
+        record.completionBasis !== 'patient_report' ||
+        !Number.isFinite(record.duration) ||
+        record.duration < 0 ||
+        record.reps !== 0
+      )
+        return;
+      const previous = state.history.find((h) => h.id === record.id);
+      if (previous) {
+        // Replaying the same event cannot add credit. Different content is not silently accepted.
+        const comparable = { ...previous, durability: record.durability };
+        if (JSON.stringify(comparable) !== JSON.stringify(record)) {
+          previous.recordConflict = true;
+          previous.durability = 'pending';
+          state.historySaveErrors[record.id] = 'conflict';
+        }
+        return;
+      }
+      state.history.unshift(record);
+      state.history.splice(MAX_HISTORY);
+    },
+    historyWriteResult: (state, { payload }: PayloadAction<HistoryWriteEvent>) => {
+      for (const receipt of payload.records) {
+        const record = state.history.find((h) => h.id === receipt.id);
+        if (
+          !record ||
+          record.writeRevision !== receipt.writeRevision ||
+          record.durability !== 'pending' ||
+          record.recordConflict ||
+          state.historySaveErrors[record.id] === 'conflict'
+        )
+          continue;
+        if (payload.outcome === 'saved') {
+          record.durability = 'saved';
+          delete state.historySaveErrors[record.id];
+        } else {
+          state.historySaveErrors[record.id] = receipt.writeRevision;
+        }
+      }
+    },
+    retryGuidedActivity: (state, { payload: id }: PayloadAction<string>) => {
+      const record = state.history.find((h) => h.id === id);
+      const error = state.historySaveErrors[id];
+      if (
+        !record ||
+        record.durability !== 'pending' ||
+        error === undefined ||
+        record.recordConflict ||
+        error === 'conflict'
+      )
+        return;
+      record.writeRevision = (record.writeRevision ?? 0) + 1;
+      delete state.historySaveErrors[id];
+    },
     startExercise: (state, action: PayloadAction<Exercise>) => {
       state.currentExercise = action.payload;
       state.isExercising = true;
@@ -291,6 +371,9 @@ const exerciseSlice = createSlice({
 });
 
 export const {
+  recordGuidedActivity,
+  historyWriteResult,
+  retryGuidedActivity,
   startExercise,
   stopExercise,
   setSessionContext,

@@ -1,3 +1,4 @@
+import { useGuidedRoutine } from '../components/exercises/useGuidedRoutine';
 /**
  * Exercise tab (iOS/Android).
  *
@@ -163,12 +164,17 @@ const PoseDetectionScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    requestCameraPermission();
+    if (stage === 'exercise' && !practice && device && permission === 'unknown') {
+      void requestCameraPermission();
+    }
+  }, [stage, practice, device, permission, requestCameraPermission]);
+
+  useEffect(() => {
     return () => {
       dispatch(setDetecting(false));
       mockPoseDataSimulator?.stop();
     };
-  }, [dispatch, requestCameraPermission]);
+  }, [dispatch]);
 
   // Validate each new pose during the exercise; show and speak the instruction
   useEffect(() => {
@@ -262,6 +268,7 @@ const PoseDetectionScreen: React.FC = () => {
 
   // Today's routine: start the next exercise, and what follows each one
   const routineFlow = useRoutineFlow({ plan, setSelectedKey, start: handleStart });
+  const guided = useGuidedRoutine();
 
   const backToChooser = useCallback(() => {
     resetGate();
@@ -362,6 +369,8 @@ const PoseDetectionScreen: React.FC = () => {
   // -------------------------------------------------------------------------
   // 1. Choose
   // -------------------------------------------------------------------------
+  if (guided.content) return guided.content;
+
   if (stage === 'choose') {
     return (
       <View style={styles.flex} testID={AccessibilityIds.poseDetection.screen}>
@@ -375,6 +384,8 @@ const PoseDetectionScreen: React.FC = () => {
             setRecordingDemo(true);
           }}
           onStart={handleStart}
+          onStartWithoutCamera={guided.start}
+          notice={guided.notice}
           routine={routineFlow.routine}
           onStartRoutine={routineFlow.startRoutine}
           onToggleRoutine={routineFlow.toggle}
