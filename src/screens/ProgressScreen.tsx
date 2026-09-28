@@ -110,7 +110,9 @@ const ProgressScreen: React.FC = () => {
         <View style={styles.flex}>
           <AppText variant="heading">
             {hasGuided
-              ? 'activities recorded this week'
+              ? week.sessions === 1
+                ? 'activity recorded this week'
+                : 'activities recorded this week'
               : streak === 1
                 ? 'day in a row'
                 : 'days in a row'}

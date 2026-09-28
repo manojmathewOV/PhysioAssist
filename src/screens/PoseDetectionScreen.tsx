@@ -386,6 +386,7 @@ const PoseDetectionScreen: React.FC = () => {
           onStart={handleStart}
           onStartWithoutCamera={guided.start}
           notice={guided.notice}
+          pendingActivity={guided.pendingCurrent}
           routine={routineFlow.routine}
           onStartRoutine={routineFlow.startRoutine}
           onToggleRoutine={routineFlow.toggle}

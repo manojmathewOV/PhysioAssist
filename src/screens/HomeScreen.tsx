@@ -1,6 +1,10 @@
 import PendingActivityNotice from '../components/exercises/PendingActivityNotice';
 import { guidedShoulderTitle } from '../services/care/guidedShoulder';
-import { selectDurableHistory } from '../store/historySelectors';
+import {
+  selectDurableHistory,
+  selectPendingActivities,
+  pendingForOccurrence,
+} from '../store/historySelectors';
 /**
  * Home: a calm daily summary with one obvious action.
  *
@@ -49,12 +53,18 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const name = useSelector((s: RootState) => s.user.currentUser?.name);
   const history = useSelector(selectDurableHistory);
+  const pending = useSelector(selectPendingActivities);
   const goal = useSelector((s: RootState) => s.settings.dailyRepGoal ?? 30);
   const plan = useSelector((s: RootState) => s.settings.exercisePlan);
   // The physio's routine, when one is set, is what "today" means
   // Kept current as time passes (a mini-session becoming due, midnight)
   const { routine } = useRoutineClock(plan, history);
   const hasRoutine = routine.items.length > 0;
+  const pendingCurrent = pendingForOccurrence(
+    pending,
+    plan,
+    routine.items[routine.nextIndex]?.key
+  );
   // Not confirmed for this stage of recovery: no exercises offered
   const waiting = !exercisesAllowed(plan);
   // Timed mini-sessions: between rounds, or an unfinished schedule
@@ -103,7 +113,14 @@ const HomeScreen: React.FC = () => {
         when="Today"
         testID="home-today"
       >
-        {roundWait ? (
+        {pendingCurrent ? (
+          <View style={styles.waiting}>
+            <AppText variant="heading">Activity awaiting save</AppText>
+            <AppText variant="body">
+              Review the unsaved activity. You do not need to repeat it.
+            </AppText>
+          </View>
+        ) : roundWait ? (
           <View style={styles.waiting} testID="home-round-wait">
             <AppText variant="heading">{roundWait.title}</AppText>
             <AppText variant="body" color={colors.textSecondary}>
@@ -178,7 +195,13 @@ const HomeScreen: React.FC = () => {
             </View>
           </View>
         )}
-        {waiting || roundWait ? null : hasRoutine && routineLeft === 0 ? (
+        {pendingCurrent ? (
+          <BigButton
+            label="Review unsaved activity"
+            onPress={startExercises}
+            testID="home-pending-action"
+          />
+        ) : waiting || roundWait ? null : hasRoutine && routineLeft === 0 ? (
           <BigButton
             variant="secondary"
             label="See my progress"
@@ -247,9 +270,15 @@ const HomeScreen: React.FC = () => {
           when={shortDate(last.date)}
           // A still hold is timed, not counted
           value={
-            last.kind === 'activity' || lastIsHold
-              ? formatDuration(last.duration)
-              : `${last.reps}`
+            last.kind === 'activity'
+              ? last.completion === 'completed'
+                ? 'Completed'
+                : last.completion === 'stopped_early'
+                  ? 'Stopped early'
+                  : 'Attempted'
+              : lastIsHold
+                ? formatDuration(last.duration)
+                : `${last.reps}`
           }
           unit={`${last.kind === 'activity' ? 'reported activity' : lastIsHold ? 'resting still' : 'reps'} · ${
             findExerciseOption(last.exerciseId)?.title ?? last.exerciseName

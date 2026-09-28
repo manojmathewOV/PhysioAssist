@@ -2,16 +2,25 @@ import PendingActivityNotice from './PendingActivityNotice';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../store';
-import { selectDurableHistory, selectVisibleHistory } from '../../store/historySelectors';
+import {
+  selectDurableHistory,
+  selectVisibleHistory,
+  pendingForOccurrence,
+} from '../../store/historySelectors';
 import {
   recordGuidedActivity,
   retryGuidedActivity,
 } from '../../store/slices/exerciseSlice';
+import { updateSettings } from '../../store/slices/settingsSlice';
 import { exercisesAllowed } from '../../services/care/episode';
-import { applyPlan, ExercisePlan } from '../../services/pose/exercisePlan';
+import { applyPlan, ExercisePlan, validRangeMin } from '../../services/pose/exercisePlan';
 import { todaysRoutine, occurrenceFor } from '../../services/pose/routine';
 import { localDay } from '../../utils/progressSummary';
-import { guidedShoulderFor, GuidedExercise } from '../../services/care/guidedShoulder';
+import {
+  guidedShoulderFor,
+  GuidedExercise,
+  isGuidedShoulder,
+} from '../../services/care/guidedShoulder';
 import type { GuidedActivityOutcome } from '../../services/session/guidedActivity';
 import { findExerciseOption } from './exerciseCatalog';
 import { routineAmount } from './TodaysRoutineCard';
@@ -20,12 +29,13 @@ import GuidedActivity from './GuidedActivity';
 interface Selection {
   id: string;
   exercise: GuidedExercise;
-  startedAt: number;
   plan: ExercisePlan;
   profileId: string;
   fingerprint: string;
   occurrenceKey: string;
   amount: string;
+  holdSeconds?: number;
+  minimumReps?: number;
   day: string;
 }
 /** Shared entry on web/native: a due permitted routine activity, never synthetic pose. */
@@ -37,6 +47,8 @@ export function useGuidedRoutine() {
   const errors = useSelector((s: RootState) => s.exercise.historySaveErrors);
   const profileId = useSelector((s: RootState) => s.user.currentUser?.id);
   const [selection, setSelection] = useState<Selection | null>(null);
+  const enableSpeech = useSelector((s: RootState) => s.settings.enableSpeech);
+  const speechRate = useSelector((s: RootState) => s.settings.speechRate);
   const fingerprint = JSON.stringify(plan);
   const start = () => {
     if (!plan || !profileId || !exercisesAllowed(plan)) return;
@@ -45,16 +57,23 @@ export function useGuidedRoutine() {
     const item = fresh.items[fresh.nextIndex];
     const regular = findExerciseOption(fresh.next);
     const option = regular ?? guidedShoulderFor(plan, fresh.next);
-    if (!item || !option || option.exercise.primaryJoint !== plan.joint) return;
+    if (
+      !item ||
+      !option ||
+      option.exercise.primaryJoint !== plan.joint ||
+      pendingForOccurrence(visibleHistory, plan, item.key)
+    )
+      return;
     setSelection({
       id: `guided-${now.toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
       exercise: regular ? applyPlan(regular.exercise, plan) : option.exercise,
-      startedAt: now,
       plan,
       profileId,
       fingerprint,
       occurrenceKey: item.key,
       amount: routineAmount(item),
+      holdSeconds: isGuidedShoulder(item.exerciseId) ? item.holdSeconds : undefined,
+      minimumReps: item.reps ?? validRangeMin(item.repRange),
       day: localDay(now),
     });
   };
@@ -104,7 +123,13 @@ export function useGuidedRoutine() {
       : record.durability === 'saved'
         ? 'saved'
         : 'saving';
+  const next = todaysRoutine(plan, history, Date.now());
   return {
+    pendingCurrent: pendingForOccurrence(
+      visibleHistory,
+      plan,
+      occurrenceFor(next, next.next ?? '')
+    ),
     start,
     notice: <PendingActivityNotice />,
     content:
@@ -112,9 +137,13 @@ export function useGuidedRoutine() {
         <GuidedActivity
           key={selection.id}
           exercise={selection.exercise}
-          startedAt={selection.startedAt}
           side={selection.plan.side}
           amount={selection.amount}
+          holdSeconds={selection.holdSeconds}
+          minimumReps={selection.minimumReps}
+          enableSpeech={enableSpeech}
+          speechRate={speechRate}
+          onSpeechChange={(value) => dispatch(updateSettings({ enableSpeech: value }))}
           videoLink={selection.plan.videos?.[selection.exercise.id]}
           allowed={fingerprint === selection.fingerprint && exercisesAllowed(plan)}
           onStartAllowed={() => {
@@ -123,6 +152,7 @@ export function useGuidedRoutine() {
             return (
               fingerprint === selection.fingerprint &&
               exercisesAllowed(plan) &&
+              !pendingForOccurrence(visibleHistory, plan, selection.occurrenceKey) &&
               localDay(now) === selection.day &&
               fresh.next === selection.exercise.id &&
               occurrenceFor(fresh, selection.exercise.id) === selection.occurrenceKey

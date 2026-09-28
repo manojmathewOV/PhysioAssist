@@ -4,6 +4,7 @@ import { AppState, StyleSheet } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import type { GuidedExercise } from '../../services/care/guidedShoulder';
 import { AppText, Banner, BigButton, Card, Screen } from '../ui';
+import { useGuidedSpeech } from './useGuidedSpeech';
 import { spacing } from '../../theme';
 import {
   activityOutcome,
@@ -25,6 +26,11 @@ export interface GuidedActivityProps {
   side: 'left' | 'right';
   amount: string;
   videoLink?: string;
+  holdSeconds?: number;
+  minimumReps?: number;
+  enableSpeech?: boolean;
+  speechRate?: number;
+  onSpeechChange?: (enabled: boolean) => void;
   /** False if the source programme/profile changed after this snapshot. */
   allowed: boolean;
   onExit: () => void;
@@ -39,6 +45,11 @@ export default function GuidedActivity({
   side,
   amount,
   videoLink,
+  holdSeconds,
+  minimumReps,
+  enableSpeech = false,
+  speechRate,
+  onSpeechChange,
   allowed,
   onExit,
   onStartAllowed,
@@ -54,9 +65,19 @@ export default function GuidedActivity({
   const stateRef = useRef(state);
   const [now, setNow] = useState(Date.now);
   const [expired, setExpired] = useState(false);
+  const canTimeHolds =
+    Number.isFinite(holdSeconds) &&
+    holdSeconds! > 0 &&
+    Number.isSafeInteger(minimumReps) &&
+    minimumReps! > 0;
+  const [timeHolds, setTimeHolds] = useState(canTimeHolds);
+  const [holdFrom, setHoldFrom] = useState<number | null>(null);
+  const [timedHolds, setTimedHolds] = useState(0);
+  const [spokenHoldSeconds, setSpokenHoldSeconds] = useState(holdSeconds);
   const [videoMounted, setVideoMounted] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [reviewing, setReviewing] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
   const reportSent = useRef(false);
   const [reported, setReported] = useState<boolean | null>(null);
   const focused = useIsFocused();
@@ -98,7 +119,21 @@ export default function GuidedActivity({
       setExpired(true);
       return;
     }
-    if (type === 'start' || type === 'resume' || type === 'finish') setReviewing(false);
+    if (type === 'start' || type === 'resume' || type === 'finish') {
+      setReviewing(false);
+      setShowVideo(false); // Retain position, but do not mix video audio with activity cues.
+      setShowSteps(false);
+    }
+    if (timeHolds && (type === 'start' || type === 'resume')) {
+      const elapsed = activityTime(stateRef.current, Date.now()).activeMilliseconds;
+      if (type === 'start' || holdFrom === null) {
+        setHoldFrom(type === 'start' ? 0 : elapsed);
+        setSpokenHoldSeconds(holdSeconds);
+      } else
+        setSpokenHoldSeconds(
+          Math.max(0, Math.ceil((holdSeconds! * 1000 - (elapsed - holdFrom)) / 1000))
+        );
+    }
     send({ type, at: Date.now() });
   };
   const report = (completed: boolean) => {
@@ -118,6 +153,69 @@ export default function GuidedActivity({
     !foreground ||
     !focused ||
     state.interruption === 'programme_changed';
+  useEffect(() => {
+    if (
+      !timeHolds ||
+      !canTimeHolds ||
+      holdFrom === null ||
+      state.phase !== 'active' ||
+      disabled
+    )
+      return;
+    if (time.activeMilliseconds - holdFrom < holdSeconds! * 1000) return;
+    setHoldFrom(null);
+    setTimedHolds((count) => count + 1);
+    send({ type: 'pause', at: Date.now() });
+  }, [
+    timeHolds,
+    canTimeHolds,
+    holdFrom,
+    state.phase,
+    disabled,
+    time.activeMilliseconds,
+    holdSeconds,
+    send,
+  ]);
+  const betweenHolds = timeHolds && timedHolds > 0 && holdFrom === null;
+  const timedMinimum = betweenHolds && timedHolds >= minimumReps!;
+  const liveCue =
+    exercise.instructions[exercise.id === 'sleeper-stretch' ? 2 : 1] ??
+    exercise.instructions[0] ??
+    'Follow your programme.';
+  const currentCue =
+    state.phase === 'paused'
+      ? betweenHolds
+        ? 'Release this hold and rest until you are ready.'
+        : 'Paused. Press Resume when ready.'
+      : liveCue;
+  const spoken = expired
+    ? 'This session is no longer due. Return to your programme.'
+    : !allowed || state.interruption === 'programme_changed'
+      ? 'Your programme changed. Stop here and check your instructions.'
+      : state.phase === 'ready'
+        ? `${exercise.name}. ${side} ${exercise.primaryJoint ?? 'side'}. ${amount}. Get into position. Start only when you are ready.`
+        : state.phase === 'finished'
+          ? ''
+          : betweenHolds
+            ? `Hold timer ${timedHolds} of ${minimumReps} finished. Release and rest. ${timedMinimum ? 'You can finish and tell us how it went.' : 'Start the next hold when ready.'}`
+            : state.phase === 'paused'
+              ? 'Paused.'
+              : timeHolds
+                ? `Hold ${timedHolds + 1}. ${spokenHoldSeconds} seconds remaining in this prescribed hold. ${liveCue}`
+                : `${exercise.name}. ${amount}. ${liveCue}`;
+  const speech = useGuidedSpeech(
+    enableSpeech,
+    !foreground || !focused || reviewing,
+    spoken,
+    speechRate
+  );
+  const remainingHold =
+    holdFrom === null
+      ? holdSeconds
+      : Math.max(
+          0,
+          Math.ceil((holdSeconds! * 1000 - (time.activeMilliseconds - holdFrom)) / 1000)
+        );
   return (
     <Screen
       // A new result must start at its status, not keep the old form's scroll offset.
@@ -129,7 +227,14 @@ export default function GuidedActivity({
           : 'activity'
       }
       testID="guided-activity"
-      title={exercise.name}
+      title={reviewing && showVideo ? 'Demonstration' : exercise.name}
+      scrollResetKey={
+        reviewing && showVideo
+          ? 'reference'
+          : state.phase === 'ready'
+            ? 'ready'
+            : 'activity'
+      }
       subtitle={`${side === 'left' ? 'Left' : 'Right'} ${exercise.primaryJoint ?? 'side'} · Without camera`}
       footer={
         state.phase === 'finished' ? (
@@ -137,7 +242,7 @@ export default function GuidedActivity({
         ) : state.phase === 'ready' ? (
           <>
             <BigButton
-              label="Start exercise"
+              label="I’m ready — start"
               disabled={disabled}
               onPress={() => act('start')}
               testID="guided-start"
@@ -151,12 +256,20 @@ export default function GuidedActivity({
           </>
         ) : (
           <>
-            <BigButton
-              label={state.phase === 'paused' ? 'Resume' : 'Pause'}
-              disabled={state.phase === 'paused' && disabled}
-              onPress={() => act(state.phase === 'paused' ? 'resume' : 'pause')}
-              testID="guided-pause"
-            />
+            {!timedMinimum ? (
+              <BigButton
+                label={
+                  betweenHolds
+                    ? 'Start next hold'
+                    : state.phase === 'paused'
+                      ? 'Resume'
+                      : 'Pause'
+                }
+                disabled={state.phase === 'paused' && disabled}
+                onPress={() => act(state.phase === 'paused' ? 'resume' : 'pause')}
+                testID="guided-pause"
+              />
+            ) : null}
             <BigButton
               label="Finish / stop"
               variant="secondary"
@@ -209,7 +322,11 @@ export default function GuidedActivity({
           ) : (
             <Banner
               tone="info"
-              message="This attempt has not been saved. It will not tick off today’s routine."
+              message={
+                reported === null
+                  ? 'Tell us how it went to save it.'
+                  : 'This attempt has not been saved. It will not tick off today’s routine.'
+              }
               testID="guided-unsaved"
             />
           )}
@@ -244,43 +361,44 @@ export default function GuidedActivity({
         </Card>
       ) : (
         <>
-          <Card style={styles.card}>
-            <AppText variant="bodyStrong" testID="guided-dose">
-              {amount}
-            </AppText>
-            {state.phase === 'ready' ? (
-              <AppText variant="body">
-                Follow your existing programme. The camera will not be used or count your
-                movements.
+          {!reviewing || !showVideo ? (
+            <Card style={styles.card}>
+              <AppText variant="bodyStrong" testID="guided-dose">
+                {amount}
               </AppText>
-            ) : (
-              <>
-                <AppText
-                  variant="display"
-                  testID="guided-time"
-                  accessibilityLabel={`Active time ${formatDuration(time.activeMilliseconds / 1000)}`}
-                >
-                  {formatDuration(time.activeMilliseconds / 1000)}
+              {state.phase === 'ready' ? (
+                <AppText variant="body">
+                  Get into position and read or watch the instructions. The timer has not
+                  started.
                 </AppText>
-                <AppText variant="bodyStrong" testID="guided-instruction">
-                  {state.phase === 'paused'
-                    ? 'Paused. Press Resume when ready.'
-                    : 'Follow the timing and movements in your programme.'}
-                </AppText>
-              </>
-            )}
-          </Card>
-          {exercise.warnings?.map((warning) => (
-            <Banner key={warning} tone="warning" message={warning} />
-          ))}
-          <Card style={styles.card}>
-            <AppText variant="heading">Your instructions</AppText>
-            {exercise.instructions.map((text, index) => (
-              <AppText key={`${index}-${text}`} variant="body">
-                {index + 1}. {text}
-              </AppText>
-            ))}
-          </Card>
+              ) : (
+                <>
+                  <AppText variant="heading" testID="guided-instruction">
+                    {currentCue}
+                  </AppText>
+                  {timeHolds ? (
+                    <AppText variant="bodyStrong" testID="guided-hold-time">
+                      {betweenHolds
+                        ? `${timedHolds} hold timer${timedHolds === 1 ? '' : 's'} finished`
+                        : `Hold ${timedHolds + 1} of ${minimumReps}: ${formatDuration(remainingHold ?? 0)} remaining`}
+                    </AppText>
+                  ) : null}
+                  <AppText
+                    variant="body"
+                    testID="guided-time"
+                    accessibilityLabel={`Active time ${formatDuration(time.activeMilliseconds / 1000)}`}
+                  >
+                    {formatDuration(time.activeMilliseconds / 1000)} active
+                  </AppText>
+                  {timeHolds ? (
+                    <AppText variant="body">
+                      Timing is guidance, not a measurement or repetition count.
+                    </AppText>
+                  ) : null}
+                </>
+              )}
+            </Card>
+          ) : null}
           {videoId && (!showVideo || (state.phase === 'paused' && !reviewing)) ? (
             <BigButton
               label="Watch demonstration"
@@ -296,12 +414,23 @@ export default function GuidedActivity({
               }}
             />
           ) : null}
-          {reviewing ? (
-            <AppText variant="body">
-              Watching does not count as exercise time.{' '}
-              {state.phase === 'ready' ? 'Press Start exercise' : 'Press Resume'} when you
-              are ready to exercise.
-            </AppText>
+          {reviewing && showVideo ? (
+            <>
+              <AppText variant="body">
+                {state.phase === 'ready'
+                  ? 'Watch before you start.'
+                  : 'Activity paused while you watch.'}
+              </AppText>
+              {state.phase !== 'ready' ? (
+                <AppText
+                  variant="body"
+                  testID="guided-time"
+                  accessibilityLabel={`Active time ${formatDuration(time.activeMilliseconds / 1000)}`}
+                >
+                  {formatDuration(time.activeMilliseconds / 1000)} active
+                </AppText>
+              ) : null}
+            </>
           ) : null}
           {videoId && videoMounted ? (
             <ExerciseVideo
@@ -312,6 +441,56 @@ export default function GuidedActivity({
               compact={state.phase === 'active'}
               onHide={() => setShowVideo(false)}
               testID="guided-video"
+            />
+          ) : null}
+          {state.phase === 'ready' || showSteps ? (
+            <Card style={styles.card} testID="guided-setup-instructions">
+              <AppText variant="heading">Your instructions</AppText>
+              {exercise.instructions.map((text, index) => (
+                <AppText key={index} variant="body">
+                  {index + 1}. {text}
+                </AppText>
+              ))}
+            </Card>
+          ) : (
+            <BigButton
+              label="Show instructions"
+              compact
+              variant="ghost"
+              testID="guided-show-steps"
+              onPress={() => {
+                if (stateRef.current.phase === 'active')
+                  send({ type: 'pause', at: Date.now() });
+                setShowSteps(true);
+              }}
+            />
+          )}
+          {exercise.warnings?.map((warning) => (
+            <Banner key={warning} tone="warning" message={warning} />
+          ))}
+          {onSpeechChange ? (
+            <BigButton
+              label={enableSpeech ? 'Spoken guidance: on' : 'Spoken guidance: off'}
+              compact
+              variant="secondary"
+              testID="guided-speech-toggle"
+              onPress={() => onSpeechChange(!enableSpeech)}
+            />
+          ) : null}
+          {speech.unavailable ? (
+            <AppText variant="body" testID="guided-speech-unavailable">
+              Spoken guidance is unavailable. Follow the written instructions.
+            </AppText>
+          ) : null}
+          {state.phase === 'ready' && canTimeHolds ? (
+            <BigButton
+              label={
+                timeHolds ? 'Prescribed hold timer: on' : 'Prescribed hold timer: off'
+              }
+              compact
+              variant="secondary"
+              testID="guided-hold-toggle"
+              onPress={() => setTimeHolds(!timeHolds)}
             />
           ) : null}
           <AppText variant="body">

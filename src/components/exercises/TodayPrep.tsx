@@ -30,6 +30,7 @@ export interface TodayPrepProps {
   onHelp: () => void;
   starting?: boolean;
   notice?: React.ReactNode;
+  pendingActivity?: boolean;
 }
 
 /** "14:30" in the patient's own clock format. */
@@ -92,6 +93,7 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
   onHelp,
   starting,
   notice,
+  pendingActivity = false,
 }) => {
   const nextItem = routine.nextIndex >= 0 ? routine.items[routine.nextIndex] : undefined;
   const regular = nextItem ? findExerciseOption(nextItem.exerciseId) : undefined;
@@ -117,18 +119,24 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
         option ? (
           <>
             <BigButton
-              label={guided ? 'Start exercise' : 'I’m ready'}
+              label={
+                pendingActivity
+                  ? 'Activity awaiting save'
+                  : guided
+                    ? 'Get ready'
+                    : 'I’m ready'
+              }
               icon="play-arrow"
               onPress={() => {
                 if (guided) onWithoutCamera?.();
                 else onReady();
               }}
               loading={starting}
-              disabled={Boolean(guided && !onWithoutCamera)}
+              disabled={pendingActivity || Boolean(guided && !onWithoutCamera)}
               testID="start-routine-button"
               accessibilityHint={
                 guided
-                  ? 'Starts your guided activity without using the camera'
+                  ? 'Opens preparation; the timer starts only when you are ready'
                   : `Opens the camera for ${option.title.toLowerCase()}`
               }
             />
@@ -137,6 +145,7 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
                 label="Exercise without camera"
                 variant="secondary"
                 onPress={onWithoutCamera}
+                disabled={pendingActivity}
                 testID="start-without-camera"
               />
             ) : null}
@@ -164,7 +173,7 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
                 testID="today-video"
               />
               <AppText variant="body" color={colors.textSecondary}>
-                Watch how it’s done, then press {guided ? 'Start exercise' : 'I’m ready'}.
+                Watch how it’s done, then press {guided ? 'Get ready' : 'I’m ready'}.
               </AppText>
             </View>
           ) : null}

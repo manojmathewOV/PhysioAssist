@@ -46,6 +46,7 @@ interface ExerciseChooserProps {
   onSelect: (key: ExerciseKey) => void;
   onStart: () => void;
   onStartWithoutCamera?: () => void;
+  pendingActivity?: boolean;
   /** Shows a spinner on Start (e.g. while the camera opens). */
   starting?: boolean;
   /** Optional message above the list (e.g. a Banner). */
@@ -92,6 +93,7 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
   onSelect,
   onStart,
   onStartWithoutCamera,
+  pendingActivity,
   starting,
   notice,
   plan,
@@ -188,6 +190,7 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
         onHelp={openHelp}
         starting={starting}
         notice={notice}
+        pendingActivity={pendingActivity}
       />
     );
   }

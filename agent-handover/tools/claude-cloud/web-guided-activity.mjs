@@ -39,7 +39,9 @@ try{
  await page.getByTestId('tab-exercises').click();
  check('exact supine first variant',(await page.getByTestId('today-next-title').innerText()).includes('Lying assisted'));
  await image(page,'guided-prep-390');
- await page.getByTestId('start-routine-button').click();await page.getByTestId('guided-time').waitFor();
+ await page.getByTestId('start-routine-button').click();await page.getByTestId('guided-start').waitFor();
+ await page.waitForTimeout(1600);check('preparation is untimed',await page.getByTestId('guided-time').count()===0);
+ await image(page,'guided-ready-390');await page.getByTestId('guided-start').click();await page.getByTestId('guided-time').waitFor();
  await page.waitForTimeout(1300);await page.getByTestId('guided-pause').click();
  const paused=await page.getByTestId('guided-time').innerText();await page.waitForTimeout(2100);
  check('pause freezes active time',await page.getByTestId('guided-time').innerText()===paused);
@@ -51,10 +53,10 @@ try{
  check('pause retained independently',h[0].pausedSeconds>=2&&h[0].wallSeconds>h[0].duration);
  await image(page,'guided-saved-390');await page.getByTestId('guided-done').click();
  check('next exact assisted rotation',(await page.getByTestId('today-next-title').innerText()).includes('stick-assisted'));
- await page.getByTestId('start-routine-button').click();await page.waitForTimeout(1100);await page.getByTestId('guided-stop').click();
+ await page.getByTestId('start-routine-button').click();await page.getByTestId('guided-start').click();await page.waitForTimeout(1100);await page.getByTestId('guided-stop').click();
  await page.getByTestId('guided-stopped-early').click();await page.getByTestId('guided-save-state').filter({hasText:'Saved on this device'}).waitFor();
  await page.getByTestId('guided-done').click();check('early stop advances without completing',(await page.getByTestId('today-next-title').innerText()).includes('Sleeper'));
- await page.getByTestId('start-routine-button').click();await page.waitForTimeout(1100);await page.getByTestId('guided-stop').click();
+ await page.getByTestId('start-routine-button').click();await page.getByTestId('guided-start').click();await page.waitForTimeout(1100);await page.getByTestId('guided-stop').click();
  await page.getByTestId('guided-completed').click();await page.getByTestId('guided-save-state').filter({hasText:'Saved on this device'}).waitFor();
  await page.getByTestId('guided-done').click();await page.getByTestId('tab-home').click();
  check('only completed activities count',(await page.getByTestId('home-goal-ring').getAttribute('aria-label'))?.startsWith('2 of 3'));
@@ -74,7 +76,7 @@ try{
   window.blockExerciseSave=true;
   Storage.prototype.setItem=function(key,value){if(key==='persist:exercise'&&window.blockExerciseSave)throw new Error('Synthetic storage failure');return original.call(this,key,value);};
  });
- await failed.getByTestId('tab-exercises').click();await failed.getByTestId('start-routine-button').click();
+ await failed.getByTestId('tab-exercises').click();await failed.getByTestId('start-routine-button').click();await failed.getByTestId('guided-start').click();
  await failed.waitForTimeout(1100);await failed.getByTestId('guided-stop').click();await failed.getByTestId('guided-completed').click();
  await failed.getByTestId('guided-save-state').filter({hasText:'Not saved yet'}).waitFor();
  check('failed write gives no saved credit',(await historyOf(failed)).length===0);
@@ -87,6 +89,9 @@ try{
  const notice=failed.getByTestId('today-prep').getByTestId('pending-activity-notice');
  await notice.waitFor();
  check('failure remains visible after leaving summary',(await notice.innerText()).includes('do not need to repeat'));
+ check('pending occurrence cannot be started again',await failed.getByTestId('start-routine-button').isDisabled());
+ await failed.getByTestId('tab-home').click();await failed.getByTestId('home-pending-action').waitFor();check('Home offers recovery not repeat',await failed.getByTestId('home-start-exercises').count()===0);
+ await image(failed,'guided-pending-home-320');await failed.getByTestId('home-pending-action').click();
  await failed.evaluate(()=>{window.blockExerciseSave=false;});
  await notice.locator('[data-testid^="retry-pending-"]').click();
  await failed.waitForFunction(()=>JSON.parse(JSON.parse(localStorage.getItem('persist:exercise')).history).length===1);
@@ -94,6 +99,48 @@ try{
  await failed.reload();await failed.getByTestId('tab-progress').click();await failed.getByTestId('progress-session-0').waitFor();
  check('retry survives restart with no duplicate',(await historyOf(failed)).length===1);
  await image(failed,'guided-recovered-320');check('no app runtime error',result.errors.length===0);
+ const holds=await browser.newPage({viewport:{width:320,height:568}});
+ holds.on('pageerror',e=>result.errors.push(e.message));
+ await holds.addInitScript(()=>{
+  window.requestedSpeech=[];
+  const synth=window.speechSynthesis;
+  if(synth){const original=synth.speak.bind(synth);synth.speak=u=>{window.requestedSpeech.push(u.text);return original(u);};}
+ });
+ await seed(holds,{...plan,routine:[{...plan.routine[2],holdSeconds:4}]});
+ await holds.getByTestId('tab-exercises').click();await holds.getByTestId('start-routine-button').click();
+ await holds.getByTestId('guided-start').waitFor();await holds.waitForTimeout(1400);
+ check('hold preparation is not timed',await holds.getByTestId('guided-time').count()===0);
+ await image(holds,'guided-hold-ready-320');
+ await holds.getByTestId('guided-speech-toggle').click();
+ await holds.waitForFunction(()=>window.requestedSpeech.some(t=>t.includes('Get into position')));
+ await holds.getByTestId('guided-start').click();
+ await holds.getByTestId('guided-instruction').waitFor();
+ const instruction=await holds.getByTestId('guided-instruction').boundingBox(),stop=await holds.getByTestId('guided-stop').boundingBox();
+ check('live instruction remains above Stop at 320px',instruction&&stop&&instruction.y>=0&&instruction.y+instruction.height<=stop.y);
+ await image(holds,'guided-hold-active-320');
+ await holds.getByTestId('guided-hold-time').filter({hasText:'1 hold timer finished'}).waitFor({timeout:10000});
+ const beforeRest=await holds.getByTestId('guided-time').innerText();await holds.waitForTimeout(1600);
+ check('between-hold rest is not counted',await holds.getByTestId('guided-time').innerText()===beforeRest);
+ check('timer has not created a record',(await historyOf(holds)).length===0);
+ await holds.waitForFunction(()=>window.requestedSpeech.some(t=>t.includes('Release and rest')));
+ await image(holds,'guided-hold-rest-320');
+ await holds.getByTestId('guided-pause').click();
+ await holds.getByTestId('guided-hold-time').filter({hasText:'2 hold timers finished'}).waitFor({timeout:10000});
+ check('timed minimum still needs patient report',(await historyOf(holds)).length===0&&await holds.getByTestId('guided-pause').count()===0);
+ await holds.getByTestId('guided-stop').click();
+ check('report starts as a question not a failure',(await holds.getByTestId('guided-unsaved').innerText()).includes('Tell us how it went'));
+ await holds.getByTestId('guided-completed').click();await holds.getByTestId('guided-save-state').filter({hasText:'Saved on this device'}).waitFor();
+ const heldRecord=(await historyOf(holds))[0];
+ check('hold outcome stays self-report and unmeasured',heldRecord.completionBasis==='patient_report'&&heldRecord.measured===false&&heldRecord.reps===0&&heldRecord.bestDegrees===undefined);
+ result.speechRequests=await holds.evaluate(()=>window.requestedSpeech);
+ check('browser requested prescribed hold and release speech',result.speechRequests.some(t=>t.includes('4 seconds'))&&result.speechRequests.some(t=>t.includes('Release and rest')));
+ await holds.getByTestId('guided-done').click();await holds.getByTestId('tab-home').click();
+ check('Home shows completion rather than a large duration',(await holds.getByTestId('home-progress').innerText()).includes('Completed'));
+ await holds.reload();await holds.getByTestId('tab-progress').click();await holds.getByTestId('progress-session-0').waitFor();
+ check('one activity has singular summary',(await holds.getByTestId('progress-streak').innerText()).includes('activity recorded this week'));
+ await image(holds,'guided-hold-reopened-320');await holds.close();
+ check('no app runtime errors after prescribed-hold journey',result.errors.length===0);
+
  result.complete=true;
 } catch(error){result.complete=false;result.error=String(error);throw error;}
 finally{fs.writeFileSync(path.join(out,'journey.json'),JSON.stringify(result,null,2));await browser.close();console.log(JSON.stringify(result,null,2));}
