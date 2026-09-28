@@ -233,3 +233,28 @@ it.each(['allowanceVersion', 'angleReference', 'setupProtocol'] as const)(
     expect(select(r, history, context).value).toBeUndefined();
   }
 );
+
+it('programme-owned blocking state outranks numbers and historical best', () => {
+  const v = select(record(), history, {
+    ...context,
+    blockingMessage: 'Stop and check your programme.',
+  });
+  expect(v).toMatchObject({
+    state: 'blocked',
+    message: 'Stop and check your programme.',
+  });
+  expect(v.value).toBeUndefined();
+  expect(v.best).toBeUndefined();
+});
+it('equal instants in different timezone strings have a deterministic best', () => {
+  const a = record('a', 45, 20),
+    b = record('b', 45, 20);
+  b.date = '2026-09-20T19:00:00.000+10:00';
+  expect(select(record(), [b, a], context).best?.id).toBe('a');
+  expect(select(record(), [a, b], context).best?.id).toBe('a');
+});
+it('unsupported display precision does not produce floating-point text artefacts', () => {
+  const r = record();
+  r.method.displayStepDegrees = 1.1;
+  expect(select(r, [], { ...context, methods: [r.method] }).value).toBeUndefined();
+});

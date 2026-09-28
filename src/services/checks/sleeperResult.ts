@@ -52,6 +52,8 @@ export interface SleeperResultContext {
   mode: 'patient' | 'evaluation';
   methods: readonly SleeperMethod[];
   historyComplete: boolean;
+  /** Supplied by the programme/safety owner, never inferred from a record. */
+  blockingMessage?: string;
 }
 /** Empty until method, allowance and reference-repeatability qualification is approved.
  * Records cannot register their own method. Synthetic fixtures never enter this list. */
@@ -69,7 +71,8 @@ export interface SleeperResultView {
     | 'unavailable'
     | 'not_configured'
     | 'conflict'
-    | 'retracted';
+    | 'retracted'
+    | 'blocked';
   title: string;
   side: 'left' | 'right';
   date?: string;
@@ -309,6 +312,8 @@ export function selectSleeperResult(
   c: SleeperResultContext
 ): SleeperResultView {
   const fallback = empty(c);
+  if (text(c.blockingMessage))
+    return { ...fallback, state: 'blocked', message: c.blockingMessage };
   if (
     !validSleeperCheck(current) ||
     current.profileId !== c.profileId ||

@@ -109,7 +109,8 @@ export default function SleeperResultCard({
       <AppText variant="bodyStrong" testID="sleeper-result-reason">
         {view.message}
       </AppText>
-      {view.state !== 'not_configured' &&
+      {view.state !== 'blocked' &&
+      view.state !== 'not_configured' &&
       view.state !== 'conflict' &&
       view.state !== 'retracted' ? (
         <AppText variant="body" testID="sleeper-elbow">

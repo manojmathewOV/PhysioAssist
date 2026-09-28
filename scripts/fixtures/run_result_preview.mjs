@@ -88,6 +88,7 @@ try {
       'partial-history',
       'right',
       'changed-method',
+      'blocked',
     ]) {
       await page.evaluate((name) => window.showSleeperExample(name), scenario);
       await page.waitForTimeout(60);

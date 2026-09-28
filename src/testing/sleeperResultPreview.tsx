@@ -17,6 +17,8 @@ export function ResultPreview() {
   const current = exampleCheck();
   const context = { ...EXAMPLE_CONTEXT };
   let history = [...EXAMPLE_HISTORY];
+  if (scenario === 'blocked')
+    context.blockingMessage = 'Stop and check your programme before another assessment.';
   if (scenario === 'unavailable') current.angle = { state: 'unavailable' };
   if (scenario === 'moved') {
     current.angle.degrees = 50;
