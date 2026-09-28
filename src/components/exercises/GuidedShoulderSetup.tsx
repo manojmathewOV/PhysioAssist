@@ -1,7 +1,7 @@
 import { parseYouTubeId } from '../../utils/youtube';
 /** Explicit local programme editing; never supplies a default clinical dose. */
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import { AppText, BigButton, Card } from '../ui';
 import { colors, spacing } from '../../theme';
 import {
@@ -28,6 +28,7 @@ export default function GuidedShoulderSetup({
   if (plan.joint !== 'shoulder' || plan.episode?.pathway !== 'frozen_shoulder')
     return null;
   const choose = (id: string) => {
+    Keyboard.dismiss();
     const item = plan.routine?.find((x) => x.exerciseId === id);
     setSelected(id);
     setVideo(plan.videos?.[id] ?? '');
@@ -57,6 +58,7 @@ export default function GuidedShoulderSetup({
       repRange: max === undefined ? undefined : { min, max },
       holdSeconds: seconds,
     };
+    Keyboard.dismiss();
     onChange({
       ...plan,
       videos: { ...(plan.videos ?? {}), [selected]: video.trim() },

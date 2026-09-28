@@ -7,7 +7,9 @@ final class ReferenceUITests: XCTestCase {
   for _ in 0..<24 {
    let e=item(id)
    if e.exists && e.isHittable { e.tap(); return }
-   if e.exists && e.frame.minY < 70 { app.swipeDown() } else { app.swipeUp() }
+   let middle=app.coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:0.48))
+   let to=app.coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:(e.exists && e.frame.minY < 70) ? 0.73 : 0.23))
+   middle.press(forDuration:0.1,thenDragTo:to)
   }
   XCTFail("Cannot reach \(id): \(app.debugDescription)")
  }

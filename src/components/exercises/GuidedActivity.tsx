@@ -175,34 +175,7 @@ export default function GuidedActivity({
       ) : null}
       {state.phase === 'finished' ? (
         <Card style={styles.card}>
-          <AppText variant="heading">Exercise stopped</AppText>
-          <AppText variant="body">
-            Active time: {formatDuration(time.activeMilliseconds / 1000)}. Pauses are not
-            included.
-          </AppText>
-          <AppText variant="body">No camera measurement was taken.</AppText>
-          {outcome ? (
-            <AppText testID="guided-report" variant="body">
-              {reported
-                ? 'You reported completing the exercise.'
-                : 'You reported stopping early.'}
-            </AppText>
-          ) : (
-            <>
-              <BigButton
-                label="I did the whole exercise"
-                disabled={time.activeMilliseconds <= 0}
-                onPress={() => report(true)}
-                testID="guided-completed"
-              />
-              <BigButton
-                label="I stopped early"
-                variant="secondary"
-                onPress={() => report(false)}
-                testID="guided-stopped-early"
-              />
-            </>
-          )}
+          <AppText variant="heading">Your activity</AppText>
           {onRecord && reported !== null ? (
             <>
               <Banner
@@ -231,6 +204,34 @@ export default function GuidedActivity({
               message="This attempt has not been saved. It will not tick off today’s routine."
               testID="guided-unsaved"
             />
+          )}
+
+          <AppText variant="body">
+            Active time: {formatDuration(time.activeMilliseconds / 1000)}. Pauses are not
+            included.
+          </AppText>
+          <AppText variant="body">No camera measurement was taken.</AppText>
+          {outcome ? (
+            <AppText testID="guided-report" variant="body">
+              {reported
+                ? 'You reported completing the exercise.'
+                : 'You reported stopping early.'}
+            </AppText>
+          ) : (
+            <>
+              <BigButton
+                label="I did the whole exercise"
+                disabled={time.activeMilliseconds <= 0}
+                onPress={() => report(true)}
+                testID="guided-completed"
+              />
+              <BigButton
+                label="I stopped early"
+                variant="secondary"
+                onPress={() => report(false)}
+                testID="guided-stopped-early"
+              />
+            </>
           )}
         </Card>
       ) : (

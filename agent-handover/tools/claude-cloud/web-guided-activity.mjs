@@ -78,6 +78,9 @@ try{
  await failed.waitForTimeout(1100);await failed.getByTestId('guided-stop').click();await failed.getByTestId('guided-completed').click();
  await failed.getByTestId('guided-save-state').filter({hasText:'could not be confirmed'}).waitFor();
  check('failed write gives no saved credit',(await historyOf(failed)).length===0);
+ const saveBox=await failed.getByTestId('guided-save-state').boundingBox(), returnBox=await failed.getByTestId('guided-done').boundingBox();
+ check('save failure is visible above the fixed return action at 320px',saveBox&&returnBox&&saveBox.y>=0&&saveBox.y+saveBox.height<=returnBox.y);
+
  await image(failed,'guided-save-failed-320');await failed.getByTestId('guided-done').click();
  const notice=failed.getByTestId('today-prep').getByTestId('pending-activity-notice');
  await notice.waitFor();

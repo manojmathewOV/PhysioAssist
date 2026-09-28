@@ -1,4 +1,5 @@
 import React from 'react';
+import { Keyboard } from 'react-native';
 import { fireEvent, render } from '@testing-library/react-native';
 import {
   GUIDED_SHOULDER_REVISION,
@@ -81,6 +82,22 @@ describe('exact guided shoulder variants without fabricated measurement/dose', (
     expect(
       settingsReducer(settings, setExercisePlan(next)).exercisePlan?.episode?.confirmedAt
     ).toBeUndefined();
+  });
+  it('dismisses the numeric keyboard after an explicit valid programme edit', () => {
+    const dismiss = jest.spyOn(Keyboard, 'dismiss');
+    const ui = render(
+      <GuidedShoulderSetup plan={{ ...plan(), routine: [] }} onChange={jest.fn()} />
+    );
+    try {
+      fireEvent.press(ui.getByTestId('choose-sleeper-stretch'));
+      dismiss.mockClear();
+      fireEvent.changeText(ui.getByTestId('guided-dose-min'), '2');
+      fireEvent.press(ui.getByTestId('guided-dose-apply'));
+      expect(dismiss).toHaveBeenCalledTimes(1);
+    } finally {
+      ui.unmount();
+      dismiss.mockRestore();
+    }
   });
   it('patient entry starts guided exercise, never the standing camera substitution', () => {
     const p = plan();
