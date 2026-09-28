@@ -79,10 +79,11 @@ try{
  await failed.getByTestId('guided-save-state').filter({hasText:'could not be confirmed'}).waitFor();
  check('failed write gives no saved credit',(await historyOf(failed)).length===0);
  await image(failed,'guided-save-failed-320');await failed.getByTestId('guided-done').click();
- await failed.getByTestId('pending-activity-notice').waitFor();
- check('failure remains visible after leaving summary',(await failed.getByTestId('pending-activity-notice').innerText()).includes('do not need to repeat'));
+ const notice=failed.getByTestId('today-prep').getByTestId('pending-activity-notice');
+ await notice.waitFor();
+ check('failure remains visible after leaving summary',(await notice.innerText()).includes('do not need to repeat'));
  await failed.evaluate(()=>{window.blockExerciseSave=false;});
- await failed.locator('[data-testid^="retry-pending-"]').click();
+ await notice.locator('[data-testid^="retry-pending-"]').click();
  await failed.waitForFunction(()=>JSON.parse(JSON.parse(localStorage.getItem('persist:exercise')).history).length===1);
  check('retry saves once with same explicit source',(await historyOf(failed))[0].writeRevision===2&&(await historyOf(failed))[0].instructionRevision===instructionRevision);
  await failed.reload();await failed.getByTestId('tab-progress').click();await failed.getByTestId('progress-session-0').waitFor();
