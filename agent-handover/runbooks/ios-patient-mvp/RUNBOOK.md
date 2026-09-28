@@ -1,6 +1,6 @@
 # iPhone patient MVP — remaining execution roadmap
 
-Revision 4. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
+Revision 5. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
 
 ## Delivery first; gate details on demand
 
@@ -28,10 +28,11 @@ A patient can watch, enlarge, pause, hide/show and return to the reference witho
 An appropriate local programme can be learned, performed without compulsory camera tracking, interrupted, recorded durably and revisited on an iPhone.
 
 **Work:**
-- Use the owner-described lying variants and two candidate camera positions in shoulder_capture. No standing substitution; sleeper is drift-only, not internal-rotation degrees. Doses and remaining clinical choices stay source-bound.
+- Use the owner-described lying variants and candidate bedside/foot-end setups in shoulder_capture. Sleeper supports conditional approximate IR plus observable drift, not a blanket no-number rule. No standing substitution or invented dose.
 - Separate per-output view checks from treatment eligibility. Keep props/helper and affected-side instructions; do not force phone repositioning for every approved mini-session. See shoulder_capture for observable/unassessable rules.
-- Deliver Learn -> camera-optional Do -> Pause/Stop -> acknowledged local record -> reopen -> next eligible session -> My recovery. Keep first-use teaching separate from familiar-use shortcuts.
-- Implement minimum required durable write/error acknowledgement and source-safe local ownership with the read-recovery guard intact. Do not call an in-memory update saved. Full G02 migration and scale criteria still gate E1.
+- S2a — Camera-optional Do: preparation -> explicit Start -> pause/background -> explicit Resume -> Finish/Stop. Reuse the prescribed activity and source; no poses, camera count or numerical measurement is manufactured. Until durable recording is integrated, show not saved and do not give routine credit.
+- S2b — Durable record: explicit completion/self-report and stopped-early meanings, stable event identity, storage acknowledgement, retry without duplication and failed-read guard retained. Do not call in-memory state saved; full G02 migration and scale criteria still gate E1.
+- S2c — Reopen and progress: restart -> same patient/episode/side/occurrence -> acknowledged participation visible -> correct next eligible session. Unmeasured Do stays separate from Check; demonstrate on native iOS. These are successive commits/evidence scopes, not new gates or another acceptance ledger.
 - Keep activity versus Check identities explicit. An unsupported numerical Check is visibly unavailable/guided-only; it is neither zero nor an acceptance pass. Preserve historical observations with their original basis.
 - Remove false monitoring/waiting-for-a-physio promises without removing programme permissions. Sign-in is not a backup; local setup is not authenticated clinician approval.
 - Run actual native screenshots and inspect after pause, missing media, camera denial, storage retry and large text. Physical-iPhone evidence is separately required for a patient-ready claim.
@@ -86,13 +87,13 @@ The owner has a traceable, scoped basis for a pilot or release, with recovery/su
 
 ## Shoulder capture — owner direction, qualification still required
 
-Owner-selected design direction; no estimator, dose, threshold or clinical activation approved by this declaration.
+Owner-selected output direction permits conditional approximate sleeper IR alongside drift; not an implemented estimator, accuracy claim, clinical dose or activation.
 
 | Variant | Candidate camera placement | Intended observation | Output boundary |
 |---|---|---|---|
 | Supine assisted forward elevation | Beside bed, slightly above mattress | Candidate upper-arm elevation relative to trunk; retain assisting arm and any prescribed support. Not hand height or isolated glenohumeral ROM. | Guided Do first; numerical Check only with method-specific qualification. |
 | Supine stick-assisted external rotation | Foot end, slightly above mattress | Affected elbow close to body. Forearm rotation and elbow-position observability are separate; foreshortening or occlusion is not proof the elbow is correctly positioned. Elbow-flexion angle is not shoulder rotation. | Guidance plus qualified observable proxies; no rotation safety boundary or substituted standing method. |
-| Sleeper stretch | Raised bedside compromise; no required overhead rig | Relative torso roll, elbow migration/upper-arm repositioning and changed elbow bend only where visible. Confirm initial variant separately; prescribed initial roll is not drift and stillness is not correct setup. | Position-drift observations only if qualified. No internal-rotation number, scapular-fixation, humeral-head, capsule-tension or force claim. |
+| Sleeper stretch | Raised bedside compromise; no required overhead rig | Candidate approximate internal rotation from forearm orientation in the prescribed sleeper setup, with visible torso roll, elbow migration/upper-arm repositioning and elbow-bend changes assessed separately. A prescribed initial roll is not drift; stillness alone does not validate setup. | Approximate internal rotation may be displayed when this variant, angle reference, camera view and contributing interval support the qualified method. Otherwise withhold the number and retain useful observable drift/guidance. No claim of exact isolated glenohumeral ROM, scapular fixation, capsule tension or force. |
 
 - Use two optional capture positions, not two mandatory camera calibrations each mini-session. Preserve prescription order and support; never change the movement to satisfy the lens.
 - Camera-optional Do does not create synthetic poses or measured results. Patient confirmation stays self-reported; no automatic completion from watching or elapsed time alone.
@@ -100,6 +101,10 @@ Owner-selected design direction; no estimator, dose, threshold or clinical activ
 - Camera/stand movement invalidates the baseline. Detectability and robust rebaselining require testing; no fixed pixel or generic anatomical threshold selected here.
 - Compact record: variant, side, assistance, view, method, observation basis and coverage. No routine raw video or all-frame retention; incompatible methods remain separate.
 - D05/D08 camera direction is partially resolved, not clinical method approval. Sleeper exact starting variant, hold/rest, interval anchor/window and symptom policy remain explicitly open.
+- Sleeper estimate and compensation checks are complementary, not mutually exclusive. A practical raised bedside view looking approximately along the upper arm is a candidate; overhead capture is not required. Generic bedside placement alone does not qualify a numerical result.
+- Define the anatomical/measurement reference and rotation direction. Elbow-to-wrist forearm orientation is the candidate input, not shoulder-elbow-wrist elbow flexion, hand height or wrist bending. An arbitrary restricted starting pose must not be relabelled zero internal rotation; without a known reference report only a distinctly labelled change, or no number.
+- Show approximate status beside the value and preserve it in history/export. Keep variant, side, assistance, view, reference and estimator identity for comparisons. Camera movement or material position drift can invalidate the contributing interval; never present an old value as current or missing as zero. Do not use an approximate value to authorise progression, safety limits or greater force.
+- Validate against an independent reference using the exact variant, both sides, practical view offsets, restricted ranges, support/occlusion and repeated phone setup. Reference error, false cues, issued-result coverage and unavailable results belong together. No fixed error bound or extra clinical hold duration is specified here.
 
 **E0 — Integrated engineering baseline:** One reproducible reviewed development baseline; no patient/release claim.
 
@@ -278,16 +283,16 @@ Owner-selected design direction; no estimator, dose, threshold or clinical activ
 
 **Closure requires:** G02, G03, G04. **Executor:** patient_experience_implementer. **Acceptor:** independent_usability_reviewer.
 
-**Next bounded work:** Implement source-aware camera-optional shoulder Do with truthful activity recording and per-variant bedside/foot-end guidance. Do not activate unvalidated angle/drift detection; finish native live reference checks through that real patient route.
+**Next bounded work:** S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.
 
 **Remaining work:**
-- Implement source-aware camera-optional shoulder Do with truthful activity recording and per-variant bedside/foot-end guidance. Do not activate unvalidated angle/drift detection; finish native live reference checks through that real patient route.
+- S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.
 - Learn records viewing only; Do records activity with provenance; Check records qualified standardized observations. Camera-off Do remains possible only for an otherwise permitted activity.
 - Use patient-owned Today/My recovery/Help experience, concise first-use versus familiar-use guidance and appointment summary; do not build a clinician dashboard.
 
 **Required validation:**
 - **G05.V01** Learn -> Do -> interrupted Do -> incomplete Check -> valid Check -> later compatible comparison, using the same profile/episode.
-- **G05.V02** Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not treated as failed rehabilitation. Sleeper offers no internal-rotation number; a stable but wrong initial position is not correct technique, and occlusion is unassessable rather than zero drift.
+- **G05.V02** Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not failed rehabilitation. Sleeper can issue clearly approximate IR only with a qualified method, known angle reference and sufficient view/interval; otherwise no number, not zero. Approximate result and drift observability are separate. Stable but wrong setup does not prove technique; an arbitrary starting pose is not zero IR.
 - **G05.V03** Dose/schedule changes preserve compatible methods; assistance/method changes separate comparison or mark incompatibility.
 - **G05.V04** Goal, clinical restriction and demonstrator endpoint remain three separate quantities.
 - **G05.V05** Watching or a simulated demonstration never becomes completed treatment or a clinical measurement.
@@ -388,7 +393,7 @@ Owner-selected design direction; no estimator, dose, threshold or clinical activ
 **Required validation:**
 - **G08.V01** Thirty synthetic open/start/pause/stop/close cycles as a stress fixture: no sustained retained-memory growth; include background/memory pressure.
 - **G08.V02** Cold offline first use with required model/media present; low-storage model failure returns honest unmeasured state.
-- **G08.V03** Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims.
+- **G08.V03** Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims. Sleeper approximate IR requires independent reference testing of its exact angle definition and practical bedside view; check camera pitch/roll, both sides, elbow/wrist substitutes, torso drift, occlusion and repositioning. Distinguish absolute IR from change relative to setup; no unvalidated numeric error claim.
 - **G08.V04** A method change cannot silently present the same measurement-method version or turn simulation success into clinical accuracy.
 - **G08.V05** More noisy repetitions without changed true endpoints cannot justify an automatic improvement claim; report selection policy and sample basis.
 - **G08.V06** Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. Include stand movement, mattress compression, mirrored sides, initial prescribed roll, assistance and partial occlusion; rebaseline camera movement rather than label it patient drift.

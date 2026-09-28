@@ -6,16 +6,17 @@ Generated from `runbook.json` and `STATUS.json`; do not edit this view. This is 
 
 **Outcome:** An appropriate local programme can be learned, performed without compulsory camera tracking, interrupted, recorded durably and revisited on an iPhone.
 
-**Next action:** Implement source-aware camera-optional shoulder Do with truthful activity recording and per-variant bedside/foot-end guidance. Do not activate unvalidated angle/drift detection; finish native live reference checks through that real patient route.
+**Next action:** S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.
 
-**Evidence basis:** implementation `4c8b20d`; hosted `970e98c` success. Review queue: reference_safety (reviewer_reports_acceptance_formal_record_pending), storage_read_containment (independent_review_pending), reference_controls (accepted_with_nonblocking_followups_owner_relay), native_no_camera_recovery (code_corroborated_owner_relay), compact_accessibility_followup (implemented_pending_independent_review). Do not redo established fixes without fresh contrary evidence.
+**Evidence basis:** implementation `4c8b20d`; hosted `60fce34` success. Review queue: reference_safety (reviewer_reports_acceptance_formal_record_pending), storage_read_containment (independent_review_pending), reference_controls (accepted_with_nonblocking_followups_owner_relay), native_no_camera_recovery (code_corroborated_owner_relay), compact_accessibility_followup (accepted_owner_relay). Do not redo established fixes without fresh contrary evidence.
 
 ## Execute in small reviewable steps
 
-- Use the owner-described lying variants and two candidate camera positions in shoulder_capture. No standing substitution; sleeper is drift-only, not internal-rotation degrees. Doses and remaining clinical choices stay source-bound.
+- Use the owner-described lying variants and candidate bedside/foot-end setups in shoulder_capture. Sleeper supports conditional approximate IR plus observable drift, not a blanket no-number rule. No standing substitution or invented dose.
 - Separate per-output view checks from treatment eligibility. Keep props/helper and affected-side instructions; do not force phone repositioning for every approved mini-session. See shoulder_capture for observable/unassessable rules.
-- Deliver Learn -> camera-optional Do -> Pause/Stop -> acknowledged local record -> reopen -> next eligible session -> My recovery. Keep first-use teaching separate from familiar-use shortcuts.
-- Implement minimum required durable write/error acknowledgement and source-safe local ownership with the read-recovery guard intact. Do not call an in-memory update saved. Full G02 migration and scale criteria still gate E1.
+- S2a — Camera-optional Do: preparation -> explicit Start -> pause/background -> explicit Resume -> Finish/Stop. Reuse the prescribed activity and source; no poses, camera count or numerical measurement is manufactured. Until durable recording is integrated, show not saved and do not give routine credit.
+- S2b — Durable record: explicit completion/self-report and stopped-early meanings, stable event identity, storage acknowledgement, retry without duplication and failed-read guard retained. Do not call in-memory state saved; full G02 migration and scale criteria still gate E1.
+- S2c — Reopen and progress: restart -> same patient/episode/side/occurrence -> acknowledged participation visible -> correct next eligible session. Unmeasured Do stays separate from Check; demonstrate on native iOS. These are successive commits/evidence scopes, not new gates or another acceptance ledger.
 - Keep activity versus Check identities explicit. An unsupported numerical Check is visibly unavailable/guided-only; it is neither zero nor an acceptance pass. Preserve historical observations with their original basis.
 - Remove false monitoring/waiting-for-a-physio promises without removing programme permissions. Sign-in is not a backup; local setup is not authenticated clinician approval.
 - Run actual native screenshots and inspect after pause, missing media, camera denial, storage retry and large text. Physical-iPhone evidence is separately required for a patient-ready claim.

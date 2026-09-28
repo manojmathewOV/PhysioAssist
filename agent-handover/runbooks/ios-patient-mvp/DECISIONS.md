@@ -32,3 +32,7 @@ Record decision ID, actor, date, alternatives, selected option, source/evidence,
 ## Owner clarification: lying-shoulder capture (2026-09-28)
 
 D05/D08 are partially specified: slightly raised bedside camera for supine assisted elevation and sleeper position drift; foot-end, slightly raised for supine stick-assisted ER with the affected elbow close to the body. No overhead rig is required. See `shoulder_capture` in runbook.json and its generated roadmap section. This is a capture-design direction, not validation, a new dose or permission to perform an exercise. Exact sleeper starting variant, hold/rest, schedule/window and symptom rules remain open.
+
+## Owner clarification: approximate sleeper internal rotation
+
+2026-09-28: Manoj clarified that sleeper stretch can provide an approximate internal-rotation number. This supersedes the earlier drift-only/no-number wording in current requirements. Approximate IR and visible compensation observations are complementary; numerical output remains conditional on method/view/reference qualification, while guidance can remain useful without a number. D08 now permits investigating this output, not claiming the estimator already works. Exact sleeper variant/reference asset, hold/rest and schedule anchor remain open. No dose or permitted clinical range changed.

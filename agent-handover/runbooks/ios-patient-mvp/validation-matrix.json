@@ -1,6 +1,6 @@
 {
   "schema": "physioassist-validation-matrix/1",
-  "revision": 4,
+  "revision": 5,
   "runbook_id": "ios-patient-mvp",
   "evidence_schema": {
     "required": [
@@ -551,7 +551,7 @@
       "id": "G05.V02",
       "gate": "G05",
       "required_for_gate": true,
-      "scenario": "Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not treated as failed rehabilitation. Sleeper offers no internal-rotation number; a stable but wrong initial position is not correct technique, and occlusion is unassessable rather than zero drift.",
+      "scenario": "Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not failed rehabilitation. Sleeper can issue clearly approximate IR only with a qualified method, known angle reference and sufficient view/interval; otherwise no number, not zero. Approximate result and drift observability are separate. Stable but wrong setup does not prove technique; an arbitrary starting pose is not zero IR.",
       "expected": "The stated invariant holds in both positive and contrary/invalid-input controls; exact observations are retained.",
       "evidence_class": "native_patient_journey",
       "executor": "patient_app_owner",
@@ -889,7 +889,7 @@
       "id": "G08.V03",
       "gate": "G08",
       "required_for_gate": true,
-      "scenario": "Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims.",
+      "scenario": "Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims. Sleeper approximate IR requires independent reference testing of its exact angle definition and practical bedside view; check camera pitch/roll, both sides, elbow/wrist substitutes, torso drift, occlusion and repositioning. Distinguish absolute IR from change relative to setup; no unvalidated numeric error claim.",
       "expected": "The stated invariant holds in both positive and contrary/invalid-input controls; exact observations are retained.",
       "evidence_class": "reference_measurement_and_physical_device",
       "executor": "measurement_owner",

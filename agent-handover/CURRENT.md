@@ -1,5 +1,9 @@
 # Current PhysioAssist work — read this, not the historical state log
 
+## Latest clarification and relayed review — 2026-09-28
+
+Manoj permits a conditional approximate sleeper internal-rotation estimate alongside drift checks, superseding current drift-only wording; the estimator and clinical details remain unqualified. Claude's latest owner-relayed review accepts compact accessibility and the Android note at `4c8b20d`, reporting 1,661 passing/four opt-in skipped tests; no reviewer-authored GitHub approval is inferred. Checks and iOS at `60fce34` are now observed green. Storage review and the formal safety record remain separate. S2 proceeds in three tested increments: camera-optional interaction -> durable acknowledged record -> reopen/progress. See [the scoped record](responses/2026-09-28-s2-sleeper-refinement.md) and regenerated ACTIVE. No whole gate is accepted.
+
 Updated 2026-09-28. Scope: **iPhone patient-only, local-first MVP**. Surgeon/physio backend, monitoring and clinical cloud sync remain future scope.
 
 ## Ownership and basis
