@@ -1,3 +1,8 @@
+import {
+  collectHeldObservations,
+  type HeldObservations,
+  type HoldObservationProvider,
+} from './quantitativeObservations';
 /**
  * Session analysis: repetitions, a movement profile, and findings compared with
  * a reference (the physio's demonstration) and/or the prescribed goal.
@@ -43,6 +48,8 @@ export interface SessionTargets {
 }
 
 export interface AnalysisOptions {
+  /** Explicit held-interval quantities; not the repetition-only warning detector. */
+  observeHold?: HoldObservationProvider;
   /** Same stage policy as live feedback; a reference cannot grant progression. */
   coaching?: 'comfort' | 'target';
   /** Per-repetition compensation checks (services/movement/compensations). */
@@ -76,7 +83,18 @@ export interface MeasurementResult {
   reason?: UnavailableReason;
 }
 
+export interface RepetitionObservation extends CompensationHit {
+  repetitionIndex: number;
+  fromT: number;
+  toT: number;
+  basis: 'repetition_summary';
+}
+
 export interface SessionAnalysis {
+  observations?: HeldObservations;
+  compensationObservations?: RepetitionObservation[];
+  /** Total valid hits; stored detail is capped at 64 and may be partial. */
+  compensationObservationCount?: number;
   /** The accepted measurement (see MeasurementResult). */
   result: MeasurementResult;
   /** For still measurements (e.g. heel-prop knee extension) the held angle. */
@@ -233,11 +251,12 @@ function analyseMovement(
   frames: MovementFrame[],
   context: MovementContext,
   targets: SessionTargets = {},
-  { detect, cues = {} }: AnalysisOptions = {}
+  { detect, cues = {}, observeHold }: AnalysisOptions = {}
 ): SessionAnalysis {
   const direction = directionOf(context);
   const movement = movementOf(context.exerciseId);
-  if (movement.mode === 'hold') return analyseHold(frames, context, targets, cues);
+  if (movement.mode === 'hold')
+    return analyseHold(frames, context, targets, cues, observeHold);
   const lowerLimb = context.joint === 'knee' || context.joint === 'hip';
   const segmented = segmentReps(frames, {
     fallback: lowerLimb && direction === 'away' ? 'hipDrop' : undefined,
@@ -418,11 +437,28 @@ function analyseMovement(
     });
   }
 
+  const compensationObservations: RepetitionObservation[] = [];
+  let compensationObservationCount = 0;
   // Compensations: per repetition, reported when they recur
   if (detect) {
     const byId = new Map<FindingId, { reps: number[]; worst: CompensationHit }>();
     for (const rep of reps) {
       for (const hit of detect(rep, context)) {
+        if (
+          Number.isFinite(hit.value) &&
+          Number.isFinite(hit.durationMs) &&
+          hit.durationMs >= 0
+        ) {
+          compensationObservationCount++;
+          if (compensationObservations.length < 64)
+            compensationObservations.push({
+              ...hit,
+              repetitionIndex: rep.index,
+              fromT: rep.startT,
+              toT: rep.endT,
+              basis: 'repetition_summary',
+            });
+        }
         const entry = byId.get(hit.id);
         if (!entry) byId.set(hit.id, { reps: [rep.index], worst: hit });
         else {
@@ -466,6 +502,9 @@ function analyseMovement(
     profile,
     findings,
     cues: findings.slice(0, 2).map((f) => f.cue),
+    ...(compensationObservations.length
+      ? { compensationObservations, compensationObservationCount }
+      : {}),
   };
 }
 
@@ -479,7 +518,8 @@ function analyseHold(
   frames: MovementFrame[],
   context: MovementContext,
   targets: SessionTargets,
-  cues: Partial<Record<FindingId, string>>
+  cues: Partial<Record<FindingId, string>>,
+  observeHold?: HoldObservationProvider
 ): SessionAnalysis {
   const direction = directionOf(context);
   const movement = movementOf(context.exerciseId);
@@ -554,7 +594,9 @@ function analyseHold(
             ? 'not_still'
             : 'not_seen',
       };
+  const observations = collectHeldObservations(frames, context, hold, observeHold);
   return {
+    ...(observations ? { observations } : {}),
     result,
     hold,
     reps: [],

@@ -1,3 +1,5 @@
+import type { HeldObservations } from '../../services/movement/quantitativeObservations';
+import type { RepetitionObservation } from '../../services/movement/analysis';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Exercise, ValidationResult, ExerciseMetrics } from '../../types/exercise';
 import type { HistoryWriteEvent } from '../acknowledgedHistory';
@@ -24,6 +26,9 @@ export const clockOf = (s: {
 });
 
 export interface ExerciseHistory {
+  observations?: HeldObservations;
+  compensationObservations?: RepetitionObservation[];
+  compensationObservationCount?: number;
   /** New camera-optional records are scoped and acknowledged independently of measurement. */
   kind?: 'activity';
   profileId?: string;
@@ -71,6 +76,9 @@ export interface ExerciseHistory {
 
 /** Extra results recorded with a finished session. */
 export interface SessionResult {
+  observations?: HeldObservations;
+  compensationObservations?: RepetitionObservation[];
+  compensationObservationCount?: number;
   joint?: string;
   bestDegrees?: number;
   goalDegrees?: number;
