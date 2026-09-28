@@ -16,6 +16,11 @@ import { useGuidedRoutine } from '../exercises/useGuidedRoutine';
 import { logout } from '../../store/slices/userSlice';
 import type { ExercisePlan } from '../../services/pose/exercisePlan';
 
+afterEach(() => {
+  jest.restoreAllMocks();
+  jest.useRealTimers();
+});
+
 const plan: ExercisePlan = {
   joint: 'shoulder',
   side: 'left',
@@ -190,5 +195,64 @@ describe('guided patient screen', () => {
     act(() => h.result.current.start());
     expect(h.result.current.content).toBeNull();
     h.unmount();
+  });
+});
+
+it('reviewing a reference pauses activity time and does not load media before request', () => {
+  jest.useFakeTimers();
+  jest.setSystemTime(1000);
+  Object.defineProperty(AppState, 'currentState', {
+    value: 'active',
+    configurable: true,
+  });
+  const sub = jest
+    .spyOn(AppState, 'addEventListener')
+    .mockReturnValue({ remove: jest.fn() });
+  const ui = render(
+    <GuidedActivity
+      exercise={EXERCISES.armRaise}
+      side="left"
+      amount="3 times"
+      allowed
+      onExit={() => {}}
+      videoLink="https://www.youtube.com/watch?v=M7lc1UVf-VE"
+    />
+  );
+  expect(ui.queryByTestId('guided-video')).toBeNull();
+  fireEvent.press(ui.getByTestId('guided-start'));
+  act(() => {
+    jest.advanceTimersByTime(2000);
+  });
+  fireEvent.press(ui.getByTestId('guided-watch'));
+  expect(ui.getByTestId('guided-video')).toBeTruthy();
+  act(() => {
+    jest.advanceTimersByTime(10000);
+  });
+  expect(ui.getByTestId('guided-time')).toHaveTextContent('2 sec');
+  fireEvent.press(ui.getByTestId('follow-along-toggle'));
+  // Hidden means inaccessible, not destroyed: include hidden nodes for this assertion.
+  expect(ui.queryByTestId('guided-video')).toBeNull();
+  expect(ui.getByTestId('guided-video', { includeHiddenElements: true })).toHaveProp(
+    'accessibilityElementsHidden',
+    true
+  );
+  fireEvent.press(ui.getByTestId('guided-pause'));
+  act(() => {
+    jest.advanceTimersByTime(1000);
+  });
+  expect(ui.getByTestId('guided-time')).toHaveTextContent('3 sec');
+  ui.unmount();
+  sub.mockRestore();
+  jest.useRealTimers();
+});
+
+it('a programme interrupted during the attempt is recorded without new-programme credit', () => {
+  let state = move(readyActivity(), { type: 'start', at: 1000 });
+  state = move(state, { type: 'interrupt', at: 2000, reason: 'programme_changed' });
+  state = move(state, { type: 'finish', at: 3000 });
+  expect(activityOutcome(state, true)).toMatchObject({
+    completion: 'completed',
+    completionBasis: 'patient_report',
+    routineCreditEligible: false,
   });
 });

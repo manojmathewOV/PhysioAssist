@@ -164,7 +164,7 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
                 testID="today-video"
               />
               <AppText variant="body" color={colors.textSecondary}>
-                Watch how it’s done, then press I’m ready.
+                Watch how it’s done, then press {guided ? 'Start exercise' : 'I’m ready'}.
               </AppText>
             </View>
           ) : null}
@@ -309,8 +309,8 @@ export const ProgrammeWaiting: React.FC<{
       </View>
       <AppText variant="body" color={colors.textSecondary}>
         {needsSpecialist
-          ? 'Your exercises will appear here once your specialist team has approved them. Until then, follow the instructions they gave you.'
-          : 'Your physiotherapist will confirm your exercises for this stage of your recovery. Until then, follow the instructions they gave you.'}
+          ? 'This programme needs specialist approval before it is used. Follow the instructions you were given and confirm their details in programme set-up.'
+          : 'Check the exercises for this stage against the programme you were given, then confirm those details in programme set-up. This app is not monitored by a clinician.'}
       </AppText>
     </Card>
     <View style={waitingStyles.links}>

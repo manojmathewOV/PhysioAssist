@@ -86,6 +86,7 @@ export function activityOutcome(s: GuidedActivityState, completedByPatient: bool
     startedAt: s.clock.startedAt!,
     endedAt: s.endedAt!,
     kind: 'activity' as const,
+    routineCreditEligible: s.interruption !== 'programme_changed',
     completion:
       time.activeMilliseconds <= 0
         ? ('attempted' as const)

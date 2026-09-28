@@ -87,6 +87,7 @@ export function useGuidedRoutine() {
         measured: false,
         unavailableReason: 'camera_not_used',
         kind: 'activity',
+        routineCreditEligible: outcome.routineCreditEligible,
         completionBasis: 'patient_report',
         completion: outcome.completion,
         confirmedByPatient: outcome.completion === 'completed',

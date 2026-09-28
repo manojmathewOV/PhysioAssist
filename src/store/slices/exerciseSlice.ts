@@ -30,6 +30,7 @@ export interface ExerciseHistory {
   completionBasis?: 'patient_report';
   durability?: 'pending' | 'saved';
   recordConflict?: boolean;
+  routineCreditEligible?: boolean;
   writeRevision?: number;
   /** Routine calendar day bound at execution, independent of a later finish/save. */
   activityDay?: string;

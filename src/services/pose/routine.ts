@@ -202,7 +202,12 @@ type RoutineRecord = Pick<
   Partial<
     Pick<
       ExerciseHistory,
-      'occurrenceKey' | 'episodeId' | 'resolves' | 'durability' | 'activityDay'
+      | 'occurrenceKey'
+      | 'episodeId'
+      | 'resolves'
+      | 'durability'
+      | 'activityDay'
+      | 'routineCreditEligible'
     >
   >;
 
@@ -298,7 +303,7 @@ export function todaysRoutine(
   const inRoutineIds = new Set(routine.map((i) => i.exerciseId));
   const episodeId = plan?.episode?.id;
   const { records, conflicts } = dedupe(
-    history.filter((h) => h.durability !== 'pending')
+    history.filter((h) => h.durability !== 'pending' && h.routineCreditEligible !== false)
   );
   const todays = records
     .filter(

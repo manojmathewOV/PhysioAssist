@@ -54,6 +54,9 @@ export default function GuidedActivity({
   const stateRef = useRef(state);
   const [now, setNow] = useState(Date.now);
   const [expired, setExpired] = useState(false);
+  const [videoMounted, setVideoMounted] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   const reportSent = useRef(false);
   const [reported, setReported] = useState<boolean | null>(null);
   const focused = useIsFocused();
@@ -67,13 +70,18 @@ export default function GuidedActivity({
   useEffect(() => {
     const sub = AppState.addEventListener('change', (status) => {
       setForeground(status === 'active');
-      if (status !== 'active')
+      if (status !== 'active') {
+        setReviewing(false);
         send({ type: 'interrupt', reason: 'background', at: Date.now() });
+      }
     });
     return () => sub.remove();
   }, [send]);
   useEffect(() => {
-    if (!focused) send({ type: 'interrupt', reason: 'background', at: Date.now() });
+    if (!focused) {
+      setReviewing(false);
+      send({ type: 'interrupt', reason: 'background', at: Date.now() });
+    }
   }, [focused, send]);
   useEffect(() => {
     if (!allowed)
@@ -90,6 +98,7 @@ export default function GuidedActivity({
       setExpired(true);
       return;
     }
+    if (type === 'start' || type === 'resume' || type === 'finish') setReviewing(false);
     send({ type, at: Date.now() });
   };
   const report = (completed: boolean) => {
@@ -99,7 +108,8 @@ export default function GuidedActivity({
     setReported(completed);
     onRecord?.(outcome);
   };
-  const paused = state.phase !== 'active' || !focused || !foreground || !allowed;
+  const paused =
+    !focused || !foreground || !allowed || (!reviewing && state.phase !== 'active');
   const videoId = parseYouTubeId(videoLink);
   const outcome = reported === null ? null : activityOutcome(state, reported);
   const disabled =
@@ -262,11 +272,36 @@ export default function GuidedActivity({
               </AppText>
             ))}
           </Card>
-          {videoId ? (
+          {videoId && (!showVideo || (state.phase === 'paused' && !reviewing)) ? (
+            <BigButton
+              label="Watch demonstration"
+              variant="secondary"
+              testID="guided-watch"
+              disabled={!allowed || !focused || !foreground}
+              onPress={() => {
+                if (stateRef.current.phase === 'active')
+                  send({ type: 'pause', at: Date.now() });
+                setReviewing(true);
+                setVideoMounted(true);
+                setShowVideo(true);
+              }}
+            />
+          ) : null}
+          {reviewing ? (
+            <AppText variant="body">
+              Watching does not count as exercise time.{' '}
+              {state.phase === 'ready' ? 'Press Start exercise' : 'Press Resume'} when you
+              are ready to exercise.
+            </AppText>
+          ) : null}
+          {videoId && videoMounted ? (
             <ExerciseVideo
               videoId={videoId}
               start={parseYouTubeStart(videoLink)}
               paused={state.phase === 'ready' ? disabled : paused}
+              hidden={!showVideo}
+              compact={state.phase === 'active'}
+              onHide={() => setShowVideo(false)}
               testID="guided-video"
             />
           ) : null}
