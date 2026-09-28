@@ -164,6 +164,9 @@ export interface BigButtonProps {
   compact?: boolean;
 }
 
+// Keep this numeric-only style independent of the two installed RN TextStyle declarations.
+const buttonIconStyle = { marginRight: spacing.sm };
+
 const buttonColors: Record<
   ButtonVariant,
   { bg: string; pressed: string; fg: string; border?: string }
@@ -217,7 +220,7 @@ export const BigButton: React.FC<BigButtonProps> = ({
       ) : (
         <>
           {icon ? (
-            <Icon name={icon} size={26} color={palette.fg} style={styles.buttonIcon} />
+            <Icon name={icon} size={26} color={palette.fg} style={buttonIconStyle} />
           ) : null}
           <AppText variant="button" color={palette.fg}>
             {label}
@@ -507,7 +510,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonCompact: { minHeight: touch.min, paddingHorizontal: spacing.md },
-  buttonIcon: { marginRight: spacing.sm },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
