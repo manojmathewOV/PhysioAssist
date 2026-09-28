@@ -2,6 +2,8 @@
 
 ## Latest clarification and relayed review — 2026-09-28
 
+**Latest C05 partial resolution:** the upper arm is at shoulder level, approximately 90 degrees to the trunk, with the pillow-line teaching cue. Primary drift is caudal towards the waist; some drift is allowed. No numerical band or clinician-only display was approved. See [caudal specification and projection probe](research/2026-09-28-sleeper-elbow-drift/CAUDAL_RULE.md). S2a remains active; no live estimator or dose is enabled.
+
 Manoj permits a conditional approximate sleeper internal-rotation estimate alongside drift checks, superseding current drift-only wording; the estimator and clinical details remain unqualified. Claude's latest owner-relayed review accepts compact accessibility and the Android note at `4c8b20d`, reporting 1,661 passing/four opt-in skipped tests; no reviewer-authored GitHub approval is inferred. Checks and iOS at `60fce34` are now observed green. Storage review and the formal safety record remain separate. S2 proceeds in three tested increments: camera-optional interaction -> durable acknowledged record -> reopen/progress. See [the scoped record](responses/2026-09-28-s2-sleeper-refinement.md) and regenerated ACTIVE. No whole gate is accepted.
 
 Updated 2026-09-28. Scope: **iPhone patient-only, local-first MVP**. Surgeon/physio backend, monitoring and clinical cloud sync remain future scope.
@@ -19,7 +21,7 @@ Updated 2026-09-28. Scope: **iPhone patient-only, local-first MVP**. Surgeon/phy
 
 [Claude's owner-relayed review](reviews/2026-09-28-owner-relayed-claude/REVIEW.md) accepts merged S1 code with two nonblocking follow-ups and corroborates PR29 no-camera code. It is not a new GitHub approval submitted by Claude. His independent 1,649-test run is reviewer-reported; storage containment still lacks independent review and formal safety acceptance is not fabricated. Prior PR29 hosted Checks/iOS are verified green at 970e98c.
 
-The [compact-progress accessibility follow-up and Android identity note](responses/2026-09-28-review-shoulder.md) are implemented at 4c8b20d: 1,661 passing/four skipped tests and 22 real-web checks. Independent review and physical VoiceOver observation remain open. S2/G05.W1 is the next implementation pickup: camera-optional, source-aware shoulder Do. Manoj's bedside elevation/sleeper and foot-end ER directions are in runbook.json `shoulder_capture`; sleeper has no internal-rotation number and visibility is per output. This neither approves an estimator/dose nor accepts S1's missing native-live cases.
+The [compact-progress accessibility follow-up and Android identity note](responses/2026-09-28-review-shoulder.md) are implemented at 4c8b20d: 1,661 passing/four skipped tests and 22 real-web checks. Owner-relayed independent acceptance is recorded; physical VoiceOver observation remains open. S2/G05.W1 is the next implementation pickup: camera-optional, source-aware shoulder Do. Manoj's bedside elevation/sleeper and foot-end ER directions are in runbook.json `shoulder_capture`; sleeper permits qualified approximate internal rotation paired with caudal elbow drift, and visibility is per output. This neither approves an estimator/dose nor accepts S1's missing native-live cases.
 
 ## What is genuinely established
 

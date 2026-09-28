@@ -1,16 +1,16 @@
 {
-  "revision": 6,
+  "revision": 7,
   "role": "portable plan files, not implementation evidence acceptance",
   "files": [
     {
       "path": "ACTIVE.md",
-      "sha256": "3b8a0e8229485af8975490d62887431f91ab247193fabacdc9f5c183d2f074c9",
-      "bytes": 5513
+      "sha256": "3277ad133c52b7e89e9925064755e1303c64274211fd5a79bd00fa57a94c2990",
+      "bytes": 5606
     },
     {
       "path": "DECISIONS.md",
-      "sha256": "152a579cb81c414a40555da3b1385574dd1e597d48e49b6742935723b551f81d",
-      "bytes": 7512
+      "sha256": "33400a18722a66e9981cb54e1f8f25516924d28b471530846bb5eccfb937d629",
+      "bytes": 8610
     },
     {
       "path": "PROGRESSION.md",
@@ -19,8 +19,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "313a2f75266013572963e3a6fd63e9c3a62dd46a108b9b4694423b755c755062",
-      "bytes": 3142
+      "sha256": "e3dfc3defb8f53b30158779626992ceb1257b5359f55ea9eaa69dc8e47b8b6b4",
+      "bytes": 3254
     },
     {
       "path": "RESEARCH.md",
@@ -29,23 +29,23 @@
     },
     {
       "path": "ROADMAP.cnp",
-      "sha256": "4f13f2f47ee728f1c3d21e926ab554352f9bba942ea55bd76555be974df1b191",
-      "bytes": 104558
+      "sha256": "a76c98eeb03209bc58f3d9598db6e4c1acd977c3da25de6dbd069c0ccf104df9",
+      "bytes": 105217
     },
     {
       "path": "RUNBOOK.md",
-      "sha256": "df751a6ec7cf2e5233142237233a5fc663e2c56ba6964daa73541d84ef9c5688",
-      "bytes": 49440
+      "sha256": "82cf0cc3ffba0dca745f564a74ddcc42b3a6f57ee70e4fc92120e96a2513708c",
+      "bytes": 50505
     },
     {
       "path": "STATUS.json",
-      "sha256": "01ac45505ec15f04032c6cace927eca635cda44f8d46e2f5bed9ec6995211435",
+      "sha256": "3988532a47bf3985fef8b8045c0ca45f1a7c8965ed28f7558b6bc0554b89b8cc",
       "bytes": 9303
     },
     {
       "path": "TEST_MATRIX.md",
-      "sha256": "d4a3f92340fcbe8760ff20831868f7da55759e6faa5a636f53cb80e3c750c0c0",
-      "bytes": 17798
+      "sha256": "fe3ab6180bf2447f91fcbfdf59e4516f964bbac122e22da636cd43e09c5ebba8",
+      "bytes": 18457
     },
     {
       "path": "evidence/CCORE_TOOLING.md",
@@ -84,8 +84,8 @@
     },
     {
       "path": "runbook.json",
-      "sha256": "55f91ca8625b10e2b838f8062047c5dbc34c92a3f07256dd6e4288535418da9e",
-      "bytes": 92390
+      "sha256": "ee52c9ac925398abd25f01bdff6a70bca2f2f2c3a6229dd51381e16f85e585e5",
+      "bytes": 94854
     },
     {
       "path": "tools/check_matrix.py",
@@ -104,8 +104,8 @@
     },
     {
       "path": "validation-matrix.json",
-      "sha256": "11b61b7be64b142e6152656ae356c598f6f01c87ed9f5ab1f863137cd2b5dd11",
-      "bytes": 75954
+      "sha256": "21689c3a9f7c57f60f866f04a3d36b5091d0c72725967dd904522b0c1b51a32a",
+      "bytes": 76613
     }
   ]
 }

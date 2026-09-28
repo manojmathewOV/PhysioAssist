@@ -1,0 +1,50 @@
+{
+  "date": "2026-09-28",
+  "basis_sha": "24e565813931bf703dc53379a06ff4ea8c2f6eb7",
+  "scope": "Owner-confirmed caudal sleeper geometry and current-runbook refinement; no active estimator or clinical threshold",
+  "source_distinctions": {
+    "owner_confirmed": [
+      "upper arm approximately 90 degrees to body at shoulder level",
+      "pillow line is optional teaching cue",
+      "primary drift towards waist",
+      "some drift needs leeway"
+    ],
+    "reviewer_proposals_not_adopted": [
+      "10-15 degree band",
+      "clinician-only display",
+      "automatic visibility of both angles from a chest-facing camera"
+    ],
+    "remaining": [
+      "numeric tolerance",
+      "reference asset",
+      "dose details/schedule anchor",
+      "method/capture validation and initial numerical-display policy"
+    ]
+  },
+  "tests": {
+    "new_known_geometry": 15,
+    "original_geometry_rechecked": 20,
+    "original_result_bytes_unchanged": true,
+    "application_suite_rerun": false,
+    "RGB_or_patient_validation": false,
+    "initial_issue": "acos roundoff in exact synthetic projection test; numerical comparison tolerance adjusted to 1e-5 decimal places, not a clinical threshold"
+  },
+  "ccore": {
+    "tool": "ccore.runbook.compile",
+    "mode": "inspect_definition",
+    "source_sha256": "a76c98eeb03209bc58f3d9598db6e4c1acd977c3da25de6dbd069c0ccf104df9",
+    "structure_errors": 0,
+    "blocked_axes": 0,
+    "declared_axes": 121,
+    "disposition": "DefinitionTopologyReadmissionRequired",
+    "native_epoch_or_acceptance": false
+  },
+  "runbook": {
+    "revision": 7,
+    "gates": 11,
+    "criteria": 83,
+    "criterion_ids_and_states_unchanged": true
+  },
+  "production_source_changed": false,
+  "dependencies_or_media_downloaded": false
+}

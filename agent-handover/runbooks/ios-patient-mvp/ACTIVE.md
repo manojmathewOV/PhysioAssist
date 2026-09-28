@@ -12,7 +12,7 @@ Generated from `runbook.json` and `STATUS.json`; do not edit this view. This is 
 
 ## Execute in small reviewable steps
 
-- Use the owner-described lying variants and candidate bedside/foot-end setups in shoulder_capture. Sleeper supports conditional approximate IR plus observable drift, not a blanket no-number rule. No standing substitution or invented dose.
+- Use the owner-confirmed shoulder-level/90-degree sleeper variant and candidate bedside capture. Primary drift is caudal towards the waist, with leeway but no default band. Conditional approximate IR and its paired drift are separate from guided participation; do not activate an unqualified Check.
 - Separate per-output view checks from treatment eligibility. Keep props/helper and affected-side instructions; do not force phone repositioning for every approved mini-session. See shoulder_capture for observable/unassessable rules.
 - S2a — Camera-optional Do: preparation -> explicit Start -> pause/background -> explicit Resume -> Finish/Stop. Reuse the prescribed activity and source; no poses, camera count or numerical measurement is manufactured. Until durable recording is integrated, show not saved and do not give routine credit.
 - S2b — Durable record: explicit completion/self-report and stopped-early meanings, stable event identity, storage acknowledgement, retry without duplication and failed-read guard retained. Do not call in-memory state saved; full G02 migration and scale criteria still gate E1.
@@ -27,7 +27,7 @@ Generated from `runbook.json` and `STATUS.json`; do not edit this view. This is 
 
 **Only these criteria now:** G02.V06, G02.V08, G03.V01, G03.V04, G03.V05, G04.V01, G04.V03, G04.V04, G04.V06, G04.V07, G05.V01, G05.V02, G05.V05, G05.V06, G06.V03, G07.V02, G07.V03, G09.V01, G09.V02. Drill into [TEST_MATRIX.md](TEST_MATRIX.md) when executing them.
 
-**Blocked activation, not blanket engineering:** D01 identity semantics, D03 recovery/deletion, D05/C05 exact approved shoulder variant and asset, D07/C05 schedule, D08 only for numerical outputs. Missing media/clinical approval does not stop synthetic mechanics or camera-optional flow work.
+**Blocked activation, not blanket engineering:** D01 identity semantics, D03 recovery/deletion, D05/C05 remaining content/asset and dose; sleeper shoulder-level variant specified, D07/C05 schedule, D08 only for numerical outputs. Missing media/clinical approval does not stop synthetic mechanics or camera-optional flow work.
 
 **Research stop:** one named uncertainty, permitted sample, falsifier and return criterion. Reuse existing results; no bulk downloads or more broad app-review reports.
 

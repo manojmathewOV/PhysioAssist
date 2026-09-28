@@ -36,6 +36,27 @@
       "path": "test-output.txt",
       "sha256": "46de893f0e713df4ed88af2df59dd7a53b8a1e8d1244e0854d75266abbe07508",
       "bytes": 2235
+    },
+    {
+      "path": "CAUDAL_RULE.md",
+      "sha256": "e749c93c9140eb806ebe7f273233922f0c645f6483378d6bd81e62b46f940dd8",
+      "bytes": 8912
+    },
+    {
+      "path": "caudal_geometry_probe.py",
+      "sha256": "781bd176408695010d5b04ef8d69b2cda62c787c0383ef175455ebcb398560e4",
+      "bytes": 5803
+    },
+    {
+      "path": "caudal-results.json",
+      "sha256": "c0e86d0beeb9e177d524a306ecc6a7111fef19bed92025628bc9ae290ac6721f",
+      "bytes": 786
+    },
+    {
+      "path": "caudal-run.json",
+      "sha256": "e8cb76bf477f65c0d64b59b38fd6ec7a28814b55223fb6888492ee8f178c846a",
+      "bytes": 1758
     }
-  ]
+  ],
+  "supplement_basis_sha": "24e565813931bf703dc53379a06ff4ea8c2f6eb7"
 }
