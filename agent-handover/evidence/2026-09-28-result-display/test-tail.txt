@@ -1,14 +1,12 @@
-PASS src/services/pose/__tests__/exercisePlan.test.ts
+PASS src/services/pose/__tests__/adaptiveModel.test.ts
+PASS src/utils/__tests__/youtubeNative.test.ts
+PASS src/services/__tests__/audioCuePacing.test.ts
 PASS __tests__/smoke/mediapipe.test.ts
 PASS __tests__/smoke/tensorflow.test.ts
-PASS __tests__/smoke/rnfs.test.ts
-PASS src/services/pose/__tests__/adaptiveModel.test.ts
-PASS src/services/web/__tests__/focusFrame.test.ts
-PASS src/services/__tests__/audioCuePacing.test.ts
 
 Test Suites: 4 skipped, 104 passed, 104 of 108 total
 Tests:       4 skipped, 1790 passed, 1794 total
 Snapshots:   0 total
-Time:        26.887 s
+Time:        26.716 s
 Ran all test suites.
-Test results written to: ../RDC/runs/20260928T203037Z-test-b361be87/tests.json
+Test results written to: ../RDC/runs/20260928T204326Z-test-5a7cbdf7/tests.json

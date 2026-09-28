@@ -1,6 +1,6 @@
 {
   "date": "2026-09-28",
-  "application_sha": "67d4bb3ca0cda8280c047ddeb643d6e3df0de91a",
+  "application_sha": "e184830858569b10a140c45f81eb48c1c669ae79",
   "previous_basis": "f910967e4ebbb6cd0a3738fc9fa3bcc600014d8d",
   "scope": "Patient result presentation/domain rules exercised in isolated synthetic entries. Not patient navigation/history ingestion or numerical activation.",
   "tests": {
@@ -12,14 +12,14 @@
     "source_clean": true,
     "forced_exit": false,
     "teardown_warning": false,
-    "seconds": 28.62,
-    "log_sha256": "d67e2ac5ddf26cf3f0068dbbc85bdffa479730f04653f3e67ca509b22656ac9f",
+    "seconds": 28.64,
+    "log_sha256": "f3e3d1ece731da7303b7a986e8fedd78ecfe3cfa404eb5d8c83316e36ea1e05f",
     "new_focused_tests": 65,
     "synthetic_band_grid_cases": 153,
     "history_fixture_records": 10000
   },
   "web": {
-    "source_sha": "67d4bb3ca0cda8280c047ddeb643d6e3df0de91a",
+    "source_sha": "e184830858569b10a140c45f81eb48c1c669ae79",
     "result": "web-results.json",
     "complete": true,
     "viewports": [
@@ -72,5 +72,8 @@
     "Starting-position uncertainty is explicit and must qualify; no default zero uncertainty",
     "Programme-owned blocking message suppresses number/history"
   ],
-  "privacy": "Only synthetic UI pictures and numerical reports; no identifiable benchmark videos or private filesystem paths in Git"
+  "privacy": "Only synthetic UI pictures and numerical reports; no identifiable benchmark videos or private filesystem paths in Git",
+  "result_implementation_sha": "67d4bb3ca0cda8280c047ddeb643d6e3df0de91a",
+  "typecheck": "Both normal and pre-push configurations passed after extracting the unchanged numeric-only icon margin from a widened style union.",
+  "publication_preflight": "First push rejected on existing shared UI style typing reached by new test entry. Small identical-value style extraction fixes both compiler configs; no hook bypass. Full suite and preview rerun afterwards."
 }

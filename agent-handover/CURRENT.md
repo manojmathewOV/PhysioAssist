@@ -4,7 +4,7 @@ Owner scope: **iPhone-first, patient-only, local-first**. No clinician portal, m
 
 ## Latest result-display increment
 
-**Result selector/card `67d4bb3ca0cda8280c047ddeb643d6e3df0de91a`**: approximate value, same-interval schematic/status and compatible previous/episode-best with strict unknown/save/retraction/method rules. Synthetic components only; not patient navigation/live Check/persistence. [Response](responses/2026-09-28-result-display.md), [evidence](evidence/2026-09-28-result-display/run.json). Full suite1790/four skipped;65 focused cases and real-web visual checks. Existing10 clips replayed in12 runs at116deb2; pipeline coverage is not clinical precision. Native driver write blocked; no new native result-screen test.
+**Result selector/card `e184830858569b10a140c45f81eb48c1c669ae79`**: approximate value, same-interval schematic/status and compatible previous/episode-best with strict unknown/save/retraction/method rules. Synthetic components only; not patient navigation/live Check/persistence. [Response](responses/2026-09-28-result-display.md), [evidence](evidence/2026-09-28-result-display/run.json). Full suite1790/four skipped;65 focused cases and real-web visual checks. Existing10 clips replayed in12 runs at116deb2; pipeline coverage is not clinical precision. Native driver write blocked; no new native result-screen test.
 
 ## Latest bounded implementation
 

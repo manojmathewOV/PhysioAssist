@@ -1,5 +1,5 @@
 {
-  "sourceSha": "67d4bb3ca0cda8280c047ddeb643d6e3df0de91a",
+  "sourceSha": "e184830858569b10a140c45f81eb48c1c669ae79",
   "scope": "Synthetic standalone production-component preview, not patient measurement or native visual validation",
   "checks": [
     "320/current/headline",

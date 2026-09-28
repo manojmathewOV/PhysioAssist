@@ -4,7 +4,7 @@
   "runbook_revision": 12,
   "current_gate": "G05",
   "overall": "result_component_and_selector_submitted_native_check_integration_remaining",
-  "implementation_sha": "67d4bb3ca0cda8280c047ddeb643d6e3df0de91a",
+  "implementation_sha": "e184830858569b10a140c45f81eb48c1c669ae79",
   "gate_states": {
     "G00": "implemented_pending_review",
     "G01": "in_progress",
@@ -166,7 +166,7 @@
     },
     "sleeper_result_presentation": {
       "state": "implemented_pending_independent_review",
-      "basis": "67d4bb3ca0cda8280c047ddeb643d6e3df0de91a",
+      "basis": "e184830858569b10a140c45f81eb48c1c669ae79",
       "criteria": ["G05.V03", "G07.V03", "G07.V06"],
       "evidence": "../../evidence/2026-09-28-result-display/run.json",
       "scope": "65 focused cases, clean full suite1790, isolated web preview. Not connected to patient navigation/store; no clinical registry entry. New native driver write blocked and no native preview run."
@@ -249,7 +249,7 @@
     },
     {
       "subject": "sleeper_result_selector_and_card",
-      "basis": "67d4bb3ca0cda8280c047ddeb643d6e3df0de91a",
+      "basis": "e184830858569b10a140c45f81eb48c1c669ae79",
       "status": "implemented_pending_independent_review",
       "record": "../../responses/2026-09-28-result-display.md"
     }
