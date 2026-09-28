@@ -540,7 +540,7 @@
         "id": "G05.W1",
         "start_when": "Frozen input, task ownership and relevant source interfaces are known; unresolved decisions block only irreversible/clinical activation in their scope.",
         "stop_when": "Candidate evidence submitted or a named blocker with wake condition recorded; no indefinite retry.",
-        "candidate_action": "Finish reviewed min/max hold semantics and directly labelled side-aware result, with real web/native evidence. Then connect evaluation-only Check records through a narrow receipt-aware adapter. No patient estimator activation or broad performance framework.",
+        "candidate_action": "Independently review the implemented min/max hold and labelled side-aware result. Next: evaluation-only receipt-aware Check adapter and isolated storage/reopen; native result-card and physical/human qualification remain open. No live sleeper activation.",
         "after_success": "Independent acceptance review, then eligible successors; do not stop only because unit tests are green."
       }
     },

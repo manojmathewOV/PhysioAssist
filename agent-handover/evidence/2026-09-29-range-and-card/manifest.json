@@ -1,0 +1,45 @@
+{
+  "scope": "Synthetic images and source-bound implementation receipt; no clinical acceptance",
+  "files": [
+    {
+      "path": "captures.sha256.txt",
+      "bytes": 513,
+      "sha256": "9ab9d402c9cff5076e47b99e44d54eea1e1477e6bb2ea0176f2a9e96a0cf621d"
+    },
+    {
+      "path": "native-maximum.png",
+      "bytes": 212148,
+      "sha256": "15b1e084e87cba89a484ef55d4427c061f367af601236322b7961fa1c94745d5"
+    },
+    {
+      "path": "native-minimum-optional.png",
+      "bytes": 209735,
+      "sha256": "3c5083bf9f9ba888a09cecce0a68da39780b0a3e1d826f921374caece7068ea9"
+    },
+    {
+      "path": "native-saved.png",
+      "bytes": 190508,
+      "sha256": "d171ebbfba844aaae114cca218a83b9248eded9fbfb5c799e64ca5a8c255207a"
+    },
+    {
+      "path": "result-left390.png",
+      "bytes": 70560,
+      "sha256": "0c5451baad93b299dee5f90cf8bf15a8f50d70361f3dd1c90164a635e1a52597"
+    },
+    {
+      "path": "result-right390.png",
+      "bytes": 70686,
+      "sha256": "a79b9ea8bbd54c16fc707e7510bf5fbe32a84f72fa06b4603b48508835025a9c"
+    },
+    {
+      "path": "result320.png",
+      "bytes": 34621,
+      "sha256": "d797fe3b18ac036f31604576698764ffcd7555433a2dfc2a31a84b369978a603"
+    },
+    {
+      "path": "run.json",
+      "bytes": 3392,
+      "sha256": "3043781707e4180cb3bc0c53c68e7fa7ef0d1e3337fa5e7a92e82128bdea55ca"
+    }
+  ]
+}

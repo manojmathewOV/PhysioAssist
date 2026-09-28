@@ -4,7 +4,7 @@
   "runbook_revision": 13,
   "current_gate": "G05",
   "overall": "result_component_and_selector_submitted_native_check_integration_remaining",
-  "implementation_sha": "e184830858569b10a140c45f81eb48c1c669ae79",
+  "implementation_sha": "2d5455c688cb8da34db367f3757dd6291149e746",
   "gate_states": {
     "G00": "implemented_pending_review",
     "G01": "in_progress",
@@ -29,7 +29,7 @@
     "../../evidence/2026-09-28-result-display/run.json"
   ],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
-  "next": "Finish reviewed min/max hold semantics and directly labelled side-aware result, with real web/native evidence. Then connect evaluation-only Check records through a narrow receipt-aware adapter. No patient estimator activation or broad performance framework.",
+  "next": "Independently review the implemented min/max hold and labelled side-aware result. Next: evaluation-only receipt-aware Check adapter and isolated storage/reopen; native result-card and physical/human qualification remain open. No live sleeper activation.",
   "last_writer": "s2-implementation-20260928-53363",
   "limitations": [
     "No gate independently accepted by this implementation update.",
@@ -256,8 +256,9 @@
     {
       "subject": "range_and_schematic_review",
       "basis": "0995723419a5f8e6b650cd2c035e5d375e3d6d29",
-      "status": "owner_relay_findings_reproduced_fix_in_progress",
-      "record": "../../responses/2026-09-29-range-and-card.md"
+      "status": "implemented_tested_pending_independent_review",
+      "record": "../../responses/2026-09-29-range-and-card.md",
+      "implementation_basis": "2d5455c688cb8da34db367f3757dd6291149e746"
     }
   ],
   "hosted_observation": {
@@ -268,5 +269,12 @@
     "scope": "Earlier published revision; not acceptance of this new delta"
   },
   "active_branch": "agent/native-camera-recovery-20260928",
-  "patient_feedback_decision": "Selected approximate number, schematic, previous comparable Check and scoped best record. Method/allowance/activation not approved."
+  "patient_feedback_decision": "Selected approximate number, schematic, previous comparable Check and scoped best record. Method/allowance/activation not approved.",
+  "observed": {
+    "range_and_labelled_card": {
+      "basis": "2d5455c688cb8da34db367f3757dd6291149e746",
+      "record": "../../evidence/2026-09-29-range-and-card/run.json",
+      "scope": "Full command/real web/simulator guided tests passed; result card web-only. Not clinical or physical-audio acceptance."
+    }
+  }
 }

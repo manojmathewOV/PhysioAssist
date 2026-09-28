@@ -425,7 +425,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 
 **Closure requires:** G02, G03, G04. **Executor:** patient_experience_implementer. **Acceptor:** independent_usability_reviewer.
 
-**Next bounded work:** Finish reviewed min/max hold semantics and directly labelled side-aware result, with real web/native evidence. Then connect evaluation-only Check records through a narrow receipt-aware adapter. No patient estimator activation or broad performance framework.
+**Next bounded work:** Independently review the implemented min/max hold and labelled side-aware result. Next: evaluation-only receipt-aware Check adapter and isolated storage/reopen; native result-card and physical/human qualification remain open. No live sleeper activation.
 
 **Remaining work:**
 - S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.

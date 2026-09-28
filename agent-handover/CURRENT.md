@@ -1,5 +1,11 @@
 # Current PhysioAssist implementation
 
+## Latest range and result correction
+
+Application `2d5455c`: both prescribed hold bounds reach the timer; finishing at minimum is normal and optional timing ends at maximum. Direct Reference position/This reading labels, an illustrative side-lying cue, side mirroring and shared full history dates refine the synthetic result card. See [response](responses/2026-09-29-range-and-card.md) and [evidence](evidence/2026-09-29-range-and-card/run.json). Full tests, the actual guided browser journey and the Release guided-native test passed; native optional-third/no-fourth/save/reopen screenshots were inspected. The result card itself remains web-preview only.
+
+Runbook JSON/ACTIVE is revision13; older README narrative retains historical wording. The next bounded task is the evaluation-only adapter and isolated receipt-aware storage, not a new estimator, clinical allowance or performance subsystem. No main merge or new gate acceptance.
+
 Owner scope: **iPhone-first, patient-only, local-first**. No clinician portal, monitoring, automatic progression or clinical cloud synchronisation. Read this record, then [ACTIVE.md](runbooks/ios-patient-mvp/ACTIVE.md). Historical reports retain their original source and evidence limits.
 
 ## Latest result-display increment
