@@ -1,6 +1,6 @@
 # iPhone patient MVP — remaining execution roadmap
 
-Revision 11. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
+Revision 12. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
 
 ## Delivery first; gate details on demand
 
@@ -166,7 +166,7 @@ Read-only Check result and history; iPhone patient-only/local-first. No clinicia
 | eligibility_uncertain_or_unconfigured | Unknown allowance, boundary uncertainty or missing drift visibility does not qualify an angle by default. Say Position not clear or Check not yet available as appropriate. No strict-zero or 10-15-degree implicit allowance. |
 | first_compatible_check | First comparable check; do not manufacture a previous value or improvement. If today is also the only best, avoid duplicate tiles. Later equal displayed values receive no New best badge. |
 
-**Delivery order:** Keep S2a camera-optional Do -> S2b durable recording -> S2c reopen/progress. Add held-interval quantitative observation support in bounded commits with explicit output validity, not by passing a hold into a repetition-only detector. Build result selector and schematic with synthetic fixtures before the study; numerical patient activation waits for approved method/allowance, reference validation and usable repeatability. The next change is application code, not more sleeper research.
+**Delivery order:** Guided S2a/b/c and the synthetic result selector/card have implementation candidates. Review and qualify the new native display; wire the future accepted Check and compatible history through one typed adapter. No live numerical activation until method, allowance, reference and repeatability are qualified. Do not restart broad research.
 
 ## Comprehension-led mobile presentation
 
@@ -378,7 +378,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 
 **Closure requires:** G02, G03, G04. **Executor:** patient_experience_implementer. **Acceptor:** independent_usability_reviewer.
 
-**Next bounded work:** Independently review the implemented ready/hold-speech/pending-save UX and its native/web evidence. Continue the synthetic result selector/schematic and compatible history; physical audio/accessibility and clinical measurement qualification remain separate.
+**Next bounded work:** Review the implemented result selector/card and synthetic/video evidence; qualify its native presentation and connect a future accepted Check through an explicit adapter. Patient registry stays empty; no real sleeper activation or whole-storage acceptance.
 
 **Remaining work:**
 - S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.

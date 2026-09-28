@@ -2,6 +2,10 @@
 
 Owner scope: **iPhone-first, patient-only, local-first**. No clinician portal, monitoring, automatic progression or clinical cloud synchronisation. Read this record, then [ACTIVE.md](runbooks/ios-patient-mvp/ACTIVE.md). Historical reports retain their original source and evidence limits.
 
+## Latest result-display increment
+
+**Result selector/card `67d4bb3ca0cda8280c047ddeb643d6e3df0de91a`**: approximate value, same-interval schematic/status and compatible previous/episode-best with strict unknown/save/retraction/method rules. Synthetic components only; not patient navigation/live Check/persistence. [Response](responses/2026-09-28-result-display.md), [evidence](evidence/2026-09-28-result-display/run.json). Full suite1790/four skipped;65 focused cases and real-web visual checks. Existing10 clips replayed in12 runs at116deb2; pipeline coverage is not clinical precision. Native driver write blocked; no new native result-screen test.
+
 ## Latest bounded implementation
 
 **Tested application `e768304831ea52ea39a59d26535ca45606c0c7cb`: untimed preparation, spoken prescribed-hold guidance, instruction-first layout and pending-save recovery.** See [response](responses/2026-09-28-guided-ux-review.md) and [results](evidence/2026-09-28-guided-ux-review/run.json).

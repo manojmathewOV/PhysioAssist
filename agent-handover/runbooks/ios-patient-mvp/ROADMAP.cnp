@@ -2,7 +2,7 @@
 summary.what role="runbook_definition" id="physioassist_ios_patient_mvp" scope="owner_requested_patient_only_local_first_iPhone_MVP" consumer="ai_coder|ccore.runbook"
 summary.claim target="claim.G10" claim_ceiling="declarations_only_no_implementation_clinical_or_release_acceptance" acceptance="independent_owner_meet"
 summary.flow state="drafted" convergence="narrowing" focus="G05" next="G05.W1" blockers="independent_review_and_feature_scoped_decisions"
-runbook.identity id="physioassist_ios_patient_mvp" project_identity="sha256:da5e294123e29de3b6f46e1c59011bd453b843b4063436f27736ab078bf79754" definition_hash="sha256:cb0a93f6396ab1c1fdfa3fc855c0198a605c504fbdc77229bcd91aa7c4c96866" owner="Manoj"
+runbook.identity id="physioassist_ios_patient_mvp" project_identity="sha256:da5e294123e29de3b6f46e1c59011bd453b843b4063436f27736ab078bf79754" definition_hash="sha256:d351972bfd65cfe4267c838620bdd06b9d654697b344753c1b430c310824b5c5" owner="Manoj"
 runbook.epoch_template baseline="6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84" topology="acceptance_dependency_DAG" amendment="freeze_or_next_epoch"
 claim.unit id="claim.G00" subject="G00" predicate="A receiving agent can identify the frozen input, single integration branch, exact evidence scope, unresolved decisions and next executable slice without reading historical chatter." ceiling="declared_outcome_not_observed" owner="reviewer"
 run.node id="G00" name="Scope, current baseline and acceptance contract" scope="runbook.json#/gates/0" owner="implementation_lead" salience="80" state="declared" after="none" dod="dod.G00" budget="budget.G00"

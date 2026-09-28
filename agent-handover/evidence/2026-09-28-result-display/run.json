@@ -1,0 +1,76 @@
+{
+  "date": "2026-09-28",
+  "application_sha": "67d4bb3ca0cda8280c047ddeb643d6e3df0de91a",
+  "previous_basis": "f910967e4ebbb6cd0a3738fc9fa3bcc600014d8d",
+  "scope": "Patient result presentation/domain rules exercised in isolated synthetic entries. Not patient navigation/history ingestion or numerical activation.",
+  "tests": {
+    "passed": 1790,
+    "skipped": 4,
+    "failed": 0,
+    "suites_passed": 104,
+    "exit": 0,
+    "source_clean": true,
+    "forced_exit": false,
+    "teardown_warning": false,
+    "seconds": 28.62,
+    "log_sha256": "d67e2ac5ddf26cf3f0068dbbc85bdffa479730f04653f3e67ca509b22656ac9f",
+    "new_focused_tests": 65,
+    "synthetic_band_grid_cases": 153,
+    "history_fixture_records": 10000
+  },
+  "web": {
+    "source_sha": "67d4bb3ca0cda8280c047ddeb643d6e3df0de91a",
+    "result": "web-results.json",
+    "complete": true,
+    "viewports": [
+      320,
+      390,
+      820
+    ],
+    "text_stress": "CSS doubling, not native Dynamic Type",
+    "runtime_errors": 0,
+    "visual_inspection": [
+      "current320",
+      "current390",
+      "large-web-text320",
+      "unavailable320",
+      "earlier excluded390"
+    ],
+    "scope": "Actual React Native Web components; isolated synthetic data, no camera or persistence"
+  },
+  "benchmark": {
+    "source_sha": "116deb279ff48222558b89c9ce190263d274efc8",
+    "result": "rgb-results.json",
+    "completed_runs": 12,
+    "raw_clips": 10,
+    "extra_controls": [
+      "mirror",
+      "black"
+    ],
+    "sampled_frames": 4742,
+    "new_downloads": 0,
+    "scope": "Reused permission-checked inspection participants; offline web inference, not an angle/rep/sleeper/native accuracy study",
+    "source_after_replay": "Only presentation/baseline validation changed after116deb2; no movement/web/model/replay diff through67d4bb3"
+  },
+  "native": {
+    "result": "not_run",
+    "reason": "Writing the proposed new XCTest driver was blocked twice by tool safety-status check; no alternate-route write, bundling, host copy, signing or native UI run attempted",
+    "prepared_entry": "src/testing/sleeperNativePreview.tsx",
+    "old_native_evidence_not_relabelled": true
+  },
+  "limits": [
+    "Patient method registry remains empty; synthetic methods cannot self-authorise",
+    "Result card is not connected to a production Check or new persistence path",
+    "No clinical allowance, validated bedside estimator, approved asset, patient study or whole-gate acceptance",
+    "New UI lacks native screenshot and physical VoiceOver/listening qualification",
+    "Drawing is a simplified forearm rotation plane with separate elbow text, not patient reconstruction or scapular/force evidence"
+  ],
+  "fixes": [
+    "Open explanation removed when a result becomes unavailable",
+    "Visually discovered word fragmentation despite initial overflow pass: separate About label and sized metric; specific large-text check added",
+    "Forearm schematic endpoints stay within viewbox0-180; removed false ideal upper-arm reference",
+    "Starting-position uncertainty is explicit and must qualify; no default zero uncertainty",
+    "Programme-owned blocking message suppresses number/history"
+  ],
+  "privacy": "Only synthetic UI pictures and numerical reports; no identifiable benchmark videos or private filesystem paths in Git"
+}

@@ -34,3 +34,5 @@ Patient presentation now has a comprehension-led contract within `patient_feedba
 Implementation update: [guided activity, acknowledged storage and real-video replay](../../responses/2026-09-28-guided-implementation.md). The current candidate implements the first S2a/S2b/S2c path; it does not accept entire gates or activate sleeper measurements. Read current STATUS/ACTIVE rather than treating historical next-action prose as a fresh task.
 
 Latest UX candidate e768304 adds Ready, prescribed-hold voice/timing and instruction-first recovery; actual web/full-suite evidence is in the guided-ux-review response. New native verification passed after AC was connected; its actual ready/hold/reference/restart screenshots and earlier failures are recorded separately. Physical listening and patient validation remain open.
+
+Result-display increment: `67d4bb3` implements the pure selector and reusable card with isolated synthetic UI evidence. Native/Check ingestion remains separate; see the current STATUS and result-display response. Same11 gates/83 criteria; no new acceptance granted.
