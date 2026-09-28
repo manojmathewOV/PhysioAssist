@@ -36,6 +36,7 @@ interface Selection {
   amount: string;
   holdSeconds?: number;
   minimumReps?: number;
+  maximumReps?: number;
   day: string;
 }
 /** Shared entry on web/native: a due permitted routine activity, never synthetic pose. */
@@ -74,6 +75,9 @@ export function useGuidedRoutine() {
       amount: routineAmount(item),
       holdSeconds: isGuidedShoulder(item.exerciseId) ? item.holdSeconds : undefined,
       minimumReps: item.reps ?? validRangeMin(item.repRange),
+      maximumReps:
+        item.reps ??
+        (validRangeMin(item.repRange) !== undefined ? item.repRange?.max : undefined),
       day: localDay(now),
     });
   };
@@ -141,6 +145,7 @@ export function useGuidedRoutine() {
           amount={selection.amount}
           holdSeconds={selection.holdSeconds}
           minimumReps={selection.minimumReps}
+          maximumReps={selection.maximumReps}
           enableSpeech={enableSpeech}
           speechRate={speechRate}
           onSpeechChange={(value) => dispatch(updateSettings({ enableSpeech: value }))}

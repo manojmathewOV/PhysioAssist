@@ -1,3 +1,4 @@
+import { historyDate as formatDate } from '../utils/displayDate';
 import PendingActivityNotice from '../components/exercises/PendingActivityNotice';
 import { selectDurableHistory } from '../store/historySelectors';
 /**
@@ -31,13 +32,6 @@ import MeasurementCard from '../components/progress/MeasurementCard';
 
 const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const CHART_HEIGHT = 140;
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
 
 /** History stores form as 0-1 (very old sessions may hold 0-100). */
 const formPercent = (score: number) => Math.round(score <= 1 ? score * 100 : score);

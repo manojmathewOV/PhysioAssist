@@ -28,6 +28,8 @@ export interface GuidedActivityProps {
   videoLink?: string;
   holdSeconds?: number;
   minimumReps?: number;
+  /** Explicit upper end; absent preserves an exact-count legacy call. */
+  maximumReps?: number;
   enableSpeech?: boolean;
   speechRate?: number;
   onSpeechChange?: (enabled: boolean) => void;
@@ -47,6 +49,7 @@ export default function GuidedActivity({
   videoLink,
   holdSeconds,
   minimumReps,
+  maximumReps,
   enableSpeech = false,
   speechRate,
   onSpeechChange,
@@ -65,11 +68,14 @@ export default function GuidedActivity({
   const stateRef = useRef(state);
   const [now, setNow] = useState(Date.now);
   const [expired, setExpired] = useState(false);
+  const maximum = maximumReps ?? minimumReps;
   const canTimeHolds =
     Number.isFinite(holdSeconds) &&
     holdSeconds! > 0 &&
     Number.isSafeInteger(minimumReps) &&
-    minimumReps! > 0;
+    minimumReps! > 0 &&
+    Number.isSafeInteger(maximum) &&
+    maximum! >= minimumReps!;
   const [timeHolds, setTimeHolds] = useState(canTimeHolds);
   const [holdFrom, setHoldFrom] = useState<number | null>(null);
   const [timedHolds, setTimedHolds] = useState(0);
@@ -115,6 +121,11 @@ export default function GuidedActivity({
   }, [state.phase, focused, foreground]);
   const time = activityTime(state, now);
   const act = (type: 'start' | 'pause' | 'resume' | 'finish') => {
+    if ((type === 'start' || type === 'resume') && disabled) return;
+    if (type === 'resume' && timeHolds && holdFrom === null && timedHolds >= maximum!)
+      return;
+    if (type === 'start' && stateRef.current.phase !== 'ready') return;
+    if (type === 'resume' && stateRef.current.phase !== 'paused') return;
     if (type === 'start' && onStartAllowed && !onStartAllowed()) {
       setExpired(true);
       return;
@@ -178,6 +189,9 @@ export default function GuidedActivity({
   ]);
   const betweenHolds = timeHolds && timedHolds > 0 && holdFrom === null;
   const timedMinimum = betweenHolds && timedHolds >= minimumReps!;
+  const timedMaximum = betweenHolds && timedHolds >= maximum!;
+  const timedAmount =
+    minimumReps === maximum ? String(minimumReps) : `${minimumReps}–${maximum}`;
   const liveCue =
     exercise.cue ??
     exercise.instructions[exercise.id === 'sleeper-stretch' ? 2 : 1] ??
@@ -198,7 +212,7 @@ export default function GuidedActivity({
         : state.phase === 'finished'
           ? ''
           : betweenHolds
-            ? `Hold timer ${timedHolds} of ${minimumReps} finished. Release and rest. ${timedMinimum ? 'You can finish and tell us how it went.' : 'Start the next hold when ready.'}`
+            ? `Hold timer ${timedHolds} finished. Release and rest. ${timedMinimum ? (timedMaximum ? 'You can finish and tell us how it went.' : 'You can finish here, or time an optional hold.') : 'Start the next hold when ready.'}`
             : state.phase === 'paused'
               ? 'Paused.'
               : timeHolds
@@ -255,9 +269,26 @@ export default function GuidedActivity({
               testID="guided-back"
             />
           </>
+        ) : timedMinimum ? (
+          <>
+            <BigButton
+              label="Finish / stop"
+              onPress={() => act('finish')}
+              testID="guided-stop"
+            />
+            {!timedMaximum ? (
+              <BigButton
+                label={`Time optional hold ${timedHolds + 1}`}
+                variant="secondary"
+                disabled={disabled}
+                onPress={() => act('resume')}
+                testID="guided-pause"
+              />
+            ) : null}
+          </>
         ) : (
           <>
-            {!timedMinimum ? (
+            {!timedMaximum ? (
               <BigButton
                 label={
                   betweenHolds
@@ -379,11 +410,18 @@ export default function GuidedActivity({
                   <AppText variant="heading" testID="guided-instruction">
                     {currentCue}
                   </AppText>
+                  {timedMinimum ? (
+                    <AppText variant="bodyStrong" testID="guided-minimum-reached">
+                      {timedMaximum
+                        ? 'Your prescribed hold timers are finished.'
+                        : 'You can finish here. Another hold is optional.'}
+                    </AppText>
+                  ) : null}
                   {timeHolds ? (
                     <AppText variant="bodyStrong" testID="guided-hold-time">
                       {betweenHolds
                         ? `${timedHolds} hold timer${timedHolds === 1 ? '' : 's'} finished`
-                        : `Hold ${timedHolds + 1} of ${minimumReps}: ${formatDuration(remainingHold ?? 0)} remaining`}
+                        : `Hold ${timedHolds + 1} of ${timedAmount}: ${formatDuration(remainingHold ?? 0)} remaining`}
                     </AppText>
                   ) : null}
                   <AppText

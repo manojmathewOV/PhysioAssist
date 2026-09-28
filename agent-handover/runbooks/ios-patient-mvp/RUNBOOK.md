@@ -1,6 +1,6 @@
 # iPhone patient MVP — remaining execution roadmap
 
-Revision 12. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
+Revision 13. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
 
 ## Delivery first; gate details on demand
 
@@ -28,6 +28,7 @@ A patient can watch, enlarge, pause, hide/show and return to the reference witho
 An appropriate local programme can be learned, performed without compulsory camera tracking, interrupted, recorded durably and revisited on an iPhone.
 
 **Work:**
+- Current bounded patch: preserve prescribed minimum AND maximum through hook, timer, screen and speech. At minimum, Finish is normal and primary; optional hold stays available only up to maximum. Timer completion never proves movement or grants completion credit. Test pause/stop/source change during optional holds and save/reopen at both allowed endpoints.
 - Use the owner-confirmed shoulder-level/90-degree sleeper variant and candidate bedside capture. Primary drift is caudal towards the waist, with leeway but no default band. Conditional approximate IR and its paired drift are separate from guided participation; do not activate an unqualified Check.
 - Separate per-output view checks from treatment eligibility. Keep props/helper and affected-side instructions; do not force phone repositioning for every approved mini-session. See shoulder_capture for observable/unassessable rules.
 - S2a — Camera-optional Do: preparation -> explicit Start -> pause/background -> explicit Resume -> Finish/Stop. Reuse the prescribed activity and source; no poses, camera count or numerical measurement is manufactured. Until durable recording is integrated, show not saved and do not give routine credit.
@@ -37,6 +38,7 @@ An appropriate local programme can be learned, performed without compulsory came
 - Remove false monitoring/waiting-for-a-physio promises without removing programme permissions. Sign-in is not a backup; local setup is not authenticated clinician approval.
 - Run actual native screenshots and inspect after pause, missing media, camera denial, storage retry and large text. Physical-iPhone evidence is separately required for a patient-ready claim.
 - Selected patient Check/history view: approximate IR + simple schematic + last comparable Check + best recorded in this recovery. Build synthetic presentation in bounded code, consume paired observations, retain comfort suppression and all validity/series rules in shoulder_capture.patient_feedback. Do not delay guided Do for the study or activate unqualified numbers.
+- Next integration commit: receipt-aware evaluation Check adapter and isolated persistence, then native result observation. Keep measured origin (synthetic/replay/live study), run purpose (shadow/visible evaluation/patient), and result disposition separate. The adapter translates, not estimates or qualifies its own method.
 
 **Existing criteria:** G02.V06, G02.V08, G03.V01, G03.V04, G03.V05, G04.V01, G04.V03, G04.V04, G04.V06, G04.V07, G05.V01, G05.V02, G05.V05, G05.V06, G06.V03, G07.V02, G07.V03, G09.V01, G09.V02.
 **Activation decisions:** D01 identity semantics, D03 recovery/deletion, D05/C05 remaining content/asset and dose; sleeper shoulder-level variant specified, D07/C05 schedule, D08 measurement/allowance/activation; patient display intent selected.
@@ -131,6 +133,7 @@ Read-only Check result and history; iPhone patient-only/local-first. No clinicia
 - Default to the current result. Optional comparison may show one earlier compatible result with solid/dashed lines and labels; do not stack current/previous/best/target on one small drawing. Any historical drawing retains its own elbow position and interval; a historical forearm cannot be combined with today's best elbow.
 - Never use a best-value arc or permitted drift band as a target to fill. Freeze the post-Check schematic instead of chasing frame noise; no trophy, flashing record, forced animation or falling-score effect. Unknown result segments are omitted/labelled, while instructional drawings remain clearly instructional.
 - Use direct labels beside the relevant body part, fixed spatial relationships and a stable affected-side convention. The main sketch need not quantitatively encode every variable: use the number for approximate rotation and an elbow marker/status for position, with a separate labelled plane/detail only when needed. No animated 3D orbit, perspective puzzle, legend lookup or multiple simultaneous ghosts. The schematic remains visible; test its added comprehension against the same text/numbers without it.
+- Reviewer correction: directly label Reference position and This reading; do not call the angle reference Start unless it is actually the measured start. A separate clearly illustrated side-lying/bed reminder is not measured bed-plane, elbow-contact or scapular evidence. Anatomical-side display mirroring never changes stored angles or preview-mirror semantics. Use the shared full history date and patient-facing words.
 
 ### Comparable previous and best
 
@@ -200,6 +203,50 @@ This is one refinement of existing G07.V03, not another study programme or prere
 - Measure (official_product_manual): Level display maps spatial alignment to a visual state and approximate degrees. Do not copy zero-tolerance or colour-only success. https://support.apple.com/guide/iphone/iphbd435673d/ios
 - Weather (official_product_manual): Current temperature precedes high/low and future detail. Borrow information hierarchy, not a clinical normal range or recovery forecast. https://support.apple.com/guide/iphone/iph1ac0b35f/ios
 - Hinge (official_product_manual): Replay instructions, pause/audio/captions and camera-free continuation. Useful mechanics only; its dosage, gamification and clinical model are not copied. https://www.hingehealth.com/user-manual/
+
+## Evaluation-only integration and device boundary
+
+### Sequence
+
+- Correct min/max and complete direct-label result presentation
+- Narrow adapter plus isolated evaluation storage/reopen
+- Reference-linked capture and physical-phone formative use
+- Targeted setup/stale-frame/model-switch and device qualification
+- Independent numerical activation decision
+
+### Adapter
+
+- Registry comes from the application owner, never observation contents. The adapter does not calculate angles or choose endpoints.
+- Saved state comes from the storage receipt; candidate text is not proof of durability. Same record drives number, diagram and compatible history.
+- Synthetic/replayed/live evaluation origins remain distinguishable; approximate is a property of a measurement, not an alternative to accepted/withheld.
+
+### Isolation
+
+- Unvalidated live estimation is restricted to explicitly authorised evaluation builds/studies with consent and governance; it does not run hidden in patient sessions.
+- Evaluation records cannot enter clinical progress, episode best, activity credit, speech coaching or programme progression. Method approval cannot retrospectively promote research records.
+- Default patient method registry remains empty. No general user setting grants measurement authority.
+
+### Setup
+
+- Phone/setup change or uncertainty invalidates affected measurement intervals, not acknowledged activity. Fresh reacquisition is explicit.
+- Gravity alone does not establish unchanged placement: yaw/translation and visual ambiguity require appropriate qualified evidence. Reuse existing framing/cue priorities.
+- Gate data immediately when invalid; use persistence to stabilise ordinary presentation, never to delay a safety cue or retain invalid measurements.
+
+### Device
+
+- Record actual model/configuration, capture timestamps and received coverage. A model switch ends the interval unless equivalence is qualified. Dropped/stale frames cannot fabricate continuous observation.
+- Measure physical-device capture-to-feedback age, thermal and UI effects before adding a broad governor. Reuse current adaptive model machinery.
+- Minimal stale-callback cancellation and durable recovery are required; an in-process fatal crash/OS kill cannot be promised to recover in JavaScript or save a final trace.
+
+### Evidence
+
+- Use synthetic event/record tests for software, real RGB for inference, paired forearm and upper-arm/trunk reference for sleeper accuracy, repeated self-setup for temporal comparison, and human tasks for understanding. None substitutes for the others.
+- Upper-arm reference must resolve the intended bed-plane angle; an ordinary gravity inclinometer alone cannot determine in-plane horizontal rotation.
+- Landmark traces aid downstream replay but cannot diagnose all image-model errors. Linked images/landmarks are governed data; approved retention and independent references remain separate.
+
+### Deferred
+
+- No second pose model, 3D avatar, generative clinical coaching, hidden patient research, clinician portal or seven-input governor without demonstrated need.
 
 **E0 — Integrated engineering baseline:** One reproducible reviewed development baseline; no patient/release claim.
 
@@ -378,7 +425,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 
 **Closure requires:** G02, G03, G04. **Executor:** patient_experience_implementer. **Acceptor:** independent_usability_reviewer.
 
-**Next bounded work:** Review the implemented result selector/card and synthetic/video evidence; qualify its native presentation and connect a future accepted Check through an explicit adapter. Patient registry stays empty; no real sleeper activation or whole-storage acceptance.
+**Next bounded work:** Finish reviewed min/max hold semantics and directly labelled side-aware result, with real web/native evidence. Then connect evaluation-only Check records through a narrow receipt-aware adapter. No patient estimator activation or broad performance framework.
 
 **Remaining work:**
 - S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.
@@ -392,7 +439,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 - **G05.V03** Dose/schedule changes preserve compatible methods; assistance/method changes separate comparison or mark incompatibility. Previous and best use saved, qualified, non-retracted Checks from the same patient/episode/side/variant/assistance, compatible setup, reference, estimator/endpoint selection and caudal allowance value/version. Previous excludes current and has its own date. Unknown legacy/protocol changes, corrected/deleted best, duplicate retries, unsaved current result and incomplete history cannot produce a falsely compatible or all-time record.
 - **G05.V04** Goal, clinical restriction and demonstrator endpoint remain three separate quantities. In a comfort phase, passive qualified ROM history may appear without re-enabling personal-best score/celebration or range-seeking cues. Repeat-to-beat actions, record-confetti and target arcs are absent; clinical warning/stop instructions still win over both result and history.
 - **G05.V05** Watching or a simulated demonstration never becomes completed treatment or a clinical measurement.
-- **G05.V06** Patient-confirmed completion is labelled self-reported, not camera-observed or clinician-supervised.
+- **G05.V06** Patient-confirmed completion is labelled self-reported, not camera-observed or clinician-supervised. Preserve the explicit repetition-range maximum as well as minimum. Show Finish normally at the minimum and optional timing only up to the maximum; no automatic completion at either endpoint. Exact-count, invalid-range, early-stop and interrupted-optional-hold cases must agree in audio, UI and saved participation.
 - **G05.V07** Appointment summary identifies episode, source/version, method, support, date, unmeasured attempts and questions without implying notification of a care team.
 - **G05.V08** Reaching a demonstration's maximum never silently substitutes for a lower prescribed target or relaxes a precaution.
 
@@ -455,7 +502,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 **Required validation:**
 - **G07.V01** Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback. App Pause also pauses the player; Hide/Show preserves position; the viewport and native identity satisfy the selected provider contract; unavailable/blocked/autoplay-denied states recover truthfully. Separately qualify the three reference paths and forbid YouTube-frame extraction.
 - **G07.V02** Speech identifies the next movement and dose without forcing a floor-exercising patient to reach for the phone.
-- **G07.V03** Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. Patient result card: one large approximate value, elbow state, simple same-interval schematic, secondary previous/best with dates and one Done action. At narrow/large-text settings stack content; the diagram cannot conflate forearm rotation with bed-plane caudal alignment. Muted excluded values remain legible and reasons do not depend on colour. First/no/partial-history states avoid blank zeros or false pose. Counterbalanced comprehension task: identify today/previous/best, elbow state, approximate/invalid and saved/unsaved, and correct next action; measure accuracy/time and confident misinterpretations before preference. Directly labelled schematic must be tested against equivalent text/numbers; no population claim from a small formative round. Test at actual viewing distance and comfortable posture without forcing the patient to watch constantly.
+- **G07.V03** Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. Patient result card: one large approximate value, elbow state, simple same-interval schematic, secondary previous/best with dates and one Done action. At narrow/large-text settings stack content; the diagram cannot conflate forearm rotation with bed-plane caudal alignment. Muted excluded values remain legible and reasons do not depend on colour. First/no/partial-history states avoid blank zeros or false pose. Counterbalanced comprehension task: identify today/previous/best, elbow state, approximate/invalid and saved/unsaved, and correct next action; measure accuracy/time and confident misinterpretations before preference. Directly labelled schematic must be tested against equivalent text/numbers; no population claim from a small formative round. Test at actual viewing distance and comfortable posture without forcing the patient to watch constantly. Reference/current schematic labels are directly visible, the anatomy/bed cue is explicitly illustrative, side presentation mirrors without altering data, and full dates use the shared history formatter. Do not label an arbitrary angle reference as measured Start.
 - **G07.V04** Camera problem plus precaution plus praise selects one correct visual/spoken message consistently.
 - **G07.V05** Corrupt, missing, wrong-variant or unavailable video cannot silently substitute another movement; approved text/audio fallback is clear.
 - **G07.V06** Dynamic Type, VoiceOver and Voice Control traverse a complete native routine with reachable Stop/Pause. Compact counts retain accessible role/value; iOS requires its native announcement route, not Android liveRegion alone. Test app speech on/off, warnings, pause/background, listener cleanup and no per-second hold chatter. Post-Check text/schematic/date/approximate and eligibility labels are equivalent for VoiceOver; Hear result uses the existing single-owner speech path and no frame-by-frame or duplicate announcement. Reduced motion and named enlarge controls retain every essential result.
@@ -489,7 +536,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 **Required validation:**
 - **G08.V01** Thirty synthetic open/start/pause/stop/close cycles as a stress fixture: no sustained retained-memory growth; include background/memory pressure.
 - **G08.V02** Cold offline first use with required model/media present; low-storage model failure returns honest unmeasured state.
-- **G08.V03** Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims. Sleeper approximate IR requires independent reference testing of its exact angle definition and practical bedside view; check camera pitch/roll, both sides, elbow/wrist substitutes, torso drift, occlusion and repositioning. Distinguish absolute IR from change relative to setup; no unvalidated numeric error claim. For the chosen sleeper variant test caudal upper-arm angle and IR against independent references together. A raw image angle must not masquerade as a bed-plane angle; test foreshortening, body roll, lift, near-boundary uncertainty, baseline creep and tolerance-policy changes. Healthy feasibility alone does not determine clinical leeway.
+- **G08.V03** Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims. Sleeper approximate IR requires independent reference testing of its exact angle definition and practical bedside view; check camera pitch/roll, both sides, elbow/wrist substitutes, torso drift, occlusion and repositioning. Distinguish absolute IR from change relative to setup; no unvalidated numeric error claim. For the chosen sleeper variant test caudal upper-arm angle and IR against independent references together. A raw image angle must not masquerade as a bed-plane angle; test foreshortening, body roll, lift, near-boundary uncertainty, baseline creep and tolerance-policy changes. Healthy feasibility alone does not determine clinical leeway. Evaluation records and modes stay isolated from patient output/credit; model/source/interval and storage receipts are bound through the explicit adapter. Evaluate reference agreement and coverage, not only correlation. No implicit qualification by switching a flag.
 - **G08.V04** A method change cannot silently present the same measurement-method version or turn simulation success into clinical accuracy.
 - **G08.V05** More noisy repetitions without changed true endpoints cannot justify an automatic improvement claim; report selection policy and sample basis. Best is an observed record, not a reliable estimate of true maximum capacity. Predeclare sample/window/endpoint selection, show first/tie states without celebration, and prohibit automatic improvement until repeatability AND clinical interpretation support it. No numeric variability bound is invented.
 - **G08.V06** Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. Include stand movement, mattress compression, mirrored sides, initial prescribed roll, assistance and partial occlusion; rebaseline camera movement rather than label it patient drift. Match the initial upper-arm/torso setup across days as well as within-session drift. A session baseline must catch cumulative elbow migration that per-repetition resetting hides. Include pure rotation, combined shoulder/elbow translation and camera/torso motion controls.
@@ -522,7 +569,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 
 **Required validation:**
 - **G09.V01** Cloud build -> simulator -> authored journey -> screenshot/video artifacts -> image retrieval -> recorded visual review is demonstrated end-to-end.
-- **G09.V02** Local profile, routine preparation, reference, live exercise, paused state, unmeasured result and progress all appear in the artifact manifest.
+- **G09.V02** Local profile, routine preparation, reference, live exercise, paused state, unmeasured result and progress all appear in the artifact manifest. The native result screen has its own evidence; previous guided activity screenshots do not validate it. Tool-blocked operations remain unperformed and cannot be rerouted to evade restrictions.
 - **G09.V03** Restart simulator and re-open local records; large text and smaller-device states are not replaced by web screenshots.
 - **G09.V04** All artifact links are durable or explicitly expire; public artifacts contain synthetic/non-identifying material only.
 - **G09.V05** Each native image/video is tied to exact tested source, dependency/toolchain, fixture, screen state and reviewer finding.

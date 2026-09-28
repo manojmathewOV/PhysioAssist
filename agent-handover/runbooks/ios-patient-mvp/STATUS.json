@@ -1,7 +1,7 @@
 {
   "schema": "physioassist-runbook-status/1",
   "runbook_id": "ios-patient-mvp",
-  "runbook_revision": 12,
+  "runbook_revision": 13,
   "current_gate": "G05",
   "overall": "result_component_and_selector_submitted_native_check_integration_remaining",
   "implementation_sha": "e184830858569b10a140c45f81eb48c1c669ae79",
@@ -29,7 +29,7 @@
     "../../evidence/2026-09-28-result-display/run.json"
   ],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
-  "next": "Review the implemented result selector/card and synthetic/video evidence; qualify its native presentation and connect a future accepted Check through an explicit adapter. Patient registry stays empty; no real sleeper activation or whole-storage acceptance.",
+  "next": "Finish reviewed min/max hold semantics and directly labelled side-aware result, with real web/native evidence. Then connect evaluation-only Check records through a narrow receipt-aware adapter. No patient estimator activation or broad performance framework.",
   "last_writer": "s2-implementation-20260928-53363",
   "limitations": [
     "No gate independently accepted by this implementation update.",
@@ -252,15 +252,20 @@
       "basis": "e184830858569b10a140c45f81eb48c1c669ae79",
       "status": "implemented_pending_independent_review",
       "record": "../../responses/2026-09-28-result-display.md"
+    },
+    {
+      "subject": "range_and_schematic_review",
+      "basis": "0995723419a5f8e6b650cd2c035e5d375e3d6d29",
+      "status": "owner_relay_findings_reproduced_fix_in_progress",
+      "record": "../../responses/2026-09-29-range-and-card.md"
     }
   ],
   "hosted_observation": {
-    "basis": "8da497777266441155e50b5a4f28cf47873a72c9",
-    "checks_run": 36403222980,
-    "ios_run": 36403222979,
+    "basis": "0995723419a5f8e6b650cd2c035e5d375e3d6d29",
+    "checks_run": 36481588587,
+    "ios_run": 36481588566,
     "conclusion": "success",
-    "scope": "Previous published candidate only. Newd38b9cb checks must be read separately; no physical/native new hold acceptance.",
-    "record": "../../responses/2026-09-28-guided-ux-review.md"
+    "scope": "Earlier published revision; not acceptance of this new delta"
   },
   "active_branch": "agent/native-camera-recovery-20260928",
   "patient_feedback_decision": "Selected approximate number, schematic, previous comparable Check and scoped best record. Method/allowance/activation not approved."

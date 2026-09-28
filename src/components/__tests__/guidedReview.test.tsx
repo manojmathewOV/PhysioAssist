@@ -164,3 +164,33 @@ it('a pending occurrence from yesterday cannot block today', () => {
   expect(h.result.current.content).not.toBeNull();
   h.unmount();
 });
+
+it.each([
+  { item: { exerciseId: 'arm-raise', repRange: { min: 2, max: 3 } }, min: 2, max: 3 },
+  {
+    item: { exerciseId: 'arm-raise', reps: 2, repRange: { min: 2, max: 3 } },
+    min: 2,
+    max: 2,
+  },
+])(
+  'passes both prescribed bounds to the guided activity ($min–$max)',
+  ({ item, min, max }) => {
+    const { store } = setup();
+    const initial = store.getState();
+    const s = configureStore({
+      reducer: rootReducer,
+      preloadedState: {
+        ...initial,
+        settings: { ...initial.settings, exercisePlan: { ...plan, routine: [item] } },
+      },
+    });
+    const h = renderHook(() => useGuidedRoutine(), {
+      wrapper: ({ children }) => <Provider store={s}>{children}</Provider>,
+    });
+    act(() => h.result.current.start());
+    const activity = h.result.current.content as React.ReactElement;
+    expect(activity.props.minimumReps).toBe(min);
+    expect(activity.props.maximumReps).toBe(max);
+    h.unmount();
+  }
+);

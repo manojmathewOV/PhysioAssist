@@ -107,6 +107,22 @@ try {
         `${width}/${scenario}/synthetic-label`,
         await page.getByTestId('sleeper-synthetic').isVisible()
       );
+      if (hasNumber || scenario === 'moved') {
+        check(
+          `${width}/${scenario}/direct-labels`,
+          (await page.getByTestId('sleeper-reference-label').innerText()) ===
+            'Reference position' &&
+            (await page.getByTestId('sleeper-reading-label').innerText()) ===
+              'This reading'
+        );
+        const ray = Number(
+          await page.getByTestId('sleeper-current-ray').getAttribute('x2')
+        );
+        check(
+          `${width}/${scenario}/side-convention`,
+          scenario === 'right' ? ray < 112 : ray > 112
+        );
+      }
       if (scenario === 'moved')
         check(
           `${width}/excluded-not-best`,
@@ -140,7 +156,7 @@ try {
       );
       if (
         width < 400 &&
-        ['current', 'unavailable', 'moved', 'unsaved'].includes(scenario)
+        ['current', 'unavailable', 'moved', 'unsaved', 'right'].includes(scenario)
       ) {
         const name = `${scenario}-${width}.png`;
         await page.screenshot({ path: path.join(out, name) });

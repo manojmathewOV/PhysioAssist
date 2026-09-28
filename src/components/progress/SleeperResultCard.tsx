@@ -1,59 +1,13 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Svg, { Circle, Line } from 'react-native-svg';
+import { SleeperSchematic } from './SleeperSchematic';
+export { forearmEndpoint, SleeperSchematic } from './SleeperSchematic';
+import { historyDate } from '../../utils/displayDate';
 import { AppText, BigButton, Card } from '../ui';
 import { colors, spacing } from '../../theme';
 import type { SleeperResultView } from '../../services/checks/sleeperResult';
 
-const dateLabel = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-/** Frozen schematic of the reported forearm angle, not a reconstructed patient.
- * Elbow alignment is a different plane and is never drawn as this rotation. */
-export function forearmEndpoint(degrees: number | undefined) {
-  if (degrees === undefined || !Number.isFinite(degrees) || degrees < 0 || degrees > 180)
-    return null;
-  const angle = (degrees * Math.PI) / 180;
-  return { x: 112 + 58 * Math.sin(angle), y: 75 - 58 * Math.cos(angle) };
-}
-export function SleeperSchematic({ view }: { view: SleeperResultView }) {
-  const point = forearmEndpoint(view.rotationDegrees);
-  if (!point) return null;
-  const { x, y } = point;
-  return (
-    <View
-      testID="sleeper-schematic"
-      accessible
-      accessibilityLabel={`${view.side} forearm turn, ${view.value}. ${view.elbowText}. Simplified diagram, not a camera image.`}
-    >
-      <AppText variant="label">Forearm turn · simplified view</AppText>
-      <Svg width="100%" height={124} viewBox="0 0 240 150" accessible={false}>
-        <Line
-          x1={112}
-          y1={75}
-          x2={112}
-          y2={15}
-          stroke={colors.border}
-          strokeWidth={3}
-          strokeDasharray="5 5"
-        />
-        <Line
-          x1={112}
-          y1={75}
-          x2={x}
-          y2={y}
-          stroke={colors.primary}
-          strokeWidth={10}
-          strokeLinecap="round"
-        />
-        <Circle cx={112} cy={75} r={8} fill={colors.primary} />
-      </Svg>
-    </View>
-  );
-}
+const dateLabel = historyDate;
 export default function SleeperResultCard({
   view,
   onDone,
@@ -146,9 +100,10 @@ export default function SleeperResultCard({
       ) : null}
       {details && view.value ? (
         <AppText variant="body" testID="sleeper-explanation">
-          The drawing shows forearm turn, not a photograph. Its dashed line is the angle
-          reference, not a target. Elbow position is checked separately. Only checks made
-          the same way are compared.
+          The drawing shows forearm turn, not a photograph. Reference position is the
+          angle reference, not a target or your measured starting position. The bed
+          illustration is a position reminder, not measured geometry. Elbow position is
+          checked separately. Only checks made the same way are compared.
         </AppText>
       ) : null}
       {onDone ? <BigButton label="Done" testID="sleeper-done" onPress={onDone} /> : null}

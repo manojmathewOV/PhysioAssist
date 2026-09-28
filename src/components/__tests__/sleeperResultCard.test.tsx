@@ -96,3 +96,34 @@ it.each([NaN, Infinity, -1, 181, undefined])(
     expect(forearmEndpoint(degrees)).toBeNull();
   }
 );
+
+it('labels reference and reading directly without requiring the explanation', () => {
+  const ui = render(<SleeperResultCard view={view()} />);
+  expect(ui.getByText('Reference position')).toBeTruthy();
+  expect(ui.getByText('This reading')).toBeTruthy();
+  expect(ui.getByText('Side-lying illustration')).toBeTruthy();
+  expect(ui.getByText('How far your forearm turned in (estimate)')).toBeTruthy();
+  expect(ui.queryByText('Start')).toBeNull();
+  expect(ui.queryByTestId('sleeper-explanation')).toBeNull();
+});
+it('mirrors presentation by anatomical side, without altering the stored angle', () => {
+  const endpoint = forearmEndpoint as (
+    d: number,
+    s?: 'left' | 'right'
+  ) => { x: number; y: number };
+  const l = endpoint(42, 'left'),
+    r = endpoint(42, 'right');
+  expect(l.x + r.x).toBeCloseTo(224);
+  expect(l.y).toBeCloseTo(r.y);
+});
+it('uses the same full patient-facing date format as detailed activity history', () => {
+  const v = view();
+  const ui = render(<SleeperResultCard view={v} />);
+  const date = new Date(v.date!).toLocaleDateString(undefined, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  expect(ui.getByText(`Left shoulder · ${date}`)).toBeTruthy();
+});

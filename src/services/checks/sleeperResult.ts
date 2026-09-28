@@ -309,7 +309,7 @@ function evaluate(r: SleeperCheck, c: SleeperResultContext): SleeperResultView {
     state: 'comparable',
     value: reading(r).text,
     rotationDegrees: reading(r).degrees,
-    message: 'Internal rotation (estimate)',
+    message: 'How far your forearm turned in (estimate)',
   };
 }
 /** Pure as-of-current comparison. No writes, inferred approvals, goal or improvement score. */

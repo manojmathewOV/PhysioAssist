@@ -1,6 +1,6 @@
 {
   "schema": "physioassist-validation-matrix/1",
-  "revision": 12,
+  "revision": 13,
   "runbook_id": "ios-patient-mvp",
   "evidence_schema": {
     "required": [
@@ -608,7 +608,7 @@
       "id": "G05.V06",
       "gate": "G05",
       "required_for_gate": true,
-      "scenario": "Patient-confirmed completion is labelled self-reported, not camera-observed or clinician-supervised.",
+      "scenario": "Patient-confirmed completion is labelled self-reported, not camera-observed or clinician-supervised. Preserve the explicit repetition-range maximum as well as minimum. Show Finish normally at the minimum and optional timing only up to the maximum; no automatic completion at either endpoint. Exact-count, invalid-range, early-stop and interrupted-optional-hold cases must agree in audio, UI and saved participation.",
       "expected": "The stated invariant holds in both positive and contrary/invalid-input controls; exact observations are retained.",
       "evidence_class": "native_patient_journey",
       "executor": "patient_app_owner",
@@ -777,7 +777,7 @@
       "id": "G07.V03",
       "gate": "G07",
       "required_for_gate": true,
-      "scenario": "Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. Patient result card: one large approximate value, elbow state, simple same-interval schematic, secondary previous/best with dates and one Done action. At narrow/large-text settings stack content; the diagram cannot conflate forearm rotation with bed-plane caudal alignment. Muted excluded values remain legible and reasons do not depend on colour. First/no/partial-history states avoid blank zeros or false pose. Counterbalanced comprehension task: identify today/previous/best, elbow state, approximate/invalid and saved/unsaved, and correct next action; measure accuracy/time and confident misinterpretations before preference. Directly labelled schematic must be tested against equivalent text/numbers; no population claim from a small formative round. Test at actual viewing distance and comfortable posture without forcing the patient to watch constantly.",
+      "scenario": "Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. Patient result card: one large approximate value, elbow state, simple same-interval schematic, secondary previous/best with dates and one Done action. At narrow/large-text settings stack content; the diagram cannot conflate forearm rotation with bed-plane caudal alignment. Muted excluded values remain legible and reasons do not depend on colour. First/no/partial-history states avoid blank zeros or false pose. Counterbalanced comprehension task: identify today/previous/best, elbow state, approximate/invalid and saved/unsaved, and correct next action; measure accuracy/time and confident misinterpretations before preference. Directly labelled schematic must be tested against equivalent text/numbers; no population claim from a small formative round. Test at actual viewing distance and comfortable posture without forcing the patient to watch constantly. Reference/current schematic labels are directly visible, the anatomy/bed cue is explicitly illustrative, side presentation mirrors without altering data, and full dates use the shared history formatter. Do not label an arbitrary angle reference as measured Start.",
       "expected": "The stated invariant holds in both positive and contrary/invalid-input controls; exact observations are retained.",
       "evidence_class": "native_media_accessibility_and_human",
       "executor": "patient_experience_owner",
@@ -889,7 +889,7 @@
       "id": "G08.V03",
       "gate": "G08",
       "required_for_gate": true,
-      "scenario": "Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims. Sleeper approximate IR requires independent reference testing of its exact angle definition and practical bedside view; check camera pitch/roll, both sides, elbow/wrist substitutes, torso drift, occlusion and repositioning. Distinguish absolute IR from change relative to setup; no unvalidated numeric error claim. For the chosen sleeper variant test caudal upper-arm angle and IR against independent references together. A raw image angle must not masquerade as a bed-plane angle; test foreshortening, body roll, lift, near-boundary uncertainty, baseline creep and tolerance-policy changes. Healthy feasibility alone does not determine clinical leeway.",
+      "scenario": "Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims. Sleeper approximate IR requires independent reference testing of its exact angle definition and practical bedside view; check camera pitch/roll, both sides, elbow/wrist substitutes, torso drift, occlusion and repositioning. Distinguish absolute IR from change relative to setup; no unvalidated numeric error claim. For the chosen sleeper variant test caudal upper-arm angle and IR against independent references together. A raw image angle must not masquerade as a bed-plane angle; test foreshortening, body roll, lift, near-boundary uncertainty, baseline creep and tolerance-policy changes. Healthy feasibility alone does not determine clinical leeway. Evaluation records and modes stay isolated from patient output/credit; model/source/interval and storage receipts are bound through the explicit adapter. Evaluate reference agreement and coverage, not only correlation. No implicit qualification by switching a flag.",
       "expected": "The stated invariant holds in both positive and contrary/invalid-input controls; exact observations are retained.",
       "evidence_class": "reference_measurement_and_physical_device",
       "executor": "measurement_owner",
@@ -1001,7 +1001,7 @@
       "id": "G09.V02",
       "gate": "G09",
       "required_for_gate": true,
-      "scenario": "Local profile, routine preparation, reference, live exercise, paused state, unmeasured result and progress all appear in the artifact manifest.",
+      "scenario": "Local profile, routine preparation, reference, live exercise, paused state, unmeasured result and progress all appear in the artifact manifest. The native result screen has its own evidence; previous guided activity screenshots do not validate it. Tool-blocked operations remain unperformed and cannot be rerouted to evade restrictions.",
       "expected": "The stated invariant holds in both positive and contrary/invalid-input controls; exact observations are retained.",
       "evidence_class": "native_artifact_review",
       "executor": "native_validation_owner",

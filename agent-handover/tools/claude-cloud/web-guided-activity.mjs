@@ -126,7 +126,14 @@ try{
  await image(holds,'guided-hold-rest-320');
  await holds.getByTestId('guided-pause').click();
  await holds.getByTestId('guided-hold-time').filter({hasText:'2 hold timers finished'}).waitFor({timeout:10000});
- check('timed minimum still needs patient report',(await historyOf(holds)).length===0&&await holds.getByTestId('guided-pause').count()===0);
+ check('timed minimum permits finish and optional third without recording',(await historyOf(holds)).length===0&&(await holds.getByTestId('guided-minimum-reached').innerText()).includes('You can finish here')&&(await holds.getByTestId('guided-pause').innerText()).includes('Time optional hold 3'));
+ await image(holds,'guided-minimum-optional-320');
+ const finishAtMinimum=await holds.getByTestId('guided-stop').boundingBox(),optionalAtMinimum=await holds.getByTestId('guided-pause').boundingBox();
+ check('finish remains the primary first action at minimum',finishAtMinimum&&optionalAtMinimum&&finishAtMinimum.y<optionalAtMinimum.y);
+ await holds.getByTestId('guided-pause').click();
+ await holds.getByTestId('guided-hold-time').filter({hasText:'3 hold timers finished'}).waitFor({timeout:10000});
+ check('maximum offers no fourth hold and still has no activity record',await holds.getByTestId('guided-pause').count()===0&&(await historyOf(holds)).length===0);
+ await image(holds,'guided-maximum-320');
  await holds.getByTestId('guided-stop').click();
  check('report starts as a question not a failure',(await holds.getByTestId('guided-unsaved').innerText()).includes('Tell us how it went'));
  await holds.getByTestId('guided-completed').click();await holds.getByTestId('guided-save-state').filter({hasText:'Saved on this device'}).waitFor();
