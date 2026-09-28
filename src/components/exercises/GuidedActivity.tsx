@@ -120,6 +120,14 @@ export default function GuidedActivity({
     state.interruption === 'programme_changed';
   return (
     <Screen
+      // A new result must start at its status, not keep the old form's scroll offset.
+      key={
+        state.phase === 'finished'
+          ? reported === null
+            ? 'report'
+            : 'result'
+          : 'activity'
+      }
       testID="guided-activity"
       title={exercise.name}
       subtitle={`${side === 'left' ? 'Left' : 'Right'} ${exercise.primaryJoint ?? 'side'} · Without camera`}
