@@ -8,12 +8,15 @@ import { exercisesAllowed } from './episode';
 export type GuidedExercise = Pick<
   Exercise,
   'id' | 'name' | 'primaryJoint' | 'instructions' | 'warnings'
->;
+> & {
+  /** Short presentation of the same instructions, not a new prescription. */ cue?: string;
+};
 export const GUIDED_SHOULDER_REVISION = 'manoj-lying-shoulder-20260928-v1';
 export const GUIDED_SHOULDER: Record<string, GuidedExercise> = {
   'supine-assisted-elevation': {
     id: 'supine-assisted-elevation',
     name: 'Lying assisted arm raise',
+    cue: 'Support the working arm with your other arm.',
     primaryJoint: 'shoulder',
     instructions: [
       'Lie on your back.',
@@ -27,6 +30,7 @@ export const GUIDED_SHOULDER: Record<string, GuidedExercise> = {
   'supine-stick-external-rotation': {
     id: 'supine-stick-external-rotation',
     name: 'Lying stick-assisted turn-out',
+    cue: 'Keep the working elbow close to your body.',
     primaryJoint: 'shoulder',
     instructions: [
       'Lie on your back with the stick.',
@@ -40,6 +44,7 @@ export const GUIDED_SHOULDER: Record<string, GuidedExercise> = {
   'sleeper-stretch': {
     id: 'sleeper-stretch',
     name: 'Sleeper stretch',
+    cue: 'Keep your elbow roughly level with your shoulder.',
     primaryJoint: 'shoulder',
     instructions: [
       'Use the side-lying position in your programme.',

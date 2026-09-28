@@ -115,8 +115,8 @@ try{
  await holds.waitForFunction(()=>window.requestedSpeech.some(t=>t.includes('Get into position')));
  await holds.getByTestId('guided-start').click();
  await holds.getByTestId('guided-instruction').waitFor();
- const instruction=await holds.getByTestId('guided-instruction').boundingBox(),stop=await holds.getByTestId('guided-stop').boundingBox();
- check('live instruction remains above Stop at 320px',instruction&&stop&&instruction.y>=0&&instruction.y+instruction.height<=stop.y);
+ const instruction=await holds.getByTestId('guided-instruction').boundingBox(),timer=await holds.getByTestId('guided-hold-time').boundingBox(),pause=await holds.getByTestId('guided-pause').boundingBox();
+ check('instruction and hold timer stay above the entire fixed footer at 320px',instruction&&timer&&pause&&instruction.y>=0&&Math.max(instruction.y+instruction.height,timer.y+timer.height)<=pause.y-16);
  await image(holds,'guided-hold-active-320');
  await holds.getByTestId('guided-hold-time').filter({hasText:'1 hold timer finished'}).waitFor({timeout:10000});
  const beforeRest=await holds.getByTestId('guided-time').innerText();await holds.waitForTimeout(1600);

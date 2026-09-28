@@ -179,6 +179,7 @@ export default function GuidedActivity({
   const betweenHolds = timeHolds && timedHolds > 0 && holdFrom === null;
   const timedMinimum = betweenHolds && timedHolds >= minimumReps!;
   const liveCue =
+    exercise.cue ??
     exercise.instructions[exercise.id === 'sleeper-stretch' ? 2 : 1] ??
     exercise.instructions[0] ??
     'Follow your programme.';
@@ -363,9 +364,11 @@ export default function GuidedActivity({
         <>
           {!reviewing || !showVideo ? (
             <Card style={styles.card}>
-              <AppText variant="bodyStrong" testID="guided-dose">
-                {amount}
-              </AppText>
+              {state.phase === 'ready' || !timeHolds ? (
+                <AppText variant="bodyStrong" testID="guided-dose">
+                  {amount}
+                </AppText>
+              ) : null}
               {state.phase === 'ready' ? (
                 <AppText variant="body">
                   Get into position and read or watch the instructions. The timer has not
