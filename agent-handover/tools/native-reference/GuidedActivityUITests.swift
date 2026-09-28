@@ -14,7 +14,12 @@ final class ReferenceUITests: XCTestCase {
   XCTFail("Cannot reach \(id): \(app.debugDescription)")
  }
  func shot(_ name: String) { let a=XCTAttachment(screenshot: app.screenshot());a.name=name;a.lifetime = .keepAlways;add(a) }
- func enter(_ id: String,_ value: String) { tap(id);item(id).typeText(value) }
+ func enter(_ id: String,_ value: String) {
+  tap(id); let current=item(id).value as? String ?? ""
+  if current == value { print("Reused matching fixture for \(id)"); return }
+  XCTAssertTrue(current.isEmpty || current == item(id).placeholderValue, "Unexpected existing fixture for \(id)")
+  item(id).typeText(value);XCTAssertEqual(item(id).value as? String,value)
+ }
  func saved() {
   let e=item("guided-save-state")
   let predicate=NSPredicate(format:"label CONTAINS 'Saved on this device'")

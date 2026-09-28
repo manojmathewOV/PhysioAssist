@@ -14,7 +14,12 @@ final class ReferenceUITests: XCTestCase {
   XCTFail("Cannot reach \(id): \(app.debugDescription)")
  }
  func shot(_ name: String) { let a=XCTAttachment(screenshot: app.screenshot());a.name=name;a.lifetime = .keepAlways;add(a) }
- func enter(_ id: String,_ value: String) { tap(id);item(id).typeText(value) }
+ func enter(_ id: String,_ value: String) {
+  tap(id); let current=item(id).value as? String ?? ""
+  if current == value { print("Reused matching fixture for \(id)"); return }
+  XCTAssertTrue(current.isEmpty || current == item(id).placeholderValue, "Unexpected existing fixture for \(id)")
+  item(id).typeText(value);XCTAssertEqual(item(id).value as? String,value)
+ }
  func saved() {
   let e=item("guided-save-state")
   let predicate=NSPredicate(format:"label CONTAINS 'Saved on this device'")
@@ -35,10 +40,10 @@ final class ReferenceUITests: XCTestCase {
   for id in ["supine-assisted-elevation","supine-stick-external-rotation","sleeper-stretch"] {
    tap("choose-"+id);enter("guided-dose-min","2");enter("guided-dose-max","3");
    if id == "sleeper-stretch" { enter("guided-dose-hold","6") }
-   if id == "supine-assisted-elevation" { enter("guided-video-url","https://www.youtube.com/watch?v=M7lc1UVf-VE&t=8s") };tap("guided-dose-apply")
+   if id == "supine-assisted-elevation" { enter("guided-video-url","https://www.youtube.com/watch?v=M7lc1UVf-VE&t=8s") };XCTAssertTrue(item("guided-dose-apply").isEnabled);tap("guided-dose-apply")
   }
   tap("programme-confirm");tap("exercise-setup-done")
-  XCTAssertTrue(item("today-next-title").waitForExistence(timeout:10));shot("native-guided-preparation")
+  XCTAssertTrue(item("today-next-title").waitForExistence(timeout:10));XCTAssertTrue(item("today-next-title").label.contains("Lying assisted arm raise"));shot("native-guided-preparation")
   tap("start-routine-button");XCTAssertTrue(item("guided-start").waitForExistence(timeout:10))
   Thread.sleep(forTimeInterval:2);XCTAssertFalse(item("guided-time").exists);shot("native-guided-ready")
   tap("guided-start");XCTAssertTrue(item("guided-time").waitForExistence(timeout:10))

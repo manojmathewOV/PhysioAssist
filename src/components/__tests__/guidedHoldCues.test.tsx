@@ -156,3 +156,22 @@ it('speech failure leaves a readable alternative', async () => {
   );
   ui.unmount();
 });
+
+it('turning speech on partway through a hold announces only remaining time', async () => {
+  const Harness = () => {
+    const [enabled, setEnabled] = React.useState(false);
+    return (
+      <GuidedActivity {...props} enableSpeech={enabled} onSpeechChange={setEnabled} />
+    );
+  };
+  const ui = render(<Harness />);
+  fireEvent.press(ui.getByTestId('guided-start'));
+  await advance(2000);
+  expect(audio.speakGuidance).not.toHaveBeenCalled();
+  fireEvent.press(ui.getByTestId('guided-speech-toggle'));
+  await advance(0);
+  expect(audio.speakGuidance).toHaveBeenLastCalledWith(
+    expect.stringContaining('2 seconds remaining')
+  );
+  ui.unmount();
+});

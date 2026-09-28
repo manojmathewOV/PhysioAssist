@@ -477,7 +477,21 @@ export default function GuidedActivity({
               compact
               variant="secondary"
               testID="guided-speech-toggle"
-              onPress={() => onSpeechChange(!enableSpeech)}
+              onPress={() => {
+                if (!enableSpeech && timeHolds && holdFrom !== null) {
+                  const elapsed = activityTime(
+                    stateRef.current,
+                    Date.now()
+                  ).activeMilliseconds;
+                  setSpokenHoldSeconds(
+                    Math.max(
+                      0,
+                      Math.ceil((holdSeconds! * 1000 - (elapsed - holdFrom)) / 1000)
+                    )
+                  );
+                }
+                onSpeechChange(!enableSpeech);
+              }}
             />
           ) : null}
           {speech.unavailable ? (
