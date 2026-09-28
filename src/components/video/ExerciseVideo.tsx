@@ -135,6 +135,7 @@ const ExerciseVideo: React.FC<ExerciseVideoProps> = ({
       style={[styles.wrap, style, hidden && styles.hidden]}
       testID={testID}
       accessibilityElementsHidden={hidden}
+      aria-hidden={hidden}
       importantForAccessibility={hidden ? 'no-hide-descendants' : 'auto'}
       onLayout={(e) => {
         if (e.nativeEvent.layout.width > 0) setWidth(e.nativeEvent.layout.width);

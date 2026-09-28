@@ -236,6 +236,10 @@ it('reviewing a reference pauses activity time and does not load media before re
     'accessibilityElementsHidden',
     true
   );
+  expect(ui.getByTestId('guided-video', { includeHiddenElements: true })).toHaveProp(
+    'aria-hidden',
+    true
+  );
   fireEvent.press(ui.getByTestId('guided-pause'));
   act(() => {
     jest.advanceTimersByTime(1000);

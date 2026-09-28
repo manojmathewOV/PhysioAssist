@@ -158,8 +158,11 @@ try{
  await image(videoPage,'guided-reference-private-390');
  const mounted=await videoPage.getByTestId('reference-webview').elementHandle();
  const beforeStart=await state();await videoPage.getByTestId('guided-start').click();
- await frame().waitForFunction(()=>document.querySelector('video')?.paused);
- check('activity keeps the reference mounted but hides and pauses it',await mounted.evaluate(el=>el.isConnected)&&await videoPage.getByTestId('guided-video').isHidden());
+ await videoPage.waitForTimeout(800);
+ result.hiddenProbe={video:await state(),mounted:await mounted.evaluate(el=>el.isConnected),hidden:await videoPage.getByTestId('guided-video').evaluate(el=>({rect:el.getBoundingClientRect().toJSON(),aria:el.getAttribute('aria-hidden')})),frames:videoPage.frames().map(f=>f.url())};
+ console.log('HIDDEN_PROBE',JSON.stringify(result.hiddenProbe));
+ await frame().waitForFunction(()=>document.querySelector('video')?.paused,undefined,{polling:100});
+ check('activity keeps the reference mounted but hides and pauses it',await mounted.evaluate(el=>el.isConnected)&&(await state()).paused&&await videoPage.getByTestId('guided-video').evaluate(el=>el.getBoundingClientRect().right<0&&getComputedStyle(el).opacity==='0'&&el.getAttribute('aria-hidden')==='true'));
  await videoPage.waitForTimeout(1300);await videoPage.getByTestId('guided-watch').click();
  await frame().waitForFunction(()=>!document.querySelector('video')?.paused);
  const later=await state();check('Watch again restores prior playback position',later.time>=beforeStart.time-0.3);
