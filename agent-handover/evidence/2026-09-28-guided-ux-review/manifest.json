@@ -1,0 +1,40 @@
+{
+  "scope": "Exact candidate public-safe evidence; technical YouTube screenshot and raw media excluded",
+  "files": [
+    {
+      "path": "guided-hold-active-320.png",
+      "sha256": "753ea96289d9be4557448c27d46388ef67b71a55320464ebd6b5029b2d120895",
+      "bytes": 34900
+    },
+    {
+      "path": "guided-hold-rest-320.png",
+      "sha256": "82e48dc36897e2de7e2f8ac2c558f5c1b6eca6d46a18c87d9f0cc37d7f4f315e",
+      "bytes": 33375
+    },
+    {
+      "path": "guided-ready-390.png",
+      "sha256": "3d3c82a0935300a76e2534e78bc2d101e2dea1abad26a1789b174b3a50b085b8",
+      "bytes": 58427
+    },
+    {
+      "path": "guided-save-failed-320.png",
+      "sha256": "e808a76e3ea4a0d45b91f2d5929de543816ca6ba949b14ebbf3dc998b3a94cde",
+      "bytes": 35851
+    },
+    {
+      "path": "historical-capture-provenance.json",
+      "sha256": "2f9d57c61b92f7d920fda261f071662eb8469c1c93d8863b963c1c34ccbb4e2b",
+      "bytes": 1001
+    },
+    {
+      "path": "run.json",
+      "sha256": "2d1e7973df8c3651890e19b48e6a51e59f8603017b6997d01b6fc42efff7db44",
+      "bytes": 4429
+    },
+    {
+      "path": "web-journey.json",
+      "sha256": "2d0ef4426dd6ffab7aab70916a6115a6a3b9619611304b06da0aa58d00b84283",
+      "bytes": 4100
+    }
+  ]
+}

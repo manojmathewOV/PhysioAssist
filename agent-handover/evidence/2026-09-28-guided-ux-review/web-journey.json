@@ -1,0 +1,117 @@
+{
+  "scope": "Synthetic guided activity browser journey, not clinical prescription or camera accuracy",
+  "checks": [
+    "exact supine first variant",
+    "preparation is untimed",
+    "pause freezes active time",
+    "one acknowledged nonmeasured self-report",
+    "pause retained independently",
+    "next exact assisted rotation",
+    "early stop advances without completing",
+    "only completed activities count",
+    "early stop is not all completed",
+    "guided records are not failed numerical Checks",
+    "reported activity words",
+    "camera never opened",
+    "restart restores same records",
+    "failed write gives no saved credit",
+    "save failure is visible above the fixed return action at 320px",
+    "failure remains visible after leaving summary",
+    "pending occurrence cannot be started again",
+    "Home offers recovery not repeat",
+    "retry saves once with same explicit source",
+    "retry survives restart with no duplicate",
+    "no app runtime error",
+    "hold preparation is not timed",
+    "instruction and hold timer stay above the entire fixed footer at 320px",
+    "between-hold rest is not counted",
+    "timer has not created a record",
+    "timed minimum still needs patient report",
+    "report starts as a question not a failure",
+    "hold outcome stays self-report and unmeasured",
+    "browser requested prescribed hold and release speech",
+    "Home shows completion rather than a large duration",
+    "one activity has singular summary",
+    "no app runtime errors after prescribed-hold journey",
+    "real reference can play during untimed preparation",
+    "reference viewport is readable and above fixed footer",
+    "activity keeps the reference mounted but hides and pauses it",
+    "Watch again restores prior playback position",
+    "watching in activity does not advance its timer",
+    "manual reference pause survives Hide and Watch again",
+    "reference viewing has recorded no treatment"
+  ],
+  "errors": [],
+  "screens": [
+    "guided-prep-390",
+    "guided-ready-390",
+    "guided-paused-390",
+    "guided-saved-390",
+    "guided-progress-390",
+    "guided-save-failed-320",
+    "guided-pending-home-320",
+    "guided-recovered-320",
+    "guided-hold-ready-320",
+    "guided-hold-active-320",
+    "guided-hold-rest-320",
+    "guided-hold-reopened-320",
+    "guided-reference-private-390"
+  ],
+  "saveGeometry": {
+    "saveBox": {
+      "x": 48,
+      "y": 172,
+      "width": 224,
+      "height": 84
+    },
+    "returnBox": {
+      "x": 24,
+      "y": 404,
+      "width": 272,
+      "height": 64
+    }
+  },
+  "speechRequests": [
+    "Sleeper stretch. left shoulder. 2\u20133 times \u00b7 hold 4 sec each. Get into position. Start only when you are ready.",
+    "Hold 1. 4 seconds remaining in this prescribed hold. Keep your elbow roughly level with your shoulder.",
+    "Hold timer 1 of 2 finished. Release and rest. Start the next hold when ready.",
+    "Hold 2. 4 seconds remaining in this prescribed hold. Keep your elbow roughly level with your shoulder.",
+    "Hold timer 2 of 2 finished. Release and rest. You can finish and tell us how it went."
+  ],
+  "hiddenProbe": {
+    "video": {
+      "time": 8.258262,
+      "paused": true
+    },
+    "mounted": true,
+    "hidden": {
+      "rect": {
+        "x": -10000,
+        "y": 16,
+        "width": 390,
+        "height": 295,
+        "top": 16,
+        "right": -9610,
+        "bottom": 311,
+        "left": -10000
+      },
+      "aria": "true"
+    },
+    "frames": [
+      "http://127.0.0.1:58076/",
+      "about:srcdoc",
+      "https://www.youtube-nocookie.com/embed/M7lc1UVf-VE?playsinline=1&rel=0&cc_load_policy=1&autoplay=0&origin=http%3A%2F%2F127.0.0.1%3A58076&start=8&widget_referrer=http%3A%2F%2F127.0.0.1%3A58076%2F&enablejsapi=1&widgetid=1&forigin=about%3Asrcdoc&aoriginsup=1&aorigins=http%3A%2F%2F127.0.0.1%3A58076&gporigin=http%3A%2F%2F127.0.0.1%3A58076%2F&vf=6"
+    ]
+  },
+  "referencePosition": {
+    "beforeStart": {
+      "time": 8.236804,
+      "paused": false
+    },
+    "later": {
+      "time": 8.332708,
+      "paused": false
+    }
+  },
+  "complete": true
+}

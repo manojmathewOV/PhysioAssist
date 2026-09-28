@@ -1,0 +1,88 @@
+{
+  "recorded_at": "2026-09-28T15:07:19.944825+00:00",
+  "application_sha": "d38b9cb4d05f3c8f5b721b4b411025d90b8daf88",
+  "previous_public_basis": "8da497777266441155e50b5a4f28cf47873a72c9",
+  "scope": "Reviewer readiness/spoken prescribed-hold/instruction-layout/pending-save fixes; no new clinical prescription, estimator or complete-runbook acceptance",
+  "review": {
+    "reviewer": "Claude",
+    "source": "Owner-provided attachment, transcribed by receiving agent not a reviewer-authored GitHub approval",
+    "basis": "a8da5f5b630475144dfc12af1afd5cbc6a9d8516",
+    "scope": "Prior mechanics corroborated; readiness/audio/layout required before patient use. New code requires its own review."
+  },
+  "tests": {
+    "passed": 1724,
+    "skipped": 4,
+    "failed": 0,
+    "suites": 102,
+    "exit": 0,
+    "seconds": 29.83,
+    "forced_exit": false,
+    "teardown_warning": false,
+    "source_clean": true,
+    "log_sha256": "a8674db7aa95abaa050fb49a8b54025b901981d32bdd1b57bb8c5c93885651e3",
+    "command": "node_modules/.bin/jest --ci --watchman=false --maxWorkers=2 --json (existing managed cache)"
+  },
+  "typecheck": "passed on final committed application; normal pre-push configured type check and21 Integration tests also passed",
+  "lint": {
+    "errors": 0,
+    "warnings": 7,
+    "scope": "All changed TypeScript files versus8da4977 on final committed application"
+  },
+  "web": {
+    "source": "d38b9cb4d05f3c8f5b721b4b411025d90b8daf88",
+    "checks": 39,
+    "runtime_errors": [],
+    "complete": true,
+    "viewports": [
+      "390x844",
+      "320x568"
+    ],
+    "speech": "Observed calls into Web Speech synthesis with prescribed values, not an audible physical-device/VoiceOver assessment",
+    "real_reference": "Official YouTube technical sample; actual playback time, pause, preserved position and manual pause checked",
+    "visual_review": [
+      "ready390",
+      "hold-active320",
+      "hold-rest320",
+      "save-failure320",
+      "reopened320",
+      "reference390"
+    ],
+    "result": "web-journey.json"
+  },
+  "native": {
+    "new_build": "blocked_before_launch",
+    "exit": 2,
+    "reason": "Refused: Native build requires AC power under this profile",
+    "new_UI_test_run": false,
+    "old_passes_not_relabelled": true,
+    "updated_test": "agent-handover/tools/native-reference/GuidedReferenceUITests.swift",
+    "next": "AC power, guarded native build, actual ready/hold/reference/restart run, retrieve attachments and inspect them"
+  },
+  "reproductions": {
+    "review_cases": "Six new cases first failed before drafted fixes, then pass",
+    "pending_day": "A new contrary-input test showed yesterday pending blocks today; fixed with explicit activity-day comparison",
+    "layout": "First 32-check mechanics run passed but inspection showed long cue clipped; test incorrectly compared with lower Stop. Fixed shorter same-meaning cue, removed redundant active dose, test checks cue+hold time above top Pause/footer. Preserved failure image locally.",
+    "video_harness": "Default animation-frame wait timed out while reference was offscreen; direct query established video.paused=true with original iframe connected. Changed hidden-state polling to100ms and assert actual paused state/geometry rather than Playwright isHidden, which did not represent this opacity/offscreen design. Added aria-hidden to retained player. No pause assertion removed."
+  },
+  "historical_capture_provenance": "historical-capture-provenance.json",
+  "remaining": [
+    "Independent review of new timing/audio/pending-state code",
+    "Actual native build and UI run blocked on AC",
+    "Physical VoiceOver, audio audibility/interruptions and older-user use",
+    "Approved clinical reference assets, remaining dose/schedule and measurement qualification",
+    "Result selector/schematic, full storage migration, identity/backup and other runbook gates"
+  ],
+  "unchanged": [
+    "No default hold/rest/clinical drift threshold or automatic completion",
+    "No sleeper numerical activation or range/force coaching",
+    "Existing movement/RGB model pipeline unchanged; prior benchmark results retain1096a16 basis, not repeated for these UI-only changes",
+    "Main not merged; no protected prior evidence modified"
+  ],
+  "resources": {
+    "new_clones": 0,
+    "new_dependencies": 0,
+    "new_benchmark_downloads": 0,
+    "new_native_builds": 0,
+    "existing_dependencies_and_cache_reused": true
+  }
+}

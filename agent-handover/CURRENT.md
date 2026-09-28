@@ -1,30 +1,30 @@
 # Current PhysioAssist implementation
 
-Updated2026-09-28. Owner-selected scope: **iPhone-first, patient-only, local-first**. No clinician portal, monitoring, clinical cloud synchronisation or automatic progression. Read this current record, then the generated [ACTIVE.md](runbooks/ios-patient-mvp/ACTIVE.md); historical narratives remain pinned to their original revisions.
+Owner scope: **iPhone-first, patient-only, local-first**. No clinician portal, monitoring, automatic progression or clinical cloud synchronisation. Read this record, then [ACTIVE.md](runbooks/ios-patient-mvp/ACTIVE.md). Historical reports retain their original source and evidence limits.
 
 ## Latest bounded implementation
 
-**Tested candidate `a8da5f5b630475144dfc12af1afd5cbc6a9d8516`: guided shoulder activity, acknowledged local saving, reopening/history and quantitative observation enablers.** See [response](responses/2026-09-28-guided-implementation.md) and [source-bound results](evidence/2026-09-28-guided-implementation/run.json).
+**Tested application `d38b9cb4d05f3c8f5b721b4b411025d90b8daf88`: untimed preparation, spoken prescribed-hold guidance, instruction-first layout and pending-save recovery.** See [response](responses/2026-09-28-guided-ux-review.md) and [results](evidence/2026-09-28-guided-ux-review/run.json).
 
-The exact lying variants now have a camera-free route with explicit programme dose and confirmation, start/pause/watch/finish, self-reported completion or early stop, acknowledged save/retry and preserved episode/side/occurrence identity. No fake pose, measured angle, inferred repetitions or clinical authority is fabricated. The held-interval observation provider is opt-in; numerical detail survives into records, but no sleeper detector is activated.
+The patient explicitly starts after preparation. Optional holds use only supplied duration/repetition values and pause between intervals; no rest prescription or observed completion is invented. One short cue leads; timing is secondary. Watching suspends activity/audio and retains the paused player. Failed writes offer recovery, not repeating the same occurrence, and yesterday's pending event does not block today.
 
-Evidence: 1,707 passing tests/four opt-in skipped, clean final source and shutdown; 18 actual web checks; actual Release native guided and reference/restart journeys with inspected screenshots. Ten acquired MobiPhysio inspection clips plus mirror/blank controls produced12 runs/4,742 samples. These establish pipeline operation and observed limitations, not clinical accuracy, older-user comprehension or the whole runbook.
+Clean final suite: **1,724 passed, four opt-in skipped, zero failures**, natural exit. TypeScript passed; targeted lint has zero errors/seven warnings. **39 real-web/synthetic-programme checks** passed, with actual official-player playback, speech-request observation and visually inspected320/390px screenshots. This is not actual audible VoiceOver, clinical video approval or patient-camera accuracy.
 
-Native video now runs inside real camera-free treatment without enabling production simulation. This resolves that specific test-route blocker; real-camera/native focus, physical-device and approved clinical-video validation remain separate. Raw videos and third-party screenshots stay outside Git; only synthetic UI captures and numeric metadata are published.
+**Native pending:** the new managed build refused before launch because the Mac is on battery. The updated native test covers ready/hold/reference/restart but has not run at this source. Connect AC power, run the guarded build and updated journey, retrieve attachments and inspect them. Prior native/hosted successes must not be reused as current native acceptance.
 
-## Ownership and branches
+## Preserved foundation
 
-- Main remains the development baseline merged through PR28 at `aebfa1b7832a9de314c19d69d494339f82eea5bf`; it is not patient/release approval.
-- PR29 on `agent/native-camera-recovery-20260928` is the single receiving implementation branch. New source is submitted for independent review, not merged by this pickup.
-- The S2 writer resumed the same interrupted task and preserved all inherited commits/failed probes. Consult the local unique writer receipt before any shared-checkout edit; no concurrent writer or force/reset operation.
-- Claude remains independent reviewer. His owner-relayed S1/accessibility acceptances retain their exact earlier scope; they do not approve this new code. [Original handover](responses/2026-09-27-6bc4d77-claude-final-handover.md), [review](reviews/2026-09-28-owner-relayed-claude/REVIEW.md).
+The prior `a8da5f5` guided activity/acknowledged-write/quantitative-observation implementation remains intact; [its record](responses/2026-09-28-guided-implementation.md) carries1,707 tests, prior actual native journeys and the ten-video MobiPhysio development replay. The movement/RGB estimator is unchanged by this UX patch. Detection coverage was never clinical accuracy. No new videos/dependencies were downloaded.
 
-## Next code and review
+Claude's supplied review corroborated the previous mechanics and required these UX corrections before patient use. It is recorded as an owner-relayed review, not a GitHub approval by Claude. The previous identical native history/reopen pictures have two distinct original capture events; [provenance](evidence/2026-09-28-guided-ux-review/historical-capture-provenance.json) explains why pixels alone do not prove restart. Originals are untouched.
 
-Review this activity/save/observation delta and current hosted checks. The next bounded code should implement the patient result selector/schematic and compatible saved-history presentation using synthetic fixtures, without activating an unqualified sleeper result. Continue the existing gate requirements instead of creating another roadmap.
+## Ownership, review and continuation
 
-Remaining: full transaction/migration/backup/long-history storage, true registration policy, approved assets and remaining clinical programme decisions, selected knee/postoperative delivery, actual sleeper IR/caudal estimator and tolerance study, physical VoiceOver/resources, older-user comprehension and pilot/release requirements. Guided Do is useful without a numerical Check; a local configuration flag is not authenticated surgeon/physio approval.
+- Main remains `aebfa1b7832a9de314c19d69d494339f82eea5bf`. PR29/`agent/native-camera-recovery-20260928` is the single receiving branch; no merge or gate acceptance occurs in this task.
+- Continue only from the exact current head and local unique writer receipt. This task resumed its own interrupted work; no parallel writer, reset or force-push was used.
+- Review the new timing/audio/pending-state delta and complete the native/physical-audio observations. Then implement the specified patient result selector/schematic/compatible history using synthetic fixtures, with real numerical activation still gated.
+- The previous8da4977 hosted Checks/iOS were confirmed green; the new candidate needs its own hosted result. The runbook distinguishes those bases.
 
-Your selected sleeper intent remains: shoulder-level upper arm near90degrees, caudal drift with leeway, same-interval approximate IR and elbow observation, and a patient-visible schematic/current/previous/compatible episode-best without target chasing. The clinical band is unset. Details live in [runbook](runbooks/ios-patient-mvp/RUNBOOK.md), [decisions](runbooks/ios-patient-mvp/DECISIONS.md) and the existing sleeper research; no new blanket no-number rule.
+Still open: independent new-code and earlier storage-read review/formal safety record; full database migration/scale and registration/backup policy; approved clinical assets and remaining dose/schedule decisions; selected knee/postoperative rollout; actual sleeper IR/caudal method, allowance and reference-repeatability qualification; physical accessibility/resources, patient comprehension and pilot/release gates. No new research roadmap is needed to resume code.
 
-The retired Pod-installation and P08 issues should not be re-investigated without new contradictory evidence. The independent storage-read review/formal safety record remain open. Software tests, RGB replay, native screenshots and patient/clinical studies are distinct evidence classes. Four opt-in suites are not silently called passed.
+The owner-selected sleeper intent is unchanged: shoulder-level near90-degree upper arm, caudal leeway, same-interval approximate IR and elbow observation, and patient-visible current/previous/compatible episode-best plus a simple schematic without target chasing. Numerical allowance remains unset. Four opt-in suites and unperformed native/human checks are not silently counted as passes.

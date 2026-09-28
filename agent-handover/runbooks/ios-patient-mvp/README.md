@@ -1,6 +1,6 @@
-# iPhone patient MVP — execution runbook v10
+# iPhone patient MVP — execution runbook v11
 
-One roadmap, continuous with G00-G10. Revision 10 narrows the sleeper requirement to the owner-confirmed shoulder-level/90-degree variant with caudal leeway, and retains the owner-relayed Claude review and practical lying-shoulder capture requirements within the existing five delivery slices. One complete shoulder journey is next. The wider G00-G10 detail remains available behind the compact pickup. It does not implement the remaining features or approve clinical protocols.
+One roadmap, continuous with G00-G10. Revision 11 narrows the sleeper requirement to the owner-confirmed shoulder-level/90-degree variant with caudal leeway, and retains the owner-relayed Claude review and practical lying-shoulder capture requirements within the existing five delivery slices. One complete shoulder journey is next. The wider G00-G10 detail remains available behind the compact pickup. It does not implement the remaining features or approve clinical protocols.
 
 **Start:** [ACTIVE.md](ACTIVE.md) is the compact generated pickup; [STATUS.json](STATUS.json) is its sole current-state source and names the current gate/work item. [RUNBOOK.md](RUNBOOK.md) is the readable progression. [TEST_MATRIX.md](TEST_MATRIX.md) binds every planned acceptance scenario to a stable ID and evidence class. [PROGRESSION.md](PROGRESSION.md) defines movement between states and endpoints.
 
@@ -32,3 +32,5 @@ Patient-result decision is selected: see the generated RUNBOOK section **Patient
 Patient presentation now has a comprehension-led contract within `patient_feedback.comprehension`: direct spatial labels, context-specific feedback, familiar navigation/alignment/current-value patterns, and tests of correct understanding rather than visual preference. It changes no clinical threshold or activation.
 
 Implementation update: [guided activity, acknowledged storage and real-video replay](../../responses/2026-09-28-guided-implementation.md). The current candidate implements the first S2a/S2b/S2c path; it does not accept entire gates or activate sleeper measurements. Read current STATUS/ACTIVE rather than treating historical next-action prose as a fresh task.
+
+Latest UX candidate d38b9cb adds Ready, prescribed-hold voice/timing and instruction-first recovery; actual web/full-suite evidence is in the guided-ux-review response. New native verification is blocked on the managed AC-power preflight, not accepted from earlier screenshots.

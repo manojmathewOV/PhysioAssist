@@ -1,10 +1,10 @@
 {
   "schema": "physioassist-runbook-status/1",
   "runbook_id": "ios-patient-mvp",
-  "runbook_revision": 10,
+  "runbook_revision": 11,
   "current_gate": "G05",
-  "overall": "guided_shoulder_and_acknowledged_records_implemented_pending_review",
-  "implementation_sha": "a8da5f5b630475144dfc12af1afd5cbc6a9d8516",
+  "overall": "guided_UX_implemented_web_verified_native_pending_AC",
+  "implementation_sha": "d38b9cb4d05f3c8f5b721b4b411025d90b8daf88",
   "gate_states": {
     "G00": "implemented_pending_review",
     "G01": "in_progress",
@@ -24,10 +24,11 @@
     "../../evidence/2026-09-27-reference-controls/run.json",
     "../../evidence/2026-09-27-reference-controls/pickup.json",
     "../../evidence/2026-09-28-review-shoulder/run.json",
-    "../../evidence/2026-09-28-guided-implementation/run.json"
+    "../../evidence/2026-09-28-guided-implementation/run.json",
+    "../../evidence/2026-09-28-guided-ux-review/run.json"
   ],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
-  "next": "Review/test the published guided activity and acknowledged-write candidate. Next bounded application work: synthetic patient result selector/schematic and compatible history, without activating unqualified sleeper measurements. Complete remaining storage/native/clinical gates separately.",
+  "next": "Review the published ready/hold-speech/pending-save UX correction; complete its native build and updated journey when AC power is available. Then implement the synthetic result selector/schematic and compatible history; no unqualified sleeper activation.",
   "last_writer": "s2-implementation-20260928-53363",
   "limitations": [
     "No gate independently accepted by this implementation update.",
@@ -73,6 +74,15 @@
       "observed": "Actual Release camera-free activity now exercises reference Play/Pause/Hide/Replay and pause-time exclusion, then save/restart. The older fake-camera test remains historically failed; real camera/native focus and complete approved-media claims remain open.",
       "wake": "Fresh guided regression or remaining native real-camera/media/physical-device qualification, not a repeat of the excluded-production-practice route.",
       "evidence": "../../evidence/2026-09-28-guided-implementation/run.json"
+    },
+    {
+      "id": "NATIVE-GUIDED-UX-AC",
+      "gate": "G09",
+      "status": "preflight_blocked_AC_required",
+      "owner": "receiving_agent",
+      "observed": "Guarded new iOS build refused on battery with exit2; no build/test launched. Existing native evidence belongs to prior code.",
+      "wake": "AC power, unchanged candidate/lock preflight, native ready/hold/reference/restart driver and actual screenshot inspection",
+      "evidence": "../../evidence/2026-09-28-guided-ux-review/run.json"
     }
   ],
   "observed_subitems": {
@@ -144,6 +154,13 @@
       "basis": "1096a16ae246ac6644886ddaa3d6b54169c22d40",
       "evidence": "../../evidence/2026-09-28-guided-implementation/run.json",
       "scope": "10 original inspection clips plus mirror/blank controls, 4742 samples; no independent angle/rep truth or native accuracy."
+    },
+    "guided_UX": {
+      "state": "implemented_pending_native_and_independent_review",
+      "basis": "d38b9cb4d05f3c8f5b721b4b411025d90b8daf88",
+      "criteria": ["G05.V01", "G07.V02", "G07.V03", "G07.V08"],
+      "evidence": "../../evidence/2026-09-28-guided-ux-review/run.json",
+      "scope": "Untimed ready, supplied hold timing/voice requests, concise cue, exact pending-occurrence recovery; software/web proven, no new native or physical audio run"
     }
   },
   "active_pr": 29,
@@ -205,17 +222,24 @@
     {
       "subject": "guided_activity_storage_and_quantitative_observations",
       "basis": "a8da5f5b630475144dfc12af1afd5cbc6a9d8516",
-      "status": "implemented_pending_independent_review",
-      "record": "../../responses/2026-09-28-guided-implementation.md"
+      "status": "mechanics_corroborated_owner_relay_UX_followups_required",
+      "record": "../../responses/2026-09-28-guided-implementation.md",
+      "review_record": "../../responses/2026-09-28-guided-ux-review.md"
+    },
+    {
+      "subject": "guided_readiness_hold_speech_and_recovery",
+      "basis": "d38b9cb4d05f3c8f5b721b4b411025d90b8daf88",
+      "status": "implemented_pending_independent_and_native_review",
+      "record": "../../responses/2026-09-28-guided-ux-review.md"
     }
   ],
   "hosted_observation": {
-    "basis": "60fce34542cc6eaa8f08bc2252e5ca4239eb85ad",
-    "checks_run": 36360528579,
-    "ios_run": 36360528611,
+    "basis": "8da497777266441155e50b5a4f28cf47873a72c9",
+    "checks_run": 36403222980,
+    "ios_run": 36403222979,
     "conclusion": "success",
-    "scope": "Existing hosted checks observed; no physical VoiceOver or complete native camera-optional journey qualification",
-    "record": "../../responses/2026-09-28-s2-sleeper-refinement.md"
+    "scope": "Previous published candidate only. Newd38b9cb checks must be read separately; no physical/native new hold acceptance.",
+    "record": "../../responses/2026-09-28-guided-ux-review.md"
   },
   "active_branch": "agent/native-camera-recovery-20260928",
   "patient_feedback_decision": "Selected approximate number, schematic, previous comparable Check and scoped best record. Method/allowance/activation not approved."

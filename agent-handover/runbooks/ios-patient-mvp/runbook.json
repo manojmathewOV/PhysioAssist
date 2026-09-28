@@ -1,7 +1,7 @@
 {
   "schema": "physioassist-portable-runbook/1",
   "id": "ios-patient-mvp",
-  "revision": 10,
+  "revision": 11,
   "prepared_date": "2026-09-27",
   "claim": "declaration_only_no_implementation_or_clinical_acceptance",
   "authority": {
@@ -540,7 +540,7 @@
         "id": "G05.W1",
         "start_when": "Frozen input, task ownership and relevant source interfaces are known; unresolved decisions block only irreversible/clinical activation in their scope.",
         "stop_when": "Candidate evidence submitted or a named blocker with wake condition recorded; no indefinite retry.",
-        "candidate_action": "Review/test the published guided activity and acknowledged-write candidate. Next bounded application work: synthetic patient result selector/schematic and compatible history, without activating unqualified sleeper measurements. Complete remaining storage/native/clinical gates separately.",
+        "candidate_action": "Review the published ready/hold-speech/pending-save UX correction; complete its native build and updated journey when AC power is available. Then implement the synthetic result selector/schematic and compatible history; no unqualified sleeper activation.",
         "after_success": "Independent acceptance review, then eligible successors; do not stop only because unit tests are green."
       }
     },

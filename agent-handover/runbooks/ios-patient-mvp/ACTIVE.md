@@ -6,9 +6,9 @@ Generated from `runbook.json` and `STATUS.json`; do not edit this view. This is 
 
 **Outcome:** An appropriate local programme can be learned, performed without compulsory camera tracking, interrupted, recorded durably and revisited on an iPhone.
 
-**Next action:** Review/test the published guided activity and acknowledged-write candidate. Next bounded application work: synthetic patient result selector/schematic and compatible history, without activating unqualified sleeper measurements. Complete remaining storage/native/clinical gates separately.
+**Next action:** Review the published ready/hold-speech/pending-save UX correction; complete its native build and updated journey when AC power is available. Then implement the synthetic result selector/schematic and compatible history; no unqualified sleeper activation.
 
-**Evidence basis:** implementation `a8da5f5`; hosted `60fce34` success. Review queue: reference_safety (reviewer_reports_acceptance_formal_record_pending), storage_read_containment (independent_review_pending), reference_controls (accepted_with_nonblocking_followups_owner_relay), native_no_camera_recovery (code_corroborated_owner_relay), compact_accessibility_followup (accepted_owner_relay), sleeper_geometry_research (tests_and_reasoning_corroborated_owner_relay), guided_activity_storage_and_quantitative_observations (implemented_pending_independent_review). Do not redo established fixes without fresh contrary evidence.
+**Evidence basis:** implementation `d38b9cb`; hosted `8da4977` success. Review queue: reference_safety (reviewer_reports_acceptance_formal_record_pending), storage_read_containment (independent_review_pending), reference_controls (accepted_with_nonblocking_followups_owner_relay), native_no_camera_recovery (code_corroborated_owner_relay), compact_accessibility_followup (accepted_owner_relay), sleeper_geometry_research (tests_and_reasoning_corroborated_owner_relay), guided_activity_storage_and_quantitative_observations (mechanics_corroborated_owner_relay_UX_followups_required), guided_readiness_hold_speech_and_recovery (implemented_pending_independent_and_native_review). Do not redo established fixes without fresh contrary evidence.
 
 ## Execute in small reviewable steps
 

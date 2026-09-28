@@ -1,0 +1,21 @@
+{
+  "source_sha": "a8da5f5b630475144dfc12af1afd5cbc6a9d8516",
+  "captures": [
+    {
+      "test": "ReferenceUITests/testGuidedReferenceAndRestart()",
+      "capture": "native-guided-reopened_0_69AD6428-2BC9-4BB6-BC2A-DE9202536F7C.png",
+      "exportedFileName": "F8496DC8-EE3C-409C-9F84-E57294B82B7C.png",
+      "timestamp": 1790584445.861,
+      "sha256": "5475811b497d523ee038303e67a9bfdd38ca2e9ea8b4c84dcba3d4d3b1da9a21"
+    },
+    {
+      "test": "ReferenceUITests/testGuidedReferenceAndRestart()",
+      "capture": "native-guided-history_0_B5823CE0-1D7D-46A4-BF2F-DA9D7DF20180.png",
+      "exportedFileName": "5C4451B8-F027-49A3-BE99-7E50C6383DEA.png",
+      "timestamp": 1790584441.725,
+      "sha256": "5475811b497d523ee038303e67a9bfdd38ca2e9ea8b4c84dcba3d4d3b1da9a21"
+    }
+  ],
+  "same_pixels": true,
+  "scope": "Two captures show the same visual state; restart evidence comes from XCTest assertions and capture events, not visual difference. Originals and published images are unchanged."
+}

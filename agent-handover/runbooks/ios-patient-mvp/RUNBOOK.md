@@ -1,6 +1,6 @@
 # iPhone patient MVP — remaining execution roadmap
 
-Revision 10. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
+Revision 11. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
 
 ## Delivery first; gate details on demand
 
@@ -378,7 +378,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 
 **Closure requires:** G02, G03, G04. **Executor:** patient_experience_implementer. **Acceptor:** independent_usability_reviewer.
 
-**Next bounded work:** Review/test the published guided activity and acknowledged-write candidate. Next bounded application work: synthetic patient result selector/schematic and compatible history, without activating unqualified sleeper measurements. Complete remaining storage/native/clinical gates separately.
+**Next bounded work:** Review the published ready/hold-speech/pending-save UX correction; complete its native build and updated journey when AC power is available. Then implement the synthetic result selector/schematic and compatible history; no unqualified sleeper activation.
 
 **Remaining work:**
 - S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.
