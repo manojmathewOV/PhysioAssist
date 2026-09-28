@@ -1,7 +1,7 @@
 {
   "schema": "physioassist-portable-runbook/1",
   "id": "ios-patient-mvp",
-  "revision": 9,
+  "revision": 10,
   "prepared_date": "2026-09-27",
   "claim": "declaration_only_no_implementation_or_clinical_acceptance",
   "authority": {
@@ -283,7 +283,7 @@
         "id": "G02.W1",
         "start_when": "Frozen input, task ownership and relevant source interfaces are known; unresolved decisions block only irreversible/clinical activation in their scope.",
         "stop_when": "Candidate evidence submitted or a named blocker with wake condition recorded; no indefinite retry.",
-        "candidate_action": "Independently review published read-error containment, then implement durable write acknowledgement and recoverable local storage without removing the guard.",
+        "candidate_action": "Review implemented read-error containment and guided write/readback acknowledgements; continue transaction/migration/profile/backup/scale work without removing either guard.",
         "after_success": "Independent acceptance review, then eligible successors; do not stop only because unit tests are green."
       }
     },
@@ -540,7 +540,7 @@
         "id": "G05.W1",
         "start_when": "Frozen input, task ownership and relevant source interfaces are known; unresolved decisions block only irreversible/clinical activation in their scope.",
         "stop_when": "Candidate evidence submitted or a named blocker with wake condition recorded; no indefinite retry.",
-        "candidate_action": "S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.",
+        "candidate_action": "Review/test the published guided activity and acknowledged-write candidate. Next bounded application work: synthetic patient result selector/schematic and compatible history, without activating unqualified sleeper measurements. Complete remaining storage/native/clinical gates separately.",
         "after_success": "Independent acceptance review, then eligible successors; do not stop only because unit tests are green."
       }
     },
@@ -712,7 +712,7 @@
         "id": "G07.W1",
         "start_when": "Frozen input, task ownership and relevant source interfaces are known; unresolved decisions block only irreversible/clinical activation in their scope.",
         "stop_when": "Candidate evidence submitted or a named blocker with wake condition recorded; no indefinite retry.",
-        "candidate_action": "Verify compact progress follow-up on real assistive technology; S1 code review is relayed/recorded. Preserve the remaining native live and approved-asset boundary, not a new downloader or parser rewrite.",
+        "candidate_action": "Review new actual native camera-free reference journey. Continue approved-asset, physical accessibility and low-cognition presentation work; do not repeat already tested playback mechanics without a new counterexample.",
         "after_success": "Independent acceptance review, then eligible successors; do not stop only because unit tests are green."
       }
     },

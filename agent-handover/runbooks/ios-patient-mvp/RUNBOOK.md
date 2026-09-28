@@ -1,6 +1,6 @@
 # iPhone patient MVP — remaining execution roadmap
 
-Revision 9. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
+Revision 10. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
 
 ## Delivery first; gate details on demand
 
@@ -281,7 +281,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 
 **Closure requires:** G01. **Executor:** storage_implementer. **Acceptor:** independent_engineering_reviewer.
 
-**Next bounded work:** Independently review published read-error containment, then implement durable write acknowledgement and recoverable local storage without removing the guard.
+**Next bounded work:** Review implemented read-error containment and guided write/readback acknowledgements; continue transaction/migration/profile/backup/scale work without removing either guard.
 
 **Remaining work:**
 - Independently review published read-error containment, then implement durable write acknowledgement and recoverable local storage without removing the guard.
@@ -378,7 +378,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 
 **Closure requires:** G02, G03, G04. **Executor:** patient_experience_implementer. **Acceptor:** independent_usability_reviewer.
 
-**Next bounded work:** S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.
+**Next bounded work:** Review/test the published guided activity and acknowledged-write candidate. Next bounded application work: synthetic patient result selector/schematic and compatible history, without activating unqualified sleeper measurements. Complete remaining storage/native/clinical gates separately.
 
 **Remaining work:**
 - S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.
@@ -444,7 +444,7 @@ This is one refinement of existing G07.V03, not another study programme or prere
 
 **Closure requires:** G03, G04, G05. **Executor:** patient_experience_implementer. **Acceptor:** independent_reviewer_and_target_users.
 
-**Next bounded work:** Verify compact progress follow-up on real assistive technology; S1 code review is relayed/recorded. Preserve the remaining native live and approved-asset boundary, not a new downloader or parser rewrite.
+**Next bounded work:** Review new actual native camera-free reference journey. Continue approved-asset, physical accessibility and low-cognition presentation work; do not repeat already tested playback mechanics without a new counterexample.
 
 **Remaining work:**
 - Review the small native no-camera correction in PR #29; then camera-optional source-aware Do and native live reference coverage. No more unpublished integration chain or re-investigation of retired fixes.

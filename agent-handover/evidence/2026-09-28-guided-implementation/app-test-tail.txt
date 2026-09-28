@@ -1,0 +1,35 @@
+PASS src/features/shoulderAnalytics/__tests__/ShoulderROMTracker.test.ts
+PASS src/services/pose/__tests__/mediapipeLandmarks.test.ts
+PASS __tests__/smoke/tensorflow.test.ts
+PASS src/utils/__tests__/progressSummary.test.ts
+PASS src/services/movement/__tests__/view.test.ts
+PASS src/components/__tests__/framingRequirement.test.ts
+PASS src/services/pose/__tests__/measurementLandmarks.test.ts
+PASS src/features/videoComparison/__tests__/errorDetection.test.ts
+PASS src/services/__tests__/goniometerService.test.ts
+PASS src/services/web/__tests__/WebPoseDetectionService.test.ts
+PASS src/utils/__tests__/PersistenceFilter.test.ts
+PASS __tests__/auth/userSlice.test.ts
+PASS src/services/pose/__tests__/OrientationClassifier.test.ts
+PASS src/components/exercises/__tests__/referenceFor.test.ts
+PASS src/types/__tests__/pose.test.ts
+PASS __tests__/integration/videoFrameFeeder.test.ts
+PASS src/__tests__/deviceHealthMonitor.test.ts
+PASS src/services/biomechanics/__tests__/AnatomicalReferenceService.test.ts
+PASS src/services/movement/__tests__/peakReview.test.ts
+PASS src/utils/__tests__/youtube.test.ts
+PASS src/services/pose/__tests__/exercisePlan.test.ts
+PASS src/utils/__tests__/youtubeNative.test.ts
+PASS src/services/web/__tests__/focusFrame.test.ts
+PASS src/types/__tests__/biomechanics.test.ts
+PASS src/services/__tests__/audioCuePacing.test.ts
+PASS __tests__/smoke/rnfs.test.ts
+PASS __tests__/smoke/mediapipe.test.ts
+PASS src/services/pose/__tests__/adaptiveModel.test.ts
+
+Test Suites: 4 skipped, 99 passed, 99 of 103 total
+Tests:       4 skipped, 1707 passed, 1711 total
+Snapshots:   0 total
+Time:        27.589 s
+Ran all test suites.
+Test results written to: ../RDC/runs/20260928T090715Z-test-373401bc/tests.json

@@ -1,11 +1,11 @@
 {
-  "revision": 9,
+  "revision": 10,
   "role": "portable plan files, not implementation evidence acceptance",
   "files": [
     {
       "path": "ACTIVE.md",
-      "sha256": "190e354fbe0f9c25448d3d34987246e9ae387742c12d9bf48baf9157f0ee05d0",
-      "bytes": 6090
+      "sha256": "c417ff3a21ade3bed45384b23b1c7607e4f4a799986919d417dd0111ec0993ab",
+      "bytes": 6181
     },
     {
       "path": "DECISIONS.md",
@@ -19,8 +19,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "ace304b21d26edc6794a36a70f0061a81cfa41308bc29c77b4be263f32de8f31",
-      "bytes": 3915
+      "sha256": "73da336b606d5e9e1d58a1ad56021c0a4d7a443688dd8597351e6212e2d69868",
+      "bytes": 4278
     },
     {
       "path": "RESEARCH.md",
@@ -29,18 +29,18 @@
     },
     {
       "path": "ROADMAP.cnp",
-      "sha256": "ce8a19f4441fc556f45edee76b8f93355e1138c44b6008a56d73bab264810149",
+      "sha256": "66db1f56a2db17e6ebe8774e118c540817687c9ed3f6c4c1e00109188139b297",
       "bytes": 108271
     },
     {
       "path": "RUNBOOK.md",
-      "sha256": "94e174a818fa4f970e5f06c1eebafbb5b000763b03325c920771e0c29bd0d50c",
-      "bytes": 70521
+      "sha256": "3e00aaa4e406b05246f08c7ec0238d9591c0e273a3700712b388dd0b026dd956",
+      "bytes": 70548
     },
     {
       "path": "STATUS.json",
-      "sha256": "4dc93a3424ba0fadadd93b5d9992df51e09b89b80b706d4ef6fa3de58eccd650",
-      "bytes": 9735
+      "sha256": "203cdfecb68159dfe6600ed14ffb020f478ba72520864c90c023f58b27f732a1",
+      "bytes": 11803
     },
     {
       "path": "TEST_MATRIX.md",
@@ -89,8 +89,8 @@
     },
     {
       "path": "runbook.json",
-      "sha256": "082ecc203d0feb0b10bcc8c0c44d18bdedf99978edfc31bce783ea1ee78f1538",
-      "bytes": 117292
+      "sha256": "12ef5b2ff4844e94738740482bb7fe1eb2701ed80033757a7875ea76cf508c0e",
+      "bytes": 117319
     },
     {
       "path": "tools/check_matrix.py",
@@ -109,8 +109,8 @@
     },
     {
       "path": "validation-matrix.json",
-      "sha256": "15b6ebfefda1a07887812fe4ffbeedc3abc99089dffe7c44e8475da81d235c20",
-      "bytes": 79667
+      "sha256": "fcf5dc512a56e477bdd16cc8ea0b10fa004556cba923b761915e4b5f990e7e1d",
+      "bytes": 79668
     }
   ]
 }

@@ -6,9 +6,9 @@ Generated from `runbook.json` and `STATUS.json`; do not edit this view. This is 
 
 **Outcome:** An appropriate local programme can be learned, performed without compulsory camera tracking, interrupted, recorded durably and revisited on an iPhone.
 
-**Next action:** S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.
+**Next action:** Review/test the published guided activity and acknowledged-write candidate. Next bounded application work: synthetic patient result selector/schematic and compatible history, without activating unqualified sleeper measurements. Complete remaining storage/native/clinical gates separately.
 
-**Evidence basis:** implementation `4c8b20d`; hosted `60fce34` success. Review queue: reference_safety (reviewer_reports_acceptance_formal_record_pending), storage_read_containment (independent_review_pending), reference_controls (accepted_with_nonblocking_followups_owner_relay), native_no_camera_recovery (code_corroborated_owner_relay), compact_accessibility_followup (accepted_owner_relay), sleeper_geometry_research (tests_and_reasoning_corroborated_owner_relay). Do not redo established fixes without fresh contrary evidence.
+**Evidence basis:** implementation `a8da5f5`; hosted `60fce34` success. Review queue: reference_safety (reviewer_reports_acceptance_formal_record_pending), storage_read_containment (independent_review_pending), reference_controls (accepted_with_nonblocking_followups_owner_relay), native_no_camera_recovery (code_corroborated_owner_relay), compact_accessibility_followup (accepted_owner_relay), sleeper_geometry_research (tests_and_reasoning_corroborated_owner_relay), guided_activity_storage_and_quantitative_observations (implemented_pending_independent_review). Do not redo established fixes without fresh contrary evidence.
 
 ## Execute in small reviewable steps
 

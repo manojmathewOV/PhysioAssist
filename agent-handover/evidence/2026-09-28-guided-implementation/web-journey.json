@@ -1,0 +1,47 @@
+{
+  "scope": "Synthetic guided activity browser journey, not clinical prescription or camera accuracy",
+  "checks": [
+    "exact supine first variant",
+    "pause freezes active time",
+    "one acknowledged nonmeasured self-report",
+    "pause retained independently",
+    "next exact assisted rotation",
+    "early stop advances without completing",
+    "only completed activities count",
+    "early stop is not all completed",
+    "guided records are not failed numerical Checks",
+    "reported activity words",
+    "camera never opened",
+    "restart restores same records",
+    "failed write gives no saved credit",
+    "save failure is visible above the fixed return action at 320px",
+    "failure remains visible after leaving summary",
+    "retry saves once with same explicit source",
+    "retry survives restart with no duplicate",
+    "no app runtime error"
+  ],
+  "errors": [],
+  "screens": [
+    "guided-prep-390",
+    "guided-paused-390",
+    "guided-saved-390",
+    "guided-progress-390",
+    "guided-save-failed-320",
+    "guided-recovered-320"
+  ],
+  "saveGeometry": {
+    "saveBox": {
+      "x": 48,
+      "y": 172,
+      "width": 224,
+      "height": 84
+    },
+    "returnBox": {
+      "x": 24,
+      "y": 404,
+      "width": 272,
+      "height": 64
+    }
+  },
+  "complete": true
+}

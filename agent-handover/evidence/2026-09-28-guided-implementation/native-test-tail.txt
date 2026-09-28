@@ -1,0 +1,35 @@
+    t =   127.95s     Checking `Expect predicate `existsNoRetry == 1` for object "progress-session-0" Any`
+    t =   127.95s         Checking existence of `"progress-session-0" Any`
+    t =   127.99s Find the Application 'org.reactjs.native.example.PhysioAssist'
+    t =   128.05s Added attachment named 'native-guided-reopened'
+    t =   128.05s Checking existence of `"progress-series-0" Any`
+    t =   128.09s Checking existence of `"tab-home" Any`
+    t =   128.11s Find the "tab-home" Any
+    t =   128.13s Tap "tab-home" Button
+    t =   128.13s     Wait for org.reactjs.native.example.PhysioAssist to idle
+    t =   128.13s     Find the "tab-home" Button
+    t =   128.15s     Check for interrupting elements affecting "tab-home" Button
+    t =   128.16s     Synthesize event
+    t =   128.45s     Wait for org.reactjs.native.example.PhysioAssist to idle
+    t =   128.46s Waiting 10.0s for "home-goal-ring" Any to exist
+    t =   129.48s     Checking `Expect predicate `existsNoRetry == 1` for object "home-goal-ring" Any`
+    t =   129.49s         Checking existence of `"home-goal-ring" Any`
+    t =   129.54s Find the "home-goal-ring" Any
+    t =   129.59s Tear Down
+Test Case '-[ReferenceUITests.ReferenceUITests testGuidedReferenceAndRestart]' passed (129.802 seconds).
+Test Suite 'ReferenceUITests' passed at 2026-09-28 18:34:07.613.
+	 Executed 1 test, with 0 failures (0 unexpected) in 129.802 (129.803) seconds
+Test Suite 'ReferenceUITests.xctest' passed at 2026-09-28 18:34:07.614.
+	 Executed 1 test, with 0 failures (0 unexpected) in 129.802 (129.803) seconds
+Test Suite 'All tests' passed at 2026-09-28 18:34:07.614.
+	 Executed 1 test, with 0 failures (0 unexpected) in 129.802 (129.804) seconds
+2026-09-28 18:34:07.925 xcodebuild[3514:400849660] [MT] IDETestOperationsObserverDebug: 133.523 elapsed -- Testing started completed.
+2026-09-28 18:34:07.925 xcodebuild[3514:400849660] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-28 18:34:07.925 xcodebuild[3514:400849660] [MT] IDETestOperationsObserverDebug: 133.523 sec, +133.523 sec -- end
+
+Test session results, code coverage, and logs:
+	<WORKSPACE>/RDC/runs/20260928-s2-implementation/continuation/native-reference/journey.xcresult
+
+** TEST SUCCEEDED **
+
+Testing started
