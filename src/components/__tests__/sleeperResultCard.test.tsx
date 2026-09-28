@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
-import SleeperResultCard from '../progress/SleeperResultCard';
+import SleeperResultCard, { forearmEndpoint } from '../progress/SleeperResultCard';
 import { selectSleeperResult } from '../../services/checks/sleeperResult';
 import {
   exampleCheck,
@@ -79,3 +79,20 @@ it('does not keep an open numerical explanation after the result is unavailable'
   ui.rerender(<SleeperResultCard view={selectSleeperResult(r, [], EXAMPLE_CONTEXT)} />);
   expect(ui.queryByTestId('sleeper-explanation')).toBeNull();
 });
+
+it.each([0, 42, 90, 135, 180])(
+  'schematic endpoint at %s stays inside its viewport',
+  (degrees) => {
+    const p = forearmEndpoint(degrees)!;
+    expect(p.x).toBeGreaterThanOrEqual(5);
+    expect(p.x).toBeLessThanOrEqual(235);
+    expect(p.y).toBeGreaterThanOrEqual(5);
+    expect(p.y).toBeLessThanOrEqual(145);
+  }
+);
+it.each([NaN, Infinity, -1, 181, undefined])(
+  'invalid schematic value %s is withheld',
+  (degrees) => {
+    expect(forearmEndpoint(degrees)).toBeNull();
+  }
+);

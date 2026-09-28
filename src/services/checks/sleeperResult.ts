@@ -42,6 +42,7 @@ export interface SleeperCheck {
     caudalDegrees?: number;
     uncertaintyDegrees?: number;
     initialCaudalDegrees?: number;
+    initialUncertaintyDegrees?: number;
     intervalId?: string;
   };
 }
@@ -173,6 +174,9 @@ export function validSleeperCheck(v: unknown): v is SleeperCheck {
         finite(e.uncertaintyDegrees) &&
         e.uncertaintyDegrees >= 0 &&
         e.uncertaintyDegrees <= 180 &&
+        finite(e.initialUncertaintyDegrees) &&
+        e.initialUncertaintyDegrees >= 0 &&
+        e.initialUncertaintyDegrees <= 180 &&
         finite(e.initialCaudalDegrees) &&
         Math.abs(e.initialCaudalDegrees) <= 180 &&
         text(e.intervalId)
@@ -201,6 +205,7 @@ function fingerprint(r: SleeperCheck) {
     r.elbow.caudalDegrees,
     r.elbow.uncertaintyDegrees,
     r.elbow.initialCaudalDegrees,
+    r.elbow.initialUncertaintyDegrees,
     r.elbow.intervalId,
   ]);
 }
@@ -270,8 +275,10 @@ function evaluate(r: SleeperCheck, c: SleeperResultContext): SleeperResultView {
   if (!angleVisible) return v;
   const initialInside =
     elbowVisible &&
-    r.elbow.initialCaudalDegrees! >= method.minCaudalDegrees &&
-    r.elbow.initialCaudalDegrees! <= method.maxCaudalDegrees;
+    r.elbow.initialCaudalDegrees! - r.elbow.initialUncertaintyDegrees! >=
+      method.minCaudalDegrees &&
+    r.elbow.initialCaudalDegrees! + r.elbow.initialUncertaintyDegrees! <=
+      method.maxCaudalDegrees;
   if (r.setup !== 'acceptable' || !inside || !initialInside) {
     if (
       method.angleValidOutsideBand &&

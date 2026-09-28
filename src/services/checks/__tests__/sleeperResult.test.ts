@@ -258,3 +258,15 @@ it('unsupported display precision does not produce floating-point text artefacts
   r.method.displayStepDegrees = 1.1;
   expect(select(r, [], { ...context, methods: [r.method] }).value).toBeUndefined();
 });
+
+it('baseline uncertainty crossing the allowed band prevents comparison', () => {
+  const r = record();
+  r.elbow.initialCaudalDegrees = 10;
+  r.elbow.initialUncertaintyDegrees = 2;
+  expect(select(r, history, context).value).toBeUndefined();
+});
+it('does not invent zero baseline uncertainty', () => {
+  const r = record();
+  delete r.elbow.initialUncertaintyDegrees;
+  expect(select(r, history, context).value).toBeUndefined();
+});

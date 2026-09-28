@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Svg, { Circle, Line, Path } from 'react-native-svg';
+import Svg, { Circle, Line } from 'react-native-svg';
 import { AppText, BigButton, Card } from '../ui';
 import { colors, spacing } from '../../theme';
 import type { SleeperResultView } from '../../services/checks/sleeperResult';
@@ -13,11 +13,16 @@ const dateLabel = (iso: string) =>
   });
 /** Frozen schematic of the reported forearm angle, not a reconstructed patient.
  * Elbow alignment is a different plane and is never drawn as this rotation. */
+export function forearmEndpoint(degrees: number | undefined) {
+  if (degrees === undefined || !Number.isFinite(degrees) || degrees < 0 || degrees > 180)
+    return null;
+  const angle = (degrees * Math.PI) / 180;
+  return { x: 112 + 58 * Math.sin(angle), y: 75 - 58 * Math.cos(angle) };
+}
 export function SleeperSchematic({ view }: { view: SleeperResultView }) {
-  if (view.rotationDegrees === undefined) return null;
-  const angle = (view.rotationDegrees * Math.PI) / 180;
-  const x = 112 + 82 * Math.sin(angle),
-    y = 115 - 82 * Math.cos(angle);
+  const point = forearmEndpoint(view.rotationDegrees);
+  if (!point) return null;
+  const { x, y } = point;
   return (
     <View
       testID="sleeper-schematic"
@@ -26,33 +31,25 @@ export function SleeperSchematic({ view }: { view: SleeperResultView }) {
     >
       <AppText variant="label">Forearm turn · simplified view</AppText>
       <Svg width="100%" height={124} viewBox="0 0 240 150" accessible={false}>
-        <Line x1={20} y1={126} x2={220} y2={126} stroke={colors.border} strokeWidth={3} />
-        <Path
-          d="M25 112 Q45 103 65 114 L112 115"
-          fill="none"
-          stroke={colors.textSecondary}
-          strokeWidth={9}
-          strokeLinecap="round"
-        />
         <Line
           x1={112}
-          y1={115}
+          y1={75}
           x2={112}
-          y2={30}
+          y2={15}
           stroke={colors.border}
           strokeWidth={3}
           strokeDasharray="5 5"
         />
         <Line
           x1={112}
-          y1={115}
+          y1={75}
           x2={x}
           y2={y}
           stroke={colors.primary}
           strokeWidth={10}
           strokeLinecap="round"
         />
-        <Circle cx={112} cy={115} r={8} fill={colors.primary} />
+        <Circle cx={112} cy={75} r={8} fill={colors.primary} />
       </Svg>
     </View>
   );

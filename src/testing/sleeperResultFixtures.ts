@@ -54,6 +54,7 @@ export function exampleCheck(id = 'current', degrees = 42, day = 28): SleeperChe
       caudalDegrees: 3,
       uncertaintyDegrees: 0,
       initialCaudalDegrees: 1,
+      initialUncertaintyDegrees: 0,
       intervalId: `window-${id}`,
     },
   };
