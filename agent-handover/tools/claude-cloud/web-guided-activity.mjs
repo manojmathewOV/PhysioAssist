@@ -141,6 +141,36 @@ try{
  await image(holds,'guided-hold-reopened-320');await holds.close();
  check('no app runtime errors after prescribed-hold journey',result.errors.length===0);
 
+ const videoPage=await browser.newPage({viewport:{width:390,height:844}});
+ videoPage.on('pageerror',e=>result.errors.push(e.message));
+ await seed(videoPage,{...plan,routine:[plan.routine[0]],videos:{[ids[0]]:'https://www.youtube.com/watch?v=M7lc1UVf-VE&t=8s'}});
+ await videoPage.getByTestId('tab-exercises').click();await videoPage.getByTestId('start-routine-button').click();
+ await videoPage.getByTestId('guided-watch').click();
+ await videoPage.getByTestId('reference-play-pause').waitFor();
+ await videoPage.getByTestId('reference-player-state').filter({hasText:'ready'}).waitFor({timeout:30000});
+ await videoPage.getByTestId('reference-play-pause').click();
+ const frame=()=>videoPage.frames().find(f=>f.url().includes('youtube-nocookie.com/embed'));
+ const state=()=>frame().evaluate(()=>{const v=document.querySelector('video');return {time:v.currentTime,paused:v.paused};});
+ await frame().waitForFunction(()=>{const v=document.querySelector('video');return v&&!v.paused&&v.currentTime>8.2;});
+ check('real reference can play during untimed preparation',await videoPage.getByTestId('guided-time').count()===0);
+ const viewport=await videoPage.getByTestId('reference-player-viewport').boundingBox(),startBox=await videoPage.getByTestId('guided-start').boundingBox();
+ check('reference viewport is readable and above fixed footer',viewport&&startBox&&viewport.width>=200&&viewport.height>=200&&viewport.y>=0&&viewport.y+viewport.height<=startBox.y-16);
+ await image(videoPage,'guided-reference-private-390');
+ const mounted=await videoPage.getByTestId('reference-webview').elementHandle();
+ const beforeStart=await state();await videoPage.getByTestId('guided-start').click();
+ await frame().waitForFunction(()=>document.querySelector('video')?.paused);
+ check('activity keeps the reference mounted but hides and pauses it',await mounted.evaluate(el=>el.isConnected)&&await videoPage.getByTestId('guided-video').isHidden());
+ await videoPage.waitForTimeout(1300);await videoPage.getByTestId('guided-watch').click();
+ await frame().waitForFunction(()=>!document.querySelector('video')?.paused);
+ const later=await state();check('Watch again restores prior playback position',later.time>=beforeStart.time-0.3);
+ const activeBefore=await videoPage.getByTestId('guided-time').innerText();await videoPage.waitForTimeout(1300);
+ check('watching in activity does not advance its timer',await videoPage.getByTestId('guided-time').innerText()===activeBefore);
+ await videoPage.getByTestId('reference-play-pause').click();await frame().waitForFunction(()=>document.querySelector('video')?.paused);
+ await videoPage.getByTestId('follow-along-toggle').click();await videoPage.getByTestId('guided-watch').click();await videoPage.waitForTimeout(500);
+ check('manual reference pause survives Hide and Watch again',(await state()).paused);
+ check('reference viewing has recorded no treatment',(await historyOf(videoPage)).length===0);
+ result.referencePosition={beforeStart,later};await videoPage.close();
+
  result.complete=true;
 } catch(error){result.complete=false;result.error=String(error);throw error;}
 finally{fs.writeFileSync(path.join(out,'journey.json'),JSON.stringify(result,null,2));await browser.close();console.log(JSON.stringify(result,null,2));}
