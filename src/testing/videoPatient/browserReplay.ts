@@ -10,6 +10,7 @@ interface ReplayOptions {
   url: string;
   fps: number;
   transform: 'none' | 'mirror' | 'black';
+  exerciseId: 'side-arm-raise' | 'shoulder-external-rotation';
 }
 const median = (xs: number[]) => {
   const s = [...xs].sort((a, b) => a - b);
@@ -37,7 +38,9 @@ const waitFor = (target: EventTarget, event: string) =>
     target.addEventListener(event, done, { once: true });
     target.addEventListener('error', fail, { once: true });
   });
-async function replay({ url, fps, transform }: ReplayOptions) {
+async function replay({ url, fps, transform, exerciseId }: ReplayOptions) {
+  if (!['side-arm-raise', 'shoulder-external-rotation'].includes(exerciseId))
+    throw new Error('Explicit diagnostic exercise required');
   if (!(fps > 0 && fps <= 30)) throw new Error('Explicit sample rate required');
   const video = document.createElement('video');
   video.muted = true;
@@ -56,8 +59,7 @@ async function replay({ url, fps, transform }: ReplayOptions) {
   const detector = new WebPoseDetectionService();
   detector.setVideoStyle('natural');
   const recorders = (['left', 'right'] as BodySide[]).map(
-    (side) =>
-      new MovementRecorder({ joint: 'shoulder', side, exerciseId: 'side-arm-raise' })
+    (side) => new MovementRecorder({ joint: 'shoulder', side, exerciseId })
   );
   const inference: number[] = [];
   let detected = 0;
@@ -132,7 +134,8 @@ async function replay({ url, fps, transform }: ReplayOptions) {
     provider:
       '@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled',
     scope:
-      'Diagnostic arm-elevation replay, not a clinical abduction programme or sleeper assessment',
+      'Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment',
+    exerciseId,
     transform,
     sourceDurationSeconds: video.duration,
     width: canvas.width,
