@@ -58,6 +58,14 @@ def markdown(m,vm,state):
   lines+=['## Shoulder capture — owner direction, qualification still required','',capture['scope'],'','| Variant | Candidate camera placement | Intended observation | Output boundary |','|---|---|---|---|']
   for x in capture['variants']:lines+=['| '+' | '.join(x[k].replace('|',' / ') for k in ['variant','position','intent','output'])+' |']
   lines+=['']+['- '+x for x in capture['common']]+['']
+ feedback=m.get('shoulder_capture',{}).get('patient_feedback')
+ if feedback:
+  lines+=['## Patient result — approximate rotation, schematic and personal history','',feedback['decision'],'',feedback['scope'],'']
+  for key,title in [('layout','Patient hierarchy'),('schematic','Schematic without misleading geometry'),('comparison','Comparable previous and best'),('invariants','Safety and data invariants'),('accessibility_and_practicality','Accessible and practical')]:
+   lines+=['### '+title,'']+['- '+x for x in feedback[key]]+['']
+  lines+=['### Result states','','| State | Required presentation |','|---|---|']
+  lines+=['| '+x['state']+' | '+x['display'].replace('|',' / ')+' |' for x in feedback['states']]
+  lines+=['','**Delivery order:** '+feedback['delivery'],'']
  for ep in m['endpoints']:lines+=['**'+ep['id']+' — '+ep['name']+':** '+ep['meaning'],'']
  for g in m['gates']:
   lines+=['## '+g['id']+' — '+g['title'],'','**Outcome:** '+g['outcome'],'','**Closure requires:** '+(', '.join(g['depends_on']) or 'No prior gate')+'. **Executor:** '+g['owner']+'. **Acceptor:** '+g['acceptance']['acceptor']+'.','', '**Next bounded work:** '+g['next_work_item']['candidate_action'],'','**Remaining work:**']

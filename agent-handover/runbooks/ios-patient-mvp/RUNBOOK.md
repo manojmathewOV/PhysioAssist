@@ -1,6 +1,6 @@
 # iPhone patient MVP — remaining execution roadmap
 
-Revision 7. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
+Revision 8. Stable gates G00–G10; no gate accepted by this declaration. Actual progress is in [STATUS.json](STATUS.json).
 
 ## Delivery first; gate details on demand
 
@@ -36,9 +36,10 @@ An appropriate local programme can be learned, performed without compulsory came
 - Keep activity versus Check identities explicit. An unsupported numerical Check is visibly unavailable/guided-only; it is neither zero nor an acceptance pass. Preserve historical observations with their original basis.
 - Remove false monitoring/waiting-for-a-physio promises without removing programme permissions. Sign-in is not a backup; local setup is not authenticated clinician approval.
 - Run actual native screenshots and inspect after pause, missing media, camera denial, storage retry and large text. Physical-iPhone evidence is separately required for a patient-ready claim.
+- Selected patient Check/history view: approximate IR + simple schematic + last comparable Check + best recorded in this recovery. Build synthetic presentation in bounded code, consume paired observations, retain comfort suppression and all validity/series rules in shoulder_capture.patient_feedback. Do not delay guided Do for the study or activate unqualified numbers.
 
 **Existing criteria:** G02.V06, G02.V08, G03.V01, G03.V04, G03.V05, G04.V01, G04.V03, G04.V04, G04.V06, G04.V07, G05.V01, G05.V02, G05.V05, G05.V06, G06.V03, G07.V02, G07.V03, G09.V01, G09.V02.
-**Activation decisions:** D01 identity semantics, D03 recovery/deletion, D05/C05 remaining content/asset and dose; sleeper shoulder-level variant specified, D07/C05 schedule, D08 only for numerical outputs.
+**Activation decisions:** D01 identity semantics, D03 recovery/deletion, D05/C05 remaining content/asset and dose; sleeper shoulder-level variant specified, D07/C05 schedule, D08 measurement/allowance/activation; patient display intent selected.
 **Return:** G05. Exact candidate, required scoped evidence, independent review and no unresolved safety/data-loss/privacy defect in this delivered scope. Slice delivery never accepts a whole gate or unsupported measurement.
 
 ### S3 — Reuse for the selected knee programme and useful history
@@ -87,7 +88,7 @@ The owner has a traceable, scoped basis for a pilot or release, with recovery/su
 
 ## Shoulder capture — owner direction, qualification still required
 
-Owner-selected output direction permits conditional approximate sleeper IR alongside drift; not an implemented estimator, accuracy claim, clinical dose or activation.
+Owner-defined shoulder capture plus patient-result presentation: conditional approximate sleeper IR, caudal drift and patient-visible diagram/history. Product intent is selected; method accuracy, tolerance, dose and release remain unapproved.
 
 | Variant | Candidate camera placement | Intended observation | Output boundary |
 |---|---|---|---|
@@ -107,6 +108,62 @@ Owner-selected output direction permits conditional approximate sleeper IR along
 - Validate against an independent reference using the exact variant, both sides, practical view offsets, restricted ranges, support/occlusion and repeated phone setup. Reference error, false cues, issued-result coverage and unavailable results belong together. No fixed error bound or extra clinical hold duration is specified here.
 - Compute elbow displacement relative to the torso and upper-arm direction change as continuous outputs, paired with the same endpoint interval as approximate IR. Preserve session baseline and starting posture across days; do not reduce temporal data to warning counts. See ../../research/2026-09-28-sleeper-elbow-drift/README.md for tested geometry and current data-loss-at-aggregation gap.
 - Latest owner resolution: primary sleeper deviation is caudal towards waist from shoulder-level/90-degree alignment; small drift is allowed but numeric band remains unset. Pillow line is a teaching cue only. See quantitative_elbow_drift.refinement_ref for computation, camera projection limits and unapproved reviewer proposals.
+- Patient-facing sleeper feedback is now selected; see patient_feedback. Use post-Check approximate number + same-interval diagram + last comparable Check + best recorded in this recovery. This is passive history, not encouragement to beat a record or a relaxation of comfort precautions.
+
+## Patient result — approximate rotation, schematic and personal history
+
+2026-09-28 Manoj selects patient-visible approximate sleeper IR, a clear schematic, previous comparable reading and best recorded value. This resolves display intent, not method/clinical activation or the numeric caudal allowance.
+
+Read-only Check result and history; iPhone patient-only/local-first. No clinician account is required. Guided Do remains useful without measurement. Review/study builds use explicitly synthetic or governed evaluation inputs until qualification.
+
+### Patient hierarchy
+
+- Keep the existing calm typography/card style. In order: Sleeper stretch + affected side/date; one large About X degrees value if qualified; one compact elbow-position status; explanatory schematic; secondary Last comparable check and Best recorded in this recovery rows with dates; brief variability note; one Done/Return action. Details are optional.
+- Results are available after the Check and later in My recovery, not a live maximum-to-chase during every short routine. No repeat-to-beat or retest-until-green CTA. A replay/instruction action must not bypass dose/schedule permissions.
+- Use About/Approximate with every shown angle, including history and speech. No invented decimal precision, error interval or several-degrees claim. Choose display resolution from method qualification; small numerical differences are not automatically improvement.
+- Keep current recording state separate: a valid but unacknowledged result says Not saved yet and does not enter recorded comparisons. Failure to measure or save is not personal failure or automatically completed prescribed activity.
+
+### Schematic without misleading geometry
+
+- Render locally from the same accepted observation/interval as the number and elbow status, never from a camera still, stock endpoint or generative image. It is a simplified diagram, not a reconstruction of scapula, tissue tension or force; anatomical invisibility is not replaced by an ideal measured pose.
+- Use a side-lying outline for orientation, a clear forearm rotation indication and a separate elbow/shoulder-level alignment inset or labelled view. Do not draw IR and caudal deviation as if they were the same planar angle. Preserve affected-side and mirroring conventions; the pillow is only an instructional cue.
+- Default to the current result. Optional comparison may show one earlier compatible result with solid/dashed lines and labels; do not stack current/previous/best/target on one small drawing. Any historical drawing retains its own elbow position and interval; a historical forearm cannot be combined with today's best elbow.
+- Never use a best-value arc or permitted drift band as a target to fill. Freeze the post-Check schematic instead of chasing frame noise; no trophy, flashing record, forced animation or falling-score effect. Unknown result segments are omitted/labelled, while instructional drawings remain clearly instructional.
+
+### Comparable previous and best
+
+- Use only durably saved, non-retracted, deduplicated, qualified Checks for the same local patient, care episode, side, exact variant/assistance, angle reference, compatible setup/view/calibration protocol, estimator/window selection and approved caudal-tolerance policy (value plus version). A per-session baseline ID differs naturally; validate compatible setup rather than demanding identical session IDs.
+- Last comparable check means the chronologically preceding eligible record, excluding the current event. It is not necessarily the last attempt: display its date and do not hide later unmeasured/out-of-band attempts in history. Unknown legacy provenance is never backfilled as qualified.
+- Best recorded in this recovery is the maximum qualified internal-rotation endpoint for this episode/compatible series, including today only after acknowledgement. It is an observed record, not true capacity or a treatment target. Keep the selected source record/interval/date; ties use a deterministic documented rule with no celebration.
+- A new side, episode, variant, assistance, angle definition, estimator or allowance/selection policy creates a separate comparison series by default. Dose/schedule changes alone need not split a compatible measurement method. Preserve old series rather than deleting/reinterpreting them.
+- Changing tolerance, selecting more attempts or retaining a noisy maximum can change the best without real recovery. Preserve candidate count/selection method and qualify repeatability separately from clinically important change. No automatic improved/deteriorated claim or computed percentage recovery.
+- Recompute/invalidate derived best after correction, deletion or retraction; retries cannot create records or counts twice. Incomplete retained/imported history must say Best in saved checks, never all-time. A cached best never survives deletion of its source or silently ignores history truncation.
+
+### Safety and data invariants
+
+- Retain existing comfort-phase suppression of New personal best! and Previous best score/100. The new passive ROM record is distinct from score and goals: display policy may allow factual history while coaching remains restricted. Never remove !coachingLimited to expose the old celebration.
+- Safety/symptom/prescription instructions outrank measurement and history in both visual and selected speech. No estimated record authorises progression, more force, longer hold or extra repetitions. No outcome from an unobservable elbow or threshold edge is labelled safe/normal.
+- All surfaces (text, diagram, spoken result, history and future export) consume one versioned observation/eligibility result. No UI recalculation, fallback live number or independent maxima. Approved dose and recovery phase remain authoritative.
+- Local vector rendering avoids storing camera stills, but numbers and result diagrams remain health information. No public telemetry/screenshots or automatic sharing; use synthetic public fixtures. Persist compact source values and provenance, regenerate the diagram, and bound history queries/cache.
+
+### Accessible and practical
+
+- Accessible text carries the same result, side, date, approximate qualifier and elbow/eligibility state as the schematic. No colour-only or gesture-only information. Essential labels are not tiny or faint; mute emphasis, not readability.
+- Support the existing native text scaling, high contrast and Reduce Motion preferences. On narrow phones stack previous/best rows and schematic panels; enlarge/replay has a named reachable control. No clipping the unit, About qualifier, safety reason, Pause/Stop or Done to fit decoration.
+- One explicit Hear result action may read a concise ordered summary using the existing speech/VoiceOver ownership logic; do not add a second voice, read every animation frame or queue target/personal-best praise over a warning.
+- Usability acceptance: an older or lower-digital-confidence participant can explain which reading is current, which is previous/best, why a number was excluded, and that best is not a target. Missing data are not failure; no clinician monitoring or transmission is implied.
+
+### Result states
+
+| State | Required presentation |
+|---|---|
+| qualified_comparable | Headline approximate IR from a robust predefined interval meeting the approved position/visibility/reference conditions. Patient label: Elbow: near shoulder level, meaning within the approved check allowance, not perfectly fixed or proven safe. Same-interval schematic and eligible history are available. |
+| valid_observation_not_comparable | Only when the measurement method supports the actual observed position: secondary approximate value and explicit Not used for comparison: elbow moved (or the true reason). Do not put it in the headline or previous/best series. Muted hierarchy must retain readable contrast, not merely grey/color status. |
+| unavailable_or_method_invalid | No numerical fallback or measured forearm schematic, even greyed. Explain Cannot measure this check. Observable elbow information may remain; unknown is not level/zero. Older readings may stay visible with their own dates and a clearly separate historical heading. |
+| eligibility_uncertain_or_unconfigured | Unknown allowance, boundary uncertainty or missing drift visibility does not qualify an angle by default. Say Position not clear or Check not yet available as appropriate. No strict-zero or 10-15-degree implicit allowance. |
+| first_compatible_check | First comparable check; do not manufacture a previous value or improvement. If today is also the only best, avoid duplicate tiles. Later equal displayed values receive no New best badge. |
+
+**Delivery order:** Keep S2a camera-optional Do -> S2b durable recording -> S2c reopen/progress. Add held-interval quantitative observation support in bounded commits with explicit output validity, not by passing a hold into a repetition-only detector. Build result selector and schematic with synthetic fixtures before the study; numerical patient activation waits for approved method/allowance, reference validation and usable repeatability. The next change is application code, not more sleeper research.
 
 **E0 — Integrated engineering baseline:** One reproducible reviewed development baseline; no patient/release claim.
 
@@ -291,12 +348,13 @@ Owner-selected output direction permits conditional approximate sleeper IR along
 - S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.
 - Learn records viewing only; Do records activity with provenance; Check records qualified standardized observations. Camera-off Do remains possible only for an otherwise permitted activity.
 - Use patient-owned Today/My recovery/Help experience, concise first-use versus familiar-use guidance and appointment summary; do not build a clinician dashboard.
+- Implement shoulder_capture.patient_feedback after observation/record enablers, with synthetic UI first and qualified numerical activation later; never relax comfort coaching to expose history.
 
 **Required validation:**
 - **G05.V01** Learn -> Do -> interrupted Do -> incomplete Check -> valid Check -> later compatible comparison, using the same profile/episode.
-- **G05.V02** Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not failed rehabilitation. Sleeper can issue clearly approximate IR only with a qualified method, known angle reference and sufficient view/interval; otherwise no number, not zero. Approximate result and drift observability are separate. Stable but wrong setup does not prove technique; an arbitrary starting pose is not zero IR. Continuous elbow data distinguish measured-zero/below-alert, unobservable and not-applicable; unknown depth or missing wrist cannot manufacture a normal paired result. Caudal drift is judged relative to the prescribed near-90-degree setup, not zeroed at an arbitrary start. Keep the qualified robust endpoint and overall endpoint with their own paired positions; unspecified tolerance never becomes zero-tolerance or automatic pass. No extra-exercise prompt follows rejected measurement.
-- **G05.V03** Dose/schedule changes preserve compatible methods; assistance/method changes separate comparison or mark incompatibility.
-- **G05.V04** Goal, clinical restriction and demonstrator endpoint remain three separate quantities.
+- **G05.V02** Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not failed rehabilitation. Sleeper can issue clearly approximate IR only with a qualified method, known angle reference and sufficient view/interval; otherwise no number, not zero. Approximate result and drift observability are separate. Stable but wrong setup does not prove technique; an arbitrary starting pose is not zero IR. Continuous elbow data distinguish measured-zero/below-alert, unobservable and not-applicable; unknown depth or missing wrist cannot manufacture a normal paired result. Caudal drift is judged relative to the prescribed near-90-degree setup, not zeroed at an arbitrary start. Keep the qualified robust endpoint and overall endpoint with their own paired positions; unspecified tolerance never becomes zero-tolerance or automatic pass. No extra-exercise prompt follows rejected measurement. Test valid within-band, valid-but-noncomparable, method-invalid, unseen elbow, unset/uncertain band and first-check states. Out-of-band values appear only as secondary labelled observations if the method supports that actual position; an invalid number is absent, never rescued by greying. Same-interval numeric/schematic/state output must agree.
+- **G05.V03** Dose/schedule changes preserve compatible methods; assistance/method changes separate comparison or mark incompatibility. Previous and best use saved, qualified, non-retracted Checks from the same patient/episode/side/variant/assistance, compatible setup, reference, estimator/endpoint selection and caudal allowance value/version. Previous excludes current and has its own date. Unknown legacy/protocol changes, corrected/deleted best, duplicate retries, unsaved current result and incomplete history cannot produce a falsely compatible or all-time record.
+- **G05.V04** Goal, clinical restriction and demonstrator endpoint remain three separate quantities. In a comfort phase, passive qualified ROM history may appear without re-enabling personal-best score/celebration or range-seeking cues. Repeat-to-beat actions, record-confetti and target arcs are absent; clinical warning/stop instructions still win over both result and history.
 - **G05.V05** Watching or a simulated demonstration never becomes completed treatment or a clinical measurement.
 - **G05.V06** Patient-confirmed completion is labelled self-reported, not camera-observed or clinician-supervised.
 - **G05.V07** Appointment summary identifies episode, source/version, method, support, date, unmeasured attempts and questions without implying notification of a care team.
@@ -361,10 +419,10 @@ Owner-selected output direction permits conditional approximate sleeper IR along
 **Required validation:**
 - **G07.V01** Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback. App Pause also pauses the player; Hide/Show preserves position; the viewport and native identity satisfy the selected provider contract; unavailable/blocked/autoplay-denied states recover truthfully. Separately qualify the three reference paths and forbid YouTube-frame extraction.
 - **G07.V02** Speech identifies the next movement and dose without forcing a floor-exercising patient to reach for the phone.
-- **G07.V03** Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning.
+- **G07.V03** Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. Patient result card: one large approximate value, elbow state, simple same-interval schematic, secondary previous/best with dates and one Done action. At narrow/large-text settings stack content; the diagram cannot conflate forearm rotation with bed-plane caudal alignment. Muted excluded values remain legible and reasons do not depend on colour. First/no/partial-history states avoid blank zeros or false pose.
 - **G07.V04** Camera problem plus precaution plus praise selects one correct visual/spoken message consistently.
 - **G07.V05** Corrupt, missing, wrong-variant or unavailable video cannot silently substitute another movement; approved text/audio fallback is clear.
-- **G07.V06** Dynamic Type, VoiceOver and Voice Control traverse a complete native routine with reachable Stop/Pause. Compact counts retain accessible role/value; iOS requires its native announcement route, not Android liveRegion alone. Test app speech on/off, warnings, pause/background, listener cleanup and no per-second hold chatter.
+- **G07.V06** Dynamic Type, VoiceOver and Voice Control traverse a complete native routine with reachable Stop/Pause. Compact counts retain accessible role/value; iOS requires its native announcement route, not Android liveRegion alone. Test app speech on/off, warnings, pause/background, listener cleanup and no per-second hold chatter. Post-Check text/schematic/date/approximate and eligibility labels are equivalent for VoiceOver; Hear result uses the existing single-owner speech path and no frame-by-frame or duplicate announcement. Reduced motion and named enlarge controls retain every essential result.
 - **G07.V07** All important props/helper context remain legible in selected focus/plain fixtures; person tracking transfer withholds/reconfirms rather than silently measuring a helper.
 - **G07.V08** Meaningful audio and captions remain correct through calls, mute, pause and resume without queued contradictory praise.
 
@@ -397,11 +455,11 @@ Owner-selected output direction permits conditional approximate sleeper IR along
 - **G08.V02** Cold offline first use with required model/media present; low-storage model failure returns honest unmeasured state.
 - **G08.V03** Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims. Sleeper approximate IR requires independent reference testing of its exact angle definition and practical bedside view; check camera pitch/roll, both sides, elbow/wrist substitutes, torso drift, occlusion and repositioning. Distinguish absolute IR from change relative to setup; no unvalidated numeric error claim. For the chosen sleeper variant test caudal upper-arm angle and IR against independent references together. A raw image angle must not masquerade as a bed-plane angle; test foreshortening, body roll, lift, near-boundary uncertainty, baseline creep and tolerance-policy changes. Healthy feasibility alone does not determine clinical leeway.
 - **G08.V04** A method change cannot silently present the same measurement-method version or turn simulation success into clinical accuracy.
-- **G08.V05** More noisy repetitions without changed true endpoints cannot justify an automatic improvement claim; report selection policy and sample basis.
+- **G08.V05** More noisy repetitions without changed true endpoints cannot justify an automatic improvement claim; report selection policy and sample basis. Best is an observed record, not a reliable estimate of true maximum capacity. Predeclare sample/window/endpoint selection, show first/tie states without celebration, and prohibit automatic improvement until repeatability AND clinical interpretation support it. No numeric variability bound is invented.
 - **G08.V06** Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. Include stand movement, mattress compression, mirrored sides, initial prescribed roll, assistance and partial occlusion; rebaseline camera movement rather than label it patient drift. Match the initial upper-arm/torso setup across days as well as within-session drift. A session baseline must catch cumulative elbow migration that per-repetition resetting hides. Include pure rotation, combined shoulder/elbow translation and camera/torso motion controls.
-- **G08.V07** Chosen endpoint with poor tracking is withheld even if the rest of the session has high visibility. Pair the endpoint IR with elbow displacement and upper-arm direction from that same interval, not independent maxima/minima. Preserve numerical values/units/coverage through history, including held Checks; below-alert observations do not disappear into the warning list.
+- **G08.V07** Chosen endpoint with poor tracking is withheld even if the rest of the session has high visibility. Pair the endpoint IR with elbow displacement and upper-arm direction from that same interval, not independent maxima/minima. Preserve numerical values/units/coverage through history, including held Checks; below-alert observations do not disappear into the warning list. Patient-facing headline, historical comparison and schematic bind the same observed interval and allowance policy. A valid approximate angle with unassessable elbow cannot qualify the paired Check. Renderer cannot synthesize a normal elbow or use an unrelated best interval.
 - **G08.V08** Thirty repeated camera cycles release resources; memory/low-storage/model failure gives an honest safe fallback, not another app reload loop.
-- **G08.V09** Structured synthetic appointment export round-trips meaning, units, unknowns, correction links and version; unavailable is not zero.
+- **G08.V09** Structured synthetic appointment export round-trips meaning, units, unknowns, correction links and version; unavailable is not zero. Approximate qualifier, tolerance/selection policy, evidence basis and source observation survive export and diagram regeneration. A result schematic remains private health-derived information despite containing no camera image; no automatic clinician delivery or public artefact.
 
 **Deliverables:** release Instruments/MetricKit or equivalent device report; estimator decision record; footprint budget baseline and pass/fail evidence.
 

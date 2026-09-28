@@ -1,0 +1,74 @@
+{
+  "date": "2026-09-28",
+  "basis_sha": "89a57e4458a0a16c1f1e014a20d1c900551ba2b6",
+  "scope": "Runbook v8 patient-facing sleeper result selection and presentation only",
+  "owner_selected": [
+    "approximate IR",
+    "same-interval schematic and elbow state",
+    "previous comparable reading",
+    "best recorded compatible reading within this recovery"
+  ],
+  "open": [
+    "numeric caudal tolerance and qualification",
+    "reference accuracy/coverage and repeatability",
+    "real-patient numerical activation",
+    "approved asset and remaining dose/schedule"
+  ],
+  "source_inspection": {
+    "files": [
+      "src/components/exercises/ExerciseSummary.tsx",
+      "src/components/exercises/useMovementAnalysis.ts"
+    ],
+    "finding": "Existing comfort guard suppresses score-based New personal best and prior score; passive ROM history can be distinct without removing the guard."
+  },
+  "design_references": [
+    {
+      "source": "Apple Charts Human Interface Guidelines",
+      "url": "https://developer.apple.com/design/human-interface-guidelines/charts",
+      "checked": "2026-09-28",
+      "basis": "Plain descriptions, hierarchy, usable chart labels and no colour-only meaning; not clinical proof"
+    },
+    {
+      "source": "W3C Understanding SC1.4.3",
+      "url": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html",
+      "checked": "2026-09-28",
+      "basis": "Muted text carrying meaningful results still needs readable contrast"
+    }
+  ],
+  "checks": {
+    "portable_runbook": "passed",
+    "matrix_and_archive": "passed",
+    "generated_views": "match",
+    "existing_negative_controls": {
+      "structure": 7,
+      "delivery": 6,
+      "matrix": 14
+    },
+    "criterion_count": 83,
+    "gate_count": 11,
+    "refined_criteria": 8,
+    "accepted_gates": 0,
+    "application_source_unchanged": true,
+    "clinical_tolerance_unset": true,
+    "new_geometry_tests": 0,
+    "new_full_app_tests": false
+  },
+  "ccore": {
+    "tool": "ccore.runbook.compile",
+    "mode": "inspect_definition",
+    "source_hash": "a7498e5ad615effd56e3463264e4b887ddf7c6392b388fbe064b8d4bf933e470",
+    "structure_errors": 0,
+    "blocked_axes": 0,
+    "dimensions": 121,
+    "members": 11,
+    "construction_gaps": 11,
+    "disposition": "DefinitionTopologyReadmissionRequired",
+    "execution_or_acceptance_created": false
+  },
+  "limits": [
+    "Specification not an implemented screen or numerical estimator",
+    "No iOS build, actual screenshot, VoiceOver listening, RGB or clinical study",
+    "No new dependency, benchmark, clone or external sharing",
+    "Review is owner-relayed, not an agent-submitted independent APPROVE"
+  ]
+}

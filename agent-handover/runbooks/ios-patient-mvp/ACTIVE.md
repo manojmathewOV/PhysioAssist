@@ -8,7 +8,7 @@ Generated from `runbook.json` and `STATUS.json`; do not edit this view. This is 
 
 **Next action:** S2a: implement the camera-optional Do interaction first, with explicit unsaved state until S2b acknowledges durable storage; then S2c reopening/progress. Preserve exact lying variants. Sleeper may have approximate IR after method/view qualification, independently of useful drift observations.
 
-**Evidence basis:** implementation `4c8b20d`; hosted `60fce34` success. Review queue: reference_safety (reviewer_reports_acceptance_formal_record_pending), storage_read_containment (independent_review_pending), reference_controls (accepted_with_nonblocking_followups_owner_relay), native_no_camera_recovery (code_corroborated_owner_relay), compact_accessibility_followup (accepted_owner_relay). Do not redo established fixes without fresh contrary evidence.
+**Evidence basis:** implementation `4c8b20d`; hosted `60fce34` success. Review queue: reference_safety (reviewer_reports_acceptance_formal_record_pending), storage_read_containment (independent_review_pending), reference_controls (accepted_with_nonblocking_followups_owner_relay), native_no_camera_recovery (code_corroborated_owner_relay), compact_accessibility_followup (accepted_owner_relay), sleeper_geometry_research (tests_and_reasoning_corroborated_owner_relay). Do not redo established fixes without fresh contrary evidence.
 
 ## Execute in small reviewable steps
 
@@ -20,6 +20,7 @@ Generated from `runbook.json` and `STATUS.json`; do not edit this view. This is 
 - Keep activity versus Check identities explicit. An unsupported numerical Check is visibly unavailable/guided-only; it is neither zero nor an acceptance pass. Preserve historical observations with their original basis.
 - Remove false monitoring/waiting-for-a-physio promises without removing programme permissions. Sign-in is not a backup; local setup is not authenticated clinician approval.
 - Run actual native screenshots and inspect after pause, missing media, camera denial, storage retry and large text. Physical-iPhone evidence is separately required for a patient-ready claim.
+- Selected patient Check/history view: approximate IR + simple schematic + last comparable Check + best recorded in this recovery. Build synthetic presentation in bounded code, consume paired observations, retain comfort suppression and all validity/series rules in shoulder_capture.patient_feedback. Do not delay guided Do for the study or activate unqualified numbers.
 
 **Validation:** focused contrary-input tests -> relevant regression/hooks -> real-player web -> native journey/artifact retrieval -> actual visual inspection -> independent review. A technical fixture can prove mechanics, not clinical approval.
 
@@ -27,7 +28,7 @@ Generated from `runbook.json` and `STATUS.json`; do not edit this view. This is 
 
 **Only these criteria now:** G02.V06, G02.V08, G03.V01, G03.V04, G03.V05, G04.V01, G04.V03, G04.V04, G04.V06, G04.V07, G05.V01, G05.V02, G05.V05, G05.V06, G06.V03, G07.V02, G07.V03, G09.V01, G09.V02. Drill into [TEST_MATRIX.md](TEST_MATRIX.md) when executing them.
 
-**Blocked activation, not blanket engineering:** D01 identity semantics, D03 recovery/deletion, D05/C05 remaining content/asset and dose; sleeper shoulder-level variant specified, D07/C05 schedule, D08 only for numerical outputs. Missing media/clinical approval does not stop synthetic mechanics or camera-optional flow work.
+**Blocked activation, not blanket engineering:** D01 identity semantics, D03 recovery/deletion, D05/C05 remaining content/asset and dose; sleeper shoulder-level variant specified, D07/C05 schedule, D08 measurement/allowance/activation; patient display intent selected. Missing media/clinical approval does not stop synthetic mechanics or camera-optional flow work.
 
 **Research stop:** one named uncertainty, permitted sample, falsifier and return criterion. Reuse existing results; no bulk downloads or more broad app-review reports.
 
