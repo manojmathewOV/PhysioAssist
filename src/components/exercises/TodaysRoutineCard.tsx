@@ -1,3 +1,7 @@
+import {
+  guidedShoulderTitle,
+  isGuidedShoulder,
+} from '../../services/care/guidedShoulder';
 /**
  * Today's session: the exercises the physiotherapist assigned, in order, with
  * the ones done today ticked. The patient doesn't choose: Start goes to the
@@ -19,7 +23,13 @@ import type { Completion } from '../../services/pose/routine';
 export const routineAmount = (
   item: PrescribedExercise & { occurrence?: number; timesPerDay?: number }
 ): string => {
-  const base = amountOf(item);
+  const base =
+    amountOf(item) +
+    (isGuidedShoulder(item.exerciseId) &&
+    item.holdSeconds !== undefined &&
+    item.holdSeconds > 0
+      ? ` · hold ${formatDuration(item.holdSeconds)} each`
+      : '');
   // Several sessions a day: which one this is
   return item.timesPerDay && item.timesPerDay > 1 && item.occurrence
     ? `Session ${item.occurrence} of ${item.timesPerDay} · ${base}`
@@ -42,7 +52,11 @@ const amountOf = (item: PrescribedExercise): string => {
       : `${range.min} times`;
   }
   const reps = item.reps ?? option?.exercise.targetRepetitions;
-  return reps ? `${reps} times` : option?.goal ?? '';
+  return reps
+    ? `${reps} times`
+    : isGuidedShoulder(item.exerciseId)
+      ? 'Amount not set'
+      : option?.goal ?? '';
 };
 
 const STATUS_WORDS: Record<Completion, string> = {
@@ -67,7 +81,9 @@ export const TodaysRoutineCard: React.FC<{
         {routine.round
           ? `Mini-session ${routine.round}: ${routine.doneCount} of ${total} done`
           : allDone
-            ? 'All done for today'
+            ? routine.doneCount === total
+              ? 'All done for today'
+              : 'Activities recorded for today'
             : `${routine.doneCount} of ${total} ${total === 1 ? 'exercise' : 'exercises'} done`}
       </AppText>
       <View>
@@ -86,7 +102,7 @@ export const TodaysRoutineCard: React.FC<{
               onPress={onPressItem ? () => onPressItem(item.exerciseId) : undefined}
               accessibilityRole={onPressItem ? 'button' : undefined}
               accessible
-              accessibilityLabel={`${i + 1}. ${option?.title ?? item.exerciseId}, ${routineAmount(
+              accessibilityLabel={`${i + 1}. ${option?.title ?? guidedShoulderTitle(item.exerciseId) ?? item.exerciseId}, ${routineAmount(
                 item
               )}. ${item.status ? STATUS_WORDS[item.status] : isNext ? 'Next' : 'To do'}`}
               testID={`todays-routine-item-${i}`}
@@ -100,7 +116,11 @@ export const TodaysRoutineCard: React.FC<{
                 ]}
               >
                 {item.finished ? (
-                  <Icon name="check" size={22} color={colors.onPrimary} />
+                  <Icon
+                    name={item.done ? 'check' : 'pause'}
+                    size={22}
+                    color={colors.onPrimary}
+                  />
                 ) : (
                   <AppText
                     variant="bodyStrong"
@@ -111,7 +131,11 @@ export const TodaysRoutineCard: React.FC<{
                 )}
               </View>
               <View style={styles.flex}>
-                <AppText variant="bodyStrong">{option?.title ?? item.exerciseId}</AppText>
+                <AppText variant="bodyStrong">
+                  {option?.title ??
+                    guidedShoulderTitle(item.exerciseId) ??
+                    item.exerciseId}
+                </AppText>
                 <AppText variant="body" color={colors.textSecondary}>
                   {item.status && item.status !== 'attempted'
                     ? STATUS_WORDS[item.status]

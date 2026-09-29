@@ -1,0 +1,752 @@
+{
+  "sourceSha": "1096a16ae246ac6644886ddaa3d6b54169c22d40",
+  "diffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "entrySha256": "b1a7daaa7136c57fa2aceec30416c2c17d8cf499cb07588881171a0f3149245a",
+  "browser": "153.0.8010.54",
+  "dataset": "10.7910/DVN/XSI0QN",
+  "participants": [
+    "P05",
+    "P09"
+  ],
+  "scope": "Inspection-only RGB replay of web inference; no angle or rep reference truth, no native/device/clinical validation",
+  "assets": {
+    "pose.js": "fcb703afcce65d0a1c540f6a70c3bb45fc84521498c21a9d4160265dde648ab4",
+    "pose_landmark_full.tflite": "e9a5c5cb17f736fafd4c2ec1da3b3d331d6edbe8a0d32395855aeb2cdfd64b9f",
+    "pose_solution_packed_assets_loader.js": "d7aa29b7d8e11b5c97a58d719e982dd15c2de72995d95112d60492b854840a36",
+    "pose_solution_simd_wasm_bin.js": "3983d1dca31d945d81abb70b18dd61f28ef4736e112463d7cfb1cbadef588127",
+    "pose_web.binarypb": "dc8efd1c2d62007b34278467407fda5f70847f41310e0e39f0f59fc17b1d01f7",
+    "pose_solution_packed_assets.data": "a63c614bef30d35947f13be361820b1e4e3bec9cfeebf4d11216a18373108e85",
+    "pose_solution_simd_wasm_bin.wasm": "195a929430e2ce130b3efb82e64ba27c8e68cb0f6bad870b715688060ea6f7e2"
+  },
+  "results": [
+    {
+      "file": "E01_P05_AF_VFL_GM.mp4",
+      "rawSha256": "8c301bb8dc662a98fdbd382e408196b782eb845acdffe3239ecc2438b63f70e4",
+      "label": "F",
+      "condition": "FL",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "side-arm-raise",
+      "transform": "none",
+      "sourceDurationSeconds": 25.919604,
+      "width": 1080,
+      "height": 1920,
+      "fps": 15,
+      "frames": 389,
+      "poseFrames": 389,
+      "poseCoverage": 1,
+      "medianInferenceMilliseconds": 125.90000009536743,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 389,
+          "coverage": 1,
+          "views": {
+            "oblique": 389
+          },
+          "estimatedFrames": 389,
+          "medianAngle": 19.819847699018787,
+          "reps": 0,
+          "result": {
+            "status": "unavailable",
+            "reason": "no_repetitions"
+          },
+          "findings": [],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 335,
+          "coverage": 0.8611825192802056,
+          "views": {
+            "oblique": 389
+          },
+          "estimatedFrames": 335,
+          "medianAngle": 116.13952985067253,
+          "reps": 9,
+          "result": {
+            "status": "measured",
+            "degrees": 154,
+            "approximate": true
+          },
+          "findings": [],
+          "numericFinite": true
+        }
+      ]
+    },
+    {
+      "file": "E01_P05_AR_VFL_GM.mp4",
+      "rawSha256": "bb8e222fae2e2a34d056af9493a48eec37e4b91e3456729e2dbac7d0766dca4e",
+      "label": "R",
+      "condition": "FL",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "side-arm-raise",
+      "transform": "none",
+      "sourceDurationSeconds": 4.7075,
+      "width": 1920,
+      "height": 1080,
+      "fps": 15,
+      "frames": 71,
+      "poseFrames": 71,
+      "poseCoverage": 1,
+      "medianInferenceMilliseconds": 156.89999985694885,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 71,
+          "coverage": 1,
+          "views": {
+            "front": 71
+          },
+          "estimatedFrames": 0,
+          "medianAngle": 10.512274172398142,
+          "reps": 0,
+          "result": {
+            "status": "unavailable",
+            "reason": "no_repetitions"
+          },
+          "findings": [],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 71,
+          "coverage": 1,
+          "views": {
+            "front": 71
+          },
+          "estimatedFrames": 0,
+          "medianAngle": 51.668153557664276,
+          "reps": 2,
+          "result": {
+            "status": "measured",
+            "degrees": 99,
+            "approximate": false
+          },
+          "findings": [],
+          "numericFinite": true
+        }
+      ]
+    },
+    {
+      "file": "E01_P05_AF_VLL_GM.mp4",
+      "rawSha256": "e460b53124243a032cb1a524fc831777af255fcfffc1b29439de838b086cbcb3",
+      "label": "F",
+      "condition": "LL",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "side-arm-raise",
+      "transform": "none",
+      "sourceDurationSeconds": 32.1275,
+      "width": 1080,
+      "height": 1920,
+      "fps": 15,
+      "frames": 482,
+      "poseFrames": 482,
+      "poseCoverage": 1,
+      "medianInferenceMilliseconds": 117.59999990463257,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 482,
+          "coverage": 1,
+          "views": {
+            "front": 482
+          },
+          "estimatedFrames": 0,
+          "medianAngle": 9.446043051411555,
+          "reps": 0,
+          "result": {
+            "status": "unavailable",
+            "reason": "no_repetitions"
+          },
+          "findings": [],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 482,
+          "coverage": 1,
+          "views": {
+            "front": 482
+          },
+          "estimatedFrames": 0,
+          "medianAngle": 99.78077647348606,
+          "reps": 10,
+          "result": {
+            "status": "measured",
+            "degrees": 165,
+            "approximate": false
+          },
+          "findings": [],
+          "numericFinite": true
+        }
+      ]
+    },
+    {
+      "file": "E01_P05_AF_VO_GM.mp4",
+      "rawSha256": "6d6c3b6fd704578eeb7043cba5cbb36a8c2343320320709000380a40b15804c0",
+      "label": "F",
+      "condition": "O",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "side-arm-raise",
+      "transform": "none",
+      "sourceDurationSeconds": 24.742541,
+      "width": 1080,
+      "height": 1920,
+      "fps": 15,
+      "frames": 371,
+      "poseFrames": 369,
+      "poseCoverage": 0.9946091644204852,
+      "medianInferenceMilliseconds": 118.10000014305115,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 354,
+          "coverage": 0.954177897574124,
+          "views": {
+            "front": 316,
+            "oblique": 24,
+            "side": 29,
+            "unknown": 2
+          },
+          "estimatedFrames": 19,
+          "medianAngle": 5.482077764012318,
+          "reps": 0,
+          "result": {
+            "status": "unavailable",
+            "reason": "no_repetitions"
+          },
+          "findings": [],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 357,
+          "coverage": 0.9622641509433962,
+          "views": {
+            "front": 316,
+            "oblique": 24,
+            "side": 29,
+            "unknown": 2
+          },
+          "estimatedFrames": 22,
+          "medianAngle": 56.95627151000209,
+          "reps": 9,
+          "result": {
+            "status": "measured",
+            "degrees": 168,
+            "approximate": false
+          },
+          "findings": [],
+          "numericFinite": true
+        }
+      ]
+    },
+    {
+      "file": "E03_P05_AF_VFL_GM.mp4",
+      "rawSha256": "d00d3bd4119efef2d1b6729f468a13592b84aa43d163980285440185d2d5a107",
+      "label": "F",
+      "condition": "FL",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "shoulder-external-rotation",
+      "transform": "none",
+      "sourceDurationSeconds": 23.813667,
+      "width": 1080,
+      "height": 1920,
+      "fps": 15,
+      "frames": 357,
+      "poseFrames": 357,
+      "poseCoverage": 1,
+      "medianInferenceMilliseconds": 111.90000009536743,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 357,
+          "coverage": 1,
+          "views": {
+            "front": 357
+          },
+          "estimatedFrames": 357,
+          "medianAngle": 24.002498580242886,
+          "reps": 3,
+          "result": {
+            "status": "measured",
+            "degrees": 35,
+            "approximate": true
+          },
+          "findings": [],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 357,
+          "coverage": 1,
+          "views": {
+            "front": 357
+          },
+          "estimatedFrames": 357,
+          "medianAngle": 8.165658076356559,
+          "reps": 8,
+          "result": {
+            "status": "measured",
+            "degrees": 23,
+            "approximate": true
+          },
+          "findings": [],
+          "numericFinite": true
+        }
+      ]
+    },
+    {
+      "file": "E01_P09_AF_VFL_GF.mp4",
+      "rawSha256": "eec8753b3f76298cfd0068a1e46a5d85d230f4dd7cde1561c472d5ad1eb80681",
+      "label": "F",
+      "condition": "FL",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "side-arm-raise",
+      "transform": "none",
+      "sourceDurationSeconds": 33.551459,
+      "width": 1080,
+      "height": 1920,
+      "fps": 15,
+      "frames": 503,
+      "poseFrames": 503,
+      "poseCoverage": 1,
+      "medianInferenceMilliseconds": 102.29999995231628,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 503,
+          "coverage": 1,
+          "views": {
+            "oblique": 503
+          },
+          "estimatedFrames": 503,
+          "medianAngle": 17.69337737736215,
+          "reps": 0,
+          "result": {
+            "status": "unavailable",
+            "reason": "no_repetitions"
+          },
+          "findings": [],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 401,
+          "coverage": 0.7972166998011928,
+          "views": {
+            "oblique": 503
+          },
+          "estimatedFrames": 401,
+          "medianAngle": 114.94108077119112,
+          "reps": 9,
+          "result": {
+            "status": "measured",
+            "degrees": 150,
+            "approximate": true
+          },
+          "findings": [],
+          "numericFinite": true
+        }
+      ]
+    },
+    {
+      "file": "E01_P09_AR_VFL_GF.mp4",
+      "rawSha256": "a36f2f59b8c5246108b2bea2826bc173bf295df77f3ec2eddc969d0ff603a206",
+      "label": "R",
+      "condition": "FL",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "side-arm-raise",
+      "transform": "none",
+      "sourceDurationSeconds": 29.126896,
+      "width": 1080,
+      "height": 1920,
+      "fps": 15,
+      "frames": 437,
+      "poseFrames": 437,
+      "poseCoverage": 1,
+      "medianInferenceMilliseconds": 99.29999995231628,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 437,
+          "coverage": 1,
+          "views": {
+            "oblique": 249,
+            "side": 188
+          },
+          "estimatedFrames": 249,
+          "medianAngle": 18.926912254128215,
+          "reps": 9,
+          "result": {
+            "status": "measured",
+            "degrees": 150,
+            "approximate": true
+          },
+          "findings": [],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 273,
+          "coverage": 0.6247139588100686,
+          "views": {
+            "oblique": 249,
+            "side": 188
+          },
+          "estimatedFrames": 143,
+          "medianAngle": 151.23943846929353,
+          "reps": 9,
+          "result": {
+            "status": "measured",
+            "degrees": 171,
+            "approximate": false
+          },
+          "findings": [],
+          "numericFinite": true
+        }
+      ]
+    },
+    {
+      "file": "E01_P09_AF_VLL_GF.mp4",
+      "rawSha256": "6bb2ff0cbac9ce1756cde541d737b764c719b2beaa2dccf9ce4de9dc85e87c4c",
+      "label": "F",
+      "condition": "LL",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "side-arm-raise",
+      "transform": "none",
+      "sourceDurationSeconds": 30.382229,
+      "width": 1080,
+      "height": 1920,
+      "fps": 15,
+      "frames": 456,
+      "poseFrames": 456,
+      "poseCoverage": 1,
+      "medianInferenceMilliseconds": 102.79999995231628,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 456,
+          "coverage": 1,
+          "views": {
+            "front": 440,
+            "oblique": 16
+          },
+          "estimatedFrames": 16,
+          "medianAngle": 9.699141589772976,
+          "reps": 0,
+          "result": {
+            "status": "unavailable",
+            "reason": "no_repetitions"
+          },
+          "findings": [],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 456,
+          "coverage": 1,
+          "views": {
+            "front": 440,
+            "oblique": 16
+          },
+          "estimatedFrames": 16,
+          "medianAngle": 88.74789908077575,
+          "reps": 10,
+          "result": {
+            "status": "measured",
+            "degrees": 172,
+            "approximate": false
+          },
+          "findings": [],
+          "numericFinite": true
+        }
+      ]
+    },
+    {
+      "file": "E01_P09_AF_VO_GF.mp4",
+      "rawSha256": "ab6cf4d3a0f42b7c70b093f7533605a1adb9a64b26bf2c720e59e734298a5732",
+      "label": "F",
+      "condition": "O",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "side-arm-raise",
+      "transform": "none",
+      "sourceDurationSeconds": 28.180896,
+      "width": 1080,
+      "height": 1920,
+      "fps": 15,
+      "frames": 423,
+      "poseFrames": 418,
+      "poseCoverage": 0.9881796690307328,
+      "medianInferenceMilliseconds": 103,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 391,
+          "coverage": 0.9243498817966903,
+          "views": {
+            "front": 340,
+            "oblique": 16,
+            "unknown": 5,
+            "side": 62
+          },
+          "estimatedFrames": 16,
+          "medianAngle": 8.942417418181195,
+          "reps": 0,
+          "result": {
+            "status": "unavailable",
+            "reason": "no_repetitions"
+          },
+          "findings": [],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 379,
+          "coverage": 0.8959810874704491,
+          "views": {
+            "front": 340,
+            "oblique": 16,
+            "unknown": 5,
+            "side": 62
+          },
+          "estimatedFrames": 12,
+          "medianAngle": 87.54402032930919,
+          "reps": 10,
+          "result": {
+            "status": "measured",
+            "degrees": 178,
+            "approximate": false
+          },
+          "findings": [],
+          "numericFinite": true
+        }
+      ]
+    },
+    {
+      "file": "E03_P09_AF_VFL_GF.mp4",
+      "rawSha256": "6fc452b40f5f03f7d67dbdb9a84c8bc5114b19486fb75fe5fba99055ce563dc0",
+      "label": "F",
+      "condition": "FL",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "shoulder-external-rotation",
+      "transform": "none",
+      "sourceDurationSeconds": 31.636833,
+      "width": 1080,
+      "height": 1920,
+      "fps": 15,
+      "frames": 475,
+      "poseFrames": 475,
+      "poseCoverage": 1,
+      "medianInferenceMilliseconds": 101.70000004768372,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 475,
+          "coverage": 1,
+          "views": {
+            "front": 45,
+            "oblique": 269,
+            "side": 161
+          },
+          "estimatedFrames": 475,
+          "medianAngle": 35.59644047427316,
+          "reps": 14,
+          "result": {
+            "status": "unavailable",
+            "reason": "camera_view"
+          },
+          "findings": [
+            {
+              "id": "camera_view",
+              "severity": "warn",
+              "cue": "Face the phone directly, then we can measure your movement.",
+              "detail": "This exercise is measured from the front; it was filmed from an angle, so the range isn't judged.",
+              "reps": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ]
+            }
+          ],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 366,
+          "coverage": 0.7705263157894737,
+          "views": {
+            "front": 45,
+            "oblique": 269,
+            "side": 161
+          },
+          "estimatedFrames": 366,
+          "medianAngle": 14.290276104214366,
+          "reps": 15,
+          "result": {
+            "status": "unavailable",
+            "reason": "camera_view"
+          },
+          "findings": [
+            {
+              "id": "camera_view",
+              "severity": "warn",
+              "cue": "Face the phone directly, then we can measure your movement.",
+              "detail": "This exercise is measured from the front; it was filmed from an angle, so the range isn't judged.",
+              "reps": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14
+              ]
+            }
+          ],
+          "numericFinite": true
+        }
+      ]
+    },
+    {
+      "file": "E01_P05_AF_VFL_GM.mp4",
+      "rawSha256": "8c301bb8dc662a98fdbd382e408196b782eb845acdffe3239ecc2438b63f70e4",
+      "label": "F",
+      "condition": "FL",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "side-arm-raise",
+      "transform": "mirror",
+      "sourceDurationSeconds": 25.919604,
+      "width": 1080,
+      "height": 1920,
+      "fps": 15,
+      "frames": 389,
+      "poseFrames": 389,
+      "poseCoverage": 1,
+      "medianInferenceMilliseconds": 104,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 370,
+          "coverage": 0.9511568123393316,
+          "views": {
+            "oblique": 389
+          },
+          "estimatedFrames": 370,
+          "medianAngle": 109.91515411108375,
+          "reps": 9,
+          "result": {
+            "status": "measured",
+            "degrees": 160,
+            "approximate": true
+          },
+          "findings": [],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 389,
+          "coverage": 1,
+          "views": {
+            "oblique": 389
+          },
+          "estimatedFrames": 389,
+          "medianAngle": 23.559480705562795,
+          "reps": 0,
+          "result": {
+            "status": "unavailable",
+            "reason": "no_repetitions"
+          },
+          "findings": [],
+          "numericFinite": true
+        }
+      ]
+    },
+    {
+      "file": "E01_P05_AF_VFL_GM.mp4",
+      "rawSha256": "8c301bb8dc662a98fdbd382e408196b782eb845acdffe3239ecc2438b63f70e4",
+      "label": "F",
+      "condition": "FL",
+      "provider": "@mediapipe/pose web modelComplexity=1, smoothing enabled, segmentation disabled",
+      "scope": "Diagnostic source-labelled shoulder replay, not a clinical prescription or sleeper assessment",
+      "exerciseId": "side-arm-raise",
+      "transform": "black",
+      "sourceDurationSeconds": 25.919604,
+      "width": 1080,
+      "height": 1920,
+      "fps": 15,
+      "frames": 389,
+      "poseFrames": 0,
+      "poseCoverage": 0,
+      "medianInferenceMilliseconds": 89.60000014305115,
+      "sides": [
+        {
+          "side": "left",
+          "measuredFrames": 0,
+          "coverage": 0,
+          "views": {
+            "unknown": 389
+          },
+          "estimatedFrames": 0,
+          "medianAngle": null,
+          "reps": 0,
+          "result": {
+            "status": "unavailable",
+            "reason": "not_seen"
+          },
+          "findings": [],
+          "numericFinite": true
+        },
+        {
+          "side": "right",
+          "measuredFrames": 0,
+          "coverage": 0,
+          "views": {
+            "unknown": 389
+          },
+          "estimatedFrames": 0,
+          "medianAngle": null,
+          "reps": 0,
+          "result": {
+            "status": "unavailable",
+            "reason": "not_seen"
+          },
+          "findings": [],
+          "numericFinite": true
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "complete": true
+}

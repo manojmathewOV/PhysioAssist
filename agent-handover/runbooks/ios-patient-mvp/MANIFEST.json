@@ -1,16 +1,16 @@
 {
-  "revision": 3,
+  "revision": 14,
   "role": "portable plan files, not implementation evidence acceptance",
   "files": [
     {
       "path": "ACTIVE.md",
-      "sha256": "0b7152b1cd6a1923408c4adb57564582432c40d49d5524edb885a3a72f3a3c3d",
-      "bytes": 4218
+      "sha256": "84b6fb5aeb460f2f4843ab3d6b5401aa72bdee5e1269cbff840f2d07fe8f8af0",
+      "bytes": 6876
     },
     {
       "path": "DECISIONS.md",
-      "sha256": "44d475d23987e2905d912c5b231996e14bcc74910b121736dcd90712fa1646a0",
-      "bytes": 6276
+      "sha256": "57f5ded19f0e3d174d3527e3ce737f02e8a199048aabf53733f572e3c8fa122a",
+      "bytes": 9788
     },
     {
       "path": "PROGRESSION.md",
@@ -19,8 +19,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "0cef41322d07b4233de08a5ad57eef358f0aebee94aa0779f568260a9c03d48b",
-      "bytes": 2489
+      "sha256": "7dbadf688c1ebac32f03abe8b24d4d135db94e5b6a22c31728328edb80298f1a",
+      "bytes": 4923
     },
     {
       "path": "RESEARCH.md",
@@ -29,23 +29,23 @@
     },
     {
       "path": "ROADMAP.cnp",
-      "sha256": "5ce101551a693abcd2af4f792c1052755df1ca7cab4128395cc8724621298668",
-      "bytes": 102491
+      "sha256": "c363290d3c177da3668a4acb8608011a6d56ee4e77b82ebe773fd0384fad6f23",
+      "bytes": 110714
     },
     {
       "path": "RUNBOOK.md",
-      "sha256": "c23fe45d3223fdafe73880d874a87a3b7aafd3f3752c25cec5832bf9ce291dcb",
-      "bytes": 41538
+      "sha256": "8fef4594f9a54255f651c13c773793c45f327c039f06328596bc4a0d1d4234c8",
+      "bytes": 77004
     },
     {
       "path": "STATUS.json",
-      "sha256": "19f6f1bc0433edf5b0ee2a1c355e915e298d6e1aca924c98ebd8b4d3de115e0e",
-      "bytes": 7169
+      "sha256": "dab49ffdd126d85916d2823374ff1bbaed26f85716c7f44f3d813cd08d629db5",
+      "bytes": 15491
     },
     {
       "path": "TEST_MATRIX.md",
-      "sha256": "3e74c83056d96d249f92ae660400509ae7f5fd421cf8726f8f9979dbaf3adae9",
-      "bytes": 15747
+      "sha256": "7553e436afb0d84b2c1713de3b7c5805a3bdaafcf19cf99b8ccfb51f9bef9c2b",
+      "bytes": 23954
     },
     {
       "path": "evidence/CCORE_TOOLING.md",
@@ -73,19 +73,29 @@
       "bytes": 3700
     },
     {
+      "path": "evidence/patient-feedback-20260928.json",
+      "sha256": "40da1d478bf0a7b1f7689a4d8705a9b6e13719eb96b198f73e709d1f94b78a06",
+      "bytes": 2666
+    },
+    {
+      "path": "evidence/phone-architecture-20260929.json",
+      "sha256": "62259213f0bc2c22c0244cf41f51127e397493a8cb38461ff155590a98d18a9b",
+      "bytes": 2950
+    },
+    {
       "path": "evidence/structural-check.json",
       "sha256": "f29e1949f189fe1919ecca47ec4ee68b7913948c0861eeea8aa048846faef32f",
       "bytes": 264
     },
     {
       "path": "research.json",
-      "sha256": "d1c94ee17e6b8eef42eb948ef7097192a3538f67b154446112fe53a24e38351e",
-      "bytes": 14625
+      "sha256": "29608946e57276597977d9df2aed5f05757a99f220409fd32b96ccd7bf858d5e",
+      "bytes": 66037
     },
     {
       "path": "runbook.json",
-      "sha256": "908b88ec2a32de63dea4757a6da7daede7dc62ae006bd15786a318dec908f5fe",
-      "bytes": 82132
+      "sha256": "b99c069c9c7ba53b188ec6df53afade989c3dc776adc8030d5f1c12fe489177b",
+      "bytes": 127688
     },
     {
       "path": "tools/check_matrix.py",
@@ -99,13 +109,13 @@
     },
     {
       "path": "tools/render_cnp.py",
-      "sha256": "dd4aa80bc00603a74a55ff86b40954702cd9d408f0c99e04b251b2e4f0fe143f",
-      "bytes": 13216
+      "sha256": "a188efba93bc2c0d4ac78e43ab28df41968a7b76cedcbe97b39e5f18a1530b6d",
+      "bytes": 15275
     },
     {
       "path": "validation-matrix.json",
-      "sha256": "a7030cf61f1b1787c0f06d79727ef4bab706786506676549e173df024cecdc8e",
-      "bytes": 73903
+      "sha256": "8902c1c8a1f642353248f7d6ffecf455bf3c16302c05045bac98bde1bc0f9046",
+      "bytes": 82111
     }
   ]
 }

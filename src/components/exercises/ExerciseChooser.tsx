@@ -1,3 +1,4 @@
+import GuidedShoulderSetup from './GuidedShoulderSetup';
 /**
  * Step 1 of the Exercise tab (native and web).
  *
@@ -44,6 +45,8 @@ interface ExerciseChooserProps {
   selectedKey: ExerciseKey;
   onSelect: (key: ExerciseKey) => void;
   onStart: () => void;
+  onStartWithoutCamera?: () => void;
+  pendingActivity?: boolean;
   /** Shows a spinner on Start (e.g. while the camera opens). */
   starting?: boolean;
   /** Optional message above the list (e.g. a Banner). */
@@ -89,6 +92,8 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
   selectedKey,
   onSelect,
   onStart,
+  onStartWithoutCamera,
+  pendingActivity,
   starting,
   notice,
   plan,
@@ -179,11 +184,13 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
         routine={routine}
         plan={plan}
         onReady={onStartRoutine}
+        onWithoutCamera={onStartWithoutCamera}
         onRepeat={(id) => onStartExercise?.(id)}
         onOpenSetup={() => setSetupOpen(true)}
         onHelp={openHelp}
         starting={starting}
         notice={notice}
+        pendingActivity={pendingActivity}
       />
     );
   }
@@ -251,6 +258,9 @@ const ExerciseChooser: React.FC<ExerciseChooserProps> = ({
       ) : null}
       {setup && plan && onPlanChange ? (
         <ScheduleCard plan={plan} onChange={onPlanChange} />
+      ) : null}
+      {setup && plan && onPlanChange ? (
+        <GuidedShoulderSetup plan={plan} onChange={onPlanChange} />
       ) : null}
       {setup && hasRoutine && routine ? <TodaysRoutineCard routine={routine} /> : null}
       {setup && plan ? (

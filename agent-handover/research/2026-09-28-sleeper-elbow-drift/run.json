@@ -1,0 +1,47 @@
+{
+  "date": "2026-09-28",
+  "source_sha": "dc123553e3c1e8649ef9be14e91a1955624b0aa7",
+  "scope": "Quantitative sleeper geometry research and existing-runbook clarification; no live estimator or clinical approval",
+  "geometry": {
+    "test_count": 20,
+    "failures": 0,
+    "errors": 0,
+    "random_transform_cases_within_one_test": 500,
+    "cloud_mac_result_bytes_equal": true,
+    "initial_failure": "One exact floating point assertion; fixed to numerical tolerance. No application defect inferred."
+  },
+  "production_probe": {
+    "execution": "Actual analyseSession/appliesTo modules on Mac with explicit synthetic inputs",
+    "reps_positive_control": 2,
+    "magnitude_unit_duration_survive_finding": false,
+    "sleeper_uses_ER_elbow_rule": false,
+    "held_positive_control": "measured",
+    "held_detector_calls": 0
+  },
+  "ccore": {
+    "tool": "ccore.runbook.compile",
+    "mode": "inspect_definition",
+    "source_hash": "4f13f2f47ee728f1c3d21e926ab554352f9bba942ea55bd76555be974df1b191",
+    "structure_errors": 0,
+    "blocked_axes": 0,
+    "declared_axes": 121,
+    "members": 11,
+    "disposition": "DefinitionTopologyReadmissionRequired",
+    "construction_gaps": 11,
+    "execution_or_acceptance_created": false
+  },
+  "portable_checks": {
+    "gates": 11,
+    "criteria": 83,
+    "structural_negative_controls": 7,
+    "delivery_negative_controls": 6,
+    "matrix_negative_controls": 14,
+    "accepted_gates": 0
+  },
+  "limits": [
+    "Exact supplied synthetic torso axes; no RGB estimation validation",
+    "No clinical warning cutoff, dose, metric calibration, force or scapular tracking claim",
+    "No actual patient, iPhone camera, VoiceOver, native build or application full-suite rerun",
+    "No model/dataset download or dependency install; main unchanged; S2a remains the active task"
+  ]
+}

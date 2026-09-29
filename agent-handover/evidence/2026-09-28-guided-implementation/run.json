@@ -1,0 +1,175 @@
+{
+  "date": "2026-09-28",
+  "application_sha": "a8da5f5b630475144dfc12af1afd5cbc6a9d8516",
+  "observation_enabler_sha": "1096a16ae246ac6644886ddaa3d6b54169c22d40",
+  "scope": "Guided shoulder activity, acknowledged local records, quantitative observation enablers and bounded video replay. Not the entire runbook or clinical acceptance.",
+  "tests": {
+    "passed": 1707,
+    "skipped": 4,
+    "failed": 0,
+    "suites_passed": 99,
+    "seconds": 29.83,
+    "exit": 0,
+    "clean_exit": true,
+    "forceExit": false,
+    "log_sha256": "79b9a38c8297089c903e7bf18f888e71b2a8348ac1d76b6d200306664b16d966",
+    "new_quantity_tests": 13
+  },
+  "web": {
+    "source_sha": "1e669faff31fbe5660a173dbd15552737546a9dc",
+    "checks": 18,
+    "result": "passed",
+    "runtime_errors": [],
+    "saved_status_visible_320": {
+      "saveBox": {
+        "x": 48,
+        "y": 172,
+        "width": 224,
+        "height": 84
+      },
+      "returnBox": {
+        "x": 24,
+        "y": 404,
+        "width": 272,
+        "height": 64
+      }
+    },
+    "kind": "Production web app, synthetic programme and storage failure injection"
+  },
+  "native": {
+    "no_camera_journey": {
+      "sourceSha": "1e669faff31fbe5660a173dbd15552737546a9dc",
+      "scope": "Actual Release app with UI-entered synthetic programme, no real patient/camera/clinical validation",
+      "steps": [
+        {
+          "name": "make",
+          "exit": 0,
+          "seconds": 0.46
+        },
+        {
+          "name": "boot",
+          "exit": 0,
+          "seconds": 0.73
+        },
+        {
+          "name": "boot-ready",
+          "exit": 0,
+          "seconds": 5.15
+        },
+        {
+          "name": "install",
+          "exit": 0,
+          "seconds": 2.72
+        },
+        {
+          "name": "test",
+          "exit": 0,
+          "seconds": 121.44
+        }
+      ],
+      "status": "passed",
+      "attachment_export_exit": 0,
+      "owned_simulator_shutdown_exit": 0,
+      "headAfter": "1e669faff31fbe5660a173dbd15552737546a9dc"
+    },
+    "reference_journey": {
+      "sourceSha": "a8da5f5b630475144dfc12af1afd5cbc6a9d8516",
+      "scope": "Actual Release app with UI-entered synthetic programme, no real patient/camera/clinical validation",
+      "steps": [
+        {
+          "name": "make",
+          "exit": 0,
+          "seconds": 0.4
+        },
+        {
+          "name": "boot",
+          "exit": 0,
+          "seconds": 1.31
+        },
+        {
+          "name": "boot-ready",
+          "exit": 0,
+          "seconds": 4.29
+        },
+        {
+          "name": "install",
+          "exit": 0,
+          "seconds": 3.59
+        },
+        {
+          "name": "test",
+          "exit": 0,
+          "seconds": 145.54
+        }
+      ],
+      "status": "passed",
+      "attachment_export_exit": 0,
+      "owned_simulator_shutdown_exit": 0,
+      "headAfter": "a8da5f5b630475144dfc12af1afd5cbc6a9d8516"
+    },
+    "kind": "Actual Release simulator, UI-entered synthetic dose/self-report; no fake pose or real patient",
+    "clinical_asset": false,
+    "reference_asset": "Official YouTube technical sample; privately retained image only",
+    "visual_review": "Receiving agent opened saved, history and native reference screenshots at resumption"
+  },
+  "benchmarks": {
+    "dataset": "10.7910/DVN/XSI0QN",
+    "version": "3.0",
+    "license": {
+      "name": "CC0 1.0",
+      "uri": "http://creativecommons.org/publicdomain/zero/1.0",
+      "iconUri": "https://licensebuttons.net/p/zero/1.0/88x31.png",
+      "rightsIdentifier": "CC0-1.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/",
+      "languageCode": "en"
+    },
+    "raw_files": 10,
+    "raw_bytes": 263219206,
+    "participants": [
+      "P05",
+      "P09"
+    ],
+    "split": "inspection/development, not held-out validation",
+    "replay_jobs": 12,
+    "sampled_frames_with_controls": 4742,
+    "real_clip_frames": 3964,
+    "real_clip_pose_frames": 3957,
+    "real_clip_pose_coverage": 0.998234106962664,
+    "max_clip_median_inference_ms": 156.89999985694885,
+    "software_errors": 0,
+    "black_control": "zero poses; both sides unavailable",
+    "scope": "Inspection-only RGB replay of web inference; no angle or rep reference truth, no native/device/clinical validation",
+    "results": "rgb-results.json"
+  },
+  "observation_enablers": {
+    "held_provider": "Explicit opt-in interval observer, not a fabricated repetition",
+    "continuous_values": "zero/unavailable/not-applicable distinct; bounded metadata; explicit provider errors",
+    "numeric_hit_retention": "Per-repetition value/unit/duration/interval, total count and maximum64 detail rows",
+    "sleeper_estimator_active": false
+  },
+  "remaining": [
+    "Independent review of new storage/activity/observation code",
+    "Full storage migration and long-history scalability; current acknowledged writer is a bounded adapter over existing persistence",
+    "Real sleeper IR/caudal estimator, tolerance/reference qualification and repeatability",
+    "Patient result schematic/previous/episode-best screen is specified but not implemented",
+    "Real approved reference media, remaining clinical doses/schedule authority",
+    "Physical-iPhone accessibility, older-user comprehension and clinical/device studies",
+    "Real RGB native-camera validation and native focus parity",
+    "Patient identity/backup decisions, complete knee/protocol rollout and release gates"
+  ],
+  "new_failures_fixed": [
+    "Guided watch state counted time and interrupted reference resume; fixed separately",
+    "Native numeric keyboard obstructed setup buttons; dismiss at defined transitions",
+    "320px saving/failure banner hidden below prior form offset; status first and result remount resets scroll"
+  ],
+  "limits": [
+    "Input-only prescription confirmation is not authenticated clinician approval",
+    "This study does not quantify angle/rep accuracy: MobiPhysio lacks per-frame angle/rep reference and does not represent these exact lying variants",
+    "Source F labels sometimes receive algorithm oblique classification; retain disagreement instead of calling view accuracy passed",
+    "Offline per-frame timing is desktop diagnostic, not a physical-iPhone realtime claim",
+    "Prior failed screenshots/logs retained separately; no clinical improvement claim or automatic progression"
+  ],
+  "privacy": "Only synthetic UI screenshots and scrubbed numerical/provenance evidence are public. Raw dataset/video and third-party-player images stay outside Git.",
+  "resources": "Existing repo/dependencies/Pods/DerivedData reused; one bounded job/two workers; no package installation or full clone during this continuation; ten raw files occupy263219206 logical bytes."
+}

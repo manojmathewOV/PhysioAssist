@@ -1,52 +1,44 @@
-# Current PhysioAssist work — read this, not the historical state log
+# Current PhysioAssist implementation
 
-Updated 2026-09-27. Scope: **iPhone patient-only, local-first MVP**. Surgeon/physio backend, monitoring and clinical cloud sync remain future scope.
+## Device-assisted capture architecture
 
-## Ownership and basis
+Runbook-only assessment: ten elements each have an ATAM scenario, six explicit Hat perspectives and two counterfactual specifications. See `research.json` → `phone_architecture` and `runbook.json` → `shoulder_capture.phone_assistance` in the iOS MVP runbook. No stick-length entry, mandatory markers/scan/calibration movement; one capture owner and one production pose engine, optional capability-qualified depth/motion/stick. Evaluation adapter and acknowledged isolated save/reopen remain next. The current V4 capture dependency is upstream-unmaintained; a bounded maintained-stack compatibility study precedes any migration or depth extension. No sensor code or dependency change was made.
 
-- Claude implementation is frozen at `6bc4d77f9ee9bbe95ef181d50fbaf94cf2388f84`. Its final handover is [here](responses/2026-09-27-6bc4d77-claude-final-handover.md). Claude is independent reviewer unless explicitly reassigned.
-- Receiving implementer: ChatGPT via the authorised hybrid Mac/RDC/GitHub workflow. One writer per task and source surface.
-- Active consolidation: **draft PR #28**, `agent/mvp-integration-20260927`; exact predecessor refs and successor PR in [BRANCHES.json](BRANCHES.json).
-- PRs #25/#26/#27 are closed as superseded; their heads remain ancestry-contained and archive-tagged. No source branch was deleted.
-- `main` is **not changed or approved for release** by this reconciliation.
-- Reuse the owner's configured local landing `repo/` and `RDC/`. No extra clone/dependency install is needed.
+## Latest range and result correction
 
-## What is genuinely established
+Application `2d5455c`: both prescribed hold bounds reach the timer; finishing at minimum is normal and optional timing ends at maximum. Direct Reference position/This reading labels, an illustrative side-lying cue, side mirroring and shared full history dates refine the synthetic result card. See [response](responses/2026-09-29-range-and-card.md) and [evidence](evidence/2026-09-29-range-and-card/run.json). Full tests, the actual guided browser journey and the Release guided-native test passed; native optional-third/no-fourth/save/reopen screenshots were inspected. The result card itself remains web-preview only.
 
-P08 was independently retested on 6bc4d77: 1,593 passed/four opt-in skipped, parallel and open-handle runs exited cleanly. Preserve the fix. R01-R03 and web EX06 have implementation evidence; not all have independent end-to-end acceptance. Native focus and complete patient journeys remain open.
+Runbook JSON/ACTIVE is revision14; older README narrative retains historical wording. The next bounded task is the evaluation-only adapter and isolated receipt-aware storage, not a new estimator, clinical allowance or performance subsystem. No main merge or new gate acceptance.
 
-The four skipped suites are recorded individually in Claude's final handover: one Detox-mode-only and three permission-cleared dataset-dependent benchmarks. Skipped is not a benchmark pass.
+Owner scope: **iPhone-first, patient-only, local-first**. No clinician portal, monitoring, automatic progression or clinical cloud synchronisation. Read this record, then [ACTIVE.md](runbooks/ios-patient-mvp/ACTIVE.md). Historical reports retain their original source and evidence limits.
 
-## Current implementation and review
+## Latest result-display increment
 
-**I01: hosted native portability is now corroborated at `707a6e7`.** Run 36304301981 passed frozen installation, build, smoke and selected Detox. Claude independently reviewed the source/hosted result on that revision; the review was supplied by the owner. Do not keep presenting the original Install pods failure as the current unfixed state. The remaining G01 criteria and newer commits still require scoped evidence/review.
+**Result selector/card `e184830858569b10a140c45f81eb48c1c669ae79`**: approximate value, same-interval schematic/status and compatible previous/episode-best with strict unknown/save/retraction/method rules. Synthetic components only; not patient navigation/live Check/persistence. [Response](responses/2026-09-28-result-display.md), [evidence](evidence/2026-09-28-result-display/run.json). Full suite1790/four skipped;65 focused cases and real-web visual checks. Existing10 clips replayed in12 runs at116deb2; pipeline coverage is not clinical precision. Native driver write blocked; no new native result-screen test.
 
-**I02: failed-read overwrite is contained in published commits `dd7f504` and `1c539a5`.** Failed reads stay pending with explicit Retry; there is no empty-state reset. The newer code was absent from Claude's 707a6e7 review. Read [implementation/evidence](responses/2026-09-27-g01-g02-receiving-agent.md). Full transactional migration, durable-write acknowledgement and native fault testing remain open.
+## Latest bounded implementation
 
-Latest [review reconciliation](responses/2026-09-27-independent-review-reconciliation.md) distinguishes filtered extrema from raw-frame noise experiments and records privacy/copy/CI-trigger findings. Four production characterisation tests cover the actual five-frame median and away/toward selection; they do not validate clinical accuracy.
+**Tested application `e768304831ea52ea39a59d26535ca45606c0c7cb`: untimed preparation, spoken prescribed-hold guidance, instruction-first layout and pending-save recovery.** See [response](responses/2026-09-28-guided-ux-review.md) and [results](evidence/2026-09-28-guided-ux-review/run.json).
 
-**Next product slice:** [ACTIVE](runbooks/ios-patient-mvp/ACTIVE.md) identifies G07.W1/S1: independent safety/player review and remaining native live coverage, then one complete source-aware shoulder journey. Keep only the active work item's acceptance cases in view; no additional roadmap or CCore execution project. Preserve data safety, exact variants and source approval. Clinical/owner C01-C08 and D01-D08 remain unresolved only where relevant.
+The patient explicitly starts after preparation. Optional holds use only supplied duration/repetition values and pause between intervals; no rest prescription or observed completion is invented. One short cue leads; timing is secondary. Watching suspends activity/audio and retains the paused player. Failed writes offer recovery, not repeating the same occurrence, and yesterday's pending event does not block today.
 
-## One roadmap and evidence ledger
+Clean final suite: **1,725 passed, four opt-in skipped, zero failures**, natural exit. TypeScript passed; targeted lint has zero errors/seven warnings. **39 real-web/synthetic-programme checks** passed, with actual official-player playback, speech-request observation and visually inspected320/390px screenshots. This is not actual audible VoiceOver, clinical video approval or patient-camera accuracy.
 
-Read [compact active pickup](runbooks/ios-patient-mvp/ACTIVE.md), then [runbook README](runbooks/ios-patient-mvp/README.md), [STATUS](runbooks/ios-patient-mvp/STATUS.json), [gate roadmap](runbooks/ios-patient-mvp/RUNBOOK.md), then only the active criterion in [validation matrix](runbooks/ios-patient-mvp/TEST_MATRIX.md). Do not mark a gate accepted from the existence of a plan, test count or CCore syntax receipt.
+**Native verified at its stated scope:** after AC power became available, frozen Pods and the Release build passed. Updated XCTest `33cf7914` exercised Ready, reference, holds/rest, pause/background/Resume, saved self-report and reopening on application `e768304`. Screenshots were inspected. The initial power refusal and two failed fixture/synchronisation runs remain recorded; physical audibility/VoiceOver and patient use are not thereby qualified.
 
-Latest reconciliation evidence: [record](reconciliation/2026-09-27/RECONCILIATION.md). Original reviews/responses/research are retained, not overwritten. Older CURRENT snapshots are [archived](archive/2026-09-27-before-reconciliation/README.md), not competing instructions.
+## Preserved foundation
 
-## Useful tools and limits
+The prior `a8da5f5` guided activity/acknowledged-write/quantitative-observation implementation remains intact; [its record](responses/2026-09-28-guided-implementation.md) carries1,707 tests, prior actual native journeys and the ten-video MobiPhysio development replay. The movement/RGB estimator is unchanged by this UX patch. Detection coverage was never clinical accuracy. No new videos/dependencies were downloaded.
 
-- [.agents hybrid skill](../.agents/skills/physioassist-hybrid/SKILL.md): local bounded execution and cache policy.
-- [Claude reusable scripts](tools/claude-cloud/README.md): inspect before use; stale seed-method fields are known; no included private media.
-- [Original reviewer tests](tests/README.md): historical tests are not blindly installed in current Jest discovery.
-- Private protocols, identifying videos and Claude's raw scratch logs were deliberately not published. Source inventory is not source approval.
-- No inherited Claude schedules are active according to his final handover; this agent does not infer an unattended background worker.
+Claude's supplied review corroborated the previous mechanics and required these UX corrections before patient use. It is recorded as an owner-relayed review, not a GitHub approval by Claude. The previous identical native history/reopen pictures have two distinct original capture events; [provenance](evidence/2026-09-28-guided-ux-review/historical-capture-provenance.json) explains why pixels alone do not prove restart. Originals are untouched.
 
-## Latest bounded safety correction
+## Ownership, review and continuation
 
-See [reference/comfort response](responses/2026-09-27-reference-safety.md). Claude’s new review reproduced: demonstration-derived goals and missing summary-phase policy. Implementation `c3d4b7b` uses supplied goals only, preserves numeric observations and filters progression-seeking feedback in comfort stages. New wrong-view/hidden-side tests also withhold unsupported range advice. Full tests and synthetic browser evidence are recorded; independent review remains open. Hosted Checks (36316922628) and iOS (36316922623) succeeded at 74fe884; that does not establish a complete native rehabilitation journey or physical-patient evidence. That original video-control frontier is superseded by the implementation below; no extra roadmap or bulk dataset acquisition.
+- Main remains `aebfa1b7832a9de314c19d69d494339f82eea5bf`. PR29/`agent/native-camera-recovery-20260928` is the single receiving branch; no merge or gate acceptance occurs in this task.
+- Continue only from the exact current head and local unique writer receipt. This task resumed its own interrupted work; no parallel writer, reset or force-push was used.
+- Review the new timing/audio/pending-state delta and obtain the remaining physical-audio/accessibility observations. Then implement the specified patient result selector/schematic/compatible history using synthetic fixtures, with real numerical activation still gated.
+- The previous8da4977 hosted Checks/iOS were confirmed green; the new candidate needs its own hosted result. The runbook distinguishes those bases.
 
-## S1 reference controls and native URL correction
+Still open: independent new-code and earlier storage-read review/formal safety record; full database migration/scale and registration/backup policy; approved clinical assets and remaining dose/schedule decisions; selected knee/postoperative rollout; actual sleeper IR/caudal method, allowance and reference-repeatability qualification; physical accessibility/resources, patient comprehension and pilot/release gates. No new research roadmap is needed to resume code.
 
-Implemented at `2ca6c76` and `0024f87`; see [response](responses/2026-09-27-reference-controls.md) and [evidence](evidence/2026-09-27-reference-controls/run.json). The downloader/seven unused packages are removed; active local-upload and recorded comparisons remain. Real browser Pause/Hide/Show tests pass. Native setup/reference Play, Pause, Enlarge and Replay passed after reproducing/fixing a Hermes URL.hostname crash. Final committed suite: 1,645 passed/four opt-in skipped, clean exit. This is not full native treatment/Check, approved clinical content, physical-phone validation or independent acceptance. Continue with those bounded gaps, not another downloader audit.
-
-Latest receiving pickup: `18f0139` fixes retry/overlapping interruptions; `12a4814` bounds Metro and avoids this project using machine-wide Watchman. Fresh tests: 1,649 passed/four opt-in skipped, clean exit. Real web controls plus blocked-script/retry/no-credit journey: 19 checks passed. Native preparation playback observed, but expanded live test failed at the missing Release-only practice entry; no live native or clinical pass is claimed. See [pickup evidence](evidence/2026-09-27-reference-controls/pickup.json). The first stalled native build is retained; the later project-configured build passed. Independent review, source-aware camera-optional Do, approved media and full native patient use remain open.
+The owner-selected sleeper intent is unchanged: shoulder-level near90-degree upper arm, caudal leeway, same-interval approximate IR and elbow observation, and patient-visible current/previous/compatible episode-best plus a simple schematic without target chasing. Numerical allowance remains unset. Four opt-in suites and unperformed native/human checks are not silently counted as passes.

@@ -23,3 +23,16 @@ The receiving-agent pickup adds a synthetic native live session with app Pause/R
 ## Current expanded-run result
 
 At application `12a4814`, the expanded source ran and **failed** at `use-practice-mode` after the native preparation playback assertions. Release excludes the mock body; this is an unmet test-input prerequisite, not a passed live journey. The failure and screenshots are retained in the S1 pickup evidence. Do not rerun this command against the same Release setup expecting a different result, enable fake input in production, or skip the assertion and claim live coverage. Qualify a deliberately separate debug/test lane or camera-optional Do first. No global simulator reset is appropriate.
+
+## Release no-camera recovery check
+
+`NoCameraUITests.swift` is a separate, bounded test of the actual Release screen and Back action. It expects the dedicated simulator to have no front camera, and does not request the unavailable simulated exercise. It leaves `ReferenceUITests.swift` and its open live-session prerequisite unchanged.
+
+After building/installing the chosen source with the guarded workflow and generating the disposable project above, copy the selected test source before running the same Xcode command:
+
+```sh
+cp agent-handover/tools/native-reference/NoCameraUITests.swift \
+  "$RUN/native-reference/ReferenceUITests.swift"
+```
+
+Only grant camera permission on the named synthetic simulator for this test so permission denial does not select a different screen. The test verifies that absent practice functionality is not promised, that a clear explanation and Back action appear, and that Back returns to exercise selection. It does not grant a clinical permission, save a treatment, enable fake data in Release, or establish a camera-optional Do workflow. Retain the screenshot and inspect it, then shut down only the dedicated simulator.

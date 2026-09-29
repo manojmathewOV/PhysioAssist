@@ -1,3 +1,4 @@
+import { useGuidedRoutine } from '../components/exercises/useGuidedRoutine';
 /**
  * Exercise tab (iOS/Android).
  *
@@ -63,7 +64,9 @@ import {
 import ExerciseSummary, {
   ExerciseSummaryProps,
 } from '@components/exercises/ExerciseSummary';
-import CameraUnavailable from '@components/exercises/CameraUnavailable';
+import CameraUnavailable, {
+  NoCameraAvailable,
+} from '@components/exercises/CameraUnavailable';
 import { FRAMING_MESSAGE, useSessionGate } from '@components/exercises/useSessionGate';
 import {
   EXERCISE_OPTIONS,
@@ -161,12 +164,17 @@ const PoseDetectionScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    requestCameraPermission();
+    if (stage === 'exercise' && !practice && device && permission === 'unknown') {
+      void requestCameraPermission();
+    }
+  }, [stage, practice, device, permission, requestCameraPermission]);
+
+  useEffect(() => {
     return () => {
       dispatch(setDetecting(false));
       mockPoseDataSimulator?.stop();
     };
-  }, [dispatch, requestCameraPermission]);
+  }, [dispatch]);
 
   // Validate each new pose during the exercise; show and speak the instruction
   useEffect(() => {
@@ -260,6 +268,7 @@ const PoseDetectionScreen: React.FC = () => {
 
   // Today's routine: start the next exercise, and what follows each one
   const routineFlow = useRoutineFlow({ plan, setSelectedKey, start: handleStart });
+  const guided = useGuidedRoutine();
 
   const backToChooser = useCallback(() => {
     resetGate();
@@ -360,6 +369,8 @@ const PoseDetectionScreen: React.FC = () => {
   // -------------------------------------------------------------------------
   // 1. Choose
   // -------------------------------------------------------------------------
+  if (guided.content) return guided.content;
+
   if (stage === 'choose') {
     return (
       <View style={styles.flex} testID={AccessibilityIds.poseDetection.screen}>
@@ -373,6 +384,9 @@ const PoseDetectionScreen: React.FC = () => {
             setRecordingDemo(true);
           }}
           onStart={handleStart}
+          onStartWithoutCamera={guided.start}
+          notice={guided.notice}
+          pendingActivity={guided.pendingCurrent}
           routine={routineFlow.routine}
           onStartRoutine={routineFlow.startRoutine}
           onToggleRoutine={routineFlow.toggle}
@@ -457,16 +471,7 @@ const PoseDetectionScreen: React.FC = () => {
       );
     }
     if (!device) {
-      return (
-        <CameraUnavailable
-          testID="no-camera"
-          icon="no-photography"
-          title="No camera found"
-          message="This device doesn't seem to have a front camera. You can still try the exercise screen in practice mode, with a pretend body."
-          primary={practiceAction ?? { ...back, icon: 'arrow-back' }}
-          secondary={practiceAction ? back : undefined}
-        />
-      );
+      return <NoCameraAvailable onBack={backToChooser} practiceAction={practiceAction} />;
     }
     // Permission still being asked
     return (

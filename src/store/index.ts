@@ -1,5 +1,6 @@
 import { persistReducer } from 'redux-persist';
 import EncryptedStorage from './storage';
+import { createAcknowledgedHistoryStorage } from './acknowledgedHistory';
 import { createReadRecovery } from './readRecovery';
 import { combineReducers } from 'redux';
 
@@ -18,6 +19,7 @@ import networkReducer from './slices/networkSlice';
 const REHYDRATE_TIMEOUT = 0;
 
 export const persistenceRecovery = createReadRecovery(['root', 'exercise']);
+export const historyPersistence = createAcknowledgedHistoryStorage(EncryptedStorage);
 
 const rootPersistConfig = {
   key: 'root',
@@ -30,7 +32,7 @@ const rootPersistConfig = {
 // Of the exercise slice only the session history is kept across launches
 const exercisePersistConfig = {
   key: 'exercise',
-  storage: EncryptedStorage,
+  storage: historyPersistence.storage,
   timeout: REHYDRATE_TIMEOUT,
   getStoredState: persistenceRecovery.read,
   whitelist: ['history'],

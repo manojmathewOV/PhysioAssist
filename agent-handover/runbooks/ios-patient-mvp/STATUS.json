@@ -1,10 +1,10 @@
 {
   "schema": "physioassist-runbook-status/1",
   "runbook_id": "ios-patient-mvp",
-  "runbook_revision": 3,
-  "current_gate": "G07",
-  "overall": "reference_controls_web_verified_native_preparation_observed_live_gap_open",
-  "implementation_sha": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
+  "runbook_revision": 14,
+  "current_gate": "G05",
+  "overall": "result_component_and_selector_submitted_native_check_integration_remaining",
+  "implementation_sha": "2d5455c688cb8da34db367f3757dd6291149e746",
   "gate_states": {
     "G00": "implemented_pending_review",
     "G01": "in_progress",
@@ -15,25 +15,32 @@
     "G06": "planned",
     "G07": "in_progress",
     "G08": "planned",
-    "G09": "planned",
+    "G09": "in_progress",
     "G10": "planned"
   },
   "evidence": [
     "../../evidence/2026-09-27-g01-g02/run.json",
     "../../evidence/2026-09-27-reference-safety/run.json",
     "../../evidence/2026-09-27-reference-controls/run.json",
-    "../../evidence/2026-09-27-reference-controls/pickup.json"
+    "../../evidence/2026-09-27-reference-controls/pickup.json",
+    "../../evidence/2026-09-28-review-shoulder/run.json",
+    "../../evidence/2026-09-28-guided-implementation/run.json",
+    "../../evidence/2026-09-28-guided-ux-review/run.json",
+    "../../evidence/2026-09-28-result-display/run.json"
   ],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
-  "next": "Independent review of published reference controls; qualify native live Pause/Hide/Show using an isolated test lane or camera-optional Do, correct Release no-camera wording and prep visibility, then complete the source-aware shoulder journey. Do not repeat the retired downloader audit.",
-  "last_writer": "receiving_agent",
+  "next": "Implement isolated receipt-aware evaluation Check adapter/storage/reopen. Carry the no-entry capability/coordinate contract; then a bounded maintained-capture compatibility probe before optional sensor experiments. Patient methods remain unactivated.",
+  "last_writer": "s2-implementation-20260928-53363",
   "limitations": [
     "No gate independently accepted by this implementation update.",
-    "No full database migration, profile isolation, write-failure acknowledgement or clinical validation is complete.",
     "Four opt-in suites remain skipped; historical source and approvals are unchanged.",
-    "74fe884 hosted Checks and iOS succeeded; c3d4b7b safety and newer storage still await independent review. Playback/patient journey, real camera and physical-device evidence remain separate."
+    "Owner-relayed Claude S1 acceptance is scoped code review, not new GitHub APPROVE, whole-gate acceptance or physical accessibility evidence. Storage containment still lacks independent review.",
+    "Guided acknowledged-write adapter and profile-filtered activity history are implemented; complete database migration/backup/long-history scalability remain open.",
+    "Ten inspection videos test web pipeline operation, not angle/rep accuracy or the exact lying-shoulder variant. Native simulator self-reports are not real patient exercise.",
+    "Patient schematic/previous/episode-best presentation and qualified sleeper IR/caudal detector are not yet implemented; do not infer them from numerical observation storage.",
+    "New result component has synthetic/web evidence only. Native preview tooling blocked; no UI-to-live Check or persistence integration and no qualified sleeper method registry entry."
   ],
-  "integration_basis": "88918e77162a8491beb06c3e7615419a40b30630",
+  "integration_basis": "aebfa1b7832a9de314c19d69d494339f82eea5bf",
   "blockers": [
     {
       "id": "I01",
@@ -50,7 +57,7 @@
       "status": "contained_pending_independent_review",
       "owner": "storage_owner",
       "observed": "Reproduced empty overwrite; pending read, explicit retry and navigation guard now pass production-code and web fault tests. Native ordinary start observed with simulator ad-hoc signing.",
-      "wake": "Independent review and future native failure/migration/write-acknowledgement coverage; G02 remains open.",
+      "wake": "Independent read-error/write-adapter review; complete transactional migration, physical native fault/backup and scale qualification remain open.",
       "evidence": "../../evidence/2026-09-27-g01-g02/run.json#I02"
     },
     {
@@ -64,11 +71,20 @@
     {
       "id": "NATIVE-LIVE-REFERENCE",
       "gate": "G07",
-      "status": "open_test_input_boundary",
+      "status": "guided_camera_optional_route_tested_remainder_open",
       "owner": "receiving_agent",
-      "observed": "Actual Release native test reaches video playback then no-camera screen; simulated practice is compiled out. Full live reference journey has not run. No-camera copy inaccurately promises practice.",
-      "wake": "A deliberately isolated qualified test lane or completed camera-optional Do, plus reachable native presentation; no production fake-input bypass.",
-      "evidence": "../../evidence/2026-09-27-reference-controls/pickup.json"
+      "observed": "Actual Release camera-free activity now exercises reference Play/Pause/Hide/Replay and pause-time exclusion, then save/restart. The older fake-camera test remains historically failed; real camera/native focus and complete approved-media claims remain open.",
+      "wake": "Fresh guided regression or remaining native real-camera/media/physical-device qualification, not a repeat of the excluded-production-practice route.",
+      "evidence": "../../evidence/2026-09-28-guided-implementation/run.json"
+    },
+    {
+      "id": "NATIVE-GUIDED-UX-AC",
+      "gate": "G09",
+      "status": "resolved_after_power_connected_native_journey_passed",
+      "owner": "receiving_agent",
+      "observed": "Initial AC preflight refused; later power available. Frozen Pods and Release build passed; corrected native driver33cf7914 passed on app e768304. Prior failures retained.",
+      "wake": "Fresh native regression or changed input/device, not the retired power prerequisite.",
+      "evidence": "../../evidence/2026-09-28-guided-ux-review/run.json"
     }
   ],
   "observed_subitems": {
@@ -103,30 +119,83 @@
       "evidence": "../../evidence/2026-09-27-reference-safety/run.json"
     },
     "reference_controls": {
-      "state": "implemented_pending_independent_review",
+      "state": "code_review_corroborated_owner_relay",
       "basis": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
       "criteria": ["G07.V01", "G07.V05", "G05.V05"],
       "evidence": "../../evidence/2026-09-27-reference-controls/pickup.json",
-      "scope": "Real web 19 checks; native prep observed but expanded native test failed before live mode, which is excluded in Release; independent review pending"
+      "scope": "Real web 19 checks; native prep observed but expanded native test failed before live mode, which is excluded in Release; independent review pending",
+      "review": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md"
+    },
+    "native_no_camera_copy": {
+      "state": "implemented_pending_independent_review",
+      "basis": "7d717f92e4e3b31663a9516a4a8087b7664da151",
+      "evidence": "../../evidence/2026-09-28-main-integration/no-camera.json",
+      "scope": "Actual Release no-camera explanation and Back action; no full live reference pass"
+    },
+    "compact_progress": {
+      "state": "implemented_pending_independent_and_physical_accessibility_review",
+      "basis": "4c8b20d14cf923d1501e54f2700376f9fcb9870d",
+      "criteria": ["G07.V06", "G07.V08"],
+      "evidence": "../../evidence/2026-09-28-review-shoulder/run.json",
+      "scope": "Native API contract tests and actual web semantics; no physical VoiceOver test"
+    },
+    "S2a_S2b_S2c": {
+      "state": "scoped_implementation_pending_independent_review",
+      "basis": "a8da5f5b630475144dfc12af1afd5cbc6a9d8516",
+      "evidence": "../../evidence/2026-09-28-guided-implementation/run.json",
+      "scope": "Web/native guided start/pause/watch/finish, acknowledged local report, restart/history and episode isolation. Not all G02-G09 criteria."
+    },
+    "held_observation_enabler": {
+      "state": "implemented_pending_independent_review",
+      "basis": "1096a16ae246ac6644886ddaa3d6b54169c22d40",
+      "evidence": "../../evidence/2026-09-28-guided-implementation/run.json",
+      "scope": "Explicit opt-in quantitative provider and numerical findings retained; no sleeper estimator activation."
+    },
+    "rgb_replay": {
+      "state": "bounded_development_run_observed",
+      "basis": "1096a16ae246ac6644886ddaa3d6b54169c22d40",
+      "evidence": "../../evidence/2026-09-28-guided-implementation/run.json",
+      "scope": "10 original inspection clips plus mirror/blank controls, 4742 samples; no independent angle/rep truth or native accuracy."
+    },
+    "guided_UX": {
+      "state": "implemented_pending_independent_and_physical_review",
+      "basis": "e768304831ea52ea39a59d26535ca45606c0c7cb",
+      "criteria": ["G05.V01", "G07.V02", "G07.V03", "G07.V08"],
+      "evidence": "../../evidence/2026-09-28-guided-ux-review/run.json",
+      "scope": "Final1725 software tests,39 real web checks and actual Release native ready/hold/reference/restart test. No physical listening, human or clinical measurement qualification."
+    },
+    "sleeper_result_presentation": {
+      "state": "implemented_pending_independent_review",
+      "basis": "e184830858569b10a140c45f81eb48c1c669ae79",
+      "criteria": ["G05.V03", "G07.V03", "G07.V06"],
+      "evidence": "../../evidence/2026-09-28-result-display/run.json",
+      "scope": "65 focused cases, clean full suite1790, isolated web preview. Not connected to patient navigation/store; no clinical registry entry. New native driver write blocked and no native preview run."
+    },
+    "rgb_replay_current": {
+      "state": "development_pipeline_observed_not_accuracy",
+      "basis": "116deb279ff48222558b89c9ce190263d274efc8",
+      "evidence": "../../evidence/2026-09-28-result-display/run.json",
+      "scope": "12 repeated web inference jobs /4742 frames including mirror and blank controls; existing10 inspection clips reused, no sleeper/ref-angle or physical-device accuracy"
     }
   },
-  "active_pr": 28,
+  "active_pr": 29,
   "predecessor_prs": "25/26/27 closed-unmerged as superseded after checkpoint/ancestry verification",
   "review_received": {
     "reviewer": "Claude",
-    "source": "owner-supplied read-only review in chat",
-    "basis_sha": "707a6e7553fdcedbf87ebf835a21f3e22ecbf638",
-    "record": "../../responses/2026-09-27-independent-review-reconciliation.md",
-    "scope": "I01 source/hosted corroboration; no later storage or whole-gate acceptance"
+    "source": "owner-relayed read-only review in chat; receiving agent transcribed, not a GitHub review event",
+    "basis_sha": "aebfa1b7832a9de314c19d69d494339f82eea5bf",
+    "record": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md",
+    "scope": "S1 code accepted with two nonblocking follow-ups and PR29 no-camera code corroborated; no later change, physical VO or whole gate accepted; storage review still absent"
   },
-  "active_delivery_slice": "S1",
-  "active_work_item": "G07.W1",
+  "active_delivery_slice": "S2",
+  "active_work_item": "G05.W1",
   "review_queue": [
     {
       "subject": "reference_safety",
       "basis": "c3d4b7bda383a75fd6d70209a7ee73d2f888acc6",
-      "status": "independent_review_pending",
-      "record": "../../responses/2026-09-27-reference-safety.md"
+      "status": "reviewer_reports_acceptance_formal_record_pending",
+      "record": "../../responses/2026-09-27-reference-safety.md",
+      "review_record": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md"
     },
     {
       "subject": "storage_read_containment",
@@ -137,16 +206,83 @@
     {
       "subject": "reference_controls",
       "basis": "12a4814d677d7033c58f78b0eba6de5e8f234fda",
-      "status": "independent_review_pending",
-      "record": "../../responses/2026-09-27-reference-controls.md"
+      "status": "accepted_with_nonblocking_followups_owner_relay",
+      "record": "../../responses/2026-09-27-reference-controls.md",
+      "review_record": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md",
+      "review_basis": "aebfa1b7832a9de314c19d69d494339f82eea5bf"
+    },
+    {
+      "subject": "native_no_camera_recovery",
+      "basis": "7d717f92e4e3b31663a9516a4a8087b7664da151",
+      "status": "code_corroborated_owner_relay",
+      "record": "../../responses/2026-09-28-no-camera-recovery.md",
+      "review_record": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md",
+      "review_basis": "970e98c07933d78e02a7b03a07c1508864207447"
+    },
+    {
+      "subject": "compact_accessibility_followup",
+      "basis": "4c8b20d14cf923d1501e54f2700376f9fcb9870d",
+      "status": "accepted_owner_relay",
+      "record": "../../responses/2026-09-28-review-shoulder.md",
+      "review_record": "../../responses/2026-09-28-s2-sleeper-refinement.md",
+      "review_basis": "4c8b20d14cf923d1501e54f2700376f9fcb9870d"
+    },
+    {
+      "subject": "sleeper_geometry_research",
+      "basis": "89a57e4458a0a16c1f1e014a20d1c900551ba2b6",
+      "status": "tests_and_reasoning_corroborated_owner_relay",
+      "record": "../../responses/2026-09-28-sleeper-patient-feedback.md",
+      "scope": "Claude reports 15 caudal + original 20 tests pass; no app source or clinical estimator reviewed."
+    },
+    {
+      "subject": "guided_activity_storage_and_quantitative_observations",
+      "basis": "a8da5f5b630475144dfc12af1afd5cbc6a9d8516",
+      "status": "mechanics_corroborated_owner_relay_UX_followups_required",
+      "record": "../../responses/2026-09-28-guided-implementation.md",
+      "review_record": "../../responses/2026-09-28-guided-ux-review.md"
+    },
+    {
+      "subject": "guided_readiness_hold_speech_and_recovery",
+      "basis": "e768304831ea52ea39a59d26535ca45606c0c7cb",
+      "status": "implemented_pending_independent_and_physical_review",
+      "record": "../../responses/2026-09-28-guided-ux-review.md"
+    },
+    {
+      "subject": "sleeper_result_selector_and_card",
+      "basis": "e184830858569b10a140c45f81eb48c1c669ae79",
+      "status": "implemented_pending_independent_review",
+      "record": "../../responses/2026-09-28-result-display.md"
+    },
+    {
+      "subject": "range_and_schematic_review",
+      "basis": "0995723419a5f8e6b650cd2c035e5d375e3d6d29",
+      "status": "implemented_tested_pending_independent_review",
+      "record": "../../responses/2026-09-29-range-and-card.md",
+      "implementation_basis": "2d5455c688cb8da34db367f3757dd6291149e746"
     }
   ],
   "hosted_observation": {
-    "basis": "74fe884cc090ff4a5813ad47e36415186316abba",
-    "checks_run": 36316922628,
-    "ios_run": 36316922623,
+    "basis": "b54914e4ff01eb9fe94476c039ebcc428b2da78e",
+    "checks_run": 36490548921,
+    "ios_run": 36490548936,
     "conclusion": "success",
-    "scope": "Build/selected hosted tests only; not independent review or complete clinical native journey",
-    "record": "evidence/convergence-20260927.json"
+    "scope": "Observed hosted jobs for b54914e, not this runbook revision, sensor integration, independent review or clinical acceptance."
+  },
+  "active_branch": "agent/native-camera-recovery-20260928",
+  "patient_feedback_decision": "Selected approximate number, schematic, previous comparable Check and scoped best record. Method/allowance/activation not approved.",
+  "observed": {
+    "range_and_labelled_card": {
+      "basis": "2d5455c688cb8da34db367f3757dd6291149e746",
+      "record": "../../evidence/2026-09-29-range-and-card/run.json",
+      "scope": "Full command/real web/simulator guided tests passed; result card web-only. Not clinical or physical-audio acceptance."
+    }
+  },
+  "architecture_assessment": {
+    "ref": "research.json#phone_architecture",
+    "source": "research.json#phone_architecture",
+    "state": "design_review_only",
+    "basis": "b54914e4ff01eb9fe94476c039ebcc428b2da78e",
+    "implemented_sensors": false,
+    "clinical_acceptance": false
   }
 }

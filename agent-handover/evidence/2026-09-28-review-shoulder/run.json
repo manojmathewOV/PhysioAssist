@@ -1,0 +1,179 @@
+{
+  "recorded_at": "2026-09-27T23:53:01.943261+00:00",
+  "source_sha": "4c8b20d14cf923d1501e54f2700376f9fcb9870d",
+  "first_candidate": "a11b11767f7753371676675ea6164460086d6046",
+  "prior_head": "970e98c07933d78e02a7b03a07c1508864207447",
+  "scope": "Receiving-agent implementation plus owner-relayed review/runbook4; no whole-gate, independent approval of new code or clinical acceptance",
+  "review": {
+    "reviewer": "Claude",
+    "via": "Manoj pasted review; recorded separately, not a GitHub APPROVE authored as Claude",
+    "basis": "aebfa1b7832a9de314c19d69d494339f82eea5bf",
+    "reported_tests": 1649,
+    "storage_review": "still absent",
+    "record": "../../reviews/2026-09-28-owner-relayed-claude/REVIEW.md"
+  },
+  "tests": {
+    "passed": 1661,
+    "skipped": 4,
+    "failed": 0,
+    "suites": 95,
+    "source_clean": true,
+    "exit_code": 0,
+    "seconds": 28.64,
+    "forceExit": false,
+    "teardown_warning": false,
+    "raw_log_sha256": "3a8e28591eaf88c39e463a4c6957818cee06382cef53d72d827d49dfbb5d7da2",
+    "new_test_cases": 10,
+    "focused_with_existing_safety_cases": 33
+  },
+  "checks": {
+    "typecheck": "passed",
+    "targeted_lint_errors": 0,
+    "targeted_lint_warnings": 2,
+    "runbook_structural_mutants": 7,
+    "delivery_mutants": 6,
+    "matrix_mutants": 14,
+    "criterion_count": 83,
+    "gate_count": 11,
+    "accepted_gates": 0
+  },
+  "browser": {
+    "basis": "4c8b20d14cf923d1501e54f2700376f9fcb9870d",
+    "scope": "production web / real official player / synthetic practice, no native or clinical validation",
+    "checks": [
+      "real preparation playback",
+      "enlarge retains player",
+      "viewport at 320 >=200 both axes",
+      "viewport at 390 >=200 both axes",
+      "follow-along does not load before requested",
+      "app Pause stops reference",
+      "app Resume restarts previously playing reference",
+      "hide/show retains mounted player",
+      "hide/show does not restart",
+      "manual video pause survives hide/show",
+      "player does not cover instruction 390",
+      "pause control on screen 390",
+      "player does not cover instruction 320",
+      "pause control on screen 320",
+      "compact count exposes a progressbar",
+      "compact count exposes meaningful value",
+      "compact count has polite live updates with app speech off",
+      "blocked player script gives an explicit retry",
+      "failed player is removed, not shown as ready",
+      "watching, practice and load failure saved no treatment",
+      "retry restores real player when network access returns",
+      "no app runtime errors"
+    ],
+    "errors": [],
+    "pause": {
+      "pause1": {
+        "t": 8.364481,
+        "paused": true
+      },
+      "pause2": {
+        "t": 8.364481,
+        "paused": true
+      }
+    },
+    "hiddenSnapshot": {
+      "t": 8.433109,
+      "paused": true
+    },
+    "position": {
+      "hidden": {
+        "t": 8.433109,
+        "paused": true
+      },
+      "shown": {
+        "t": 8.492309,
+        "paused": false
+      }
+    },
+    "pauseControl390": {
+      "x": 40,
+      "y": 664,
+      "width": 88,
+      "height": 64
+    },
+    "layout390": {
+      "viewport": {
+        "x": 16,
+        "y": 223,
+        "width": 358,
+        "height": 201
+      },
+      "instruction": {
+        "x": 40,
+        "y": 76,
+        "width": 310,
+        "height": 82
+      }
+    },
+    "pauseControl320": {
+      "x": 24,
+      "y": 404,
+      "width": 88,
+      "height": 64
+    },
+    "layout320": {
+      "viewport": {
+        "x": 16,
+        "y": 88,
+        "width": 288,
+        "height": 200
+      },
+      "instruction": {
+        "x": 24,
+        "y": 56,
+        "width": 272,
+        "height": 26
+      }
+    },
+    "status": "passed"
+  },
+  "browser_first_failure": {
+    "basis": "a11b11767f7753371676675ea6164460086d6046",
+    "reason": "Native accessibilityValue object did not become DOM aria-valuetext; actual web assertion failed after 15 checks. Shared explicit ARIA value fixed; no assertion removed.",
+    "record": "preserved locally with source and stack"
+  },
+  "test_harness_corrections": "Earlier attempted baseline tests had an ineffective module-export spy and mocked native-contract/TypeScript issues. Those failures are NOT claimed as production counterexamples. Corrected fixtures then passed; first real-browser value failure remains distinct.",
+  "visual_review": {
+    "opened": [
+      "live-320.png",
+      "unavailable-390.png"
+    ],
+    "observed": "Instruction, compact count, Pause/Stop remain visible; failure offers Retry; technical sample not clinical media",
+    "images_publication": "People-containing sample screenshots retained locally, no new media published"
+  },
+  "ccore": {
+    "tool": "ccore.runbook.compile",
+    "mode": "inspect_definition",
+    "definition_sha256": "78e5978724dc5859e591144bbbe54c4dc00e52d4a72d348f3d7cc393fb3ab7de",
+    "structure_errors": 0,
+    "blocked_axes": 0,
+    "dod_axes": 121,
+    "members": 11,
+    "construction_gaps": 11,
+    "refs_bound": false,
+    "disposition": "DefinitionTopologyReadmissionRequired",
+    "effect": "response_only",
+    "native_epoch_or_acceptance_created": false,
+    "raw_response_sha256": "45022054bbbf73d740139b4f20eddbea6d2baf267df545ddbd5bb0219e7ca756"
+  },
+  "limits": [
+    "Native API calls checked using contract mocks, not physical VoiceOver hearing or native live exercise",
+    "No new Xcode build, native pose input, approved clinical reference or patient study in this task",
+    "Sleeper drift and proposed lying capture remain requirements, not implemented/validated estimators",
+    "Camera-optional source-aware Do and durable activity acknowledgement remain next implementation",
+    "Prior970 hosted success does not cover new commits; new source still needs independent review"
+  ],
+  "resources": {
+    "new_clone": false,
+    "dependency_install": false,
+    "dataset_download": false,
+    "native_build": false,
+    "persistent_service": false,
+    "browser_server_stopped": true,
+    "reused_dependencies_and_cache": true
+  }
+}

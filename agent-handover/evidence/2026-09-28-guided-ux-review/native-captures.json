@@ -1,0 +1,31 @@
+{
+  "source": "33cf7914ad5bcd79537a50aaf2da5bf19927c5b1",
+  "application_build": "e768304831ea52ea39a59d26535ca45606c0c7cb",
+  "scope": "Synthetic native UI screenshots actually inspected; third-party video excluded",
+  "captures": [
+    {
+      "path": "native-guided-ready.png",
+      "capture": "native-guided-ready_0_5A51C58C-65EF-4C69-A19F-244F3B3F20F8.png",
+      "timestamp": 1790609572.77,
+      "sha256": "394ae729020c46d16b22261e3047c0996c6714d847ab7913f0ccd627dedfdbf5"
+    },
+    {
+      "path": "native-guided-hold-active.png",
+      "capture": "native-guided-hold-active_0_117DF393-22A3-437D-B6D2-EB08EBF3E7BA.png",
+      "timestamp": 1790609606.724,
+      "sha256": "1667665cb05301cebbbd9fc6aaaf122df5ce49f52d07a14eee240d037d92f2aa"
+    },
+    {
+      "path": "native-guided-hold-rest.png",
+      "capture": "native-guided-hold-rest_0_F62B7FF5-5B0B-47E1-92E5-AE62C1419139.png",
+      "timestamp": 1790609614.197,
+      "sha256": "6cb85d05152abff7751980df81dc90342b5a2fe33aedca958c004a10cacfa4cf"
+    },
+    {
+      "path": "native-guided-hold-saved.png",
+      "capture": "native-guided-hold-saved_0_19990965-28C0-42AB-9DC0-EF046BD5DDD2.png",
+      "timestamp": 1790609628.522,
+      "sha256": "d6dd83adfff36f6e564a488792501e8857a488864bdc0dd6a7292529025af940"
+    }
+  ]
+}

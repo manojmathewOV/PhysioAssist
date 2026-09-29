@@ -1,0 +1,55 @@
+{
+  "scope": "Public evidence, exact source-bound observations",
+  "files": [
+    {
+      "path": "acquisition.json",
+      "bytes": 5960,
+      "sha256": "13790c8fe48e458e2b87f2b679ce418a0b7da318920a2d6ad164c3174af072ae"
+    },
+    {
+      "path": "app-test-tail.txt",
+      "bytes": 1719,
+      "sha256": "4e070c4546796cff4d535d2aeace377585aa91a2699a9d37ae6552fcb6c63ba7"
+    },
+    {
+      "path": "native-history.png",
+      "bytes": 262271,
+      "sha256": "5475811b497d523ee038303e67a9bfdd38ca2e9ea8b4c84dcba3d4d3b1da9a21"
+    },
+    {
+      "path": "native-reopened.png",
+      "bytes": 262271,
+      "sha256": "5475811b497d523ee038303e67a9bfdd38ca2e9ea8b4c84dcba3d4d3b1da9a21"
+    },
+    {
+      "path": "native-saved.png",
+      "bytes": 198155,
+      "sha256": "8b963312e59f3391ed48c55539f81f78ea579e11de73ee2afeaab803ad916094"
+    },
+    {
+      "path": "native-test-tail.txt",
+      "bytes": 2272,
+      "sha256": "f7d9a0d49eb92949e777c105b68c0224640d9e50b0b6c86df1ade4f2d2971cd4"
+    },
+    {
+      "path": "rgb-results.json",
+      "bytes": 22369,
+      "sha256": "440e44790ae9a21a6be9b1e0a49da59e64c25e341c2743852ef221c08dc4904c"
+    },
+    {
+      "path": "run.json",
+      "bytes": 6733,
+      "sha256": "d6631319012143cfbbec18981ffc3846db489e02f726efe54bd1000f850e176c"
+    },
+    {
+      "path": "test-summary.json",
+      "bytes": 264,
+      "sha256": "c829f5a1cec7e37d1f9b98055666102074b5ac10fd147c45b16fb0cfc841ab11"
+    },
+    {
+      "path": "web-journey.json",
+      "bytes": 1300,
+      "sha256": "120734e6e52933c052e4e3e6d614c07a8cb57b1f432e9d9dc9da22b7bef3f131"
+    }
+  ]
+}

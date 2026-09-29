@@ -1,0 +1,34 @@
+{
+  "scope": "Known geometry; not a camera performance result or clinical tolerance",
+  "actual_caudal_deg": 10,
+  "raw_image_angles": [
+    {
+      "camera_elevation_deg": 0,
+      "apparent_drift_deg": 89.999999
+    },
+    {
+      "camera_elevation_deg": 15,
+      "apparent_drift_deg": 34.265632
+    },
+    {
+      "camera_elevation_deg": 30,
+      "apparent_drift_deg": 19.4254
+    },
+    {
+      "camera_elevation_deg": 45,
+      "apparent_drift_deg": 14.001942
+    },
+    {
+      "camera_elevation_deg": 90,
+      "apparent_drift_deg": 10.0
+    }
+  ],
+  "setup_example": {
+    "initial_deviation_deg": 8,
+    "current_deviation_deg": 12,
+    "change_since_setup_deg": 4
+  },
+  "clinical_tolerance": null,
+  "patient_number_display_decision": "not_changed",
+  "tests_passed": 15
+}

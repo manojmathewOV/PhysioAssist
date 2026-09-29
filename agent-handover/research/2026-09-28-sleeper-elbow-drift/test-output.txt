@@ -1,0 +1,25 @@
+test_body_frame_unknown (__main__.GeometryTests.test_body_frame_unknown) ... ok
+test_camera_changed_invalidates_old_basis (__main__.GeometryTests.test_camera_changed_invalidates_old_basis) ... ok
+test_direction_drift_with_unchanged_length (__main__.GeometryTests.test_direction_drift_with_unchanged_length) ... ok
+test_elbow_flexion_not_shoulder_rotation (__main__.GeometryTests.test_elbow_flexion_not_shoulder_rotation) ... ok
+test_fixed_session_baseline_detects_ratchet (__main__.GeometryTests.test_fixed_session_baseline_detects_ratchet) ... ok
+test_gap_is_not_a_hold (__main__.GeometryTests.test_gap_is_not_a_hold) ... ok
+test_hidden_elbow_never_means_stable (__main__.GeometryTests.test_hidden_elbow_never_means_stable) ... ok
+test_hidden_shoulder_keeps_torso_referenced_elbow (__main__.GeometryTests.test_hidden_shoulder_keeps_torso_referenced_elbow) ... ok
+test_hidden_wrist_keeps_drift (__main__.GeometryTests.test_hidden_wrist_keeps_drift) ... ok
+test_invalid_geometry (__main__.GeometryTests.test_invalid_geometry) ... ok
+test_mirror_metadata_restores_body_coordinates (__main__.GeometryTests.test_mirror_metadata_restores_body_coordinates) ... ok
+test_paired_interval_uses_same_frames (__main__.GeometryTests.test_paired_interval_uses_same_frames) ... ok
+test_partial_observation_not_zero (__main__.GeometryTests.test_partial_observation_not_zero) ... ok
+test_random_rigid_and_scale_invariance (__main__.GeometryTests.test_random_rigid_and_scale_invariance) ... ok
+test_rotation_alone_does_not_move_elbow (__main__.GeometryTests.test_rotation_alone_does_not_move_elbow) ... ok
+test_scale_and_translation (__main__.GeometryTests.test_scale_and_translation) ... ok
+test_shoulder_and_elbow_translate_together (__main__.GeometryTests.test_shoulder_and_elbow_translate_together) ... ok
+test_straight_forearm_rotation_is_unobservable (__main__.GeometryTests.test_straight_forearm_rotation_is_unobservable) ... ok
+test_torso_motion_separate_from_elbow_drift (__main__.GeometryTests.test_torso_motion_separate_from_elbow_drift) ... ok
+test_unknown_neutral_is_not_zero (__main__.GeometryTests.test_unknown_neutral_is_not_zero) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.101s
+
+OK

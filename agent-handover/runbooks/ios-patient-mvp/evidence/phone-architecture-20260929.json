@@ -1,0 +1,82 @@
+{
+  "date": "2026-09-29",
+  "source_basis": "b54914e4ff01eb9fe94476c039ebcc428b2da78e",
+  "scope": "Runbook/research architecture only, no application or sensor implementation",
+  "runbook_revision": 14,
+  "atam": "Ten element scenarios with quality/source/stimulus/environment/artifact/response/measure, sensitivity and trade-off; receiving-agent priorities, not a stakeholder workshop",
+  "six_hats": "Six perspectives for each element; no real patient opinions or six-agent independence claimed",
+  "counterfactuals": {
+    "count": 20,
+    "status": "analysed_and_specified_not_device_executed"
+  },
+  "sources": {
+    "primary_platform_and_method_sources": 15,
+    "owner_comment": 5881492221,
+    "all_checked": "2026-09-29"
+  },
+  "checks": {
+    "portable_runbook": "passed",
+    "structural_negative_controls": 7,
+    "delivery_negative_controls": 6,
+    "matrix_negative_controls": 14,
+    "in_memory_architecture_negative_controls": [
+      {
+        "name": "extra patient input",
+        "detected": ["extra_patient_task"]
+      },
+      {
+        "name": "extra pose engine",
+        "detected": ["multiple_owners"]
+      },
+      {
+        "name": "unearned patient activation",
+        "detected": ["unearned_activation"]
+      },
+      {
+        "name": "missing Hat",
+        "detected": ["hat_coverage"]
+      },
+      {
+        "name": "missing falsifier",
+        "detected": ["missing_counterfactual_logic"]
+      },
+      {
+        "name": "unknown criterion",
+        "detected": ["unknown_reference"]
+      },
+      {
+        "name": "pretend device pass",
+        "detected": ["unearned_device_test"]
+      }
+    ],
+    "archive": "unchanged",
+    "application_diff": "none",
+    "clinical_inputs_and_patient_feedback": "unchanged",
+    "gate_acceptances": "unchanged"
+  },
+  "ccore": {
+    "runbook_compile": "inspect_definition",
+    "candidate_hash": "c363290d3c177da3668a4acb8608011a6d56ee4e77b82ebe773fd0384fad6f23",
+    "structure_errors": 0,
+    "blocked_axes": 0,
+    "dod_axes": 121,
+    "members": 11,
+    "disposition": "DefinitionTopologyReadmissionRequired",
+    "epoch_created": false,
+    "acceptance": false,
+    "amalgamate": "CNP provider partial; JSON coverage unavailable, no preservation inference. Exact JSON inspection used to retain existing fields."
+  },
+  "limitations": [
+    "No sensor/benchmark/device/patient tests performed",
+    "Optional new rendering-helper write was refused twice; confirmed absent. Existing renderer/tools unchanged; assessment retained in existing research.json, no alternate rendering-helper write.",
+    "Physical capability, timing/geometry, library compatibility and clinical benefit remain unqualified.",
+    "Prior b54914e hosted Checks/iOS green is not a check of this new runbook revision."
+  ],
+  "resource_use": {
+    "clone": false,
+    "package_install": false,
+    "dataset_download": false,
+    "native_build": false,
+    "persistent_service": false
+  }
+}

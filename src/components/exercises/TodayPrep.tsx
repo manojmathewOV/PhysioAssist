@@ -1,3 +1,4 @@
+import { guidedShoulderFor, isGuidedShoulder } from '../../services/care/guidedShoulder';
 /**
  * The patient's Exercise screen when the physiotherapist has set a routine:
  * no choosing. It shows the next exercise, how to set up for it (and the
@@ -22,12 +23,14 @@ export interface TodayPrepProps {
   plan: ExercisePlan;
   /** Start the next exercise. */
   onReady: () => void;
+  onWithoutCamera?: () => void;
   /** Start a particular exercise again (once today's are all done). */
   onRepeat: (exerciseId: string) => void;
   onOpenSetup: () => void;
   onHelp: () => void;
   starting?: boolean;
   notice?: React.ReactNode;
+  pendingActivity?: boolean;
 }
 
 /** "14:30" in the patient's own clock format. */
@@ -44,7 +47,7 @@ export function waitingWords(routine: TodaysRoutine): {
   if (routine.scheduleInvalid) {
     return {
       title: 'Your programme is being prepared',
-      body: 'Your physiotherapist still needs to set when your mini-sessions happen.',
+      body: 'The timing of your mini-sessions needs checking in programme set-up.',
       done: false,
       testID: 'today-schedule-incomplete',
     };
@@ -70,8 +73,11 @@ export function waitingWords(routine: TodaysRoutine): {
     };
   }
   return {
-    title: 'All done for today',
-    body: 'Rest is part of getting better. To do one again, tap it below.',
+    title:
+      routine.items.length > 0 && routine.doneCount < routine.items.length
+        ? 'Activities recorded for today'
+        : 'All done for today',
+    body: 'Follow your programme for what to do next. There is no need to repeat an exercise to get another measurement.',
     done: true,
     testID: 'today-all-done',
   };
@@ -81,14 +87,19 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
   routine,
   plan,
   onReady,
+  onWithoutCamera,
   onRepeat,
   onOpenSetup,
   onHelp,
   starting,
   notice,
+  pendingActivity = false,
 }) => {
   const nextItem = routine.nextIndex >= 0 ? routine.items[routine.nextIndex] : undefined;
-  const option = nextItem ? findExerciseOption(nextItem.exerciseId) : undefined;
+  const regular = nextItem ? findExerciseOption(nextItem.exerciseId) : undefined;
+  const guided = nextItem ? guidedShoulderFor(plan, nextItem.exerciseId) : undefined;
+  const option = regular ?? guided;
+  const needsGuidedSetup = nextItem && isGuidedShoulder(nextItem.exerciseId) && !guided;
   const total = routine.items.length;
   const videoLink = option ? plan.videos?.[option.exercise.id] : undefined;
   const videoId = parseYouTubeId(videoLink);
@@ -106,14 +117,39 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
       }
       footer={
         option ? (
-          <BigButton
-            label="I’m ready"
-            icon="play-arrow"
-            onPress={onReady}
-            loading={starting}
-            testID="start-routine-button"
-            accessibilityHint={`Opens the camera for ${option.title.toLowerCase()}`}
-          />
+          <>
+            <BigButton
+              label={
+                pendingActivity
+                  ? 'Activity awaiting save'
+                  : guided
+                    ? 'Get ready'
+                    : 'I’m ready'
+              }
+              icon="play-arrow"
+              onPress={() => {
+                if (guided) onWithoutCamera?.();
+                else onReady();
+              }}
+              loading={starting}
+              disabled={pendingActivity || Boolean(guided && !onWithoutCamera)}
+              testID="start-routine-button"
+              accessibilityHint={
+                guided
+                  ? 'Opens preparation; the timer starts only when you are ready'
+                  : `Opens the camera for ${option.title.toLowerCase()}`
+              }
+            />
+            {onWithoutCamera && !guided ? (
+              <BigButton
+                label="Exercise without camera"
+                variant="secondary"
+                onPress={onWithoutCamera}
+                disabled={pendingActivity}
+                testID="start-without-camera"
+              />
+            ) : null}
+          </>
         ) : undefined
       }
     >
@@ -137,7 +173,7 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
                 testID="today-video"
               />
               <AppText variant="body" color={colors.textSecondary}>
-                Watch how it’s done, then press I’m ready.
+                Watch how it’s done, then press {guided ? 'Get ready' : 'I’m ready'}.
               </AppText>
             </View>
           ) : null}
@@ -179,10 +215,12 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
             </View>
             <View style={styles.flex}>
               <AppText variant="heading" accessibilityRole="header">
-                {waitState.title}
+                {needsGuidedSetup ? 'Check the exercise instructions' : waitState.title}
               </AppText>
               <AppText variant="body" color={colors.textSecondary}>
-                {waitState.body}
+                {needsGuidedSetup
+                  ? 'The prescribed amount or instruction version needs checking in programme set-up before this activity can start.'
+                  : waitState.body}
               </AppText>
             </View>
           </View>
@@ -193,7 +231,13 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
         routine={routine}
         // Doing one again only once today's are all done (not while a timed
         // mini-session programme is waiting for its next round)
-        onPressItem={routine.next || routine.round ? undefined : onRepeat}
+        onPressItem={
+          routine.next ||
+          routine.round ||
+          routine.items.some((item) => isGuidedShoulder(item.exerciseId))
+            ? undefined
+            : onRepeat
+        }
       />
 
       <View style={styles.links}>
@@ -209,7 +253,7 @@ const TodayPrep: React.FC<TodayPrepProps> = ({
           variant="ghost"
           compact
           icon="tune"
-          label="Physio set-up"
+          label="Programme set-up"
           onPress={onOpenSetup}
           testID="exercise-setup-open"
           accessibilityHint="For your physiotherapist or carer: exercises, goals and videos"
@@ -274,8 +318,8 @@ export const ProgrammeWaiting: React.FC<{
       </View>
       <AppText variant="body" color={colors.textSecondary}>
         {needsSpecialist
-          ? 'Your exercises will appear here once your specialist team has approved them. Until then, follow the instructions they gave you.'
-          : 'Your physiotherapist will confirm your exercises for this stage of your recovery. Until then, follow the instructions they gave you.'}
+          ? 'This programme needs specialist approval before it is used. Follow the instructions you were given and confirm their details in programme set-up.'
+          : 'Check the exercises for this stage against the programme you were given, then confirm those details in programme set-up. This app is not monitored by a clinician.'}
       </AppText>
     </Card>
     <View style={waitingStyles.links}>
@@ -291,7 +335,7 @@ export const ProgrammeWaiting: React.FC<{
         variant="ghost"
         compact
         icon="tune"
-        label="Physio set-up"
+        label="Programme set-up"
         onPress={onOpenSetup}
         testID="exercise-setup-open"
         accessibilityHint="For your physiotherapist or carer: exercises, goals and videos"

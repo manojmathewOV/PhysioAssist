@@ -81,6 +81,7 @@ jest.mock('react-native-tts', () => ({
     setDefaultRate: jest.fn(() => Promise.resolve()),
     setDefaultPitch: jest.fn(() => Promise.resolve()),
     addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
     removeAllListeners: jest.fn(),
   },
 }));

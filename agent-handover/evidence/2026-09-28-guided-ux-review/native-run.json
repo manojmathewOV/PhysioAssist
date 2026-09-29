@@ -1,0 +1,37 @@
+{
+  "sourceSha": "33cf7914ad5bcd79537a50aaf2da5bf19927c5b1",
+  "scope": "Actual Release app with UI-entered synthetic programme, no real patient/camera/clinical validation",
+  "steps": [
+    {
+      "name": "make",
+      "exit": 0,
+      "seconds": 0.4
+    },
+    {
+      "name": "boot",
+      "exit": 0,
+      "seconds": 1.31
+    },
+    {
+      "name": "boot-ready",
+      "exit": 0,
+      "seconds": 4.15
+    },
+    {
+      "name": "install",
+      "exit": 0,
+      "seconds": 3.06
+    },
+    {
+      "name": "test",
+      "exit": 0,
+      "seconds": 193.31
+    }
+  ],
+  "application_build_sha": "e768304831ea52ea39a59d26535ca45606c0c7cb",
+  "same_application_code": true,
+  "status": "passed",
+  "attachment_export_exit": 0,
+  "owned_simulator_shutdown_exit": 0,
+  "headAfter": "33cf7914ad5bcd79537a50aaf2da5bf19927c5b1"
+}

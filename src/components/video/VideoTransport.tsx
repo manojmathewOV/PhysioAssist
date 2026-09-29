@@ -3,6 +3,9 @@ import { NativeModules } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { PlayerCommand } from './playerDocument';
 
+// iOS MVP: PhysioAppIdentity is implemented only on iOS. Android must add an
+// application-ID bridge before this player works; missing identity fails closed
+// as unavailable. Never substitute YouTube's origin or an invented bundle ID.
 export const playerOrigin = (): string => {
   const id = NativeModules.PhysioAppIdentity?.bundleIdentifier;
   return typeof id === 'string' ? `https://${id.toLowerCase()}` : '';

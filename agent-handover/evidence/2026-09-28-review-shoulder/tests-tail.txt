@@ -1,0 +1,16 @@
+PASS src/types/__tests__/biomechanics.test.ts
+PASS __tests__/smoke/tensorflow.test.ts
+PASS __tests__/smoke/mediapipe.test.ts
+PASS src/services/movement/__tests__/peakReview.test.ts
+PASS src/services/web/__tests__/WebPoseDetectionService.test.ts
+PASS src/services/web/__tests__/focusFrame.test.ts
+PASS src/utils/__tests__/youtubeNative.test.ts
+PASS src/services/pose/__tests__/adaptiveModel.test.ts
+PASS src/utils/__tests__/youtube.test.ts
+
+Test Suites: 4 skipped, 95 passed, 95 of 99 total
+Tests:       4 skipped, 1661 passed, 1665 total
+Snapshots:   0 total
+Time:        27.064 s
+Ran all test suites.
+Test results written to: ../RDC/runs/20260927T234814Z-test-2c318bd0/tests.json

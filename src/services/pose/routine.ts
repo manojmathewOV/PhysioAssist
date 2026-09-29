@@ -199,7 +199,17 @@ type RoutineRecord = Pick<
   ExerciseHistory,
   'id' | 'exerciseId' | 'date' | 'joint' | 'reps' | 'completion'
 > &
-  Partial<Pick<ExerciseHistory, 'occurrenceKey' | 'episodeId' | 'resolves'>>;
+  Partial<
+    Pick<
+      ExerciseHistory,
+      | 'occurrenceKey'
+      | 'episodeId'
+      | 'resolves'
+      | 'durability'
+      | 'activityDay'
+      | 'routineCreditEligible'
+    >
+  >;
 
 /** What must match for a repeated event id to be the same event. */
 const payloadOf = (h: RoutineRecord) =>
@@ -292,13 +302,15 @@ export function todaysRoutine(
   const routine = plan?.routine ?? [];
   const inRoutineIds = new Set(routine.map((i) => i.exerciseId));
   const episodeId = plan?.episode?.id;
-  const { records, conflicts } = dedupe(history);
+  const { records, conflicts } = dedupe(
+    history.filter((h) => h.durability !== 'pending' && h.routineCreditEligible !== false)
+  );
   const todays = records
     .filter(
       (h) =>
         plan !== null &&
         plan !== undefined &&
-        dayKey(h.date) === today &&
+        (h.activityDay ?? dayKey(h.date)) === today &&
         h.joint !== undefined &&
         h.joint.startsWith(`${plan.side}_`) &&
         inRoutineIds.has(h.exerciseId) &&

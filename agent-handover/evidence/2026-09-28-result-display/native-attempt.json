@@ -1,0 +1,8 @@
+{
+  "step": "write ResultPreviewUITests.swift",
+  "result": "tool could not determine safety status, repeated identical call also blocked",
+  "native_build": false,
+  "native_test": false,
+  "host_copy_or_signing": false,
+  "disposition": "deferred without rerouting the blocked operation"
+}

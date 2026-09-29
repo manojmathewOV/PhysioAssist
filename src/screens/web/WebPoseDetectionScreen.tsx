@@ -1,3 +1,4 @@
+import { useGuidedRoutine } from '../../components/exercises/useGuidedRoutine';
 /**
  * Exercise tab (web, MediaPipe in the browser). Same three steps as the native
  * screen: choose an exercise -> exercise with the camera filling the screen
@@ -398,6 +399,7 @@ const WebPoseDetectionScreen: React.FC = () => {
 
   // Today's routine: start the next exercise, and what follows each one
   const routineFlow = useRoutineFlow({ plan, setSelectedKey, start: handleStart });
+  const guided = useGuidedRoutine();
 
   const handleStop = () => {
     if (gate.phase !== 'active') {
@@ -531,6 +533,8 @@ const WebPoseDetectionScreen: React.FC = () => {
   // -------------------------------------------------------------------------
   // 1. Choose
   // -------------------------------------------------------------------------
+  if (guided.content) return guided.content;
+
   if (stage === 'choose') {
     return (
       <View style={styles.flex} testID={AccessibilityIds.poseDetection.screen}>
@@ -546,6 +550,9 @@ const WebPoseDetectionScreen: React.FC = () => {
           onUploadVideo={uploadVideo}
           demoStatus={demoStatus}
           onStart={handleStart}
+          onStartWithoutCamera={guided.start}
+          notice={guided.notice}
+          pendingActivity={guided.pendingCurrent}
           routine={routineFlow.routine}
           onStartRoutine={routineFlow.startRoutine}
           onToggleRoutine={routineFlow.toggle}

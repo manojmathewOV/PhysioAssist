@@ -15,7 +15,7 @@ Retain React Native unless measured evidence justifies an explicitly approved ch
 | D05 | First approved programme/variant set, content rights and private source delivery; which source revision is authoritative.                                                             | Schema and synthetic fixtures, use already approved assets only if actual approval available. | All located documents are current; approximate standing measurements cover supine assisted variants.                               |
 | D06 | Storage/native library choice and release resource budgets after baseline measurements.                                                                                               | Bounded-buffer, pagination and migration design.                                              | Arbitrary MB/FPS numbers are established requirements; account SDK needs a clinical cloud backend.                                 |
 | D07 | Interval anchor and interrupted mini-session/window-close policy; confirm C05 interpretation and per-movement dose.                                                                   | Blank editor, schedule validation and synthetic tests.                                        | 2–3 hours means a fixed 2-hour reminder, holds inherited from older handout, make-up dose, or overnight reminders.                 |
-| D08 | Which numerical observations can be shown for MVP and which remain guided-only; validation/reference protocol and repeatability.                                                      | Honest unavailable states, provenance and no-camera Do.                                       | Landmark visibility calibrates angle error; camera proves passivity or healing; a four-degree change is automatically improvement. |
+| D08 | Patient-facing sleeper result composition is selected (below); other quantities, numerical activation, reference protocol, allowance and repeatability remain open.                   | Honest unavailable states, provenance and no-camera Do.                                       | Landmark visibility calibrates angle error; camera proves passivity or healing; a four-degree change is automatically improvement. |
 
 ## Clinical decisions are not settled by this runbook
 
@@ -28,3 +28,23 @@ Use durable local profile, episode, programme-revision, session, occurrence, eve
 ## Decisions and disagreement
 
 Record decision ID, actor, date, alternatives, selected option, source/evidence, scope and reopen condition. An implementation agent may choose reversible code organisation; it may not choose missing clinical doses, source authority, data-publication permissions or release claims. Missing inputs block the affected feature/activation, not unrelated admitted work.
+
+## Owner clarification: lying-shoulder capture (2026-09-28)
+
+D05/D08 are partially specified: slightly raised bedside camera for supine assisted elevation and sleeper position drift; foot-end, slightly raised for supine stick-assisted ER with the affected elbow close to the body. No overhead rig is required. See `shoulder_capture` in runbook.json and its generated roadmap section. This is a capture-design direction, not validation, a new dose or permission to perform an exercise. The latest partial C05 resolution below specifies the sleeper variant; hold/rest, schedule/window and symptom rules remain open.
+
+## Owner clarification: approximate sleeper internal rotation
+
+2026-09-28: Manoj clarified that sleeper stretch can provide an approximate internal-rotation number. This supersedes the earlier drift-only/no-number wording in current requirements. Approximate IR and visible compensation observations are complementary; numerical output remains conditional on method/view/reference qualification, while guidance can remain useful without a number. D08 now permits investigating this output, not claiming the estimator already works. The latest partial C05 resolution below specifies the sleeper variant; reference asset, hold/rest and schedule anchor remain open. No dose or permitted clinical range changed.
+
+## C05/D05 partial resolution: shoulder-level sleeper, caudal drift with leeway
+
+2026-09-28, direct owner instruction from Manoj: side-lying with upper arm straight out approximately 90 degrees to the body, level with shoulder and “in line with the pillow” when one is used. The unwanted movement of interest is caudal migration towards the waist. Some drift must be allowed; perfect fixation is not the criterion. This resolves the previously open upper-arm variant/direction, not the complete prescription.
+
+Numerical tolerance is still unset: the reviewer's suggested 10–15 degrees has NOT been approved. Initial clinician-only display was a reviewer proposal; the newer patient-facing composition decision below supersedes that uncertainty, not the need for method qualification. Approved asset, remaining dosing/schedule and patient-release measurement qualification remain open. No agent-created default, source overwrite or clinical activation. Detailed narrow contract: [caudal rule](../../research/2026-09-28-sleeper-elbow-drift/CAUDAL_RULE.md).
+
+## D08 partial resolution: patient-visible sleeper result and history
+
+2026-09-28, Manoj requests the approximate rotation number, a simple schematic, comparison to the previous reading and a best recorded value. Adopt this as patient-facing product intent: after a qualified Check, About X degrees, the same-interval elbow position, Last comparable check and Best recorded in this recovery. The best is scoped to the compatible series within this care episode; incomplete history uses Best in saved checks, not all-time. See `shoulder_capture.patient_feedback` in runbook.json and the generated roadmap.
+
+This permits passive historical ROM information in a comfort phase; it does not re-enable personal-best celebrations, score/100, target-chasing speech or extra treatment. Numerical clinical activation, display resolution/repeatability, the caudal tolerance and approved content/dose/schedule remain open. Build and review the selector/schematic with synthetic fixtures first; do not wait for a study to build guided Do and records. Existing original research/reviews are historical evidence, not overwritten decisions.

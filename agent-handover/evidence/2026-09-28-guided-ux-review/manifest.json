@@ -1,0 +1,70 @@
+{
+  "scope": "Exact candidate public-safe evidence; technical YouTube screenshot and raw media excluded",
+  "files": [
+    {
+      "path": "guided-hold-active-320.png",
+      "sha256": "753ea96289d9be4557448c27d46388ef67b71a55320464ebd6b5029b2d120895",
+      "bytes": 34900
+    },
+    {
+      "path": "guided-hold-rest-320.png",
+      "sha256": "82e48dc36897e2de7e2f8ac2c558f5c1b6eca6d46a18c87d9f0cc37d7f4f315e",
+      "bytes": 33375
+    },
+    {
+      "path": "guided-ready-390.png",
+      "sha256": "3d3c82a0935300a76e2534e78bc2d101e2dea1abad26a1789b174b3a50b085b8",
+      "bytes": 58427
+    },
+    {
+      "path": "guided-save-failed-320.png",
+      "sha256": "e808a76e3ea4a0d45b91f2d5929de543816ca6ba949b14ebbf3dc998b3a94cde",
+      "bytes": 35851
+    },
+    {
+      "path": "historical-capture-provenance.json",
+      "sha256": "2f9d57c61b92f7d920fda261f071662eb8469c1c93d8863b963c1c34ccbb4e2b",
+      "bytes": 1001
+    },
+    {
+      "path": "native-captures.json",
+      "sha256": "af7d3008537c8836068862a27227b522e66e678bb274cfffe2b26af94006647f",
+      "bytes": 1288
+    },
+    {
+      "path": "native-guided-hold-active.png",
+      "sha256": "1667665cb05301cebbbd9fc6aaaf122df5ce49f52d07a14eee240d037d92f2aa",
+      "bytes": 206845
+    },
+    {
+      "path": "native-guided-hold-rest.png",
+      "sha256": "6cb85d05152abff7751980df81dc90342b5a2fe33aedca958c004a10cacfa4cf",
+      "bytes": 202814
+    },
+    {
+      "path": "native-guided-hold-saved.png",
+      "sha256": "d6dd83adfff36f6e564a488792501e8857a488864bdc0dd6a7292529025af940",
+      "bytes": 188779
+    },
+    {
+      "path": "native-guided-ready.png",
+      "sha256": "394ae729020c46d16b22261e3047c0996c6714d847ab7913f0ccd627dedfdbf5",
+      "bytes": 204019
+    },
+    {
+      "path": "native-run.json",
+      "sha256": "447a4ae7fbf990c2f1fb19b32475ba6ee732c34b886b2477059dbb599abfc318",
+      "bytes": 826
+    },
+    {
+      "path": "run.json",
+      "sha256": "a074ddc245ce1f2bafd48dff76ec9f8a5ed4899f589e43ed6cfe58eb0e2b5558",
+      "bytes": 5882
+    },
+    {
+      "path": "web-journey.json",
+      "sha256": "17f0bf1d6c58663bd63c58e951767dae8c6d7854499051c5540d1f3110a9f146",
+      "bytes": 4097
+    }
+  ]
+}

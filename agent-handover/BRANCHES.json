@@ -1,10 +1,9 @@
 {
   "schema": 1,
-  "date": "2026-09-27",
-  "active_branch": "agent/mvp-integration-20260927",
-  "active_pr": 28,
-  "main_sha_unchanged": "d045d460800a9d50db30ab3df4b836e99406a0dd",
-  "state": "single_draft_integration_with_preserved_predecessors",
+  "date": "2026-09-28",
+  "active_branch": "agent/native-camera-recovery-20260928",
+  "active_pr": 29,
+  "state": "main_consolidated_single_followup",
   "predecessors": [
     {
       "role": "application",
@@ -49,5 +48,14 @@
     "Close predecessor PRs as superseded without deleting refs",
     "Do not merge main until integrated checks/review and owner decision"
   ],
-  "successor_published_sha": "e5215fdbbe00ecc49ba37d2da6ee1fc3b7bbb069"
+  "successor_published_sha": "e5215fdbbe00ecc49ba37d2da6ee1fc3b7bbb069",
+  "main_before_integration": "d045d460800a9d50db30ab3df4b836e99406a0dd",
+  "main_sha": "aebfa1b7832a9de314c19d69d494339f82eea5bf",
+  "integration_pr": {
+    "number": 28,
+    "head": "d910a8cbee07169e28a2b8c0014932f67d4a6c3f",
+    "merge": "aebfa1b7832a9de314c19d69d494339f82eea5bf",
+    "state": "merged",
+    "branch_retained": true
+  }
 }

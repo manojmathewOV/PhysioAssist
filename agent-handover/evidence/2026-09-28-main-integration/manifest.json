@@ -1,0 +1,14 @@
+{
+  "no-camera.json": {
+    "sha256": "ce4efda4124554f5c24cd910acdacf1f0cfdf89e8f8a0179cda60a3973e51809",
+    "bytes": 4444
+  },
+  "release-no-camera-truthful.png": {
+    "sha256": "0fd01ae2b511a56f5d9304f0e560e983c5a15727dfaa3358b6c94f37ff2a0e35",
+    "bytes": 157820
+  },
+  "merge.json": {
+    "sha256": "69d94354b7e861ab47f785a08abbdc4c766b8e112d42300521c9d8ecb9d20d65",
+    "bytes": 2223
+  }
+}

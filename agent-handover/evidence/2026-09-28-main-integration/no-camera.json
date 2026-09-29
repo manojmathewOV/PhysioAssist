@@ -1,0 +1,136 @@
+{
+  "recorded_at": "2026-09-27T15:34:19.265782+00:00",
+  "scope": "No-camera recovery presentation, not camera-free treatment, numerical measurement, full patient journey or independent review",
+  "implementation_sha": "7d717f92e4e3b31663a9516a4a8087b7664da151",
+  "native_driver_and_build_sha": "7cbafe4a057b531eacf8dc6804ebc20368fd62d9",
+  "tests": {
+    "passed": 1651,
+    "failed": 0,
+    "skipped": 4,
+    "suites": 93,
+    "exit": 0,
+    "teardown_warning": false,
+    "raw_log_sha256": "f1130f3b96c8a30f0f4444d0519f19935fea04467d680b6fbee5d5965abbe935",
+    "scope": "Clean committed 7d717f9; subsequent 7cbafe4 added only separate native UI driver"
+  },
+  "typecheck_exit": 0,
+  "new_component_cases": 2,
+  "native_build": {
+    "schema": 1,
+    "run_id": "20260927T152627Z-ios-build-c9f03fad",
+    "action": "ios-build",
+    "source_sha": "7cbafe4a057b531eacf8dc6804ebc20368fd62d9",
+    "candidate_dirty": false,
+    "status_before": "",
+    "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "untracked_files_are_not_attested": true,
+    "command": [
+      "xcodebuild",
+      "-workspace",
+      "ios/PhysioAssist.xcworkspace",
+      "-scheme",
+      "PhysioAssist",
+      "-configuration",
+      "Release",
+      "-sdk",
+      "iphonesimulator",
+      "-derivedDataPath",
+      "<WORKSPACE>/RDC/cache/DerivedData",
+      "-resultBundlePath",
+      "<WORKSPACE>/RDC/runs/20260927T152627Z-ios-build-c9f03fad/build.xcresult",
+      "-jobs",
+      "2",
+      "ARCHS=arm64",
+      "ONLY_ACTIVE_ARCH=YES",
+      "COMPILER_INDEX_STORE_ENABLE=NO",
+      "CODE_SIGNING_ALLOWED=YES",
+      "CODE_SIGN_IDENTITY=-",
+      "build"
+    ],
+    "timeout_seconds": 1200,
+    "state": "passed",
+    "owner_pid": 21335,
+    "started_at": "20260927T152627Z",
+    "claim_ceiling": "command observation only; not visual, clinical or release acceptance",
+    "child_pid": 21448,
+    "exit_code": 0,
+    "teardown_warning": false,
+    "head_after": "7cbafe4a057b531eacf8dc6804ebc20368fd62d9",
+    "log_sha256": "1f6305ed81a61484037f01b32ad80c028224452fcbfcf22bc3997681ac89e871",
+    "seconds": 31.24
+  },
+  "native_ui": {
+    "source_sha": "7cbafe4a057b531eacf8dc6804ebc20368fd62d9",
+    "scope": "Release no-camera message and Back action; no clinical/no-camera-treatment acceptance",
+    "steps": [
+      {
+        "name": "make-project",
+        "exit": 0,
+        "seconds": 0.57
+      },
+      {
+        "name": "boot",
+        "exit": 0,
+        "seconds": 0.88
+      },
+      {
+        "name": "bootstatus",
+        "exit": 0,
+        "seconds": 4.07
+      },
+      {
+        "name": "install",
+        "exit": 0,
+        "seconds": 3.49
+      },
+      {
+        "name": "camera-permission",
+        "exit": 0,
+        "seconds": 0.19
+      },
+      {
+        "name": "native-ui",
+        "exit": 0,
+        "seconds": 33.57
+      },
+      {
+        "name": "attachments",
+        "exit": 0,
+        "seconds": 0.29
+      },
+      {
+        "name": "shutdown",
+        "exit": 0,
+        "seconds": 3.11
+      }
+    ],
+    "state": "passed",
+    "build_record": "RDC/runs/20260927T152627Z-ios-build-c9f03fad/run.json",
+    "driver_sha256": "3f76d3e1cdbdaddf1d9522ba892d698750cd78640880eae043fb47f0731b3455"
+  },
+  "visual_review": {
+    "file": "release-no-camera-truthful.png",
+    "sha256": "0fd01ae2b511a56f5d9304f0e560e983c5a15727dfaa3358b6c94f37ff2a0e35",
+    "observed": "Opened actual native screenshot: explanation contains no nonexistent practice offer; Back to exercises visible; test activates Back and confirms return",
+    "identity": "Dedicated synthetic simulator, no patient media"
+  },
+  "changes": [
+    "NoCameraAvailable chooses its explanation and actions from the same optional practice action",
+    "Native screen uses that component; __DEV__ boundary unchanged",
+    "Release no-camera return tested by XCTest; old failed full-live probe retained"
+  ],
+  "remaining": [
+    "Camera-optional Do is not implemented by this patch",
+    "Full native live reference controls still need qualified test input or camera-optional Do",
+    "Independent reviewer acceptance remains pending",
+    "No physical iPhone, approved clinical media or clinical validation"
+  ],
+  "resources": {
+    "new_clone": false,
+    "new_dependency_install": false,
+    "new_dataset": false,
+    "native_cache_reused": true,
+    "dedicated_simulator_shutdown": true,
+    "global_setting_changes": false
+  }
+}

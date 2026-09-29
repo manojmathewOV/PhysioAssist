@@ -1,0 +1,12 @@
+{
+  "passed": 1707,
+  "skipped": 4,
+  "failed": 0,
+  "suites_passed": 99,
+  "seconds": 29.83,
+  "exit": 0,
+  "clean_exit": true,
+  "forceExit": false,
+  "log_sha256": "79b9a38c8297089c903e7bf18f888e71b2a8348ac1d76b6d200306664b16d966",
+  "new_quantity_tests": 13
+}

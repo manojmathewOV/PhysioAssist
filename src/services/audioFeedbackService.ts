@@ -29,6 +29,7 @@ export class AudioFeedbackService {
   private lastSpokenTime: number = 0;
   private speakingQueue: string[] = [];
   private isSpeaking: boolean = false;
+  private guidanceEpoch = 0;
   private lastCorrectionTime = -Infinity;
   private lastCorrectionByText = new Map<string, number>();
   private lastWarningByText = new Map<string, number>();
@@ -173,6 +174,7 @@ export class AudioFeedbackService {
     ) {
       return false;
     }
+    ++this.guidanceEpoch;
     this.lastWarningByText.set(message, now);
     this.lastCorrectionTime = now;
     // Drop queued praise, counts and corrections: the warning replaces them
@@ -199,6 +201,23 @@ export class AudioFeedbackService {
       this.isSpeaking = false;
       // Continue processing queue even if one message fails
       this.processQueue();
+    }
+  }
+
+  /** Replace stale guided instructions; never queue missed holds after interruption. */
+  async speakGuidance(message: string): Promise<boolean> {
+    const epoch = ++this.guidanceEpoch;
+    this.speakingQueue = [];
+    if (!message || !this.config.enableSpeech) return false;
+    try {
+      await Tts.stop();
+      if (epoch !== this.guidanceEpoch || !this.config.enableSpeech) return false;
+      this.isSpeaking = true;
+      await Tts.speak(message);
+      return true;
+    } catch {
+      if (epoch === this.guidanceEpoch) this.isSpeaking = false;
+      return false;
     }
   }
 
@@ -294,6 +313,7 @@ export class AudioFeedbackService {
    */
   updateConfig(newConfig: Partial<FeedbackConfig>): void {
     this.config = { ...this.config, ...newConfig };
+    if (newConfig.enableSpeech === false) void this.stopAll().catch(() => undefined);
 
     if (newConfig.speechRate !== undefined) {
       Tts.setDefaultRate(newConfig.speechRate);
@@ -311,8 +331,10 @@ export class AudioFeedbackService {
    * Stop all audio feedback
    */
   async stopAll(): Promise<void> {
-    await Tts.stop();
+    ++this.guidanceEpoch;
     this.speakingQueue = [];
+    this.isSpeaking = false;
+    await Tts.stop();
     this.soundCache.forEach((sound) => sound.stop());
   }
 

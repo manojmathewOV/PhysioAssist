@@ -1,0 +1,20 @@
+{
+  "application_sha": "2d5455c688cb8da34db367f3757dd6291149e746",
+  "basis": "0995723419a5f8e6b650cd2c035e5d375e3d6d29",
+  "scope": "Prescribed min/max hold behaviour, result labels/side presentation/date format, existing runbook convergence. No estimator or clinical activation.",
+  "reproduction": {"range_cases_before": {"failed": 8, "passed": 3}, "card_cases_before": {"failed": 3, "passed": 16}},
+  "focused": {"passed": 96, "suites": 5, "new_cases": 16},
+  "full_suite": {"state": "passed", "exit": 0, "source_clean": true, "teardown_warning": false, "force_exit": false, "command_seconds": 28.0, "log_sha256": "5669fca151c921b988eec16010e129a630f63882fd6bc5ba4acee5f9f449312a"},
+  "typecheck": {"normal": "passed", "prepush_configuration": "passed"},
+  "targeted_lint": {"errors": 0, "warnings": 0},
+  "web_guided": {"state": "passed", "source": "2d5455c688cb8da34db367f3757dd6291149e746", "includes": ["untimed preparation", "pause/rest", "optional third hold", "no fourth", "manual report", "save failure/retry/reopen", "actual official YouTube sample"], "visual_review": ["minimum-optional320", "maximum320", "active320", "save-failure320"], "scope": "Synthetic programme and browser speech requests, not physical audibility or clinical content"},
+  "native_guided": {"state": "passed", "test_exit": 0, "test_seconds": 173.48, "build_seconds": 55.89, "source": "2d5455c688cb8da34db367f3757dd6291149e746", "visual_review": ["minimum optional", "maximum", "saved", "reopened"], "scope": "Release simulator guided routine and existing reference/restart assertions; not the result card or a real patient", "simulator_shutdown_exit": 0},
+  "result_card": {"web_preview": "passed", "viewports": [320, 390, 820], "native_visual_test": "not_performed", "physical_VoiceOver": "not_performed", "patient_comprehension": "not_performed", "limit": "Narrow/large-text presentation remains scrollable; do not infer effortless comprehension from rendering checks."},
+  "ccore": {"structure_errors": 0, "blocked_axes": 0, "declared_DoD_dimensions": 121, "members": 11, "disposition": "DefinitionTopologyReadmissionRequired", "claim_ceiling": "context_preflight_only_no_epoch_or_acceptance_authority", "candidate_hash": "e5f7a44c45f60f4bb326d51cd17583b45ee379eaee44e54a6d664d1063e5dd69"},
+  "runbook": {"revision": 13, "gates": 11, "criteria": 83, "new_accepted_gates": 0},
+  "tool_limitations": ["One further compact-layout/README mutation was refused and did not execute. No alternate-route execution was used.", "A subsequent read-only batch count/metadata query was refused twice; test success is reported from the managed command receipt rather than inventing its total.", "The prior native result-driver restriction remains; the existing guided-native test is a different scope."],
+  "benchmark": "No new run or download. This patch changes dose/UI, not the video estimator; previous 116deb2 RGB observations retain their own basis and limits.",
+  "clinical": "No new hold/rest duration, tolerance, model qualification, patient method registration or prescription permission.",
+  "resources": {"new_clone": false, "new_dependencies": false, "new_dataset": false, "reused_cache": true, "native_builds": 1},
+  "next": "Independent review; narrow evaluation-only Check adapter and isolated receipt-aware storage/reopen, plus native result presentation and real-user/measurement qualification."
+}

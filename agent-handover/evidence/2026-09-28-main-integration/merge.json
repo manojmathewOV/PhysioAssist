@@ -1,0 +1,57 @@
+{
+  "date": "2026-09-28",
+  "merge_sha": "aebfa1b7832a9de314c19d69d494339f82eea5bf",
+  "pr": 28,
+  "published_head": "d910a8cbee07169e28a2b8c0014932f67d4a6c3f",
+  "original_tested_sha": "0024f8771a02ab8519b32dd84407e829ec6bb7b7",
+  "method": "merge; source commits preserved",
+  "authority": "Explicit Manoj request to address coordination, merge to main and proceed",
+  "scope": "development baseline only; no clinical/release/whole-gate or fabricated independent approval",
+  "baseline_tests": {
+    "source": "d910a8cbee07169e28a2b8c0014932f67d4a6c3f",
+    "passed": 1649,
+    "skipped": 4,
+    "failed": 0,
+    "teardown_warning": false,
+    "exact_original_retest_passed": 1645
+  },
+  "hosted": [
+    {
+      "id": 36328792890,
+      "name": "Checks",
+      "head_sha": "d910a8cbee07169e28a2b8c0014932f67d4a6c3f",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36328792890",
+      "updated_at": "2026-09-27T15:17:23Z"
+    },
+    {
+      "id": 36328792889,
+      "name": "iOS Simulator",
+      "head_sha": "d910a8cbee07169e28a2b8c0014932f67d4a6c3f",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/manojmathewOV/PhysioAssist/actions/runs/36328792889",
+      "updated_at": "2026-09-27T15:42:42Z"
+    }
+  ],
+  "coordination": {
+    "initial_exact_push": "normal hooks passed; safely rejected non-fast-forward when prior session finished publication",
+    "history_preserved": true,
+    "previous_writer_exited": true,
+    "temporary_publication_worktree_removed": true,
+    "active_followup": "agent/native-camera-recovery-20260928",
+    "followup_pr": 29,
+    "mechanism": "Unique owner receipt and separate branch; no competing process or shared-checkout writer. This convention is not an OS-enforced lock."
+  },
+  "review_queue": [
+    "Claude to formalise safety review at c3d4b7b",
+    "Independent storage containment review",
+    "Independent player and follow-up review"
+  ],
+  "limitations": [
+    "Native live reference input gap remains",
+    "Approved clinical content and camera-optional Do incomplete",
+    "No release approval or physical-patient validation"
+  ]
+}

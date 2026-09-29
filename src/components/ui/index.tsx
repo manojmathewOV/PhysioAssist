@@ -71,6 +71,8 @@ export interface ScreenProps {
   /** Content pinned below the scroll area (e.g. the main action). */
   footer?: React.ReactNode;
   headerRight?: React.ReactNode;
+  /** Reset scroll on a meaningful task transition without unmounting media. */
+  scrollResetKey?: string;
 }
 
 /** Widest the content column gets (tablets, desktop browsers). */
@@ -84,7 +86,13 @@ export const Screen: React.FC<ScreenProps> = ({
   testID,
   footer,
   headerRight,
+  scrollResetKey,
 }) => {
+  const scrollRef = React.useRef<ScrollView>(null);
+  React.useEffect(() => {
+    if (scrollResetKey !== undefined)
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [scrollResetKey]);
   // Small phones: a smaller title leaves room for the content
   const compact = useWindowDimensions().width < 360;
   const header = title ? (
@@ -116,6 +124,7 @@ export const Screen: React.FC<ScreenProps> = ({
     >
       {scroll ? (
         <ScrollView
+          ref={scrollRef}
           // Web: a scrollable area must be reachable by keyboard
           focusable={Platform.OS === 'web'}
           contentContainerStyle={styles.scrollContent}
@@ -154,6 +163,9 @@ export interface BigButtonProps {
   style?: StyleProp<ViewStyle>;
   compact?: boolean;
 }
+
+// Keep this numeric-only style independent of the two installed RN TextStyle declarations.
+const buttonIconStyle = { marginRight: spacing.sm };
 
 const buttonColors: Record<
   ButtonVariant,
@@ -208,7 +220,7 @@ export const BigButton: React.FC<BigButtonProps> = ({
       ) : (
         <>
           {icon ? (
-            <Icon name={icon} size={26} color={palette.fg} style={styles.buttonIcon} />
+            <Icon name={icon} size={26} color={palette.fg} style={buttonIconStyle} />
           ) : null}
           <AppText variant="button" color={palette.fg}>
             {label}
@@ -498,7 +510,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonCompact: { minHeight: touch.min, paddingHorizontal: spacing.md },
-  buttonIcon: { marginRight: spacing.sm },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,

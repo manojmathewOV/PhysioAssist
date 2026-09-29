@@ -146,6 +146,14 @@
       "status": "tool_observation_record",
       "supports": "Native definition-shape framework, graph/DoD/terminal declaration constraints",
       "limits": "No TaskEpoch/native acceptance/clinical authority inferred"
+    },
+    {
+      "id": "S19",
+      "kind": "architecture_research",
+      "locator": "research.json#phone_architecture",
+      "status": "desk_analysis_source_checked",
+      "supports": "ATAM/Six Hats/counterfactual decisions for no-entry device-assisted capture",
+      "limits": "Not native, clinical, usability or formal stakeholder acceptance"
     }
   ],
   "questions": [
@@ -204,7 +212,7 @@
     {
       "id": "Q05",
       "question": "Which pose source and native presentation give useful feedback at the smallest measured resource cost?",
-      "sources": ["S02", "S10"],
+      "sources": ["S02", "S10", "S19"],
       "status": "proposed_benchmark",
       "affects": ["G08"],
       "alternatives": [
@@ -212,7 +220,9 @@
         "Apple Vision/Core ML candidate only after compatibility and evidence comparison"
       ],
       "decision": "D04,D06,D08",
-      "falsifier": "New model changes landmark/angle meaning without new method identity or validated equivalence."
+      "falsifier": "New model changes landmark/angle meaning without new method identity or validated equivalence.",
+      "architecture_review": "research.json#phone_architecture",
+      "next_experiment": "Evaluation receipt adapter; capability/coordinate probe; bounded capture migration choice; same-sequence optional-channel ablation. No patient-entered stick length."
     },
     {
       "id": "Q06",
@@ -307,5 +317,727 @@
   ],
   "native_research_body": "not_created; portable evidence register only; native tool outcomes in evidence/ccore-reconciliation.json",
   "authority": "Sources inform decisions; this register approves neither treatment nor implementation.",
-  "revision": 2
+  "revision": 14,
+  "phone_architecture": {
+    "title": "Device-assisted capture without extra patient setup",
+    "date": "2026-09-29",
+    "basis": "b54914e4ff01eb9fe94476c039ebcc428b2da78e",
+    "scope": "Architecture/design analysis, not an ATAM stakeholder workshop, independent review, sensor experiment or clinical validation. Six Hats are explicit thinking perspectives, not six independent agents. Counterfactual responses below are proposed acceptance oracles, not executed device results.",
+    "owner_input": "No patient-entered stick length; use available recent-phone capabilities to improve accuracy without a complicated internal stack. Preserve clinician-selected variant, permitted assistance, realistic caudal leeway and a simple mobile result.",
+    "source_distinctions": "Owner direction is binding product intent. Reviewer suggestions remain attributed proposals. Platform manuals establish available APIs, not app integration or anatomical accuracy. Alternatives, priorities and thresholds-not-yet-set are receiving-agent judgments.",
+    "sources": [
+      {
+        "id": "ATAM",
+        "url": "https://www.sei.cmu.edu/library/architecture-tradeoff-analysis-method-collection/",
+        "checked": "2026-09-29",
+        "supports": "Scenarios, utility tree, risks, sensitivity and trade-off points structure architecture assessment.",
+        "limits": "This solo analysis does not claim stakeholder voting or formal ATAM certification."
+      },
+      {
+        "id": "HATS",
+        "url": "https://www.debono.com/six-thinking-hats-summary",
+        "checked": "2026-09-29",
+        "supports": "Facts, feelings, caution, benefits, alternatives and process control are distinct perspectives.",
+        "limits": "No patient emotion or preference is established by adopting a perspective."
+      },
+      {
+        "id": "CALIB",
+        "url": "https://developer.apple.com/documentation/avfoundation/avcaptureconnection/iscameraintrinsicmatrixdeliverysupported",
+        "checked": "2026-09-29",
+        "supports": "Intrinsic delivery depends on both the input format and output.",
+        "limits": "Not universal per device; intrinsics alone do not recover arbitrary object depth."
+      },
+      {
+        "id": "DEPTH",
+        "url": "https://developer.apple.com/documentation/avfoundation/avcapturedepthdataoutput",
+        "checked": "2026-09-29",
+        "supports": "Active format determines available depth formats and delivers per-pixel depth/disparity.",
+        "limits": "Availability is not usable quality at the target joint."
+      },
+      {
+        "id": "SYNC",
+        "url": "https://developer.apple.com/documentation/AVFoundation/capturing-depth-using-the-lidar-camera",
+        "checked": "2026-09-29",
+        "supports": "One capture session can synchronize video/depth and supply calibration; sample uses rear LiDAR.",
+        "limits": "Rear LiDAR does not supply front-view patient depth; example precision is not clinical accuracy."
+      },
+      {
+        "id": "FILTER",
+        "url": "https://developer.apple.com/videos/play/wwdc2022/110429/",
+        "checked": "2026-09-29",
+        "supports": "Apple recommends unfiltered depth for computer vision; filtered depth fills holes.",
+        "limits": "This recommendation does not validate a joint-centre estimator."
+      },
+      {
+        "id": "MOTION",
+        "url": "https://developer.apple.com/documentation/coremotion/",
+        "checked": "2026-09-29",
+        "supports": "OS-processed gravity/attitude/rotation/user acceleration can be consumed.",
+        "limits": "No inertial inference of shoulder motion from a stationary phone."
+      },
+      {
+        "id": "TIME",
+        "url": "https://developer.apple.com/documentation/coremotion/cmlogitem/timestamp",
+        "checked": "2026-09-29",
+        "supports": "Motion timestamps are seconds since device boot.",
+        "limits": "They must not simply be equated to video PTS or wall time without a mapped clock contract."
+      },
+      {
+        "id": "V5",
+        "url": "https://margelo.com/blog/whats-new-in-visioncamera-v5",
+        "checked": "2026-09-29",
+        "supports": "V5 documents Nitro, modular outputs, depth streaming and different worklet integration.",
+        "limits": "Maintainer performance/crash claims do not establish compatibility or reliability for this app."
+      },
+      {
+        "id": "V4",
+        "url": "https://github.com/margelo/react-native-vision-camera",
+        "checked": "2026-09-29",
+        "supports": "Upstream now says V4 is no longer actively maintained and points to a V4 snapshot.",
+        "limits": "No assertion that V4 is currently insecure; maintenance status changes the migration trade-off."
+      },
+      {
+        "id": "BUFFERS",
+        "url": "https://visioncamera.margelo.com/docs/depth-output",
+        "checked": "2026-09-29",
+        "supports": "Depth uses worklet dependencies and requires disposal or the capture pool can stall.",
+        "limits": "No proof that RGB/depth clocks are aligned by merely attaching two output callbacks."
+      },
+      {
+        "id": "DEPTHMETA",
+        "url": "https://visioncamera.margelo.com/api/react-native-vision-camera/hybrid-objects/Depth",
+        "checked": "2026-09-29",
+        "supports": "Depth exposes pixel format, validity, orientation and timestamp.",
+        "limits": "Invalid, stale, mirrored or differently oriented depth is not an interchangeable pixel array."
+      },
+      {
+        "id": "VISION",
+        "url": "https://developer.apple.com/documentation/vision/identifying-3d-human-body-poses-in-images",
+        "checked": "2026-09-29",
+        "supports": "Vision 3D supplies 17 joints or none for the most prominent person; depth can help; reference-height fallback exists.",
+        "limits": "Not partial-joint observability evidence. Joint set/scale and helper-person capture need qualification."
+      },
+      {
+        "id": "MP",
+        "url": "https://developers.google.com/edge/mediapipe/solutions/vision/pose_landmarker/ios",
+        "checked": "2026-09-29",
+        "supports": "MediaPipe outputs image/world landmarks and may ignore live input while busy.",
+        "limits": "Visibility is not a calibrated angle error and nominal input fps is not output coverage."
+      },
+      {
+        "id": "OWNER",
+        "url": "https://github.com/manojmathewOV/PhysioAssist/pull/29#issuecomment-5881492221",
+        "checked": "2026-09-29",
+        "supports": "No stick-length entry and low-burden phone-capability direction were recorded after the owner message.",
+        "limits": "Comment is intent/research, not application implementation or clinical acceptance."
+      },
+      {
+        "id": "MOTIONOPS",
+        "url": "https://developer.apple.com/documentation/coremotion/",
+        "checked": "2026-09-29",
+        "supports": "Processed motion and service availability/usage requirements are documented.",
+        "limits": "Check exact service and privacy requirements; unavailable input is not permission to invent a value."
+      }
+    ],
+    "elements": [
+      {
+        "id": "P01",
+        "title": "No-entry geometry and unmeasured size",
+        "decision": "Select scale-independent angles/body-normalised displacement; unknown stick length is a latent nuisance variable, not a missing patient form field.",
+        "criteria": ["G05.V01", "G08.V03"],
+        "sources": ["OWNER"],
+        "atam": {
+          "attribute": "usability + validity",
+          "priority": "high",
+          "risk": "medium",
+          "environment": "iPhone-first local patient app and separately authorised evaluation build; clinical variant fixed",
+          "stimulus": "A patient brings an ordinary stick without a measured length.",
+          "response": "Proceed with permitted activity; use stick constraints only when observable; never substitute fixed anatomy or require an equipment measurement.",
+          "measure": "Zero new length/marker/calibration tasks; separate angle error and availability under different stick sizes, distances and grips.",
+          "sensitivity": "Depth observability and hand/shaft association, not centimetre precision.",
+          "tradeoff": "Removing a setup task improves usability but removes a possible scale input; optional depth/temporal constraints may compensate without guaranteeing identifiability.",
+          "stimulus_source": "patient/equipment",
+          "artifact": "scale-independent estimator input"
+        },
+        "hats": {
+          "white": "Angles are invariant to uniform 3D scale; an unknown-length 2D segment alone does not fix its 3D orientation.",
+          "red": "Hypothesis: tape/length forms feel burdensome or imply the patient is at fault; confirm through task observation.",
+          "black": "A guessed size or standard shoulder width can masquerade as independent calibration.",
+          "yellow": "No ruler, typing or special stick is necessary for guided care; ratios can still be informative.",
+          "green": "Combine visible shaft direction, unchanged rigidity and natural motion with depth where usable; retain multiple interpretations when ambiguous.",
+          "blue": "Make absent length a positive test case; postpone metric distances unless scale is actually supported."
+        },
+        "counterfactuals": [
+          {
+            "id": "P01.CF1",
+            "intervention": "Remove all stick dimensions",
+            "held_fixed": "Same annotated movement and permissions",
+            "expected": "No setup request; use scale-independent evidence or withhold affected output",
+            "falsifier": "Any hidden default length, forced entry or newly permitted exercise.",
+            "evidence": "planned_not_executed"
+          },
+          {
+            "id": "P01.CF2",
+            "intervention": "Change grip along a rigid shaft",
+            "held_fixed": "Same shoulder/forearm orientation",
+            "expected": "Do not move the inferred wrist to the tip; uncertainty or association may change",
+            "falsifier": "Angle changes solely because the grip-to-tip offset changed without modelling it.",
+            "evidence": "planned_not_executed"
+          }
+        ]
+      },
+      {
+        "id": "P02",
+        "title": "Calibrated coordinates and aligned time",
+        "decision": "Adopt one versioned capture geometry/time envelope before sensor fusion; preview coordinates are not metric camera coordinates.",
+        "criteria": ["G08.V04", "G08.V07"],
+        "sources": ["CALIB", "TIME", "DEPTHMETA", "MP"],
+        "atam": {
+          "attribute": "measurement integrity",
+          "priority": "high",
+          "risk": "high",
+          "environment": "iPhone-first local patient app and separately authorised evaluation build; clinical variant fixed",
+          "stimulus": "Mirroring, crop, zoom/lens, orientation, exposure timing or callback latency changes during a Check.",
+          "response": "Transform once from known source to target; align capture timestamps to a documented monotonic clock; reject stale/mismatched generations and invalidate the affected interval.",
+          "measure": "Synthetic projections and delayed/dropout event tests preserve anatomical sign; no mixed calibration IDs/timebases admitted. Record capture-to-feedback p50/p95 and missing coverage.",
+          "sensitivity": "Intrinsics reference resolution, extrinsics, digital crop/stabilisation, focus/lens policy and cross-clock mapping uncertainty.",
+          "tradeoff": "Correct transformation/time metadata is modest structural cost; treating display coordinates as anatomy is simpler but invalid for fusion.",
+          "stimulus_source": "capture device and asynchronous queues",
+          "artifact": "geometry/time observation envelope"
+        },
+        "hats": {
+          "white": "Intrinsic support depends on active format/output; Core Motion and frame timestamps are not assumed to share units/origin.",
+          "red": "Hypothesis: a stable-looking but wrong-side overlay undermines trust more than a brief unavailable state.",
+          "black": "Double mirroring, stale depth, rolling-shutter/motion blur or changed stabilisation can create convincing false motion.",
+          "yellow": "One frame identity and transform contract reduces downstream special cases and makes replays reproducible.",
+          "green": "Preserve native pixels; transform sparse landmark coordinates, mapping metadata and uncertainty rather than recopying full images.",
+          "blue": "Make coordinate/time correctness a prerequisite to combining channels; no magical accuracy claim from intrinsics."
+        },
+        "counterfactuals": [
+          {
+            "id": "P02.CF1",
+            "intervention": "Mirror/crop the preview only",
+            "held_fixed": "Same physical input and anatomical side",
+            "expected": "Only overlay presentation changes; measured side and rotation sign agree",
+            "falsifier": "A second mirror reverses side, or the result changes with UI layout.",
+            "evidence": "planned_not_executed"
+          },
+          {
+            "id": "P02.CF2",
+            "intervention": "Deliver an older depth frame after a new RGB frame",
+            "held_fixed": "Same nominal video fps",
+            "expected": "Stale pair withheld; missing sample breaks coverage according to the method",
+            "falsifier": "Receipt time or latest-value cache is substituted for matching capture time.",
+            "evidence": "planned_not_executed"
+          }
+        ]
+      },
+      {
+        "id": "P03",
+        "title": "OS-fused motion and setup stability",
+        "decision": "Use available processed motion as an optional setup-change witness; never as a complete phone-position or mattress-plane measurement.",
+        "criteria": ["G07.V04", "G08.V06"],
+        "sources": ["MOTIONOPS", "MOTION", "TIME"],
+        "atam": {
+          "attribute": "availability + validity",
+          "priority": "high",
+          "risk": "medium",
+          "environment": "iPhone-first local patient app and separately authorised evaluation build; clinical variant fixed",
+          "stimulus": "Phone is nudged, translated without changed tilt, rotated in yaw, or motion input is unavailable.",
+          "response": "Invalidate measurements on established setup change; combine with usable visual evidence; preserve activity. When stability cannot be confirmed, expose unknown and reacquire without forcing a new therapeutic movement.",
+          "measure": "Translation/yaw/tilt controls and denied/unavailable motion tests; zero false unchanged-placement claim from gravity alone. Quantify false reacquisition and setup burden.",
+          "sensitivity": "Reference frame choice, motion-sample age and cue hysteresis vs immediate measurement withholding.",
+          "tradeoff": "Motion can cheaply catch disturbances but cannot recover every translation; aggressive prompts cause repeated reaching.",
+          "stimulus_source": "phone/stand movement and motion service",
+          "artifact": "setup generation and measurement admission"
+        },
+        "hats": {
+          "white": "Core Motion provides processed orientation/motion; constant gravity is compatible with translation and yaw about gravity.",
+          "red": "Hypothesis: repeated repositioning during a painful activity causes abandonment; observe actual reaches, not just taps.",
+          "black": "Camera movement mistaken for body drift, or a rigid bed-plane assumption, defeats repeatability.",
+          "yellow": "Existing OS fusion avoids a custom inertial filter stack and reduces some setup failures.",
+          "green": "Use a shared setup generation plus visual-relative geometry; retain guided Do if the optional Check loses support.",
+          "blue": "Reuse the existing framing/cue mechanism; gate measurements promptly and debounce only non-safety presentation."
+        },
+        "counterfactuals": [
+          {
+            "id": "P03.CF1",
+            "intervention": "Translate the phone horizontally at unchanged attitude",
+            "held_fixed": "Patient remains in the same pose",
+            "expected": "Gravity alone cannot certify unchanged setup; visual/context evidence or unknown state required",
+            "falsifier": "The baseline is declared valid solely because the gravity vector matched.",
+            "evidence": "planned_not_executed"
+          },
+          {
+            "id": "P03.CF2",
+            "intervention": "Disable motion delivery",
+            "held_fixed": "Same allowed activity and RGB frames",
+            "expected": "No crash or demand for a calibration movement; use only separately qualified remaining evidence",
+            "falsifier": "Zero motion substituted for missing motion or guided activity denied.",
+            "evidence": "planned_not_executed"
+          }
+        ]
+      },
+      {
+        "id": "P04",
+        "title": "Optional synchronized depth",
+        "decision": "Evaluate front TrueDepth where the active format supports it; rear LiDAR only in a separately appropriate view. Hardware presence is not stream usability.",
+        "criteria": ["G08.V03", "G08.V06", "G08.V07"],
+        "sources": ["DEPTH", "SYNC", "FILTER", "DEPTHMETA"],
+        "atam": {
+          "attribute": "accuracy + inclusion",
+          "priority": "high",
+          "risk": "high",
+          "environment": "iPhone-first local patient app and separately authorised evaluation build; clinical variant fixed",
+          "stimulus": "Depth is absent, stale, filtered, low confidence, out of range, or samples bedding instead of the intended anatomy.",
+          "response": "Use registered fresh depth only for supported visible surfaces; keep depth/disparity units and calibration explicit. Do not fill a hidden joint with mattress depth. Fall back only to a qualified RGB method after required interval change.",
+          "measure": "Paired reference error/coverage and false acceptance; depth-only ablation; no unsupported centimetres or invented depth in holes. Report latency/memory and usable depth coverage at actual bedside distance.",
+          "sensitivity": "RGB-depth registration/extrinsics, timestamp skew, range, disparity conversion, filtering, occlusion and surface-to-joint assumptions.",
+          "tradeoff": "Depth may improve out-of-plane information but can lower frame rate, increase heat and fail where its benefit is needed; adaptive use is not monotonic improvement.",
+          "stimulus_source": "depth sensor and scene surfaces",
+          "artifact": "synchronized regional observation"
+        },
+        "hats": {
+          "white": "AVFoundation supports compatible depth streams; Apple distinguishes filters and demonstrates synchronized delivery. No device was tested in this task.",
+          "red": "Hypothesis: an expensive phone returning fewer numbers feels defective; explain unmeasurable data without implying bad recovery.",
+          "black": "A valid surface map can be an invalid joint estimate; filled holes and thin-object boundaries are hazardous.",
+          "yellow": "Front depth may add information without turning the phone around or asking for stick length.",
+          "green": "Start with sparse regional depth support and preserve nulls; compare raw versus filtered, with filtering provenance.",
+          "blue": "Select measured benefit, not device marketing. No LiDAR/TrueDepth requirement for the patient MVP."
+        },
+        "counterfactuals": [
+          {
+            "id": "P04.CF1",
+            "intervention": "Remove depth or move subject beyond usable depth",
+            "held_fixed": "Same permissions, activity and RGB recording",
+            "expected": "Continue Do; evaluate a qualified baseline method or withhold the Check",
+            "falsifier": "Silent mixture with stale depth, coercive rear-camera move or fabricated zero.",
+            "evidence": "planned_not_executed"
+          },
+          {
+            "id": "P04.CF2",
+            "intervention": "Depth pixel under a predicted joint belongs to mattress",
+            "held_fixed": "Same RGB joint prediction",
+            "expected": "Reject surface association for that joint; other valid outputs may survive",
+            "falsifier": "Nearest depth substituted into the joint merely because the map is dense.",
+            "evidence": "planned_not_executed"
+          }
+        ]
+      },
+      {
+        "id": "P05",
+        "title": "Unmarked stick as an optional constraint",
+        "decision": "Prototype small region-of-interest shaft/hand tracking only for stick variants; no mandatory tip visibility, markers, known length or second full-body model.",
+        "criteria": ["G07.V07", "G08.V03"],
+        "sources": ["OWNER"],
+        "atam": {
+          "attribute": "accuracy + bounded complexity",
+          "priority": "medium",
+          "risk": "medium",
+          "environment": "iPhone-first local patient app and separately authorised evaluation build; clinical variant fixed",
+          "stimulus": "A plain stick is partially hidden, slips in the hand, has flex, or resembles a background rail.",
+          "response": "Track association/rigidity hypotheses through natural movement; reject changed grip/bent object assumptions; separate adjunct loss from whole-pose loss. The tip is never the wrist by default.",
+          "measure": "Skeleton-only versus adjunct paired errors/availability; adversarial rails, sleeve, covered ends and sliding grip. Report extra processing and false association.",
+          "sensitivity": "Projected shaft length, contrast, hand occlusion, rigidity and direction ambiguity.",
+          "tradeoff": "A cheap line tracker can add useful constraints but weak association worsens results; support visible segments rather than demanding extra patient framing.",
+          "stimulus_source": "stick, grip and background objects",
+          "artifact": "variant-specific shaft association"
+        },
+        "hats": {
+          "white": "Current pose landmarks are not object tracking. Source debate proposed known length/markers; the owner rejected extra setup.",
+          "red": "Hypothesis: being told the household stick is wrong adds avoidable frustration; observe perceived burden.",
+          "black": "Two wrong but correlated estimates can agree; line tracking is not independent confirmation of a pose-model prior.",
+          "yellow": "A rigid visible shaft can stabilise direction or reject some implausible pose estimates at low cost.",
+          "green": "Try edges/lines in hand-adjacent regions; compare to using no stick information, retaining uncertainty.",
+          "blue": "Do not build a marker product. Keep the adjunct only if it beats baseline under realistic unmarked-stick conditions."
+        },
+        "counterfactuals": [
+          {
+            "id": "P05.CF1",
+            "intervention": "Replace visible stick by a parallel bed rail",
+            "held_fixed": "Same patient motion",
+            "expected": "Do not bind the rail to the hands; abstain when ambiguous",
+            "falsifier": "A confident angle appears through mistaken object association.",
+            "evidence": "planned_not_executed"
+          },
+          {
+            "id": "P05.CF2",
+            "intervention": "Hide both tips but leave shaft near hands",
+            "held_fixed": "Same rigid stick and motion",
+            "expected": "Partial shaft may support direction; do not invent endpoints or demand new equipment",
+            "falsifier": "Both tips assumed necessary for guided care or a fabricated length is used.",
+            "evidence": "planned_not_executed"
+          }
+        ]
+      },
+      {
+        "id": "P06",
+        "title": "One production pose engine",
+        "decision": "Retain the current engine as baseline; evaluate Apple Vision or another supported provider sequentially as alternatives, not always-on consensus.",
+        "criteria": ["G08.V04", "G08.V07"],
+        "sources": ["VISION", "MP"],
+        "atam": {
+          "attribute": "modifiability + validity",
+          "priority": "medium",
+          "risk": "medium",
+          "environment": "iPhone-first local patient app and separately authorised evaluation build; clinical variant fixed",
+          "stimulus": "Engine/model/provider revision changes, or a helper becomes the most prominent person.",
+          "response": "Record provider/model/configuration and subject track per interval; reject subject transfer; require new interval/method compatibility when switching. Do not equate all returned joints to all joints observed.",
+          "measure": "Cross-engine same-sequence comparison; no mixed-model endpoint; helper intrusion and obscured-arm cases. Resource profile per provider.",
+          "sensitivity": "Joint definitions, inferred scale, all-or-none output, smoothing and provider revision.",
+          "tradeoff": "A native provider may reduce dependencies but alters landmark meanings and portability; parallel voting increases resource use without independent evidence.",
+          "stimulus_source": "model lifecycle and helper subject",
+          "artifact": "pose provider and patient track identity"
+        },
+        "hats": {
+          "white": "MediaPipe gives predicted image/world points; Apple Vision 3D returns 17 joints or none and has reference-height fallback.",
+          "red": "Hypothesis: one coherent result feels more trustworthy than competing skeletons; that does not justify hiding failures.",
+          "black": "Most-prominent-person selection can switch to a helper, and correlated pose priors can share error.",
+          "yellow": "A provider seam permits replacement and comparison without rebuilding patient UI or clinical rules.",
+          "green": "Use an offline/evaluation provider adapter, one engine at a time, and evaluate only required outputs.",
+          "blue": "Do not replace the engine on API attractiveness alone; require reference-linked benefit and regression parity."
+        },
+        "counterfactuals": [
+          {
+            "id": "P06.CF1",
+            "intervention": "Switch Full to Lite mid-endpoint",
+            "held_fixed": "Same movement and scene",
+            "expected": "Close/invalidate affected interval unless qualified equivalence policy explicitly permits it; retain model provenance",
+            "falsifier": "The endpoint joins both models under unchanged method identity.",
+            "evidence": "planned_not_executed"
+          },
+          {
+            "id": "P06.CF2",
+            "intervention": "Helper becomes more prominent than patient",
+            "held_fixed": "Same intended patient and episode",
+            "expected": "Withhold/reconfirm affected tracking; do not move the episode to the helper",
+            "falsifier": "A new skeleton silently populates the patient best series.",
+            "evidence": "planned_not_executed"
+          }
+        ]
+      },
+      {
+        "id": "P07",
+        "title": "Capture integration and maintenance",
+        "decision": "Prefer a maintained single capture stack if compatibility is demonstrated; compare a bounded V5 migration against a bounded current-owner extension before installing. No competing camera session or indefinite V4 fork.",
+        "criteria": ["G01.V01", "G09.V01", "G08.V08"],
+        "sources": ["V5", "V4", "BUFFERS"],
+        "atam": {
+          "attribute": "maintainability + release stability",
+          "priority": "high",
+          "risk": "high",
+          "environment": "iPhone-first local patient app and separately authorised evaluation build; clinical variant fixed",
+          "stimulus": "New depth API requires different worklets/Nitro and may not fit RN0.73.2/MediaPipe0.6.0.",
+          "response": "Inventory exact transitive/native interfaces; qualify RGB parity, synchronized depth, build locks and rollback in a bounded spike. Preserve current known-good branch and first patient journey.",
+          "measure": "Pass the same native guided/player/storage/pose tests; one camera owner; explicit resolved dependency set and native receipt. Decision records maintenance burden and omitted hardware.",
+          "sensitivity": "Existing frame-plugin ABI, native build and timestamp access, OS minimum and migration scope.",
+          "tradeoff": "V5 reduces long-term custom glue but incurs migration cost; extending unmaintained V4 may be smaller today but create larger future debt.",
+          "stimulus_source": "upstream dependency/ABI changes",
+          "artifact": "capture owner and native build"
+        },
+        "hats": {
+          "white": "Locked app uses VisionCamera4.7.2; upstream labels V4 no longer actively maintained. V5 changes output/worklet contracts.",
+          "red": "Hypothesis: regressions in a working routine cost more patient confidence than a delayed optional sensor feature.",
+          "black": "Treating V5 docs as installed capability or starting a second AVCapture/AR session causes integration and custody failures.",
+          "yellow": "Supported modular outputs may retire bespoke glue and supply explicit geometry/buffer lifecycle.",
+          "green": "Compare maintained migration, narrow extension, and deferring depth; same evaluation contract in all three.",
+          "blue": "Make a compatibility/prototype decision before either migration or extension; no blanket upgrade in this task."
+        },
+        "counterfactuals": [
+          {
+            "id": "P07.CF1",
+            "intervention": "Assume current V4 hook supports V5 depth API",
+            "held_fixed": "Same locked dependencies",
+            "expected": "Capability remains unknown/unsupported until compiled and exercised",
+            "falsifier": "Documentation presence is used as integration evidence.",
+            "evidence": "planned_not_executed"
+          },
+          {
+            "id": "P07.CF2",
+            "intervention": "Migration requires broad app rewrite",
+            "held_fixed": "Same low-burden MVP goal",
+            "expected": "Defer depth if necessary; retain working baseline and record maintenance decision",
+            "falsifier": "A second camera stack or global dependency rewrite becomes an implicit requirement.",
+            "evidence": "planned_not_executed"
+          }
+        ]
+      },
+      {
+        "id": "P08",
+        "title": "Buffers, scheduling and recovery",
+        "decision": "Use one capture owner, one pose engine and bounded native buffers; extend current throttling only from measured need. Keep acquisition gaps visible.",
+        "criteria": ["G08.V01", "G08.V08"],
+        "sources": ["BUFFERS", "MP"],
+        "atam": {
+          "attribute": "responsiveness + reliability",
+          "priority": "high",
+          "risk": "medium",
+          "environment": "iPhone-first local patient app and separately authorised evaluation build; clinical variant fixed",
+          "stimulus": "Thermal pressure, skipped frames, held buffer, stale callback, background transition or native termination occurs.",
+          "response": "Release buffers on success/error/cancellation; discard stale generations; preserve acknowledged activity. Degrade only through qualified paths, no unbounded restart loop. After process death recover on next launch, not a promised last-chance JS save.",
+          "measure": "Peak/retained RSS and energy during matched cycles; capture-to-feedback age; drop coverage; zero old-generation callbacks admitted and no duplicate saved event. Existing 30-cycle fixture is engineering stress, not clinical sample size.",
+          "sensitivity": "Queue length, buffer lifetime, thread affinity, inference rate, model switches and app lifecycle.",
+          "tradeoff": "Fresh low-rate evidence can be more useful than dense stale results; energy savings cannot silently count missing time as observed.",
+          "stimulus_source": "OS/resources and worker lifecycle",
+          "artifact": "buffers, measurement freshness and acknowledged activity"
+        },
+        "hats": {
+          "white": "MediaPipe live input can be dropped while busy; VisionCamera depth buffers require disposal. Existing adaptive model selection is already implemented.",
+          "red": "Hypothesis: smooth preview with delayed coaching is more confusing than explicit temporary unavailability.",
+          "black": "Buffer exhaustion, stale-result reuse or a JS recovery promise after native crash hides data-loss risk.",
+          "yellow": "Small lifecycle boundaries reuse platform memory/compute support and keep UI responsive.",
+          "green": "Start with one in-flight task/latest admissible frame and bounded trace; add controls only to address observed bottlenecks.",
+          "blue": "Measure on the oldest selected supported iPhone and a depth-capable one; retain activities across detector-only failures."
+        },
+        "counterfactuals": [
+          {
+            "id": "P08.CF1",
+            "intervention": "Slow inference while preview stays smooth",
+            "held_fixed": "Same capture timestamps",
+            "expected": "Old output cannot remain current; gaps counted and timestamp age exposed to method gate",
+            "falsifier": "Nominal fps or repeated latest pose is treated as continuous observation.",
+            "evidence": "planned_not_executed"
+          },
+          {
+            "id": "P08.CF2",
+            "intervention": "Cancel during depth callback or kill process after acknowledged save",
+            "held_fixed": "Same stored activity",
+            "expected": "Owned buffers release where process survives; next launch recovers acknowledged event without duplication",
+            "falsifier": "Unreleased pool grows, or in-memory completion masquerades as durable after termination.",
+            "evidence": "planned_not_executed"
+          }
+        ]
+      },
+      {
+        "id": "P09",
+        "title": "Evaluation adapter, provenance and comparisons",
+        "decision": "Build the receipt-aware isolated evaluation adapter first. Keep origin, purpose, validity, uncertainty and storage receipt distinct; no incoming record registers a method.",
+        "criteria": ["G02.V08", "G05.V02", "G08.V04"],
+        "sources": ["OWNER"],
+        "atam": {
+          "attribute": "privacy + integrity",
+          "priority": "high",
+          "risk": "high",
+          "environment": "iPhone-first local patient app and separately authorised evaluation build; clinical variant fixed",
+          "stimulus": "Synthetic/replay/live-study results arrive with asserted saved flags, an unregistered method, changed sensors or a revoked consent scope.",
+          "response": "Translate validated paired observations without recomputing endpoints; derive saving from receipt; keep evaluation data out of patient history and block unauthorized capture/export. Method compatibility is explicit, not accidental field matching.",
+          "measure": "No evaluation-to-patient leakage, no incoming-method self-registration, repeat-safe save/reopen, no cross-series best after method/band/provider changes. Trace retention/export scope reviewed.",
+          "sensitivity": "Schema provenance, registry ownership, origin labels, receipt derivation and method equivalence.",
+          "tradeoff": "Compact records support future surgeon/physio review but excessive raw traces increase privacy/storage cost. Too many series fragments reduce utility; equivalence must be proven rather than assumed.",
+          "stimulus_source": "incoming record, registry and storage service",
+          "artifact": "evaluation adapter, receipt and comparison series"
+        },
+        "hats": {
+          "white": "Existing selector separates modes but evaluation currently expects synthetic origin; live research needs an explicit truthful origin path.",
+          "red": "Hypothesis: patients interpret best as a goal and saved as backed up; test meaning rather than preference alone.",
+          "black": "A guessed joint or hidden study result can become patient-authoritative through a permissive adapter.",
+          "yellow": "One recorded source can drive number, diagram and compatible history with fewer divergent rules.",
+          "green": "Use typed compact channels and explicit reason codes; separate governed short RGB/reference retention from landmark replay.",
+          "blue": "Keep patient registry empty until scoped qualification; no portal, automatic progression or research sensor collection in ordinary Do."
+        },
+        "counterfactuals": [
+          {
+            "id": "P09.CF1",
+            "intervention": "Incoming record says saved and supplies its own method",
+            "held_fixed": "Same unregistered patient context",
+            "expected": "No receipt/registration borrowed from payload; no patient number",
+            "falsifier": "Payload turns itself into a qualified saved result.",
+            "evidence": "planned_not_executed"
+          },
+          {
+            "id": "P09.CF2",
+            "intervention": "Upgrade phone/provider or widen allowance",
+            "held_fixed": "Same underlying anatomy",
+            "expected": "New series or explicit proven compatibility; no automatic improvement attribution",
+            "falsifier": "New hardware alone creates a best in an old incompatible series.",
+            "evidence": "planned_not_executed"
+          }
+        ]
+      },
+      {
+        "id": "P10",
+        "title": "Low-cognition patient feedback and optionality",
+        "decision": "The system selects supported evidence; patients do not select sensors. Preserve one relevant cue, visible uncertainty and compact paired result with optional history detail.",
+        "criteria": ["G07.V02", "G07.V03", "G07.V04"],
+        "sources": ["OWNER", "HATS"],
+        "atam": {
+          "attribute": "usability + safety",
+          "priority": "high",
+          "risk": "medium",
+          "environment": "iPhone-first local patient app and separately authorised evaluation build; clinical variant fixed",
+          "stimulus": "Patient is side-lying, cannot see the screen, declines an optional capability, or tracking fails during a permitted exercise.",
+          "response": "Retain spoken/written guidance and reachable Stop; do not force reaching, markers, length or a new movement to obtain a number. A Check can reacquire only when necessary; Do remains permitted by its programme.",
+          "measure": "Zero new calibration tasks; record setup/reach time and interpretation accuracy/confident errors on actual phones. No safety cue delayed by non-safety hysteresis and no missing-to-zero display.",
+          "sensitivity": "Cue wording/priority, screen viewing distance, accessibility scale, reference versus clinical zero.",
+          "tradeoff": "Less visual clutter reduces decisions but concealing unavailable status gives false reassurance; approximate results need meaningful qualifiers.",
+          "stimulus_source": "patient, caregiver and unavailable capture",
+          "artifact": "guided activity and result interface"
+        },
+        "hats": {
+          "white": "Owner wants approximate rotation, schematic, previous and episode-best with minimal interpretation. Existing guided Do does not require camera.",
+          "red": "Hypothesis: people may feel judged by warnings or assume a bigger historical number must be beaten; no patient finding is claimed.",
+          "black": "A successful sensor negotiation can still create an unusable bedside workflow or an unearned reassurance.",
+          "yellow": "Same simple routine can work across phones; capable hardware improves evidence without technical menus.",
+          "green": "Use context-specific post-Check information and one optional explanation, compare with simpler alternatives in comprehension tasks.",
+          "blue": "Accept improvements only when added information is useful without new patient duties; optional sensor loss never rewrites a prescription."
+        },
+        "counterfactuals": [
+          {
+            "id": "P10.CF1",
+            "intervention": "Disable all optional channels but retain authorised guided plan",
+            "held_fixed": "Same user/task",
+            "expected": "Do still works with truthful record; Check uses qualified RGB or unavailable",
+            "falsifier": "Treatment is blocked solely for absent sensor/marker/length.",
+            "evidence": "planned_not_executed"
+          },
+          {
+            "id": "P10.CF2",
+            "intervention": "User interprets best as a target despite attractive schematic",
+            "held_fixed": "Same values and method",
+            "expected": "Redesign/retest wording and hierarchy; no preference-only acceptance",
+            "falsifier": "Visual appeal or green automation substitutes for understanding.",
+            "evidence": "planned_not_executed"
+          }
+        ]
+      }
+    ],
+    "inspected_code": {
+      "ref": "b54914e4ff01eb9fe94476c039ebcc428b2da78e",
+      "files": [
+        "package-lock.json",
+        "src/hooks/useBlazePose.ts",
+        "src/services/checks/sleeperResult.ts",
+        "src/services/pose/adaptiveModel.ts"
+      ],
+      "locked_versions": {
+        "react-native": "0.73.2",
+        "react-native-vision-camera": "4.7.2",
+        "react-native-mediapipe": "0.6.0",
+        "react-native-worklets-core": "1.6.2"
+      },
+      "finding": "Existing one-pose hook uses GPU and adaptive Full/Lite. New result selector is isolated and patient registry empty. This task does not prove calibration/motion/depth integration."
+    },
+    "utility_tree": [
+      {
+        "quality": "truthful measurement and history",
+        "priority": "highest",
+        "elements": ["P02", "P04", "P09"],
+        "acceptance": "No unsupported patient result, hidden method change, wrong-side assignment or fabricated observation interval."
+      },
+      {
+        "quality": "patient effort and accessibility",
+        "priority": "highest",
+        "elements": ["P01", "P10"],
+        "acceptance": "No length/marker/calibration task; clinically permitted Do remains usable independently of optional measurement."
+      },
+      {
+        "quality": "availability and resource use",
+        "priority": "high",
+        "elements": ["P03", "P08"],
+        "acceptance": "Preserve activity through measurement loss; quantify fresh-result latency, retained memory, energy and reacquisition burden."
+      },
+      {
+        "quality": "maintainability and portability",
+        "priority": "high",
+        "elements": ["P06", "P07"],
+        "acceptance": "One camera/pose owner; exact dependencies and rollback; platform capability differences do not leak into clinical meaning."
+      },
+      {
+        "quality": "incremental information gain",
+        "priority": "medium",
+        "elements": ["P05", "P04"],
+        "acceptance": "Optional adjunct stays only after paired evidence shows worthwhile benefit at acceptable resource cost."
+      }
+    ],
+    "risk_themes": [
+      "False precision: predicted depth, visible surfaces, rig geometry and clinical joint angle are not equivalent; correlated channels can agree while wrong.",
+      "Burden transfer: removing a form must not introduce tape, room scans, repeated reaches or expensive-phone dependence.",
+      "Integration debt: more sensors/engines/callbacks multiply transform/time/lifetime errors; V4 maintenance status makes indefinite custom extensions costly.",
+      "History contamination: automatic fallback, model updates, research origin or an asserted save flag can manufacture progress unless authority and provenance are retained."
+    ],
+    "non_risks_within_scope": [
+      "Current no-entry decision needs no new therapeutic dose or allowance. Existing guided activity can continue to deliver value while methods are evaluated.",
+      "A versioned capture/provider adapter can reuse the tested selector rather than create a second comparison algorithm. This is a design mitigation, not implemented sensor validation."
+    ],
+    "choices": [
+      {
+        "option": "Existing RGB plus corrected metadata/motion",
+        "decision": "Selected evaluation baseline and first sensing enhancement",
+        "condition": "Correct transformation/time coverage before claiming multisensor gain."
+      },
+      {
+        "option": "Optional synchronized front depth and stick adjunct",
+        "decision": "Conditional experiments, not prerequisites",
+        "condition": "Same active camera/session; unmarked/no-entered-length; independent paired references; useful benefit without added patient setup."
+      },
+      {
+        "option": "Maintained VisionCamera migration",
+        "decision": "Preferred direction to investigate, not an approved upgrade",
+        "condition": "Current upstream V4 maintenance status favours it, but exact RN/MediaPipe/plugin compatibility and native RGB/depth parity must pass first."
+      },
+      {
+        "option": "Small current-capture native extension",
+        "decision": "Time-bounded alternative only",
+        "condition": "Useful public integration seam, no competing session, named maintenance owner and retirement plan; otherwise defer depth rather than maintain an open-ended fork."
+      },
+      {
+        "option": "Parallel pose ensemble, automatic calibration routine, always-on sensors",
+        "decision": "Not selected",
+        "condition": "Reconsider only on a named evidence gap and quantified benefit; no increase in patient work by default."
+      }
+    ],
+    "experiments": {
+      "purpose": "Ablate information sources, not compare attractive demos. Physical/clinical experiment is planned and unexecuted.",
+      "arms": [
+        "A: exact current RGB baseline",
+        "B: same RGB plus supported calibrated geometry/time and OS motion",
+        "C: B plus synchronized usable depth, on compatible capture",
+        "D: B or C plus unmarked-stick constraint where the prescribed variant uses it"
+      ],
+      "design": [
+        "Use paired reference-linked sequences and stable clinical variants; candidates never receive known stick length. Researchers may retain measured lengths only for independent truth/instrumentation.",
+        "Hold participant/side/variant and endpoint protocol constant; freeze candidate policies on development cases, then evaluate independent participants/repeat-day self-setup. Do not tune on the final test result.",
+        "Report both error on issued results and the full eligible-attempt denominator: coverage, false acceptance/withholding, per-subgroup and per-view results. Report conditional depth-available and whole-workflow performance separately.",
+        "Participants and sessions, not thousands of correlated frames, determine independent sampling. Predefine intended-use accuracy/repeatability, acceptable coverage loss and resource budgets before activation; numbers remain unresolved, not implicit defaults.",
+        "Record bias, error distribution/limits of agreement, repeatability and recovery alongside capture-to-feedback latency, RSS, energy and setup effort. No improvement claim from correlation or high pose availability alone.",
+        "Do not conflate forearm inclination with IR or use a gravity-only upper-arm inclinometer as proof of in-bed-plane caudal alignment. References must measure both intended quantities with known definitions.",
+        "Existing RGB benchmark videos can test only recorded channels; synthetic depth/IMU tests transport/logic, not hardware benefit. Replays cannot establish battery, thermal, actual speech or human comprehension.",
+        "Fault interventions: missing/stale depth, timestamp drift, mirror/crop/lens changes, glare/occlusion, covered shaft, grip slip, helper intrusion, translation at fixed gravity, model switch, memory/thermal pressure and research-origin leakage.",
+        "Use only consented, permitted inputs. Keep a small approved RGB/reference subset for image-estimator debugging; landmark replay alone cannot explain inference hallucination. Retain compact ordinary records rather than routine images."
+      ],
+      "go_no_go": "Retain an adjunct only if it improves prespecified clinically meaningful error/coverage or robustness without unacceptable burden/resource cost. If it fails, remove/defer it while retaining baseline and guided Do. A neutral/negative result is a legitimate endpoint, not reason to broaden the stack."
+    },
+    "implementation_order": [
+      {
+        "step": "Evaluation integration",
+        "criterion": "G05.V02",
+        "dod": "Typed observation adapter + isolated acknowledged persistence + reopen/comparison. No estimator math, method self-registration, incoming saved-flag trust or patient leakage. Synthetic-to-live-study origin transition stays explicit.",
+        "stop": "Independent review of source-bound positive/negative tests and real storage round trip; patient registry remains unchanged."
+      },
+      {
+        "step": "Capabilities and geometry",
+        "criterion": "G08.V04",
+        "dod": "Probe actual selected camera/format and permission state; establish coordinate/clock/generation contract and unavailable fields without new patient controls. Probe alone does not stream unnecessary sensors.",
+        "stop": "Compiled adapter with fixture coverage; physical capability receipt separately needed before stating device support."
+      },
+      {
+        "step": "Capture integration choice",
+        "criterion": "G09.V01",
+        "dod": "Bounded compatibility spike: maintained V5 versus public same-owner extension versus deferred depth; exact dependency/rollback and one-session evidence.",
+        "stop": "Choose one justified route; no broad framework rewrite solely for an optional feature."
+      },
+      {
+        "step": "Incremental sensing evaluation",
+        "criterion": "G08.V03",
+        "dod": "Motion/calibration, then optional depth/stick on the same reference-linked sequence; include all failure and missing-channel cases.",
+        "stop": "Ablation evidence and useful-gain decision; absent consent/device/reference is a named blocker, not a fabricated pass."
+      },
+      {
+        "step": "Patient qualification and reuse",
+        "criterion": "G10.V01",
+        "dod": "Approved method/allowance/display precision and physical/human evidence; keep knee/protocol delivery progressing independently. Stable provenance/API prepares later clinician integration without a portal now.",
+        "stop": "Named independent/clinical acceptance before enabling numerical patient methods; no whole-gate acceptance by this document."
+      }
+    ]
+  }
 }

@@ -1,0 +1,55 @@
+{
+  "scope": "Exact executed result-component and separately pinned RGB evidence",
+  "files": [
+    {
+      "path": "current-320.png",
+      "bytes": 30438,
+      "sha256": "ac2ff5257852955487c867dea902eee74b55a0af2d54b61f2d9ae22f60f45f00"
+    },
+    {
+      "path": "current-390.png",
+      "bytes": 63142,
+      "sha256": "8f8b6e4122b022e2c4b227cc80be144bc5f06862c47f675a8a4bd05d504bd04e"
+    },
+    {
+      "path": "current-large-web-text-320.png",
+      "bytes": 34462,
+      "sha256": "2ed304d83f7a9654d19caa8ebb640ec689eebe5d3100bb31284080025612b62b"
+    },
+    {
+      "path": "moved-390.png",
+      "bytes": 63686,
+      "sha256": "329414da160415abdcdcb6f8f54cc2b55142a4046149c30fc357ef4183f5ad52"
+    },
+    {
+      "path": "native-attempt.json",
+      "bytes": 292,
+      "sha256": "6f75e022ddf094ea0aa425789630e5c8c0e802ec997a5bd24e2bac168cbcbee9"
+    },
+    {
+      "path": "rgb-results.json",
+      "bytes": 22343,
+      "sha256": "18f3e51dc43c63b20d30cd976c559b91a39985ecc9595f001322b26362532a55"
+    },
+    {
+      "path": "run.json",
+      "bytes": 3756,
+      "sha256": "8011c9a1ad4b2f12f6437778b8fd1cea62a309c75419e8e1e9bd7fba878b4b4c"
+    },
+    {
+      "path": "test-tail.txt",
+      "bytes": 477,
+      "sha256": "0e5bb1e0542ae2eac4e8380d917124ddcfd3d83678d3109dada8536530a93bfa"
+    },
+    {
+      "path": "unavailable-320.png",
+      "bytes": 43634,
+      "sha256": "045654b6046ff19c928dea85ce835ae5513e5e229e3faa4a844204f6039790f0"
+    },
+    {
+      "path": "web-results.json",
+      "bytes": 4629,
+      "sha256": "2fdbd53d03fb8fd44112232a2721387c8a528b0b839e0f9f648c3917a633ac48"
+    }
+  ]
+}

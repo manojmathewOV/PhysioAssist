@@ -201,6 +201,13 @@ export function sessionOutcome(
     }
     historyResult = {
       ...common,
+      ...(analysis.observations ? { observations: analysis.observations } : {}),
+      ...(analysis.compensationObservations
+        ? {
+            compensationObservations: analysis.compensationObservations,
+            compensationObservationCount: analysis.compensationObservationCount,
+          }
+        : {}),
       bestDegrees: measured ? Math.round(r.degrees as number) : undefined,
       goalDegrees: prescribed,
       measured,
