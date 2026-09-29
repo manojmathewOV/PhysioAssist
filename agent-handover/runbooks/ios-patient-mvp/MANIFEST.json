@@ -1,11 +1,11 @@
 {
-  "revision": 13,
+  "revision": 14,
   "role": "portable plan files, not implementation evidence acceptance",
   "files": [
     {
       "path": "ACTIVE.md",
-      "sha256": "995b218cd2e5878d70a8253eaf3c97e77763aedddfc306d0db88b8a8f2885adf",
-      "bytes": 7097
+      "sha256": "84b6fb5aeb460f2f4843ab3d6b5401aa72bdee5e1269cbff840f2d07fe8f8af0",
+      "bytes": 6876
     },
     {
       "path": "DECISIONS.md",
@@ -29,23 +29,23 @@
     },
     {
       "path": "ROADMAP.cnp",
-      "sha256": "59aec9da6f4d79145b4d963989a55177e7bad47c7af4b14df86d8069821050f1",
-      "bytes": 109309
+      "sha256": "c363290d3c177da3668a4acb8608011a6d56ee4e77b82ebe773fd0384fad6f23",
+      "bytes": 110714
     },
     {
       "path": "RUNBOOK.md",
-      "sha256": "3433d163766e0f4f358d2c6edb46c7ec142e6877a10800d4c3606bab93240ca2",
-      "bytes": 75590
+      "sha256": "8fef4594f9a54255f651c13c773793c45f327c039f06328596bc4a0d1d4234c8",
+      "bytes": 77004
     },
     {
       "path": "STATUS.json",
-      "sha256": "b6ab9ce0c290711231b2652d50eb380d9ecc72064e4ee173cd8b41d045eec02c",
-      "bytes": 15139
+      "sha256": "dab49ffdd126d85916d2823374ff1bbaed26f85716c7f44f3d813cd08d629db5",
+      "bytes": 15491
     },
     {
       "path": "TEST_MATRIX.md",
-      "sha256": "fa3f924efd68b5c0fbbe54717978287af98e32f8a4e0a458cda1d5a5ee88c7b9",
-      "bytes": 22549
+      "sha256": "7553e436afb0d84b2c1713de3b7c5805a3bdaafcf19cf99b8ccfb51f9bef9c2b",
+      "bytes": 23954
     },
     {
       "path": "evidence/CCORE_TOOLING.md",
@@ -78,19 +78,24 @@
       "bytes": 2666
     },
     {
+      "path": "evidence/phone-architecture-20260929.json",
+      "sha256": "62259213f0bc2c22c0244cf41f51127e397493a8cb38461ff155590a98d18a9b",
+      "bytes": 2950
+    },
+    {
       "path": "evidence/structural-check.json",
       "sha256": "f29e1949f189fe1919ecca47ec4ee68b7913948c0861eeea8aa048846faef32f",
       "bytes": 264
     },
     {
       "path": "research.json",
-      "sha256": "d1c94ee17e6b8eef42eb948ef7097192a3538f67b154446112fe53a24e38351e",
-      "bytes": 14625
+      "sha256": "29608946e57276597977d9df2aed5f05757a99f220409fd32b96ccd7bf858d5e",
+      "bytes": 66037
     },
     {
       "path": "runbook.json",
-      "sha256": "5e88849240da19e2f9835bbe88c714049c0a6584e112388d1a0337e815080b65",
-      "bytes": 122651
+      "sha256": "b99c069c9c7ba53b188ec6df53afade989c3dc776adc8030d5f1c12fe489177b",
+      "bytes": 127688
     },
     {
       "path": "tools/check_matrix.py",
@@ -109,8 +114,8 @@
     },
     {
       "path": "validation-matrix.json",
-      "sha256": "b2ff2a19bd9f79a5ad4ca5d67d706691666c1d6deffe8672bd55fd0bcd83dcbf",
-      "bytes": 80706
+      "sha256": "8902c1c8a1f642353248f7d6ffecf455bf3c16302c05045bac98bde1bc0f9046",
+      "bytes": 82111
     }
   ]
 }

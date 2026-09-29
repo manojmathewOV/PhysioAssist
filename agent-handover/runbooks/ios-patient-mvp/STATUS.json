@@ -1,7 +1,7 @@
 {
   "schema": "physioassist-runbook-status/1",
   "runbook_id": "ios-patient-mvp",
-  "runbook_revision": 13,
+  "runbook_revision": 14,
   "current_gate": "G05",
   "overall": "result_component_and_selector_submitted_native_check_integration_remaining",
   "implementation_sha": "2d5455c688cb8da34db367f3757dd6291149e746",
@@ -29,7 +29,7 @@
     "../../evidence/2026-09-28-result-display/run.json"
   ],
   "open_decisions": ["D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "C01-C08"],
-  "next": "Independently review the implemented min/max hold and labelled side-aware result. Next: evaluation-only receipt-aware Check adapter and isolated storage/reopen; native result-card and physical/human qualification remain open. No live sleeper activation.",
+  "next": "Implement isolated receipt-aware evaluation Check adapter/storage/reopen. Carry the no-entry capability/coordinate contract; then a bounded maintained-capture compatibility probe before optional sensor experiments. Patient methods remain unactivated.",
   "last_writer": "s2-implementation-20260928-53363",
   "limitations": [
     "No gate independently accepted by this implementation update.",
@@ -262,11 +262,11 @@
     }
   ],
   "hosted_observation": {
-    "basis": "0995723419a5f8e6b650cd2c035e5d375e3d6d29",
-    "checks_run": 36481588587,
-    "ios_run": 36481588566,
+    "basis": "b54914e4ff01eb9fe94476c039ebcc428b2da78e",
+    "checks_run": 36490548921,
+    "ios_run": 36490548936,
     "conclusion": "success",
-    "scope": "Earlier published revision; not acceptance of this new delta"
+    "scope": "Observed hosted jobs for b54914e, not this runbook revision, sensor integration, independent review or clinical acceptance."
   },
   "active_branch": "agent/native-camera-recovery-20260928",
   "patient_feedback_decision": "Selected approximate number, schematic, previous comparable Check and scoped best record. Method/allowance/activation not approved.",
@@ -276,5 +276,13 @@
       "record": "../../evidence/2026-09-29-range-and-card/run.json",
       "scope": "Full command/real web/simulator guided tests passed; result card web-only. Not clinical or physical-audio acceptance."
     }
+  },
+  "architecture_assessment": {
+    "ref": "research.json#phone_architecture",
+    "source": "research.json#phone_architecture",
+    "state": "design_review_only",
+    "basis": "b54914e4ff01eb9fe94476c039ebcc428b2da78e",
+    "implemented_sensors": false,
+    "clinical_acceptance": false
   }
 }

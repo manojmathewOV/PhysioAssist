@@ -1,7 +1,7 @@
 {
   "schema": "physioassist-portable-runbook/1",
   "id": "ios-patient-mvp",
-  "revision": 13,
+  "revision": 14,
   "prepared_date": "2026-09-27",
   "claim": "declaration_only_no_implementation_or_clinical_acceptance",
   "authority": {
@@ -474,7 +474,7 @@
         "Use patient-owned Today/My recovery/Help experience, concise first-use versus familiar-use guidance and appointment summary; do not build a clinician dashboard."
       ],
       "acceptance_tests": [
-        "Learn -> Do -> interrupted Do -> incomplete Check -> valid Check -> later compatible comparison, using the same profile/episode.",
+        "Learn -> Do -> interrupted Do -> incomplete Check -> valid Check -> later compatible comparison, using the same profile/episode. No-entry test: absent stick length, markings or optional sensor cannot add a calibration task or block otherwise permitted Do.",
         "Unavailable Check shows no numeric result and no normal-technique claim; completed unmeasured Do is not failed rehabilitation. Sleeper can issue clearly approximate IR only with a qualified method, known angle reference and sufficient view/interval; otherwise no number, not zero. Approximate result and drift observability are separate. Stable but wrong setup does not prove technique; an arbitrary starting pose is not zero IR. Continuous elbow data distinguish measured-zero/below-alert, unobservable and not-applicable; unknown depth or missing wrist cannot manufacture a normal paired result. Caudal drift is judged relative to the prescribed near-90-degree setup, not zeroed at an arbitrary start. Keep the qualified robust endpoint and overall endpoint with their own paired positions; unspecified tolerance never becomes zero-tolerance or automatic pass. No extra-exercise prompt follows rejected measurement. Test valid within-band, valid-but-noncomparable, method-invalid, unseen elbow, unset/uncertain band and first-check states. Out-of-band values appear only as secondary labelled observations if the method supports that actual position; an invalid number is absent, never rescued by greying. Same-interval numeric/schematic/state output must agree.",
         "Dose/schedule changes preserve compatible methods; assistance/method changes separate comparison or mark incompatibility. Previous and best use saved, qualified, non-retracted Checks from the same patient/episode/side/variant/assistance, compatible setup, reference, estimator/endpoint selection and caudal allowance value/version. Previous excludes current and has its own date. Unknown legacy/protocol changes, corrected/deleted best, duplicate retries, unsaved current result and incomplete history cannot produce a falsely compatible or all-time record.",
         "Goal, clinical restriction and demonstrator endpoint remain three separate quantities. In a comfort phase, passive qualified ROM history may appear without re-enabling personal-best score/celebration or range-seeking cues. Repeat-to-beat actions, record-confetti and target arcs are absent; clinical warning/stop instructions still win over both result and history.",
@@ -540,7 +540,7 @@
         "id": "G05.W1",
         "start_when": "Frozen input, task ownership and relevant source interfaces are known; unresolved decisions block only irreversible/clinical activation in their scope.",
         "stop_when": "Candidate evidence submitted or a named blocker with wake condition recorded; no indefinite retry.",
-        "candidate_action": "Independently review the implemented min/max hold and labelled side-aware result. Next: evaluation-only receipt-aware Check adapter and isolated storage/reopen; native result-card and physical/human qualification remain open. No live sleeper activation.",
+        "candidate_action": "Implement isolated receipt-aware evaluation Check adapter/storage/reopen. Carry the no-entry capability/coordinate contract; then a bounded maintained-capture compatibility probe before optional sensor experiments. Patient methods remain unactivated.",
         "after_success": "Independent acceptance review, then eligible successors; do not stop only because unit tests are green."
       }
     },
@@ -648,7 +648,7 @@
       "acceptance_tests": [
         "Real approved asset plays through Watch -> enlarge -> Do -> pause/call -> resume -> summary in native iOS; missing/corrupt/offline asset has a useful fallback. App Pause also pauses the player; Hide/Show preserves position; the viewport and native identity satisfy the selected provider contract; unavailable/blocked/autoplay-denied states recover truthfully. Separately qualify the three reference paths and forbid YouTube-frame extraction.",
         "Speech identifies the next movement and dose without forcing a floor-exercising patient to reach for the phone.",
-        "Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. Patient result card: one large approximate value, elbow state, simple same-interval schematic, secondary previous/best with dates and one Done action. At narrow/large-text settings stack content; the diagram cannot conflate forearm rotation with bed-plane caudal alignment. Muted excluded values remain legible and reasons do not depend on colour. First/no/partial-history states avoid blank zeros or false pose. Counterbalanced comprehension task: identify today/previous/best, elbow state, approximate/invalid and saved/unsaved, and correct next action; measure accuracy/time and confident misinterpretations before preference. Directly labelled schematic must be tested against equivalent text/numbers; no population claim from a small formative round. Test at actual viewing distance and comfortable posture without forcing the patient to watch constantly. Reference/current schematic labels are directly visible, the anatomy/bed cue is explicitly illustrative, side presentation mirrors without altering data, and full dates use the shared history formatter. Do not label an arbitrary angle reference as measured Start.",
+        "Small supported iPhone and largest supported accessibility text: all essential instructions and controls remain reachable without clipped meaning. Patient result card: one large approximate value, elbow state, simple same-interval schematic, secondary previous/best with dates and one Done action. At narrow/large-text settings stack content; the diagram cannot conflate forearm rotation with bed-plane caudal alignment. Muted excluded values remain legible and reasons do not depend on colour. First/no/partial-history states avoid blank zeros or false pose. Counterbalanced comprehension task: identify today/previous/best, elbow state, approximate/invalid and saved/unsaved, and correct next action; measure accuracy/time and confident misinterpretations before preference. Directly labelled schematic must be tested against equivalent text/numbers; no population claim from a small formative round. Test at actual viewing distance and comfortable posture without forcing the patient to watch constantly. Reference/current schematic labels are directly visible, the anatomy/bed cue is explicitly illustrative, side presentation mirrors without altering data, and full dates use the shared history formatter. Do not label an arbitrary angle reference as measured Start. Device-assisted variants must preserve the same simple cues and reachable controls; measure setup/reaching/interpretation burden rather than merely counting visible widgets.",
         "Camera problem plus precaution plus praise selects one correct visual/spoken message consistently.",
         "Corrupt, missing, wrong-variant or unavailable video cannot silently substitute another movement; approved text/audio fallback is clear.",
         "Dynamic Type, VoiceOver and Voice Control traverse a complete native routine with reachable Stop/Pause. Compact counts retain accessible role/value; iOS requires its native announcement route, not Android liveRegion alone. Test app speech on/off, warnings, pause/background, listener cleanup and no per-second hold chatter. Post-Check text/schematic/date/approximate and eligibility labels are equivalent for VoiceOver; Hear result uses the existing single-owner speech path and no frame-by-frame or duplicate announcement. Reduced motion and named enlarge controls retain every essential result.",
@@ -738,12 +738,12 @@
       "acceptance_tests": [
         "Thirty synthetic open/start/pause/stop/close cycles as a stress fixture: no sustained retained-memory growth; include background/memory pressure.",
         "Cold offline first use with required model/media present; low-storage model failure returns honest unmeasured state.",
-        "Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims. Sleeper approximate IR requires independent reference testing of its exact angle definition and practical bedside view; check camera pitch/roll, both sides, elbow/wrist substitutes, torso drift, occlusion and repositioning. Distinguish absolute IR from change relative to setup; no unvalidated numeric error claim. For the chosen sleeper variant test caudal upper-arm angle and IR against independent references together. A raw image angle must not masquerade as a bed-plane angle; test foreshortening, body roll, lift, near-boundary uncertainty, baseline creep and tolerance-policy changes. Healthy feasibility alone does not determine clinical leeway. Evaluation records and modes stay isolated from patient output/credit; model/source/interval and storage receipts are bound through the explicit adapter. Evaluate reference agreement and coverage, not only correlation. No implicit qualification by switching a flag.",
-        "A method change cannot silently present the same measurement-method version or turn simulation success into clinical accuracy.",
+        "Independent video/reference tests report issued-angle error AND coverage, false withholding, wrong-side cases and unsupported conditions. Test the owner-selected bedside elevation/sleeper and foot-end ER capture separately. Forearm rotation visibility must not validate an unseen elbow; dependent shoulder occlusion prevents unsupported claims. Sleeper approximate IR requires independent reference testing of its exact angle definition and practical bedside view; check camera pitch/roll, both sides, elbow/wrist substitutes, torso drift, occlusion and repositioning. Distinguish absolute IR from change relative to setup; no unvalidated numeric error claim. For the chosen sleeper variant test caudal upper-arm angle and IR against independent references together. A raw image angle must not masquerade as a bed-plane angle; test foreshortening, body roll, lift, near-boundary uncertainty, baseline creep and tolerance-policy changes. Healthy feasibility alone does not determine clinical leeway. Evaluation records and modes stay isolated from patient output/credit; model/source/interval and storage receipts are bound through the explicit adapter. Evaluate reference agreement and coverage, not only correlation. No implicit qualification by switching a flag. Compare matched RGB, metadata/motion, synchronized usable-depth and unmarked-stick conditions without entered stick length. Report whole-attempt and channel-available strata, independent reference definitions and participant/session-level uncertainty; no degree error borrowed from another variant.",
+        "A method change cannot silently present the same measurement-method version or turn simulation success into clinical accuracy. Capture/provider/model/calibration/timebase/filtering/adjunct identity and compatibility are explicit; no mixed interval or same-series claim on unqualified fallback or hardware change.",
         "More noisy repetitions without changed true endpoints cannot justify an automatic improvement claim; report selection policy and sample basis. Best is an observed record, not a reliable estimate of true maximum capacity. Predeclare sample/window/endpoint selection, show first/tie states without celebration, and prohibit automatic improvement until repeatability AND clinical interpretation support it. No numeric variability bound is invented.",
-        "Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. Include stand movement, mattress compression, mirrored sides, initial prescribed roll, assistance and partial occlusion; rebaseline camera movement rather than label it patient drift. Match the initial upper-arm/torso setup across days as well as within-session drift. A session baseline must catch cumulative elbow migration that per-repetition resetting hides. Include pure rotation, combined shoulder/elbow translation and camera/torso motion controls.",
+        "Repeated phone positioning and between-day reference comparisons separate setup bias, within-session variance and clinically meaningful change. Include stand movement, mattress compression, mirrored sides, initial prescribed roll, assistance and partial occlusion; rebaseline camera movement rather than label it patient drift. Match the initial upper-arm/torso setup across days as well as within-session drift. A session baseline must catch cumulative elbow migration that per-repetition resetting hides. Include pure rotation, combined shoulder/elbow translation and camera/torso motion controls. Test unchanged-gravity translation/yaw, selfie versus rear depth, mattress surface substitution, changed grip and camera crop/mirror/lens transforms. Optional absence is unknown, not zero.",
         "Chosen endpoint with poor tracking is withheld even if the rest of the session has high visibility. Pair the endpoint IR with elbow displacement and upper-arm direction from that same interval, not independent maxima/minima. Preserve numerical values/units/coverage through history, including held Checks; below-alert observations do not disappear into the warning list. Patient-facing headline, historical comparison and schematic bind the same observed interval and allowance policy. A valid approximate angle with unassessable elbow cannot qualify the paired Check. Renderer cannot synthesize a normal elbow or use an unrelated best interval.",
-        "Thirty repeated camera cycles release resources; memory/low-storage/model failure gives an honest safe fallback, not another app reload loop.",
+        "Thirty repeated camera cycles release resources; memory/low-storage/model failure gives an honest safe fallback, not another app reload loop. One capture owner/pose engine; bounded native buffers released on error/cancel; old callbacks invalidated; fresh frame age and coverage preserved under drops. Record physical RSS/latency/energy before inventing a governor.",
         "Structured synthetic appointment export round-trips meaning, units, unknowns, correction links and version; unavailable is not zero. Approximate qualifier, tolerance/selection policy, evidence basis and source observation survive export and diagram regeneration. A result schematic remains private health-derived information despite containing no camera image; no automatic clinician delivery or public artefact."
       ],
       "deliverables": [
@@ -827,7 +827,7 @@
         "Capture native routine, reference, focus/plain, pause, unmeasured result, persisted history, small-screen and accessibility states with SHA-bound fixtures."
       ],
       "acceptance_tests": [
-        "Cloud build -> simulator -> authored journey -> screenshot/video artifacts -> image retrieval -> recorded visual review is demonstrated end-to-end.",
+        "Cloud build -> simulator -> authored journey -> screenshot/video artifacts -> image retrieval -> recorded visual review is demonstrated end-to-end. A new camera integration requires pinned compatibility and baseline native RGB/storage/audio/player parity, synchronized sensor receipt and rollback; platform documentation alone is not an integration pass.",
         "Local profile, routine preparation, reference, live exercise, paused state, unmeasured result and progress all appear in the artifact manifest. The native result screen has its own evidence; previous guided activity screenshots do not validate it. Tool-blocked operations remain unperformed and cannot be rerouted to evade restrictions.",
         "Restart simulator and re-open local records; large text and smaller-device states are not replaced by web screenshots.",
         "All artifact links are durable or explicitly expire; public artifacts contain synthetic/non-identifying material only.",
@@ -1169,7 +1169,7 @@
           "G09.V02"
         ],
         "work": [
-          "Current bounded patch: preserve prescribed minimum AND maximum through hook, timer, screen and speech. At minimum, Finish is normal and primary; optional hold stays available only up to maximum. Timer completion never proves movement or grants completion credit. Test pause/stop/source change during optional holds and save/reopen at both allowed endpoints.",
+          "Retain the reviewed minimum/maximum hold contract: Finish is normal at minimum; optional holds stop at maximum. Do not redo this without a new counterexample.",
           "Use the owner-confirmed shoulder-level/90-degree sleeper variant and candidate bedside capture. Primary drift is caudal towards the waist, with leeway but no default band. Conditional approximate IR and its paired drift are separate from guided participation; do not activate an unqualified Check.",
           "Separate per-output view checks from treatment eligibility. Keep props/helper and affected-side instructions; do not force phone repositioning for every approved mini-session. See shoulder_capture for observable/unassessable rules.",
           "S2a — Camera-optional Do: preparation -> explicit Start -> pause/background -> explicit Resume -> Finish/Stop. Reuse the prescribed activity and source; no poses, camera count or numerical measurement is manufactured. Until durable recording is integrated, show not saved and do not give routine credit.",
@@ -1179,7 +1179,7 @@
           "Remove false monitoring/waiting-for-a-physio promises without removing programme permissions. Sign-in is not a backup; local setup is not authenticated clinician approval.",
           "Run actual native screenshots and inspect after pause, missing media, camera denial, storage retry and large text. Physical-iPhone evidence is separately required for a patient-ready claim.",
           "Selected patient Check/history view: approximate IR + simple schematic + last comparable Check + best recorded in this recovery. Build synthetic presentation in bounded code, consume paired observations, retain comfort suppression and all validity/series rules in shoulder_capture.patient_feedback. Do not delay guided Do for the study or activate unqualified numbers.",
-          "Next integration commit: receipt-aware evaluation Check adapter and isolated persistence, then native result observation. Keep measured origin (synthetic/replay/live study), run purpose (shadow/visible evaluation/patient), and result disposition separate. The adapter translates, not estimates or qualifies its own method."
+          "Next: isolated receipt-aware evaluation adapter and real save/reopen. No stick length, marker, room scan or calibration movement. Drill into research.json#phone_architecture for sensor trade-offs; one capture owner/pose engine, actual capabilities and explicit clocks/transforms. No clinical activation."
         ],
         "activation_decisions": [
           "D01 identity semantics",
@@ -1516,7 +1516,8 @@
       "device": [
         "Record actual model/configuration, capture timestamps and received coverage. A model switch ends the interval unless equivalence is qualified. Dropped/stale frames cannot fabricate continuous observation.",
         "Measure physical-device capture-to-feedback age, thermal and UI effects before adding a broad governor. Reuse current adaptive model machinery.",
-        "Minimal stale-callback cancellation and durable recovery are required; an in-process fatal crash/OS kill cannot be promised to recover in JavaScript or save a final trace."
+        "Minimal stale-callback cancellation and durable recovery are required; an in-process fatal crash/OS kill cannot be promised to recover in JavaScript or save a final trace.",
+        "Device-assisted capture contract is in phone_assistance; rationale and per-element ATAM/Six Hats/counterfactual oracles are in research.json#phone_architecture. No input length, second camera/pose owner or unqualified fallback."
       ],
       "evidence": [
         "Use synthetic event/record tests for software, real RGB for inference, paired forearm and upper-arm/trunk reference for sleeper accuracy, repeated self-setup for temporal comparison, and human tasks for understanding. None substitutes for the others.",
@@ -1526,6 +1527,40 @@
       "deferred": [
         "No second pose model, 3D avatar, generative clinical coaching, hidden patient research, clinician portal or seven-input governor without demonstrated need."
       ]
+    },
+    "phone_assistance": {
+      "decision": "Use useful device evidence automatically, not every sensor continuously. No patient-entered stick length or substitute calibration chore.",
+      "review_ref": "research.json#phone_architecture",
+      "application_state": "planned_not_implemented",
+      "patient_inputs": {
+        "stick_length": false,
+        "assumed_body_dimension": false,
+        "mandatory_markers": false,
+        "room_scan": false,
+        "calibration_movement": false,
+        "sensor_mode_selection": false
+      },
+      "constraints": {
+        "camera_owners": 1,
+        "production_pose_engines": 1,
+        "routine_raw_video_retention": false,
+        "clinical_values_added": false,
+        "patient_registry_activation": false
+      },
+      "pipeline": "One existing capture owner -> aligned native image/optional sensor evidence -> one active pose engine plus variant-specific adjunct -> same-interval quantitative observation -> existing receipt-aware adapter/selector. Native buffers stay bounded; compact observations cross into UI/store.",
+      "rules": [
+        "A hardware feature, supported format, currently valid stream and qualified clinical method are four different states; capability discovery does not imply numerical availability.",
+        "Camera intrinsics, crop/mirror/orientation/lens/focus policy and monotonic capture-time mapping are explicit per capture generation. Unknown transform/time alignment withholds affected fusion, not permitted exercise.",
+        "Use OS-fused device motion without raw-sensor fusion or new patient calibration. Gravity is not bed plane, patient motion or proof of unchanged camera translation.",
+        "Depth/disparity must be fresh, synchronized and spatially registered, with units/filtering/confidence provenance. A surface behind an obscured landmark is not the joint. Front usable depth is optional; rear LiDAR does not observe a front-facing patient.",
+        "Unmarked-stick analysis uses hand/shaft association, natural temporal rigidity and available depth without entered length. A tip is not a wrist; predicted scale is not independent calibration. Occlusion/grip change may remove the adjunct without stopping Do.",
+        "Optional input loss may reduce availability. Fallback is explicit and method-qualified; it never silently pools incompatible methods/models or completes an observation gap.",
+        "Evaluation data remain governed and separate from patient records. Hidden study inference is not activated during ordinary patient Do. Consent/permissions/refusal have explicit behaviour; no microphone/photos access is added for sensor research.",
+        "One current cue and compact post-Check result remain unchanged across supported devices. More sensors must not add patient controls, new permissions without need, or calibration effort.",
+        "Prefer maintained capture integration after a bounded compatibility proof. V5 documentation is not installed V4 capability; no competing AR/camera session, indefinite V4 fork or blanket upgrade.",
+        "Benefit is judged by issued-result error AND coverage/false acceptance, repeat self-setup and physical resource/UX cost. Synthetic/RGB-only replays cannot qualify absent depth/IMU or physical performance."
+      ],
+      "delivery": "Keep evaluation adapter/storage/reopen next. Add a small capability/coordinate envelope in that path, then decide the capture integration route before depth/stick ablation; data collection needs consent/reference protocol. Guided shoulder and selected knee reuse do not wait for all sensors."
     }
   }
 }
